@@ -31,6 +31,7 @@ include("MagneticField/MagneticField.jl")
 
 using MID.MagneticField; export axel_dens
 using MID.MagneticField; export Axel_q
+using MID.MagneticField; export island_damping_q
 using MID.MagneticField; export island_q
 using MID.MagneticField; export uniform_dens
 using MID.MagneticField; export default_island_q
@@ -93,6 +94,7 @@ using MID.Spectrum; export construct_and_solve
 using MID.Spectrum; export reconstruct_phi
 using MID.Spectrum; export spectrum_from_file
 using MID.Spectrum; export solve_from_file
+using MID.Spectrum; export solve_from_file_from_inputs
 
 
 

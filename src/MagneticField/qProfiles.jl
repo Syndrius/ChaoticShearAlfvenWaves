@@ -9,6 +9,15 @@ Not sure on the scope of this, as we want this to just be part of Magnetic field
 
 """
 
+#q-profile devised for island and gap to be at r=0.5
+function island_damping_q(r)
+    a = 1.15
+    b = 0.4
+    q = a + b * r^2
+    dq = 2 * b * r
+    return q, dq
+end
+
 #removed islands from inputs now! Island data type has changed
 function Axel_q(r::Float64) :: Tuple{Float64, Float64}
 

@@ -61,7 +61,7 @@ Note that Arpack version 0.5.4 is broken but is the default version installed wi
 - nev::Int64 Number of eigenvalues to solve for.
 - R0::Float64 Major radius, used for normalising.
 """
-function arpack_solve(; Wmat, Imat, grids::GridsT, efuncs=true::Bool, nev=20::Int64, σ=0.0::Float64, reconstruct=true::Bool, R0::Float64)
+function arpack_solve(; Wmat, Imat, grids::GridsT, efuncs=true::Bool, nev=20::Int64, σ=0.0::Float64, reconstruct=false::Bool, R0::Float64)
 
     if efuncs
         #which=:LM here seems to cook it in the same way 0.5.4 does

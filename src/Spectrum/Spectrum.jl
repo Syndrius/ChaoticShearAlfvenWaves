@@ -20,6 +20,7 @@ using MID.Inputs
 export construct_and_solve
 export spectrum_from_file
 export solve_from_file
+export solve_from_file_from_inputs
 
 
 include("Construct.jl")
@@ -74,6 +75,21 @@ function spectrum_from_file(; dir::String, freq::Float64, nev=20::Int64)
     eigfuncs_to_file(ϕ=ϕ, filename=dir * "eigfuncs.dat")
 end
 
+#useful for interacting with the parralle part which is dodge af
+function solve_from_file_from_inputs(; dir::String, σ::Float64)
+
+    file_inds = dir * @sprintf("inds.dat")
+    file_data = dir * @sprintf("data.dat")
+
+    rows, cols = eachrow(readdlm(file_inds, ',', Int64))
+    Wdata, Idata = eachrow(readdlm(file_data, ',', ComplexF64))
+
+    prob, grids = inputs_from_file(dir=dir)
+
+    ω, ϕ = arpack_solve(Wmat=sparse(rows, cols, Wdata), Imat=sparse(rows, cols, Idata), grids=grids, R0=prob.geo.R0, σ=σ)
+    eigvals_to_file(ω=ω, filename=dir * "eigvals.dat")
+    eigfuncs_to_file(ϕ=ϕ, filename=dir * "eigfuncs.dat")
+end
 
 #useful for interacting with the parralle part which is dodge af
 function solve_from_file(; dir::String, grids::GridsT, R0::Float64, σ::Float64)

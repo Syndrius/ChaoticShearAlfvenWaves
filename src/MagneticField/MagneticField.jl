@@ -14,6 +14,7 @@ export BFieldT
 include("qProfiles.jl")
 
 export Axel_q
+export island_damping_q
 
 
 #maybe combine into just profiles?
