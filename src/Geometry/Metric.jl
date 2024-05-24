@@ -94,3 +94,34 @@ function toroidal_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::F
 
 
 end
+
+
+#probably only used for testing
+function cylindrical_metric(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
+
+    #doesn't equate to cylindrical limit or weird cylindrical coords
+    #this is regular old cylindrical for comparing our weak form
+
+    met.J = r
+
+    met.gl[1, 1] = 1
+
+    met.gl[2, 2] = r^2
+
+    met.gl[3, 3] = 1
+
+
+    met.gu[1, 1] = 1
+
+    met.gu[2, 2] = 1/r^2
+
+    met.gu[3, 3] = 1
+
+
+    met.dgl[2, 2, 1] = 2*r
+
+    met.dJ[1] = 1
+    
+    met.dgu[2, 2, 1] = -2 * r / r^3
+
+end

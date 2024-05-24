@@ -6,7 +6,7 @@ Computes the I matrix for the weak form at a single coordinate. Still a bit unop
 - I Stupid type due to using views.
 - met::MetT Struct containing the metric information.
 - B::BfieldT Struct containing the magnetic field information.
-- n::Float64 Desnity.
+- n::Float64 Density.
 - δ::Float64 Artifical resistivity, for damping calculations.
 """
 function compute_I!(I::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT, B::BFieldT, n::Float64, δ::Float64)
@@ -15,7 +15,7 @@ function compute_I!(I::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT,
     #display(I)
 
     #not sure how to deal with this yet!
-    H = zeros(9)
+    H = zeros(Float64, 9)
     for j=1:3, i=1:3
         #maybe this would be faster with built in matric operations??
         #I[i, j] = n*(met.gu[i, j] - B.b[i]*B.b[j])/B.mag_B^2 * met.J
@@ -37,15 +37,17 @@ function compute_I!(I::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT,
     #ϕ_ζζ, i=ζ, j=ζ
     H[9] = met.gu[3, 3]-B.b[3]*B.b[3] 
 
+
     #probably want to do this as an outer product perhaps.
     for j=1:9, i=1:9
-        I[i, j] = -n*δ*1im*H[i] * H[j] / B.mag_B^2 * met.J
+        I[i, j] = -n*δ*H[i] * H[j]  * met.J / B.mag_B^2*1.0im
     end
     #ugly fix!
     #so I is not being reset to zero for some reason
     #this forces all 9x9 entries to be filled by the damping term first, then we modify the un-damped case.
     for j=1:3, i=1:3
-        I[i, j] += n*(met.gu[i, j] - B.b[i]*B.b[j])/B.mag_B^2 * met.J
+        I[i, j] += n*(met.gu[i, j] - B.b[i]*B.b[j]) * met.J /B.mag_B^2
     end
 
+    return H
 end

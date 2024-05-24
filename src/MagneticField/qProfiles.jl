@@ -38,8 +38,8 @@ end
 
 function singular_bowden_q(r::Float64)
 
-    q = @. 1+(3-1)*r^2
-    dq = @. 4*r
+    q = 1+(3-1)*r^2
+    dq = 4*r
 
     return q, dq
 end

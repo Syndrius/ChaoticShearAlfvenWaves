@@ -6,11 +6,48 @@ using MID.Geometry
 using MID.MagneticField
 using MID.Inputs
 
+using LinearAlgebra
+
 include("W.jl")
 include("I.jl")
 
+include("new_I.jl")
+include("new_W.jl")
+
 
 export W_and_I!
+
+
+
+
+function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, met::MetT, B::BFieldT, prob::ProblemT, r:: Array{Float64}, θ::LinRange{Float64, Int64}, ζ::LinRange{Float64, Int64})
+
+    
+    #compute the density.
+    n = prob.dens.(r) :: Array{Float64}
+
+    for k=1:1:length(ζ), j=1:1:length(θ), i=1:1:length(r)
+
+        #compute the metric
+        prob.compute_met(met, r[i], θ[j], ζ[k], prob.geo.R0)
+
+        #compute the magnetic field.
+        compute_B!(B, met, prob.q, prob.isl, r[i], θ[j], ζ[k])
+        
+        #comething about views here doesn't work, I assume it is do to with passing non-indexed things in ala met etc but who knows.
+        #compute the W matrix
+        @views new_compute_W!(W[:, :, i, j, k], met, B)
+        #@views compute_W!(W[:, :, i, j, k], met, B)
+
+        #views are giving us some warnings, may be better to just define the view of I/W not the entire @views thing.
+        #compute the I matrix
+        #@views new_compute_I!(I[:, :, i, j, k], met, B, n[i], prob.δ)
+        @views compute_I!(I[:, :, i, j, k], met, B, n[i], prob.δ)
+
+    end
+
+
+end
 
 """
 Computes the two matrices W and I based on the weak form of the SAW governing equation.
@@ -27,7 +64,7 @@ Solving generalised eigenvalue problem Wϕ = ω^2Iϕ
 - θ::Float64 Poloidal angle, 0≤θ≤2π.
 - ζ::Float64 Toroidal angle, 0≤θ≤2π.
 """
-function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, met::MetT, B::BFieldT, prob::ProblemT, r:: Array{Float64}, θ::LinRange{Float64, Int64}, ζ::LinRange{Float64, Int64})
+function old_W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, met::MetT, B::BFieldT, prob::ProblemT, r:: Array{Float64}, θ::LinRange{Float64, Int64}, ζ::LinRange{Float64, Int64})
     
     #compute the density.
     n = prob.dens.(r) :: Array{Float64}

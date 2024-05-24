@@ -28,7 +28,8 @@ function full_spectrum_solve(;Wmat, Imat, grids::GridsT, efuncs=true::Bool, reco
             vals, funcs = eigen(Hermitian(Matrix(Wmat)), Hermitian(Matrix(Imat)))
             if reconstruct
                 phi = reconstruct_phi(funcs, length(vals), grids.rd.N, grids.pmd.count, grids.tmd.count)
-                return R0 .* sqrt.(vals), phi
+                #abs needed for comparison bowden case...
+                return R0 .* sqrt.(abs.(vals)), phi
             else
                 return R0 .* sqrt.(vals), funcs
             end

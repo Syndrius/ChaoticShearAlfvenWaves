@@ -14,9 +14,11 @@ function compute_W!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT,
     #now we want to combine both Tj and Tl into one, this will be cooked!
     #Tl = zeros(9, 9)
     #Tj = zeros(3, 9)
+    #display("og")
 
     #contributions to W are split into two.
     W[:, :] = compute_Tl(met, B) .* met.J
+    
     Tj = compute_Tj(met, B)
 
     #display(W[:, :, co...])
@@ -29,7 +31,9 @@ function compute_W!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT,
         W[i, μ] += Tj[i, μ] * met.J
         W[μ, i] += Tj[i, μ] * met.J
     end 
-
+    
+    
+    #println(W)
 
     
 end
@@ -194,7 +198,8 @@ function compute_Tj(met::MetT, B::BFieldT)
     end
 
     #display(B.b[:])
-
+    #display(Γ)
+    #display(dΓ)
     #display(dΓ[:, :, 2])
     #display(sqrt(-1))
     
@@ -276,6 +281,10 @@ function compute_Tj(met::MetT, B::BFieldT)
         #ϵ^312 + ϵ^213, i=3, k=2 + i=2, k=3
         Tj[n, 5] += (Γ[3, n] * Γ[2, 2] - Γ[2, n] * Γ[3, 2]) / met.J
 
+        #n=2 case
+        #Tj[2, 5] = (Γ[1, 2] * Γ[3, 1] - Γ[3, n] * Γ[1, 1]) / met.J
+        #    + (Γ[3, 2] * Γ[2, 2] - Γ[2, 2] * Γ[3, 2]) / met.J
+
         #rζ
         #first j=3, q=1
         #ϵ^231 + ϵ^132, i=2, k=1 + i=1, k=2
@@ -321,6 +330,8 @@ function compute_Tj(met::MetT, B::BFieldT)
     #display(sqrt(-1))
     #display(jparonB(B, met, co))
 
+    #display(2 .*Tj[1:3, 1:3])
+    return Tj #for testing!
     return -1/2 .* jparonB(met, B) .* Tj 
 end
 
@@ -393,7 +404,7 @@ function jparonB(met::MetT, B::BFieldT)
         end
     end
 
-
+    #display(jparonB)
     return jparonB
 end
 

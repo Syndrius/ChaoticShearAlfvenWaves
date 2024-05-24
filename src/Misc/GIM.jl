@@ -13,10 +13,18 @@ Although ϕ(0) should be ϕ'(0)=0 for m=1? It is also not a true boundary condit
 - nm::Int64 Number of poloidal modes, i.e. how many poloidal points are in the matrix.
 - nn::Int64 Number of toroidal modes, i.e. how many toroidal points are in the matrix.
 """
-function compute_boundary_inds(nr::Int64, nm::Int64, nn::Int64)
-
-    #tried to make the distinction between nθ and nm clearer.
+function compute_boundary_inds(nr::Int64, nm::Int64, nn::Int64, mlist::Array{Int64})
     left_boundary = 1:2:2*nm*nn
+    #tried to make the distinction between nθ and nm clearer.
+    if 0 in mlist
+        zero_ind = argmin(abs.(mlist))
+        left_boundary = collect(left_boundary)
+        #more complicated regularization condition
+        #shift the m=0 conditions to the derivative,
+        for i in (length(mlist) - zero_ind)*nn+1:(zero_ind)*nn
+            left_boundary[i] += 1
+        end
+    end
 
     #could probably use grid_to_index for this
     right_boundary = 1+(nr-1)*2*nm*nn:2:nr*2*nm*nn

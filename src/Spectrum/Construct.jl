@@ -41,7 +41,7 @@ function construct(; prob::ProblemT, grids::GridsT)
     #this seems to have made a minimal difference, but is surely better practise right.
     arr_length = compute_length(grids.rd.N, grids.pmd.count, grids.tmd.count)
 
-    arr_count = 1
+    arr_count = 1 #this may be wrong... gives error for v small matrix...
 
     rows = Array{Int64}(undef, arr_length) #ints
     cols = Array{Int64}(undef, arr_length) #ints
@@ -55,7 +55,7 @@ function construct(; prob::ProblemT, grids::GridsT)
 
 
     #either need a condition in case m=0 or just an error message.
-    boundary_inds = compute_boundary_inds(grids.rd.N, grids.pmd.count, grids.tmd.count)
+    boundary_inds = compute_boundary_inds(grids.rd.N, grids.pmd.count, grids.tmd.count, collect(mlist))
     #display(size(boundary_inds))
     #display(boundary_inds)
 
@@ -86,6 +86,8 @@ function construct(; prob::ProblemT, grids::GridsT)
         #I_and_W!(I, W, B, q_profile, met, compute_met, dens, r, θgrid, ζgrid, δ, isl, R0)
 
         W_and_I!(W, I, met, B, prob, r, θgrid, ζgrid)
+
+        #display(W[:, :, 1, 1, 1])
 
 
         #uses the fft plan to take the fft of our two matrices.

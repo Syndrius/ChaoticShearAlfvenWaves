@@ -34,7 +34,12 @@ using MID.MagneticField; export Axel_q
 using MID.MagneticField; export island_damping_q
 using MID.MagneticField; export island_q
 using MID.MagneticField; export uniform_dens
+using MID.MagneticField; export bowden_singular_dens
+using MID.MagneticField; export axel_dens
 using MID.MagneticField; export default_island_q
+using MID.MagneticField; export singular_bowden_q
+using MID.MagneticField; export comparison_bowden_dens
+using MID.MagneticField; export comparison_bowden_q
 
 
 
