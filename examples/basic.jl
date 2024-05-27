@@ -28,18 +28,6 @@ plot_continuum(ω = ω_cont, rgrid=rgrid)
 
 ω, ϕ = construct_and_solve(prob=prob, grids=grids, full_spectrum=true);
 
-"og"
-3×3 Matrix{Float64}:
- 0.0  -0.0187637     0.000244251
- 0.0  -0.0857724     0.000453065
- 0.0   0.000490373  -2.49237e-6
-
- "New guy"
-3×3 Matrix{Float64}:
-  0.0          -0.00938184    0.000122125
- -0.00938184   -2.24294e-18   0.000471719
-  0.000122125   0.000471719  -3.97047e-23
-
 
 reconstruct_continuum(ω = ω, ϕ = ϕ, grids = grids)
 
@@ -61,12 +49,4 @@ grids = init_grids(rgrid=rgrid, mstart=2, mcount=2, nstart=-2, ncount=1);
 reconstruct_continuum(ω = ω, ϕ = ϕ, grids = grids)
 
 plot_potential(r=rgrid, ϕ=ϕ, ind=1, pmd=grids.pmd, n=1)
-
-#0.3803
-
-a = [1, 2, 3]
-b = [3, 5, 6]
-
-using LinearAlgebra
-dot(a, b)
 

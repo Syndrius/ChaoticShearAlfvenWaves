@@ -13,7 +13,6 @@ Base class that just imports everything. We will want a description of the packa
 
 
 # Plots backend is probably cooked
-# Arpack version needs to be verified, looks like broken version has been removed from github, so should be fine.
 """
 
 

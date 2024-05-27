@@ -6,13 +6,15 @@ function new_compute_W!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::M
     W[:, :] = new_compute_Tl(met, B) .* met.J
     
     W[:, :] -= new_compute_Tj(met, B) .* met.J .* new_jparonB(met, B) ./ 2
-    #gives the same W..., yet we get different results...
+    #Now getting identical results, at least in Axel case.
+    #this implies it is not our implementation of this that is wrong
+    #rather it is what we are implementing??
     #println(W)
 
 end
 
 
-
+#this looks to be identical.
 function new_jparonB(met, B)
     #now you know we are in trouble!
     lc = zeros(3, 3, 3)
@@ -496,13 +498,13 @@ function new_compute_Tl(met, B)
     W[5, 5] = 0
 
     #for k in 1:3
-    W[5, 5] += (B.b[1] * (met.gu[2, 1] - B.b[2]*B.b[1]) * B.b[2] + B.b[1] * (met.gu[2, 2] - B.b[1]*B.b[2]) * B.b[1] 
+    W[5, 5] += (B.b[1] * (met.gu[2, 1] - B.b[2]*B.b[1]) * B.b[2] + B.b[1] * (met.gu[2, 2] - B.b[2]*B.b[2]) * B.b[1] 
                 + B.b[2] * (met.gu[1, 1] - B.b[1]*B.b[1]) * B.b[2] + B.b[2] * (met.gu[1, 2] - B.b[1]*B.b[2]) * B.b[1])
     #end
 
     W[5, 6] = 0
 
-    W[5, 6] += (B.b[1] * (met.gu[2, 1] - B.b[2]*B.b[1]) * B.b[3] + B.b[1] * (met.gu[2, 3] - B.b[1]*B.b[3]) * B.b[1] 
+    W[5, 6] += (B.b[1] * (met.gu[2, 1] - B.b[2]*B.b[1]) * B.b[3] + B.b[1] * (met.gu[2, 3] - B.b[2]*B.b[3]) * B.b[1] 
                 + B.b[2] * (met.gu[1, 1] - B.b[1]*B.b[1]) * B.b[3] + B.b[2] * (met.gu[1, 3] - B.b[1]*B.b[3]) * B.b[1])
     
 

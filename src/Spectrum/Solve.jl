@@ -67,6 +67,9 @@ function arpack_solve(; Wmat, Imat, grids::GridsT, efuncs=true::Bool, nev=20::In
     if efuncs
         #which=:LM here seems to cook it in the same way 0.5.4 does
         #wonder why this ever worked???
+        #changing maxiter to 1000, did not change result...
+        #tol-1.0-14 did not change result...
+        #both are tested for axel case.
         vals, funcs = eigs(Wmat, Imat, nev=nev, ritzvec=true, sigma=σ)
         if reconstruct
             phi = reconstruct_phi(funcs, length(vals), grids.rd.N, grids.pmd.count, grids.tmd.count)

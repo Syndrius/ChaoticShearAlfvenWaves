@@ -6,6 +6,10 @@
 using MID
 using Plots; plotlyjs()
 
+#with og W
+0.3911009635290564 - 0.0019341830644314319im
+-0.001512921720281432
+
 #this is giving ~1.8 times what we expect.
 
 N = 3000; 

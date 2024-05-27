@@ -12,6 +12,8 @@ R0 = 10.0
 
 toroidal_metric!(met, rt, θt, ζt, R0);
 
+geo = GeoParamsT(R0=R0)
+
 isl = IslandT(m0=1, n0=1, A=0.1)
 prob = init_problem(q=Axel_q, geo=geo, isl=isl, met=MID.Geometry.cylindrical_metric); 
 
@@ -59,7 +61,8 @@ function dδ(i, j)
     end
 end
 
-
+#so the new W gives some complete gib.
+#not sure what is going on tbh.
 old = MID.WeakForm.compute_Tj(met, B)
 
 old_combo = zeros(9, 9)
@@ -85,6 +88,12 @@ println(diff)
 #other option is to start comparing cases with Mathematica, probably easiest to consider cylindrical limit...
 
 
+jparold = MID.WeakForm.jparonB(met, B)
+jparnew = MID.WeakForm.new_jparonB(met, B)
+
+jpar_diff = jparold-jparnew
+
+
 Wold = zeros(ComplexF64, 9, 9, 1, 1, 1);
 
 @views MID.WeakForm.compute_W!(Wold[:, :, 1, 1, 1], met, B)
@@ -106,18 +115,32 @@ new = MID.WeakForm.new_compute_Tl(met, B)
 
 diff = new .- old
 
-#println(diff)
+diff[5, 6]
+println(diff)
 
 
 Iold = zeros(ComplexF64, 9, 9, 1, 1, 1);
 
-Hold = @views MID.WeakForm.compute_I!(Iold[:, :, 1, 1, 1], met, B, 1.0, 1.0)
+Hold = @views MID.WeakForm.compute_I!(Iold[:, :, 1, 1, 1], met, B, 1.0, 1.0e-7)
 
 Inew = zeros(ComplexF64, 9, 9, 1, 1, 1);
 
-Hnew = @views MID.WeakForm.new_compute_I!(Inew[:, :, 1, 1, 1], met, B, 1.0, 1.0)
+Hnew = @views MID.WeakForm.new_compute_I!(Inew[:, :, 1, 1, 1], met, B, 1.0, 1.0e-7)
 
-println(Hold - Hnew)
+#println(Hold - Hnew)
 
 #this is extremly different! especially the complex value??
 diff = Iold[:, :, 1, 1, 1] - Inew[:, :, 1, 1, 1]
+
+
+out1 = zeros(9, 9)
+
+for i in 1:9, j in 1:9
+    out1[i, j] = Hnew[i] * Hnew[j]
+end
+
+display(out1)
+
+out2 = Hnew * Hnew'
+
+display(out2-out1)
