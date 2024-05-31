@@ -11,7 +11,11 @@ May want to change this to post-processing or something!
 
 module Plotting
 
+using MID.Inputs
+
 using Plots
+using LaTeXStrings
+using Printf
 #Plots.set_default_backend!(:plotlyjs)
 #we probbaly want to use the plotly backend for inspection of specific frequencies.
 #using PlotlyJS

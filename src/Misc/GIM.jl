@@ -1,6 +1,5 @@
 
 
-#this is a bit of a random file that is kind of a placeholder atm
 #Grids Indexing and Matrices!
 
 
@@ -9,9 +8,9 @@ Computes the indicies of the matrices that correspond to the boundaries. Boundar
 Although ϕ(0) should be ϕ'(0)=0 for m=1? It is also not a true boundary condition, rather a regularisation condition.
 
 # Args
-- nr::Int64 Number of radial grid points
-- nm::Int64 Number of poloidal modes, i.e. how many poloidal points are in the matrix.
-- nn::Int64 Number of toroidal modes, i.e. how many toroidal points are in the matrix.
+nr::Int64 - Number of radial grid points
+nm::Int64 - Number of poloidal modes, i.e. how many poloidal points are in the matrix.
+nn::Int64 - Number of toroidal modes, i.e. how many toroidal points are in the matrix.
 """
 function compute_boundary_inds(nr::Int64, nm::Int64, nn::Int64, mlist::Array{Int64})
     left_boundary = 1:2:2*nm*nn
@@ -38,13 +37,13 @@ end
 Modifies the matrix storing the basis functions, Φ, to reflect the local derivatives being taken.
 
 #Args
-- Φ::Array{ComplexF64, 3} 9x4xgp matrix, stores the 9 derivtaives of the potential for each 4 Hermite basis functions at each gauss point.
-- H::Array{Float64, 2} Hermite basis functions.
-- dH::Array{Float64, 2} Derivtive of Hermite basis functions.
-- ddH::Array{Float64, 2} Second derivtive of Hermite basis functions.
-- m::Int64 Poloidal mode number, i.e. scale factor for derivative of Fourier basis.
-- n::Int64 Toroidal mode number, i.e. scale factor for derivative of Fourier basis.
-- jac::Float64 Jacobian of local to global transformation, not to be confused with geometric Jacobian.
+Φ::Array{ComplexF64, 3} - 9x4xgp matrix, stores the 9 derivtaives of the potential for each 4 Hermite basis functions at each gauss point.
+H::Array{Float64, 2} - Hermite basis functions.
+dH::Array{Float64, 2} - Derivtive of Hermite basis functions.
+ddH::Array{Float64, 2} - Second derivtive of Hermite basis functions.
+m::Int64 - Poloidal mode number, i.e. scale factor for derivative of Fourier basis.
+n::Int64 - Toroidal mode number, i.e. scale factor for derivative of Fourier basis.
+jac::Float64 - Jacobian of local to global transformation, not to be confused with geometric Jacobian.
 """
 function create_local_basis!(Φ::Array{ComplexF64, 3}, H::Array{Float64, 2}, dH::Array{Float64, 2}, ddH::Array{Float64, 2}, m::Int64, n::Int64, jac::Float64)
 
@@ -78,12 +77,12 @@ Where r_11 is first radial point, first Hermite, r_12 is first radial second Her
 So it will actually be [r11θ1ζ1, r12θ1ζ1, r11θ1mζ2...]
 
 # Args
-- rind::Int64 Index of radial grid
-- θind::Int64 Index of poloidal grid
-- ζind::Int64 Index of toroidal grid
-- hbind::Int64 Index of Hermite basis functions
-- nm::Int64 Number of poloidal modes, i.e. how many poloidal points are in the matrix.
-- nn::Int64 Number of toroidal modes, i.e. how many toroidal points are in the matrix.
+rind::Int64 - Index of radial grid
+θind::Int64 - Index of poloidal grid
+ζind::Int64 - Index of toroidal grid
+hbind::Int64 - Index of Hermite basis functions
+nm::Int64 - Number of poloidal modes, i.e. how many poloidal points are in the matrix.
+nn::Int64 - Number of toroidal modes, i.e. how many toroidal points are in the matrix.
 """
 function grid_to_index(rind::Int64, θind::Int64, ζind::Int64, hbind::Int64, nm::Int64, nn::Int64)
 
@@ -113,9 +112,9 @@ end
 Reverses the transformation from 3d grid to matrix, i.e. maps matrix index to appropriate point in the grid, used for plotting.
 
 # Args
-- i::Int64 Matrix index
-- nm::Int64 Number of poloidal modes, i.e. how many poloidal points are in the matrix.
-- nn::Int64 Number of toroidal modes, i.e. how many toroidal points are in the matrix.
+i::Int64 Matrix index
+nm::Int64 - Number of poloidal modes, i.e. how many poloidal points are in the matrix.
+nn::Int64 - Number of toroidal modes, i.e. how many toroidal points are in the matrix.
 """
 function index_to_grid(i::Int64, nm::Int64, nn::Int64)
     s = div(i-1, 2*nm*nn) + 1
@@ -131,11 +130,11 @@ end
 Reconstructs the 1d eigenfunction output back to the 3d grid.
 
 # Args
-- efuncs<:Array{ComplexF64, 2} Eigenfunctions that are outputed when matrix is solved. #this type doesn't work, not sure how to specify it since the efuncs may be real sometimes? Probably mostly complex.
-- nevals::Int64 Number of eigen functions found.
-- nr::Int64 Number of radial grid points
-- nm::Int64 Number of poloidal modes, i.e. how many poloidal points are in the matrix.
-- nn::Int64 Number of toroidal modes, i.e. how many toroidal points are in the matrix.
+efuncs<:Array{ComplexF64, 2} - Eigenfunctions that are outputed when matrix is solved. #this type doesn't work, not sure how to specify it since the efuncs may be real sometimes? Probably mostly complex.
+nevals::Int64 - Number of eigen functions found.
+nr::Int64 - Number of radial grid points
+nm::Int64 - Number of poloidal modes, i.e. how many poloidal points are in the matrix.
+nn::Int64 - Number of toroidal modes, i.e. how many toroidal points are in the matrix.
 """
 function reconstruct_phi(efuncs::Array{ComplexF64, 2}, nevals::Int64, nr::Int64, nm::Int64, nn::Int64)
     phi = zeros(ComplexF64, nevals, nr, nm, nn)
@@ -159,10 +158,10 @@ end
 Creates a grid with values clusered between two points.
 
 # Args
-- N::Int64 Size of the grid
-- sep1::Float64 Location of the start of the clustered region.
-- sep2::Float64 Location of the end of the clustered region.
-- frac::Float64 Fraction of N that should be in the clustered region.
+N::Int64 - Size of the grid
+sep1::Float64 - Location of the start of the clustered region.
+sep2::Float64 - Location of the end of the clustered region.
+frac::Float64 - Fraction of N that should be in the clustered region.
 """
 function clustered_grid(N::Int64, sep1::Float64, sep2::Float64, frac::Float64)
 
@@ -182,6 +181,7 @@ function clustered_grid(N::Int64, sep1::Float64, sep2::Float64, frac::Float64)
 
     return vcat(rleft, rclust, rright)
 end
+
 
 
 """

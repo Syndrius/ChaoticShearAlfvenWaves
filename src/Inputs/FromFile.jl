@@ -3,10 +3,15 @@
 
 #reading and writing problems and grids to files.
 #we have chosen to do this quite verbosly and manually, making the txt files much easier to read. But any slight changes will completly cook everything!
+"""
+Write the problem struct to file.
 
+# Args
+prob::ProblemT - Problem to write.
+filename::String - File to write.
+"""
 function problem_to_file(; prob::ProblemT, filename::String)
 
-    #qname = 
     open(filename, "w") do file
         write(file, "Problem:\n")
         write(file, "q profile: " * string(prob.q) * "\n")
@@ -25,14 +30,22 @@ function problem_to_file(; prob::ProblemT, filename::String)
 
 end
 
+"""
+Write the grids struct to file.
+
+# Args
+grids::GridsT - Grids to write.
+filename::String - File to write.
+"""
 function grids_to_file(; grids::GridsT, filename::String)
     open(filename, "w") do file
         write(file, "Grids:\n")
         write(file, "Radial Grid:\n")
-        #this may get stpuid as the grid gets big, oh well.
-        write(file, " - grid: " * string(grids.rd.grid) * "\n")
-        write(file, " - gp: " * string(grids.rd.gp) * "\n")
         write(file, " - N: " * string(grids.rd.N) * "\n")
+        write(file, " - sep1: " * string(grids.rd.sep1) * "\n")
+        write(file, " - sep2: " * string(grids.rd.sep2) * "\n")
+        write(file, " - frac: " * string(grids.rd.frac) * "\n")
+        write(file, " - gp: " * string(grids.rd.gp) * "\n")
         write(file, "Poloidal Grid:\n")
         write(file, " - start: " * string(grids.pmd.start) * "\n")
         write(file, " - count: " * string(grids.pmd.count) * "\n")
@@ -47,7 +60,12 @@ function grids_to_file(; grids::GridsT, filename::String)
 end
 
 
+"""
+Reads the problem struct from file.
 
+# Args
+filename::String - File to read.
+"""
 function problem_from_file(; filename::String)
 
     file = open(filename, "r") 
@@ -90,21 +108,28 @@ function problem_from_file(; filename::String)
             
 end
 
+"""
+Reads the grids struct from file.
+
+# Args
+filename::String - File to read.
+"""
 function grids_from_file(; filename::String)
     file = open(filename, "r") 
     readline(file) #ignore first line
 
-    #Radial Grid
-    readline(file)
-    s = readline(file)
-    #display(s)
-    rgrid = parse.(Float64, split(chop(s[10:end]; head=1, tail=1), ','))
-    #rgrid = parse(Array{Float64}, s[10:end])
-    s = readline(file)
-    #display(s)
-    gp = parse(Int64, s[8:end])
+    
+    readline(file) #Radial Grid:
     s = readline(file)
     N = parse(Int64, s[7:end])
+    s = readline(file)
+    sep1 = parse(Float64, s[10:end])
+    s = readline(file)
+    sep2 = parse(Float64, s[10:end])
+    s = readline(file)
+    frac = parse(Float64, s[10:end])
+    s = readline(file)
+    gp = parse(Int64, s[8:end])
 
     #Poloidal Grid
     readline(file)
@@ -128,7 +153,7 @@ function grids_from_file(; filename::String)
     s = readline(file)
     tf_quad = parse(Int64, s[12:end])
 
-    rd = RDataT(grid=rgrid, gp=gp, N=N)
+    rd = RDataT(N=N, sep1=sep1, sep2=sep2, frac=frac, gp=gp)
     pmd = ModeDataT(start=pstart, count=pcount, incr=pincr, f_quad=pf_quad)
     tmd = ModeDataT(start=tstart, count=tcount, incr=tincr, f_quad=tf_quad)
 
@@ -136,7 +161,12 @@ function grids_from_file(; filename::String)
 end
 
 
-#these seem to be working!
+"""
+Reads the problem and grids structs from file.
+
+# Args
+dir::String - Directory where files are stored.
+"""
 function inputs_from_file(; dir::String)
     prob = problem_from_file(filename=dir * "prob.txt")
     grids = grids_from_file(filename=dir * "grids.txt")
@@ -145,24 +175,42 @@ function inputs_from_file(; dir::String)
 
 end
 
+"""
+Writes the problem and grids structs to file.
+
+# Args
+prob::ProblemT - Problem to write.
+grids::GridsT - Grids to write.
+dir::String - Directory where files are written.
+"""
 function inputs_to_file(; prob::ProblemT, grids::GridsT, dir::String)
 
-    #I guess we are assuming that dir ends with /
     problem_to_file(prob=prob, filename=dir*"prob.txt")
     grids_to_file(grids=grids, filename=dir*"grids.txt")
 end
 
 
-#straightforward write to file function
-function eigvals_to_file(; ω, filename)
+"""
+Writes the eigenvalues to file.
+
+# Args
+ω::Array{ComplexF64} - Eigenvalues.
+filename::String - File to write.
+"""
+function eigvals_to_file(; ω::Array{ComplexF64}, filename::String)
     open(filename, "w") do file
         writedlm(file, ω, ",")
     end
 end
 
-#straightforward write to file function
-#may want to split this into real and imag to match parallel case.
-function eigfuncs_to_file(; ϕ, filename)
+"""
+Writes the eigenfunctions to file.
+
+# Args
+ϕ::Array{ComplexF64, 2} - Eigenfunctions. Note these should not be reconstructed before writing to file.
+filename::String - File to write.
+"""
+function eigfuncs_to_file(; ϕ::Array{ComplexF64, 2}, filename::String)
     open(filename, "w") do file
         writedlm(file, ϕ, ",")
     end

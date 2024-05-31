@@ -1,15 +1,11 @@
 
 
 """
+Devised q-profile such that gap and 5/4 island both occur at r=0.5.
 
-Not sure on the scope of this, as we want this to just be part of Magnetic field essentially, although it is useful for plotting as well.
-
-#this file needs to be fixed up once verification has been done.
-#currently a mess of different q's that we have tried to compare against.
-
+# Args
+r::Float64 - Radial point.
 """
-
-#q-profile devised for island and gap to be at r=0.5
 function island_damping_q(r)
     a = 1.15
     b = 0.4
@@ -18,8 +14,13 @@ function island_damping_q(r)
     return q, dq
 end
 
-#removed islands from inputs now! Island data type has changed
-function Axel_q(r::Float64) :: Tuple{Float64, Float64}
+"""
+Q profile from Axel's paper, should be renamed.
+
+# Args
+r::Float64 - Radial point.
+"""
+function Axel_q(r::Float64) 
 
     q = @. 1.05 + 0.55 * r^2
     dq = @. 2*0.55 * r
@@ -27,7 +28,12 @@ function Axel_q(r::Float64) :: Tuple{Float64, Float64}
     return q, dq
 end
 
+"""
+Q profile from Bowden comparison paper, should be renamed, or removed.
 
+# Args
+r::Float64 - Radial point.
+"""
 function comparison_bowden_q(r::Float64)
     q = 1.5+(2-1.5)*r^2
     dq = r
@@ -36,6 +42,12 @@ function comparison_bowden_q(r::Float64)
 
 end
 
+"""
+Q profile from Bowden singular paper, should be renamed.
+
+# Args
+r::Float64 - Radial point.
+"""
 function singular_bowden_q(r::Float64)
 
     q = 1+(3-1)*r^2
@@ -44,15 +56,24 @@ function singular_bowden_q(r::Float64)
     return q, dq
 end
 
+"""
+Q profile from Fu and Van Dam paper, should be renamed.
+
+# Args
+r::Float64 - Radial point.
+"""
 function fu_dam_q(r::Float64)
     q = @. 1 + r^2
     dq = @. 2*r
     return q, dq
 end
 
-#this is way better, passing isl into the q-profile seems to cook this massivly.
-#may just have to come up with a few q-profiles.
-#still gives runtime dispatch warnings, but doesn't take up all of the time.
+"""
+Q profile from Qu's paper, should be renamed.
+
+# Args
+r::Float64 - Radial point.
+"""
 function default_island_q(r::Float64)
 
     q = 1 / (1 / (5/2) - 4 / (5/2)^2 * (r^2/2-0.125))

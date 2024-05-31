@@ -4,13 +4,13 @@
 Uses Julias inbuild eigen function from LinearAlgebra. Solves the generalised eigenvalue problem Wϕ = ω^2Iϕ, finding the full spectrum of eigenvalues.
 
 # Args
-- Wmat W matrix.
-- Imat I matrix.
-- grids::GridsT Grids used in the problem, used for reconstruction.
-- efuncs::Bool Return eigenfunctions with values.
-- reconstruct::Bool Whether to reconstruct the eigenfunctions into 3d.
-- resistivity::Bool Whether we are solving with resistivity, if not matricies are Hermitian.
-- R0::Float64 Major radius, used for normalising.
+Wmat - W matrix.
+Imat - I matrix.
+grids::GridsT - Grids used in the problem, used for reconstruction.
+efuncs::Bool - Return eigenfunctions with values.
+reconstruct::Bool - Whether to reconstruct the eigenfunctions into 3d.
+resistivity::Bool - Whether we are solving with resistivity, if not matricies are Hermitian.
+R0::Float64 - Major radius, used for normalising.
 """
 function full_spectrum_solve(;Wmat, Imat, grids::GridsT, efuncs=true::Bool, reconstruct=true::Bool, resistivity=false::Bool, R0::Float64)
 
@@ -53,14 +53,14 @@ Uses shift and invert to solve for the nev nearest eigenvalues to σ using Arpac
 Note that Arpack version 0.5.4 is broken but is the default version installed with packagemanger. Install version 0.5.3 with add Arpack@0.5.3
 
 # Args
-- Wmat W matrix.
-- Imat I matrix.
-- grids::GridsT Grids used in the problem, used for reconstruction.
-- efuncs::Bool Return eigenfunctions with values.
-- σ::Float64=0.0 Find nev nearest evals to σ.
-- reconstruct::Bool Whether to reconstruct the eigenfunctions into 3d.
-- nev::Int64 Number of eigenvalues to solve for.
-- R0::Float64 Major radius, used for normalising.
+Wmat - W matrix.
+Imat - I matrix.
+grids::GridsT - Grids used in the problem, used for reconstruction.
+efuncs::Bool - Return eigenfunctions with values.
+σ::Float64=0.0 - Find nev nearest evals to σ.
+reconstruct::Bool - Whether to reconstruct the eigenfunctions into 3d.
+nev::Int64 - Number of eigenvalues to solve for.
+R0::Float64 - Major radius, used for normalising.
 """
 function arpack_solve(; Wmat, Imat, grids::GridsT, efuncs=true::Bool, nev=20::Int64, σ=0.0::Float64, reconstruct=false::Bool, R0::Float64)
 

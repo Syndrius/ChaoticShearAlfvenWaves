@@ -1,10 +1,19 @@
 
 
-#ideally this would be more sophisticated and actually label each mode etc.
-#also may need to change the name for the full spectrum case.
-function plot_continuum(; ω, rgrid)
+function plot_continuum(; ω, grids, filename=nothing, n=1)
+    #rotating it gives way to much whitespace between axis label and tickmarks.
+    p = scatter(xlabel=L"r", ylabel=L"\frac{\omega  R_0}{v_A}", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10)#, guidefontvalign=:hcentre)
+    mlist = (grids.pmd.start:grids.pmd.incr:grids.pmd.start + grids.pmd.incr * grids.pmd.count)[1:end-1]
+    rgrid = collect(LinRange(0, 1, grids.rd.N))[2:end]
+    for (i, m) in enumerate(mlist)
+        scatter!(rgrid, ω[:, i], label=@sprintf("(%d, %d)", m, n))
+    end
+    
+    display(p)
 
-    scatter(rgrid[2:end], ω)
+    if !isnothing(filename)
+        savefig(p, filename)
+    end
 
 end
 
@@ -21,7 +30,7 @@ end
 #this is also reduced as the resolution goes up.
 #think a better method would be to find the point of greatest change, but that seems more difficult.
 
-function reconstruct_continuum(; ω, ϕ, grids, ymin=-0.05, ymax=1.05)
+function reconstruct_continuum(; ω, ϕ, grids, ymin=-0.05, ymax=1.05, filename=nothing)
     #assumes only 2 modes atm.
     omdata = zeros(length(ω)) 
     rdata = zeros(length(ω))
@@ -37,6 +46,7 @@ function reconstruct_continuum(; ω, ϕ, grids, ymin=-0.05, ymax=1.05)
     mlist = (grids.pmd.start:grids.pmd.incr:grids.pmd.start + grids.pmd.incr * grids.pmd.count)[1:end-1]
     nlist = (grids.tmd.start:grids.tmd.incr:grids.tmd.start + grids.tmd.incr * grids.tmd.count)[1:end-1]
     
+    rgrid = construct_rgrid(grids)
     #labels = [collect(pmd.start:pmd.start+pmd.count), collect(tmd.start:tmd.start+tmd.count)]
 
     for i in 1:1:length(ω)
@@ -57,7 +67,7 @@ function reconstruct_continuum(; ω, ϕ, grids, ymin=-0.05, ymax=1.05)
         #display(max_mode[2])
         #display(rm[max_mode])
 
-        rdata[i] = grids.rd.grid[rm[max_mode]]
+        rdata[i] = rgrid[rm[max_mode]]
         #col[i] = (mlist[max_mode[1]], nlist[max_mode[2]])
         push!(col, (mlist[max_mode[1]], nlist[max_mode[2]]))
         omdata[i] = abs.(ω[i]) #already normalised now!
@@ -66,6 +76,10 @@ function reconstruct_continuum(; ω, ϕ, grids, ymin=-0.05, ymax=1.05)
 
     end
 
-    scatter(rdata, omdata, group=col, ylimits=(ymin, ymax))
+    p = scatter(rdata, omdata, group=col, ylimits=(ymin, ymax), xlabel=L"r", ylabel=L"\frac{\omega  R_0}{v_A}", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10)
     #return rdata, omdata, col
+    display(p)
+    if !isnothing(filename)
+        savefig(p, filename)
+    end
 end

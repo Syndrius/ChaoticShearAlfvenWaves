@@ -10,7 +10,7 @@ rt = 0.1
 R0 = 10.0
 ζt = 0.3
 
-toroidal_metric!(met, rt, θt, ζt, R0);
+test_metric!(met, rt, θt, ζt, R0);
 
 geo = GeoParamsT(R0=R0)
 

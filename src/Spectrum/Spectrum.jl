@@ -1,3 +1,10 @@
+"""
+
+Main module for finding the 3d spectrum of the TAE wave equation. Includes two main files,
+ - Construct, where the two matrices W and I are constructed.
+ - Solve, where the generalised eigenvalue problem Wϕ = ω^2 Iϕ is solved.
+
+"""
 module Spectrum
 
 
@@ -5,7 +12,7 @@ using FFTW
 using FastGaussQuadrature
 using SparseArrays
 using LinearAlgebra
-using Arpack #this package is completly fked.
+using Arpack 
 using Printf
 using DelimitedFiles
 
@@ -39,13 +46,13 @@ export full_spectrum_solve
 Constructs the two matrices and solves. Can either solve the full spectrum via inbuilt solving (slow), or use a shift and invert to find nev amount of eigenvalues closest to σ (fast).
 
 # Args
-- prob::ProblemT Struct containing the functions and parameters that define the problem we are solving
-- grids::GridT Grids to solve over.
-- efuncs::Bool Return eigenfunctions with values.
-- σ::Float64=0.0 Find nev nearest evals to σ when solving with arpack.
-- reconstruct::Bool Whether to reconstruct the eigenfunctions into 3d.
-- full_spectrum::Bool Whether to solve for the full spectrum with inbuilt solver (slow) or use arpack (fast).
-- nev::Int64 Number of eigenvalues to solve for if using Arpack.
+prob::ProblemT - Struct containing the functions and parameters that define the problem we are solving
+grids::GridT - Grids to solve over.
+efuncs::Bool - Return eigenfunctions with values.
+σ::Float64=0.0 - Find nev nearest evals to σ when solving with arpack.
+reconstruct::Bool - Whether to reconstruct the eigenfunctions into 3d.
+full_spectrum::Bool - Whether to solve for the full spectrum with inbuilt solver (slow) or use arpack (fast).
+nev::Int64 - Number of eigenvalues to solve for if using Arpack.
 """
 function construct_and_solve(; prob::ProblemT, grids::GridsT, efuncs=true::Bool, σ=0.0::Float64, reconstruct=true::Bool, full_spectrum=false::Bool, nev=20::Int64)
 
@@ -65,11 +72,19 @@ end
 #this is only done under the assumption of ocnvergence so will always use Arpack.
 #ie this is essentially just for running convergence tests.
 #may want a write to file for the normal constrct and solve func.
-function spectrum_from_file(; dir::String, freq::Float64, nev=20::Int64)
+"""
+Computes the spectrum from inputs read from file.
+
+# Args
+dir::String - Directory where inputs are stored and results will be written to.
+σ::Float64 - Target frequency. 
+nev=20::Int64 - Number of eigenvalues to solve for.
+"""
+function spectrum_from_file(; dir::String, σ::Float64, nev=20::Int64)
 
     prob, grids = inputs_from_file(dir=dir)
 
-    ω, ϕ = construct_and_solve(prob=prob, grids=grids, σ=freq, nev=nev, reconstruct=false)
+    ω, ϕ = construct_and_solve(prob=prob, grids=grids, σ=σ, nev=nev, reconstruct=false)
 
     eigvals_to_file(ω=ω, filename=dir * "eigvals.dat")
     eigfuncs_to_file(ϕ=ϕ, filename=dir * "eigfuncs.dat")

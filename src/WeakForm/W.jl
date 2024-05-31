@@ -331,7 +331,7 @@ function compute_Tj(met::MetT, B::BFieldT)
     #display(jparonB(B, met, co))
 
     #display(2 .*Tj[1:3, 1:3])
-    return Tj #for testing!
+    #return Tj #for testing!
     return -1/2 .* jparonB(met, B) .* Tj 
 end
 

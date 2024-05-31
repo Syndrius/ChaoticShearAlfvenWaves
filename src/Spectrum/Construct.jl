@@ -2,8 +2,8 @@
 Constructs the two matrices using the WeakForm of the SAW governing equation. Uses Finite elements with cubic Hermite polynomials in r, and the fourier spectral method in θ and ζ. Returns two sparse matrices.
 
 # Args
-- prob::ProblemT Struct containing the functions and parameters that define the problem we are solving
-- grids::GridT Grids to solve over.
+prob::ProblemT - Struct containing the functions and parameters that define the problem we are solving
+grids::GridT - Grids to solve over.
 """
 function construct(; prob::ProblemT, grids::GridsT)
 
@@ -76,9 +76,11 @@ function construct(; prob::ProblemT, grids::GridsT)
 
     #now we loop through the grid
 
+    rgrid = construct_rgrid(grids)
+
     for i in 1:grids.rd.N-1
 
-        r, dr = local_to_global(i, ξ, grids.rd.grid)
+        r, dr = local_to_global(i, ξ, rgrid)
 
         jac = dr/2 #following thesis!
 

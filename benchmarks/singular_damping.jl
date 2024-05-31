@@ -4,15 +4,19 @@
 using MID
 using Plots; plotlyjs()
 
-#should split this into 3, so we can stop changing shit all the time.
+#actually including Δ does seem to make our overestimated damping predictions more overestimated.
+#something funny is going on here.
 
-#think the comparison method probably shows us that there is a problem, we are pretty consistently getting the wrong tae freq and overestimating the damping by ~2.
-#may be time to tackle the weak form...
+#with Δ'=0,
+#ignore this, did a proper convergence test,
+#very promising result just hasn't convereged yet. Seems to converge to ~0.0063 so a bit larger than other cases, as before.
+#may need to run a proper convergence test with δ=0.
+#ω = 0.32578522869815174 - 0.0055639292010700595im with N=4000, δ=-4e-11
+#ω = 0.3268323919472274 - 0.006429238949748201im with N=5000, δ=-4e-11
+#ω = 0.32604286776360225 - 0.0009537158133668805im with N=5000, δ=-4e-12
+#ω = 0.3302203378605953 - 0.006120385872870546im with N=2000, δ=-4e-9
+#ω = 0.32597136448865865 - 0.005571227966510881im with N=4000, δ=-4e-11, with only two modes!
 
-#if this is the converged value 0.3258893681504531 - 0.005535297205358447im
-#that is probably close enough..., this required N=4000, m=0-3, and δ=-4e-11.
-#this was done with the new weak form W. 
-#given Axel case is still not working, it is unlikley that this is the true converged result..
 
 N = 4000; 
 #the collect is a bit annoying, but ok because we will typically use a clustered grid.
@@ -27,23 +31,23 @@ geo = GeoParamsT(R0=10.0)
 #giving ratio as -0.021115097986236567, so consistently above what the literature is giving!
 
 
-prob = init_problem(q=singular_bowden_q, geo=geo, δ=-4e-11, dens=bowden_singular_dens); #probbaly should use geo if it is part 
+prob = init_problem(q=singular_bowden_q, geo=geo, δ=-1.0e-8, dens=bowden_singular_dens)#, met=test_metric!); #probbaly should use geo if it is part 
 #even if it is not really used.
-grids = init_grids(rgrid=rgrid, mstart=0, mcount=4, nstart=-1, ncount=1);
+grids = init_grids(N=N, sep1=0.75, sep2=0.8, frac=0.2, mstart=1, mcount=2, nstart=-1, ncount=1, f_quad=4);
 #tae_freq = (0.381 / geo.R0)^2
 
 
-ω, ϕ = construct_and_solve(prob=prob, grids=grids, full_spectrum=false, σ=(0.3259/geo.R0)^2, reconstruct=true);
+ω, ϕ = construct_and_solve(prob=prob, grids=grids, full_spectrum=false, σ=(0.33/geo.R0)^2, reconstruct=true);
 
-display(ω[tae_ind])
+display(ω[1])
 display(abs(ω[1]))
 display(imag(ω[1])/real(ω[1]))
 
 reconstruct_continuum(ω = ω, ϕ = ϕ, grids = grids)
 
-tae_ind = find_ind(ω, 0.295)
+tae_ind = find_ind(ω, 0.33)
 tae_ind = 1
-plot_potential(r=rgrid, ϕ=ϕ, ind=tae_ind, pmd=grids.pmd, n=1)
+plot_potential(grids=grids, ϕ=ϕ, ind=tae_ind, n=1)
 
 display(ω[tae_ind])
 display(imag(ω[tae_ind])/real(ω[tae_ind]))

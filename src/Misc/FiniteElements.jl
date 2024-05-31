@@ -3,14 +3,16 @@
 Struct storing the data on the radial grid for finite elements.
 
 # Fields
-- grid::Array{Float64} Array storing the grid.
-- gp::Int64=4 Number of Gaussian quadrature points to use for numerical integration, defaults to 4.
-- N::Int64 Size of the grid.
+grid::Array{Float64} - Array storing the grid.
+gp::Int64=4 - Number of Gaussian quadrature points to use for numerical integration, defaults to 4.
+N::Int64 - Size of the grid.
 """
 @kwdef struct RDataT
-    grid :: Array{Float64}
-    gp :: Int64 = 4
     N :: Int64
+    sep1 :: Float64
+    sep2 :: Float64
+    frac :: Float64 = 0.0
+    gp :: Int64 = 4
 end
 
 """
@@ -24,7 +26,7 @@ const basis_id = [0, 1, 0, 1]
 Creates the four Hermite basis functions, taken from wikipedia. Returns a 4xgp matrix for the 0th, 1st and 2nd derivative.
 
 # Args
-- gp::Array{Float64} Array of the Gaussian quadrature points.
+gp::Array{Float64} - Array of the Gaussian quadrature points.
 """
 function hermite_basis(gp::Array{Float64})
     t = @. (gp + 1)/(2) #converts to correct range for spline
@@ -36,10 +38,8 @@ function hermite_basis(gp::Array{Float64})
     H[2, :] = @. 2*(t^3-2t^2 + t) #2 is from changin from -1, 1, to 1
     H[3, :] = @. -2t^3 + 3t^2
     H[4, :] = @. 2*(t^3 - t^2) #2 is from changin from -1, 1, to 1
-    #display(H)
 
-    #these all seem to need to be divided by 2, not sure why
-    #think there is an extra condition on these being 1/0 on the edges.
+    #divide by 2 so each is 1 or 0 on the edges.
     dH[1, :] = @. (6*t^2 - 6*t) / 2
     dH[2, :] = @. 2*(3*t^2-4t + 1) / 2 #2 is from changin from -1, 1, to 1
     dH[3, :] = @. (-6t^2 + 6t) / 2
@@ -61,9 +61,9 @@ end
 Converts the local grid where the finite elements are defined to the global coordinates.
 
 # Args
-- node::Int64 Current node in the finite elements grid.
-- ξ::Array{Float64} Local grid, -1≤ξ≤1.
-- grid::Array{Float64} Global grid.
+node::Int64 - Current node in the finite elements grid.
+ξ::Array{Float64} - Local grid, -1≤ξ≤1.
+grid::Array{Float64} - Global grid.
 """
 function local_to_global(node::Int64, ξ::Array{Float64}, grid::Array{Float64})
 
@@ -81,10 +81,6 @@ function local_to_global(node::Int64, ξ::Array{Float64}, grid::Array{Float64})
     
     return rglobal, dr
 end 
-
-
-
-
 
 
 """

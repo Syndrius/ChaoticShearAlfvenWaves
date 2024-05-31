@@ -2,12 +2,12 @@
 """
 Struct for storing the magnetic field and related variables at a given coordinate.
 # Fields
-- B::Array{Float64} Vector storing the magnetic field.
-- b::Array{Float64} Vector storing the normalised magnetic field.
-- dB::Array{Float64, 2} Vector storing the derivative of the magnetic field, second index refers to derivative coordinate.
-- db::Array{Float64, 2} Vector storing the derivative of the normalised magnetic field, second index refers to derivative coordinate.
-- mag_B::Float64 Magnitude of the magnetic field.
-- dmag_B::Array{Float64} Derivative of the magnitude of B, index refers to derivative coordinate.
+B::Array{Float64} - Vector storing the magnetic field.
+b::Array{Float64} - Vector storing the normalised magnetic field.
+dB::Array{Float64, 2} V- ector storing the derivative of the magnetic field, second index refers to derivative coordinate.
+db::Array{Float64, 2} - Vector storing the derivative of the normalised magnetic field, second index refers to derivative coordinate.
+mag_B::Float64 - Magnitude of the magnetic field.
+dmag_B::Array{Float64} - Derivative of the magnitude of B, index refers to derivative coordinate.
 """
 mutable struct BFieldT
     B :: Array{Float64} 
@@ -27,13 +27,13 @@ B is assumed to be in the form (B^r, B^θ, B^ζ) with
  - B^ζ = r / J
 
 # Args
-- B::BfieldT Struct where magnetic field information is stored
-- met::MetT Already computed struct containing the metric information at this coordinate.
-- q_prof::Function Function of r returning q, dq.
-- isl::IslandT Struct containing the island parameters
-- r::Float64 Radial coordinate, 0≤r≤1, minor radius is assumed 1.
-- θ::Float64 Poloidal angle, 0≤θ≤2π.
-- ζ::Float64 Toroidal angle, 0≤θ≤2π.
+B::BfieldT - Struct where magnetic field information is stored
+met::MetT - Already computed struct containing the metric information at this coordinate.
+q_prof::Function - Function of r returning q, dq.
+isl::IslandT - Struct containing the island parameters
+r::Float64 - Radial coordinate, 0≤r≤1, minor radius is assumed 1.
+θ::Float64 - Poloidal angle, 0≤θ≤2π.
+ζ::Float64 - Toroidal angle, 0≤θ≤2π.
 """
 function compute_B!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, r::Float64, θ::Float64, ζ::Float64)
 
@@ -92,8 +92,8 @@ end
 Function that computes the magnitude of B and its derivative once the other fields of BFieldT have been computed.
 
 # Args
-- B::BfieldT Struct where magnetic field information is stored
-- met::MetT Already computed struct containing the metric information at this coordinate.
+B::BfieldT - Struct where magnetic field information is stored
+met::MetT - Already computed struct containing the metric information at this coordinate.
 """
 function magnitude_B!(B::BFieldT, met::MetT)
 

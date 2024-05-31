@@ -1,5 +1,8 @@
+"""
 
+Module for miscellaneous functions, predominatly around grids, indexing and matrix structure.
 
+"""
 module Misc
 
 

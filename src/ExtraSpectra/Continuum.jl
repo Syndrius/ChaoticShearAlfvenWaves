@@ -1,26 +1,11 @@
 
-module Continuum
-
-using MID.Geometry
-using MID.Misc
-using MID.MagneticField
-using MID.WeakForm
-using MID.Inputs
-
-
-using FFTW
-using LinearAlgebra
-
-export continuum
-
-
 
 """ 
 Finds the continuum by solving the second order derivatives on each flux surface individually. Much faster than reconstructing the continuum from the full solver, but cannot handle islands, resistivity and won't find any global modes.
 
 # Args
-- prob::ProblemT Struct containing the functions and parameters that define the problem we are solving
-- grids::GridT Grids to solve over.
+prob::ProblemT - Struct containing the functions and parameters that define the problem we are solving
+grids::GridT - Grids to solve over.
 """
 function continuum(; prob::ProblemT, grids::GridsT)
 
@@ -28,7 +13,8 @@ function continuum(; prob::ProblemT, grids::GridsT)
     #cont case does not.
 
     #maybe easier to just assume that it will start from 0???
-    rlist = grids.rd.grid[2:end] #for continuum case we only need the rgrid.
+    #for contiinuum case we ignore the clustered region.
+    rlist = collect(LinRange(0, 1, grids.rd.N))[2:end]
 
     if rlist[1] == 0
         display("Don't start from 0 you goose.")
@@ -136,6 +122,8 @@ function continuum(; prob::ProblemT, grids::GridsT)
         #abs only needed for cyl limit when very close to zero
         #might also be nice to somehow label each mode 
         #not sure how that will work, may need to use the efuncs.
+        #would probbaly be best to use a try catch and just give a warning that some vals are negative?
+        #or return the non-square root, so we can make sure its only very small numbers that are negative.
         ωlist[i, :] = prob.geo.R0 * sqrt.(abs.(vals))
 
     end
@@ -144,5 +132,3 @@ function continuum(; prob::ProblemT, grids::GridsT)
     return ωlist
 end
 
-
-end
