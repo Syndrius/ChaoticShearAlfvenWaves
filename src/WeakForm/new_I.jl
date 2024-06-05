@@ -76,6 +76,7 @@ end
 
 #this gives almost the exact same thing as before...
 #quite surprising, but makes sense assuming both are accurate.
+#have removed the ϕ_10 so we can no longer use this.
 function newest_compute_I!(I::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT, B::BFieldT, n::Float64, δ::Float64, dn::Float64, r::Float64)
 
     #this is almost identical with the full metric, but completly different when we use the test_metric, that seems problomatic.

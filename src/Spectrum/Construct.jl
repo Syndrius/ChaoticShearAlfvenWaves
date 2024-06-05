@@ -26,9 +26,9 @@ function construct(; prob::ProblemT, grids::GridsT)
     #4 is the number of Hermite shape functions
     #10 is Φ and all its relevant derivatives.
     #under new method we don't use the zeroth derivative, so these could be replaced with 9 
-    Φ = zeros(ComplexF64, 10, 4, grids.rd.gp)
+    Φ = zeros(ComplexF64, 9, 4, grids.rd.gp)
     #the test function.
-    Ψ = zeros(ComplexF64, 10, 4, grids.rd.gp)   
+    Ψ = zeros(ComplexF64, 9, 4, grids.rd.gp)   
 
 
     #generalised eval problem WΦ = ω^2 I Φ
@@ -59,8 +59,8 @@ function construct(; prob::ProblemT, grids::GridsT)
     #display(size(boundary_inds))
     #display(boundary_inds)
 
-    I = zeros(ComplexF64, 10, 10, grids.rd.gp, nθ, nζ)
-    W = zeros(ComplexF64, 10, 10, grids.rd.gp, nθ, nζ)
+    I = zeros(ComplexF64, 9, 9, grids.rd.gp, nθ, nζ)
+    W = zeros(ComplexF64, 9, 9, grids.rd.gp, nθ, nζ)
 
 
     #this gives a warning but seems to work perfectly
@@ -165,10 +165,10 @@ function construct(; prob::ProblemT, grids::GridsT)
                                         cols[arr_count] = right_ind
                                         
 
-                                        Wsum = @views gauss_integrate_for_big(Ψ[:, testsf, :], Φ[:, trialsf, :], W[:, :, :, mind, nind], wg, jac, grids.rd.gp)
+                                        Wsum = @views gauss_integrate(Ψ[:, testsf, :], Φ[:, trialsf, :], W[:, :, :, mind, nind], wg, jac, grids.rd.gp)
 
 
-                                        Isum = @views gauss_integrate_for_big(Ψ[:, testsf, :], Φ[:, trialsf, :], I[:, :, :, mind, nind], wg, jac, grids.rd.gp)
+                                        Isum = @views gauss_integrate(Ψ[:, testsf, :], Φ[:, trialsf, :], I[:, :, :, mind, nind], wg, jac, grids.rd.gp)
 
                                         Wdata[arr_count] = Wsum
                                         Idata[arr_count] = Isum
@@ -181,10 +181,10 @@ function construct(; prob::ProblemT, grids::GridsT)
                                     cols[arr_count] = right_ind
                                         
 
-                                    Wsum = @views gauss_integrate_for_big(Ψ[:, testsf, :], Φ[:, trialsf, :], W[:, :, :, mind, nind], wg, jac, grids.rd.gp)
+                                    Wsum = @views gauss_integrate(Ψ[:, testsf, :], Φ[:, trialsf, :], W[:, :, :, mind, nind], wg, jac, grids.rd.gp)
 
 
-                                    Isum = @views gauss_integrate_for_big(Ψ[:, testsf, :], Φ[:, trialsf, :], I[:, :, :, mind, nind], wg, jac, grids.rd.gp)
+                                    Isum = @views gauss_integrate(Ψ[:, testsf, :], Φ[:, trialsf, :], I[:, :, :, mind, nind], wg, jac, grids.rd.gp)
 
                                     Wdata[arr_count] = Wsum
                                     Idata[arr_count] = Isum

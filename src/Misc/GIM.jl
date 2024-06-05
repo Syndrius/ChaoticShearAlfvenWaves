@@ -67,7 +67,7 @@ function create_local_basis!(Φ::Array{ComplexF64, 3}, H::Array{Float64, 2}, dH:
     @. Φ[9, :, :] = H * (-n^2)
 
     #test case with no derivative!
-    @. Φ[10, :, :] = H
+    #@. Φ[10, :, :] = H
 
 end
 
