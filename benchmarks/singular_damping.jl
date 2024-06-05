@@ -17,11 +17,18 @@ using Plots; plotlyjs()
 #ω = 0.3302203378605953 - 0.006120385872870546im with N=2000, δ=-4e-9
 #ω = 0.32597136448865865 - 0.005571227966510881im with N=4000, δ=-4e-11, with only two modes!
 
+#with test_metric 
+#0.3255335613283627 - 0.006115903141937243im
+#-0.018787319860296026
+
+#normal metric
+#0.32821226460709313 - 0.007118477121437926im
+#-0.021688638387598165
 
 N = 4000; 
 #the collect is a bit annoying, but ok because we will typically use a clustered grid.
 #rgrid = collect(LinRange(0, 1, N));
-rgrid = clustered_grid(N, 0.75, 0.8, 0.2)
+#rgrid = clustered_grid(N, 0.75, 0.8, 0.2)
 
 geo = GeoParamsT(R0=10.0)
 
@@ -31,16 +38,19 @@ geo = GeoParamsT(R0=10.0)
 #giving ratio as -0.021115097986236567, so consistently above what the literature is giving!
 
 
-prob = init_problem(q=singular_bowden_q, geo=geo, δ=-1.0e-8, dens=bowden_singular_dens)#, met=test_metric!); #probbaly should use geo if it is part 
+prob = init_problem(q=singular_bowden_q, geo=geo, δ=-4.0e-9, dens=bowden_singular_dens)#, met=test_metric!); #probbaly should use geo if it is part 
 #even if it is not really used.
 grids = init_grids(N=N, sep1=0.75, sep2=0.8, frac=0.2, mstart=1, mcount=2, nstart=-1, ncount=1, f_quad=4);
+#extra little spike is indep of clustered grid by the looks of it.
+#maybe a concern but not sure what to do.
+#grids = init_grids(N=N, mstart=1, mcount=2, nstart=-1, ncount=1, f_quad=4);
 #tae_freq = (0.381 / geo.R0)^2
 
 
 ω, ϕ = construct_and_solve(prob=prob, grids=grids, full_spectrum=false, σ=(0.33/geo.R0)^2, reconstruct=true);
 
 display(ω[1])
-display(abs(ω[1]))
+#display(abs(ω[1]))
 display(imag(ω[1])/real(ω[1]))
 
 reconstruct_continuum(ω = ω, ϕ = ϕ, grids = grids)

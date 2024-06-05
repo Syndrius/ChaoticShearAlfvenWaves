@@ -113,6 +113,27 @@ function gauss_integrate(test_vec::SubArray{ComplexF64, 2, Array{ComplexF64, 3}}
 end
 
 
+function gauss_integrate_for_big(test_vec::SubArray{ComplexF64, 2, Array{ComplexF64, 3}}, trial_vec::SubArray{ComplexF64, 2, Array{ComplexF64, 3}}, mat::SubArray{ComplexF64, 3, Array{ComplexF64, 5}}, wg::Array{Float64}, jac::Float64, ngp::Int64)#::ComplexF64
+
+    #this function is taking up a lot of time when nm, nn get large, but I think that is more to do with the size of the loops that call this function tbh.
+
+    res = 0.0 + 0.0im
+    for k in 1:ngp
+    
+        scale = wg[k] * jac
+        for j in 1:10
+
+            for i in 1:10
+                #significantly faster to have * jac here not later!
+                res += @inbounds test_vec[i, k] * mat[i, j, k] * trial_vec[j, k] * scale
+            #display(res)
+            end
+        end
+    end
+    #res *= jac
+    return res #* dr / 2 
+end
+
 #=
 #not used anymore, checked if it was faster, but it is not, kinda surprised tbh!
 function combined_integrate(resI, resW, test_vec, trial_vec, I, W, wg, jac, ngp, left_dim, right_dim)#::Tuple{ComplexF64, ComplexF64}

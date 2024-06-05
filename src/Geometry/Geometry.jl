@@ -14,7 +14,8 @@ include("Metric.jl")
 export MetT
 export toroidal_metric!
 export no_delta_metric!
-export test_metric!
+export diagonal_toroidal_metric!
+export cylindrical_metric!
 
 
 include("Island.jl")

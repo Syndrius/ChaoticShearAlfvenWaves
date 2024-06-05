@@ -37,7 +37,7 @@ function new_compute_I!(I::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::M
     #display(met.J)
     #display(δ)
 
-    I[:, :] = - (n * δ * met.J / B.mag_B^2 * 1.0im) .* H .* H' 
+    I[1:9, 1:9] = - (n * δ * met.J / B.mag_B^2 * 1.0im) .* H .* H' 
 
     #display(I)
     #I = -1.0 .* I
@@ -70,5 +70,47 @@ function new_compute_I!(I::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::M
     #    I[i, j] += met.J * n * (met.gu[i, j] - B.b[i] * B.b[j]) / B.mag_B^2
     #end
 
-    return H
+    #return H
+end
+
+
+#this gives almost the exact same thing as before...
+#quite surprising, but makes sense assuming both are accurate.
+function newest_compute_I!(I::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT, B::BFieldT, n::Float64, δ::Float64, dn::Float64, r::Float64)
+
+    #this is almost identical with the full metric, but completly different when we use the test_metric, that seems problomatic.
+    #seems like these should get closer together when we get closer to the cylindrical limit.
+    #including the g_33 terms fixes this issue, does seem like they are not apart of this, but I guess this assumes perp is r, θ, other code does not.
+    #redo damping parts, seems wrong.
+    #perhap we should do the cylindrical limit??
+    #lets try direct approach to match how we did it in phi_two_mode.
+
+    #so doing ∇_⟂ = 1/r dϕ/dr + d^2ϕ/dr^2 + 1/r^2 d^2ϕ/dθ^2 
+    #recall (ϕr, ϕθ, ϕζ, ϕrr, ϕrθ, ϕrζ, ϕθθ, ϕθζ, ϕζζ)
+    #we have added no deriv to index 10.
+
+    I[:, :] = zeros(ComplexF64, 10, 10)
+
+    #I[1, 1] = 1im * δ * n * met.J
+
+    I[4, 4] = -1im * δ * n * met.J
+    I[4, 1] = -1im * δ * n / r * met.J
+    I[4, 7] = -1im * δ * n / r^2 * met.J
+
+    #these terms need the fkn zeroth deriv, that will be v annoying to change.
+    I[10, 4] = -1im * δ * n / r^2 * met.J
+    I[10, 1] = -1im * δ * n / r^3 * met.J
+    I[10, 7] = -1im * δ * n / r^4 * met.J
+
+    I[1, 4] = 1im * δ * n / r * met.J
+    I[1, 1] = 1im * δ * n / r^2 * met.J
+    I[1, 7] = 1im * δ * n / r^3 * met.J
+
+    I[7, 4] = -1im * δ * n / r^2 * met.J
+    I[7, 1] = -1im * δ * n / r^3 * met.J 
+    I[7, 7] = -1im * δ * n / r^4 * met.J
+    
+
+    #should still be the same.
+    I[1:3, 1:3] += (met.J * n / B.mag_B^2) .* (met.gu[:, :] - B.b * B.b') 
 end

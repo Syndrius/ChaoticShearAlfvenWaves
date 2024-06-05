@@ -144,7 +144,7 @@ function two_mode(; rgrid::Array{Float64}, R0::Float64, m::Int64, n::Int64, δ::
 
                     push!(rowsI, test_ind_m)
                     push!(colsI, trial_ind_m)
-                    push!(Idata, -jac * 1im * δ * (Em[3, test, j] / jac^2 + 1/r[j] * Em[2, test, j] / jac - m^2 / r[j]^2 * Em[1, test, j]) * dens[j] * (r[j] * Em[3, trial, j] / jac^2 + 3 * Em[2, trial, j] / jac + Em[1, trial, j] /r[j] - m^2/r[j] * Em[1, trial, j]))
+                    push!(Idata, -jac * 1im * δ * (Em[3, test, j] / jac^2 + 1/r[j] * Em[2, test, j] / jac - m^2 / r[j]^2 * Em[1, test, j]) * dens[j] * (r[j] * Em[3, trial, j] / jac^2 + 3 * Em[2, trial, j] / jac + Em[1, trial, j] /r[j] - m^2/r[j] * Em[1, trial, j]) * wg[j])
 
                     #eq1 W
                     push!(rowsW, test_ind_m)
@@ -175,7 +175,7 @@ function two_mode(; rgrid::Array{Float64}, R0::Float64, m::Int64, n::Int64, δ::
 
                     push!(rowsI, test_ind_m1)
                     push!(colsI, trial_ind_m1)
-                    push!(Idata, -jac * 1im * δ * (Em1[3, test, j] / jac^2 + 1/r[j] * Em1[2, test, j] / jac - m1^2 / r[j]^2 * Em1[1, test, j]) * dens[j] * (r[j] * Em1[3, trial, j] / jac^2 + 3 * Em1[2, trial, j] / jac + Em1[1, trial, j] /r[j] - m1^2/r[j] * Em1[1, trial, j]))
+                    push!(Idata, -jac * 1im * δ * (Em1[3, test, j] / jac^2 + 1/r[j] * Em1[2, test, j] / jac - m1^2 / r[j]^2 * Em1[1, test, j]) * dens[j] * (r[j] * Em1[3, trial, j] / jac^2 + 3 * Em1[2, trial, j] / jac + Em1[1, trial, j] /r[j] - m1^2/r[j] * Em1[1, trial, j]) * wg[j])
 
 
 

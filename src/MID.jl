@@ -26,7 +26,7 @@ include("Geometry/Geometry.jl")
 
 using MID.Geometry; export toroidal_metric!
 using MID.Geometry; export no_delta_metric!
-using MID.Geometry; export test_metric!
+using MID.Geometry; export diagonal_toroidal_metric!
 using MID.Geometry; export IslandT
 
 
@@ -108,6 +108,7 @@ using MID.ExtraSpectra; export two_mode
 using MID.ExtraSpectra; export convergence_test
 using MID.ExtraSpectra; export read_convergence_data
 using MID.ExtraSpectra; export two_mode_convergence
+using MID.ExtraSpectra; export analytical_construct_and_solve
 
 
 

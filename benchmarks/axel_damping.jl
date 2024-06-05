@@ -17,36 +17,55 @@ using Plots; plotlyjs()
 
 #this is giving ~1.8 times what we expect.
 
+
+#full met, N=3000, δ=9, R0=10
+#0.39265080894305077 - 0.0021263116078717im
+#-0.001669795945791644
+#R0=20
+#0.3960742171412108 - 0.0007261131909515339im
+#-0.0005751894273240706
+
+#test_met, N=3000, δ=9, R0=10
+#0.36420118781247635 - 0.0014092290709537005im
+#-0.0010264858030824204
+#R0=20
+
 N = 3000; 
 #the collect is a bit annoying, but ok because we will typically use a clustered grid.
 #rgrid = collect(LinRange(0, 1, N));
 
 #getting some weird spikes, may need to double check this is working as expected??
-rgrid = clustered_grid(N, 0.91, 0.98, 0.25)
+#rgrid = clustered_grid(N, 0.91, 0.98, 0.25)
 
-geo = GeoParamsT(R0=10.0)
+geo = GeoParamsT(R0=20.0)
 
 #isl = IslandT(A=4e-5, m0=5, n0=4)
 
 #pretty confident it is convergeing to 0.32780760640103157 - 0.006921689729791451im
 #giving ratio as -0.021115097986236567, so consistently above what the literature is giving!
-
-prob = init_problem(q=Axel_q, geo=geo, δ=-4.0e-8, dens=axel_dens, met=test_metric!); #probbaly should use geo if it is part of prob,
+#test metric is pretty cooked, real tae freq is pretty close, touch higher with og metric
+#damping is just completly cooked though, may need to check out damping 
+#implementation.
+prob = init_problem(q=Axel_q, geo=geo, δ=-4.0e-9, dens=axel_dens, met=test_metric!); #probbaly should use geo if it is part of prob,
 #prob = init_problem(q=singular_bowden_q, geo=geo, δ=-4e-9, dens=bowden_singular_dens); #probbaly should use geo if it is part 
 #even if it is not really used.
 grids = init_grids(N=N, sep1=0.91, sep2=0.98, frac=0.25, mstart=2, mcount=2, nstart=-2, ncount=1);
+#grids = init_grids(N=N, mstart=2, mcount=2, nstart=-2, ncount=1);
 #tae_freq = (0.381 / geo.R0)^2
 
 
-ω, ϕ = construct_and_solve(prob=prob, grids=grids, full_spectrum=false, σ=(0.381/geo.R0)^2, reconstruct=true);
+ω, ϕ = construct_and_solve(prob=prob, grids=grids, full_spectrum=false, σ=(0.395/geo.R0)^2, reconstruct=true);
 tae_ind = 1
 display(ω[tae_ind])
 
 display(imag(ω[tae_ind]^2))
 
-reconstruct_continuum(ω = ω, ϕ = ϕ, grids = grids)
+#scale of eigenfunctions is v different here.
+#also singularity is much much more pronounced...
 
-tae_ind = find_ind(ω, 0.398)
+reconstruct_continuum(ω = ω.^2, ϕ = ϕ, grids = grids, ymax=0.25, ymin=-0.02)
+
+tae_ind = find_ind(ω.^2, 0.157)
 
 tae_ind = 1
 plot_potential(grids=grids, ϕ=ϕ, ind=tae_ind, n=1)

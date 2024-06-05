@@ -1,11 +1,16 @@
 
-function new_compute_W!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT, B::BFieldT)
+function new_compute_W!(W, met::MetT, B::BFieldT)
 
     #display("New guy")
     #start with the laplace like term
-    W[:, :] = new_compute_Tl(met, B) .* met.J
+    W[1:9, 1:9] = new_compute_Tl(met, B) .* met.J
     
-    W[:, :] -= new_compute_Tj(met, B) .* met.J .* new_jparonB(met, B) ./ 2
+    W[1:9, 1:9] -= new_compute_Tj(met, B) .* met.J .* new_jparonB(met, B) ./ 2
+
+    #W[1, 2] = 0.0
+    #W[2, 1] = 0.0
+    #W[3, 1] = 0.0
+    #W[1, 3] = 0.0
     #Now getting identical results, at least in Axel case.
     #this implies it is not our implementation of this that is wrong
     #rather it is what we are implementing??

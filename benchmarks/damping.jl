@@ -1,160 +1,64 @@
+
 using MID
-#we will probably remove the other damping benchmarks eventually.
+using Plots; plotlyjs()
 
-#This benchmark compares to Bowden and Hole 2015.
-#Here we compute the continuum damping of a tae.
-#This paper solves the simplified two mode tae equation derived by Berk et al 1992
-#This equation makes many approximation about large aspect ratio's that we do not.
-#We have implemented our own simple finite element solver directly for this equation to compare to.
-#we start with R=10, as done in the paper.
+#here we verify the damping calculation by comparing to Bowden and Hole 2015.
+#They determine a TAE with normalised frequency of Ω = 0.326 - 0.00571i 
+#with a damping ratio of Ωi/Ωr = -0.0175
 
-#may need to make sure these are the actual converged values.
+#this is done by solving the reduced two mode equation originally derived by Berk et al 1992.
+#They employ the q-profile q = 1 + 2r^2
+#and a density profile of 1/2(1-tanh((r-0.7)/0.05))
+#these profiles are designed to close the TAE gap, 
+#so that the TAE interacts with the continuum at ~r=0.767, leading to damping.
+
 N = 3000
-δ = -4e-10
-R0 = 10.0
-
-tae_freq = (0.3259/R0)^2
-
-
+δ = -4.0e-9
+geo = GeoParamsT(R0=10.0)
+prob = init_problem(q=singular_bowden_q, geo=geo, δ=δ, dens=bowden_singular_dens)
+#the radial grid is clustered around the singularity between 0.75 and 0.8
 grids = init_grids(N=N, sep1=0.75, sep2=0.8, frac=0.2, mstart=1, mcount=2, nstart=-1, ncount=1);
 
-geo = GeoParamsT(R0=R0)
-
-prob = init_problem(q=singular_bowden_q, geo=geo, δ=δ, dens=bowden_singular_dens);
-
+tae_freq = (0.326/geo.R0)^2; #un-normalised target frequency.
 ω, ϕ = construct_and_solve(prob=prob, grids=grids, full_spectrum=false, σ=tae_freq, reconstruct=true);
 
+#first we verify that we have found a tae.
+plot_potential(grids=grids, ϕ=ϕ, ind=1, n=1)
 
-rgrid = MID.Misc.clustered_grid(N, 0.75, 0.8, 0.2);
-#this function computes the damping directly from Berk's equation.
-ω_two, Em, Em1 = two_mode(rgrid, R0, 1, -1, δ, tae_freq);
+#then print the frequency and damping rate.
+display(ω[1])
+display(imag(ω[1]) / real(ω[1]))
+#The damping rate found is ~22% different than expected.
 
-#our code predictions a damping ratio of ~-0.022
-dr = imag(ω[1])/real(ω[1])
-#Berks equation gives a damping ratio of ~-0.0174, giving almost identical results to the quoted 
-#-0.0175 in Bowden and Hole.
-dr_two = imag(ω_two[1])/real(ω_two[1])
+#This is due to the difference in equation solved.
+#Part of Berk et al's derivation neglected the contribution of the off-diagonal terms in the metric.
+#if we remove the off diagonal terms from the metric,
+prob = init_problem(q=singular_bowden_q, geo=geo, δ=δ, dens=bowden_singular_dens, met=diagonal_toroidal_metric!);
+ω, ϕ = construct_and_solve(prob=prob, grids=grids, full_spectrum=false, σ=tae_freq, reconstruct=true);
 
-#our result is ~22% different
-display(abs(dr-dr_two)/((dr + dr_two)/2) * 100)
+#verify that we have found a tae.
+plot_potential(grids=grids, ϕ=ϕ, ind=1, n=1)
 
-#however, if we increase the aspect ratio so that the equation are more similar,
-R0 = 20.0
-geo = GeoParamsT(R0=R0)
-tae_freq = (0.332/R0)^2 #tae frequency shifts a bit with the new aspect ratio
+#then print the frequency and damping rate.
+display(ω[1])
+display(imag(ω[1]) / real(ω[1]))
+#this brings us much closer to the expected result, but still a difference of ~7%.
 
+
+#Another approximation made by Berk et al was to neglect any toroidal corrections
+#other than in terms containing second radial derivatives.
+#to emulate this, we compute the W and I matrices twice, once using a cylindircal metric
+#and the second time using the toroidal metric.
+#The final W and I matrices are mostly taken from their cylindrical versions, other than
+#the elements that are multiplied by double radial derivatives.
+#this is implemented in a separate function, and takes longer due to the extra computations required.
 prob = init_problem(q=singular_bowden_q, geo=geo, δ=δ, dens=bowden_singular_dens);
+ω, ϕ = analytical_construct_and_solve(prob=prob, grids=grids, full_spectrum=false, σ=tae_freq, reconstruct=true);
 
-ω, ϕ = construct_and_solve(prob=prob, grids=grids, full_spectrum=false, σ=tae_freq, reconstruct=false);
-ω_two, Em, Em1 = two_mode(rgrid, R0, 1, -1, δ, tae_freq);
+#verify that we have found a tae.
+plot_potential(grids=grids, ϕ=ϕ, ind=1, n=1)
 
-
-#our damping ratio is now ~-0.000966
-dr = imag(ω[1])/real(ω[1])
-#And the damping ration from Berk's equation is ~-0.00896
-dr_two = imag(ω_two[1])/real(ω_two[1])
-
-#yeilding a potential difference of only ~7.5%
-#and we would expect in the limit R0→∞ or ϵ→0, these two results would converge.
-display(abs(dr-dr_two)/((dr + dr_two)/2) * 100)
-
-#######################################################
-
-"""
-
-This section is for running the convergence tests to verify the balues computed above.
-
-"""
-
-#=
-
-using Plots
-using LaTeXStrings
-
-#alternativly, this can be seen with a proper convergence test,
-#start with R0=10 case.
-Nlist = [200, 500, 1000, 1500, 2000, 3000, 4000]
-#probably shouldn't include δ=-4e-12 tbh
-δlist = [-4e-7, -4e-8, -4e-9, -4e-10, -4e-11, -4e-12]
-R0 = 10.0
-
-tae_freq = (0.3259/R0)^2
-grids = init_grids(N=10, sep1=0.75, sep2=0.8, frac=0.2, mstart=1, mcount=2, nstart=-1, ncount=1);
-geo = GeoParamsT(R0=R0)
-
-prob = init_problem(q=singular_bowden_q, geo=geo, δ=1.0, dens=bowden_singular_dens);
-convergence_test(grids, prob, Nlist, δlist, "data/damping_convergence/", tae_freq)
-two_mode_convergence(Nlist, δlist, "data/two_mode_damping/", R0, tae_freq)
-
-#then we consider the R0=20 case.
-R0 = 20.0
-tae_freq = (0.332/R0)^2
-grids = init_grids(N=10, sep1=0.75, sep2=0.8, frac=0.2, mstart=1, mcount=2, nstart=-1, ncount=1);
-geo = GeoParamsT(R0=R0)
-
-prob = init_problem(q=singular_bowden_q, geo=geo, δ=1.0, dens=bowden_singular_dens);
-convergence_test(grids, prob, Nlist, δlist, "data/damping_convergence_20/", tae_freq)
-two_mode_convergence(Nlist, δlist, "data/two_mode_damping_20/", R0, tae_freq)
-
-
-
-
-
-ωlist = read_convergence_data(Nlist, δlist, "data/damping_convergence/");
-ωlist_2m = read_convergence_data(Nlist, δlist, "data/two_mode_damping/");
-
-ωlist_20 = read_convergence_data(Nlist, δlist, "data/damping_convergence_20/");
-ωlist_2m_20 = read_convergence_data(Nlist, δlist, "data/two_mode_damping_20/");
-
-
-
-
-shapes = [:circle, :square, :dtriangle, :pentagon, :star, :diamond]
-p = scatter(xlabel="Grid Points", ylabel=L"Im($\Omega$)/Re($\Omega$)", left_margin=4Plots.mm, yguidefontsize=16, xguidefontsize=16, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=11, ylimits=(-0.023, -0.020))
-for i in 1:1:length(δlist)
-    δlab = δlist[i]
-    scatter!(Nlist, imag.(ωlist[:, i]) ./ real.(ωlist[:, i]), markershape=shapes[i], label=L"\delta=%$δlab", opacity=0.8, markersize=6)
-end
-conv_val = imag.(ωlist[6, 4]) ./ real.(ωlist[6, 4])
-hline!(conv_val .* ones(length(Nlist)), linestyle=:dash, color=:black, label=L"\Omega=%$(round(conv_val; digits=4))")
-display(p)
-#savefig(p, "data/damping_convergence.png")
-#savefig(p, "data/damping_convergence_zoom.png")
-
-
-p = scatter(xlabel="Grid Points", ylabel=L"Im($\Omega$)/Re($\Omega$)", left_margin=4Plots.mm, yguidefontsize=16, xguidefontsize=16, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=11)#, ylimits=(-0.0185, -0.0165))
-for i in 1:1:length(δlist)
-    δlab = δlist[i]
-    scatter!(Nlist, imag.(ωlist_2m[:, i]) ./ real.(ωlist_2m[:, i]), markershape=shapes[i], label=L"\delta=%$δlab", opacity=0.8)
-end
-conv_val = imag.(ωlist_2m[6, 4]) ./ real.(ωlist_2m[6, 4])
-hline!(conv_val .* ones(length(Nlist)), linestyle=:dash, color=:black, label=L"\Omega=%$(round(conv_val; digits=4))")
-display(p)
-#savefig(p, "data/two_mode_damping.png")
-#savefig(p, "data/two_mode_damping_zoom.png")
-
-
-p = scatter(xlabel=LaTeXString("Grid Points"), ylabel=L"Im($\Omega$)/Re($\Omega$)", left_margin=4Plots.mm, yguidefontsize=16, xguidefontsize=16, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10)#, ylimits=(-0.0105, -0.009))
-for i in 1:1:length(δlist)
-    δlab = δlist[i]
-    scatter!(Nlist, imag.(ωlist_20[:, i]) ./ real.(ωlist_20[:, i]), markershape=shapes[i], label=L"\delta=%$δlab", opacity=0.8)
-end
-conv_val = imag.(ωlist_20[6, 4]) ./ real.(ωlist_20[6, 4])
-hline!(conv_val .* ones(length(Nlist)), linestyle=:dash, color=:black, label=L"\Omega=%$(round(conv_val; digits=4))")
-display(p)
-#savefig(p, "data/damping_convergence_20.png")
-#savefig(p, "data/damping_convergence_20_zoom.png")
-
-
-p = scatter(xlabel="Grid Points", ylabel=L"Im($\Omega$)/Re($\Omega$)", left_margin=4Plots.mm, yguidefontsize=16, xguidefontsize=16, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=11)#, ylimits=(-0.0095, -0.008))
-for i in 1:1:length(δlist)
-    δlab = δlist[i]
-    scatter!(Nlist, imag.(ωlist_2m_20[:, i]) ./ real.(ωlist_2m_20[:, i]), markershape=shapes[i], label=L"\delta=%$δlab", opacity=0.8)
-end
-conv_val = imag.(ωlist_2m_20[6, 4]) ./ real.(ωlist_2m_20[6, 4])
-hline!(conv_val .* ones(length(Nlist)), linestyle=:dash, color=:black, label=L"\Omega=%$(round(conv_val; digits=4))")
-display(p)
-#savefig(p, "data/two_mode_damping_20.png")
-#savefig(p, "data/two_mode_damping_20_zoom.png")
-
-=#
+#then print the frequency and damping rate.
+display(ω[1])
+display(imag(ω[1]) / real(ω[1]))
+#now gives a difference of ~3% in damping rate.

@@ -4,6 +4,7 @@ Module for auxillary spectra functions we are interested in. In particular conta
  - Computing the continuum without islands
  - Computing the spectrum from the two-mode TAE equation derived by Berk et al 1992, for comparison with literature
  - Running convergence tests for damping resutls
+ - Running our code with some approximations in built to closer replicate the analytical equations of Berk et al 1992 for benchmarking.
 
 """
 
@@ -43,5 +44,8 @@ export convergence_test
 export read_convergence_data
 export two_mode_convergence
 
+include("Analytical.jl")
+
+export analytical_construct_and_solve
 
 end

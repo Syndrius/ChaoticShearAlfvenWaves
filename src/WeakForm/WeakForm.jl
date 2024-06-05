@@ -16,8 +16,7 @@ include("new_W.jl")
 
 
 export W_and_I!
-
-
+export stupid_W_and_I!
 
 
 function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, met::MetT, B::BFieldT, prob::ProblemT, r:: Array{Float64}, θ::LinRange{Float64, Int64}, ζ::LinRange{Float64, Int64})
@@ -25,6 +24,9 @@ function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, met::MetT, B
     
     #compute the density.
     n = prob.dens.(r) :: Array{Float64}
+    #hard coded just for a test atm
+    #dont actually need this!
+    #dn = @. -5 * sech(8-10*r)^2
 
     for k=1:1:length(ζ), j=1:1:length(θ), i=1:1:length(r)
 
@@ -43,6 +45,7 @@ function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, met::MetT, B
         #compute the I matrix
         @views new_compute_I!(I[:, :, i, j, k], met, B, n[i], prob.δ)
         #@views compute_I!(I[:, :, i, j, k], met, B, n[i], prob.δ)
+        #@views newest_compute_I!(I[:, :, i, j, k], met, B, n[i], prob.δ, dn[i], r[i])
 
     end
 

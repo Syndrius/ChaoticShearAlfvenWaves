@@ -1,3 +1,35 @@
+
+
+"""
+Constructs the two matrices and solves. Can either solve the full spectrum via inbuilt solving (slow), or use a shift and invert to find nev amount of eigenvalues closest to σ (fast).
+
+# Args
+prob::ProblemT - Struct containing the functions and parameters that define the problem we are solving
+grids::GridT - Grids to solve over.
+efuncs::Bool - Return eigenfunctions with values.
+σ::Float64=0.0 - Find nev nearest evals to σ when solving with arpack.
+reconstruct::Bool - Whether to reconstruct the eigenfunctions into 3d.
+full_spectrum::Bool - Whether to solve for the full spectrum with inbuilt solver (slow) or use arpack (fast).
+nev::Int64 - Number of eigenvalues to solve for if using Arpack.
+"""
+function analytical_construct_and_solve(; prob::ProblemT, grids::GridsT, efuncs=true::Bool, σ=0.0::Float64, reconstruct=true::Bool, full_spectrum=false::Bool, nev=20::Int64)
+
+    W, I = analytical_construct(prob=prob, grids=grids)
+    
+    if full_spectrum 
+        if prob.δ == 0.0
+            ω, ϕ = full_spectrum_solve(Wmat=W, Imat=I, grids=grids, efuncs=efuncs, reconstruct=reconstruct, resistivity=false, R0=prob.geo.R0)
+        else
+            ω, ϕ = full_spectrum_solve(Wmat=W, Imat=I, grids=grids, efuncs=efuncs, reconstruct=reconstruct, resistivity=true, R0=prob.geo.R0)
+        end
+    else
+        ω, ϕ = arpack_solve(Wmat=W, Imat=I, grids=grids, efuncs=efuncs, nev=nev, σ=σ, reconstruct=reconstruct, R0=prob.geo.R0)
+    end
+end
+
+
+
+
 """
 Constructs the two matrices using the WeakForm of the SAW governing equation. Uses Finite elements with cubic Hermite polynomials in r, and the fourier spectral method in θ and ζ. Returns two sparse matrices.
 
@@ -5,8 +37,8 @@ Constructs the two matrices using the WeakForm of the SAW governing equation. Us
 prob::ProblemT - Struct containing the functions and parameters that define the problem we are solving
 grids::GridT - Grids to solve over.
 """
-function construct(; prob::ProblemT, grids::GridsT)
-
+function analytical_construct(; prob::ProblemT, grids::GridsT)
+    
     #island being nothing is stupid, either need to separate cases with and without island, or construct an empty (A=0) island if it is nothing.
 
     nθ, mlist, θgrid = spectral_grid(grids.pmd)
@@ -87,7 +119,8 @@ function construct(; prob::ProblemT, grids::GridsT)
 
         #I_and_W!(I, W, B, q_profile, met, compute_met, dens, r, θgrid, ζgrid, δ, isl, R0)
 
-        W_and_I!(W, I, met, B, prob, r, θgrid, ζgrid)
+        #W_and_I!(W, I, met, B, prob, r, θgrid, ζgrid)
+        analytical_W_and_I!(W, I, met, B, prob, r, θgrid, ζgrid)
         #W_tor, I_tor = stupid_W_and_I!(W, I, met, B, prob, r, θgrid, ζgrid)
         #stupid_W_and_I!(W, I, met, B, prob, r, θgrid, ζgrid)
 
@@ -204,4 +237,66 @@ function construct(; prob::ProblemT, grids::GridsT)
     Imat = sparse(rows, cols, Idata)
 
     return Wmat, Imat
+end
+
+
+
+
+function analytical_W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, met::MetT, B::BFieldT, prob::ProblemT, r:: Array{Float64}, θ::LinRange{Float64, Int64}, ζ::LinRange{Float64, Int64})
+
+    #define toroidal versions.
+    W_tor = zeros(ComplexF64, size(W))
+    I_tor = zeros(ComplexF64, size(I))
+    met_tor = MetT(zeros(3, 3), zeros(3, 3), zeros(3, 3, 3), zeros(3, 3, 3), 0.0, zeros(3))
+    B_tor = BFieldT(zeros(3), zeros(3), zeros(3, 3), zeros(3, 3), 0.0, zeros(3))
+
+    n = prob.dens.(r) :: Array{Float64}
+
+    for k=1:1:length(ζ), j=1:1:length(θ), i=1:1:length(r)
+
+        #compute the metric
+        #if we do this, it matches almost perfectly with the results from Axels equation, assuming his equation is in the correct form,
+        #However, using the form in his paper doesn't seem to give his results, this requires changing some signs,
+        #this then gives us the results in his paper, but then our code does not match anymore.
+        #this is all a bit fked.
+        #also the no_delta part seems inconsistent with Axel's paper, but is clearly stated in the appendix of the equation paper, ie where they define the metric elements.
+        #doing the normal calculation with test metric, we get a fair bit closer for R0=10
+        #but still a bit off, then with R0=20 its almost spot on.
+        cylindrical_metric!(met, r[i], θ[j], ζ[k], prob.geo.R0)
+        #test_metric!(met_tor, r[i], θ[j], ζ[k], prob.geo.R0)
+        toroidal_metric!(met_tor, r[i], θ[j], ζ[k], prob.geo.R0)
+        #no_delta_metric!(met_tor, r[i], θ[j], ζ[k], prob.geo.R0)
+
+        #compute the magnetic field.
+        compute_B!(B, met, prob.q, prob.isl, r[i], θ[j], ζ[k])
+        compute_B!(B_tor, met_tor, prob.q, prob.isl, r[i], θ[j], ζ[k])
+        
+
+        #Tj, the current term, is always computed under the cylindrical approxmiation
+        #so we need to split up our computation of W.
+        Tl = WeakForm.new_compute_Tl(met, B) .* met.J
+        Tl_tor = WeakForm.new_compute_Tl(met_tor, B_tor) .* met_tor.J
+        Tj = WeakForm.new_compute_Tj(met, B) .* met.J .* WeakForm.new_jparonB(met, B) ./ 2
+        #@views new_compute_W!(W[:, :, i, j, k], met, B)
+        
+
+        #assign the total value of W.
+        W[1:9, 1:9, i, j, k] .= Tl .- Tj
+
+        #replace the double radial derivative terms with the toroidal part.
+        W[1, 1, i, j, k] = Tl_tor[1, 1] - Tj[1, 1]
+        W[4, 1:9, i, j, k] .= Tl_tor[4, :] .- Tj[4, :]
+        W[1:9, 4, i, j, k] .= Tl_tor[:, 4] .- Tj[:, 4]
+
+        #same for I.
+        @views WeakForm.compute_I!(I[:, :, i, j, k], met, B, n[i], prob.δ)
+        @views WeakForm.compute_I!(I_tor[:, :, i, j, k], met_tor, B_tor, n[i], prob.δ)
+        I[1, 1, i, j, k] = I_tor[1, 1, i, j, k]
+        I[4, :, i, j, k] .= I_tor[4, :, i, j, k]
+        I[:, 4, i, j, k] .= I_tor[:, 4, i, j, k]
+
+
+
+    end
+
 end

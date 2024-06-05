@@ -114,23 +114,23 @@ function fudam(N, R, m, n, rgrid, δ)
         
 
         #Bowden singular
-        
+        #=
         q = @. 1.0 + 2.0*r^2
 
         dens = @. 1/2*(1-tanh((r-0.7)/0.05))
 
         ddens = @. -10 * sech((r-0.07)/0.05)^2
         
-
+        =#
         #Axel 2012
-        #=
+        
         q = @. 1.05 + 0.55*r^2
 
         #dens = ones(length(r)) #for testing.
         #ddens = zeros(length(r))
         dens = @. 1/2*(1-tanh((r-0.8)/0.1))
         ddens = @. -5 * sech(8-10*r)^2
-        =#
+        
 
         qpp = 2*ones(length(r))
 
@@ -146,7 +146,7 @@ function fudam(N, R, m, n, rgrid, δ)
 
         #km1pp = @. m1 * (2*qp^2 - q*qpp)/(R*q^3)
 
-        jac = dr/2
+        jac = dr / 2
 
         ϵ = @. 5*r/(2*R)
         #Fu Dam case 
@@ -195,7 +195,7 @@ function fudam(N, R, m, n, rgrid, δ)
 
                     push!(rowsI, test_ind_m)
                     push!(colsI, trial_ind_m)
-                    push!(Idata, -jac * Em[1, test, j] * r[j]^2 * ddens[j] * Em[1, trial, j] * wg[j])
+                    push!(Idata, -jac * Em[1, test, j] * r[j]^2 * ddens[j] * Em[1, trial, j] * wg[j])# * jac)
 
                     push!(rowsI, test_ind_m)
                     push!(colsI, trial_ind_m1)
@@ -247,7 +247,7 @@ function fudam(N, R, m, n, rgrid, δ)
 
                     push!(rowsI, test_ind_m1)
                     push!(colsI, trial_ind_m1)
-                    push!(Idata, -jac * Em1[1, test, j] * r[j]^2 * ddens[j] * Em1[1, trial, j] * wg[j])
+                    push!(Idata, -jac * Em1[1, test, j] * r[j]^2 * ddens[j] * Em1[1, trial, j] * wg[j])# * jac)
 
                     push!(rowsI, test_ind_m1)
                     push!(colsI, trial_ind_m)
@@ -345,8 +345,8 @@ function fudam(N, R, m, n, rgrid, δ)
     #display(I)
     #even with current term, matrix seems `pretty` Hermitian, ie ~e-15 but now we get negative evals???
     #display(maximum(W - W')) #so these matrices are Hermitian to a tolerance of ~e-15
-    #ω2, evals = eigen(Matrix(Hermitian(W)), Matrix(Hermitian(I)))
-    ω2, evals = eigs(W, I, nev=5, ritzvec=true, sigma=(0.332/R)^2)
+    ω2, evals = eigen(Matrix(Hermitian(W)), Matrix(Hermitian(I)))
+    #ω2, evals = eigs(W, I, nev=5, ritzvec=true, sigma=(0.332/R)^2)
     #ω2, evals = eigs(W, I, nev=5, ritzvec=true, sigma=(0.39/R)^2)
 
     Emsol = evals[1:2:2*N, :]
@@ -370,12 +370,12 @@ end
 #but density seems to cook it completly.
 #with extra modes in MID, ie m=1 and m=4, we get ~-5.76e-4 so even closer together.
 
-N = 1001
-rgrid = LinRange(0, 1, N);
+N = 100
+#rgrid = LinRange(0, 1, N);
 #this makes a big difference!
-#rgrid = clustered_grid(N, 0.92, 0.98, 0.2)
+rgrid = clustered_grid(N, 0.92, 0.98, 0.2)
 #rgrid = clustered_grid(N, 0.75, 0.85, 0.3)
-ω, Em, Em1 = fudam(N, 10.0, 1, -1, rgrid, -0.0e-8);
+ω, Em, Em1 = fudam(N, 10.0, 2, -2, rgrid, -0.0e-7);
 
 
 rdata, omdata, col = Em_to_cont(ω, rgrid, Em, Em1);

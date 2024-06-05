@@ -24,6 +24,7 @@ export RDataT
 export hermite_basis
 export local_to_global
 export gauss_integrate
+export gauss_integrate_for_big
 
 
 include("Spectral.jl")

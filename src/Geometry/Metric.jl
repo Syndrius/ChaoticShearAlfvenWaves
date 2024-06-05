@@ -181,8 +181,11 @@ r::Float64 -  Radial coordinate, 0≤r≤1, minor radius is assumed 1.
 ζ::Float64  - Toroidal angle, 0≤θ≤2π, #unused in this case.
 R0::Float64 -  Major radius.
 """
-function test_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
+function diagonal_toroidal_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
     
+    #this is cooked in its current form.
+    #gives a completly different frequency.
+    #pretty cooked, :(
     
     Δp = r/(4*R0)
     Δpp = 1/(4*R0)
@@ -195,26 +198,27 @@ function test_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float
 
     met.J = r * R0 * (1+2*ϵ*cos(θ))
 
+    #don't really know anyting about gl from paper.
     met.gl[1, 1] = 1-2*Δp * cos(θ)
     #met.gl[1, 2] = r*(ϵ + Δp + r*Δpp) * sin(θ)
     #met.gl[2, 1] = r*(ϵ + Δp + r*Δpp) * sin(θ)
-    met.gl[2, 2] = r^2#*(1+4*η*cos(θ) + 4*η^2)
-    #met.gl[3, 3] = R0^2#*(1+2*ϵ*cos(θ))
+    met.gl[2, 2] = r^2*(1+4*η*cos(θ) + 4*η^2)
+    met.gl[3, 3] = R0^2*(1+2*ϵ*cos(θ)) #this term seems to be difference between 77 vs 12. hmmm.
 
 
     met.gu[1, 1] = 1+2*Δp * cos(θ)
     #met.gu[1, 2] = -1/r*(ϵ + Δp + r*Δpp) * sin(θ)
     #met.gu[2, 1] = -1/r*(ϵ + Δp + r*Δpp) * sin(θ)
-    met.gu[2, 2] = 1/r^2#*(1-2*(ϵ+Δp)*cos(θ))
-    #met.gu[3, 3] = 1/R0^2#*(1-2*ϵ*cos(θ))
+    met.gu[2, 2] = 1/r^2*(1-2*(ϵ+Δp)*cos(θ))
+    met.gu[3, 3] = 1/R0^2*(1-2*ϵ*cos(θ)) 
 
     
-    #met.dJ[1] = R0 + 4*r * cos(θ)
+    met.dJ[1] = R0 + 4*r * cos(θ)
     #met.dJ[2] = -2 * r * R0*ϵ * sin(θ)
 
     #first two indicies give metric element, while third is derivative,
     #eg [1, 2, 3] is ∂g_{12}/∂ζ
-    #met.dgl[1, 1, 1] = -2*Δpp * cos(θ)
+    met.dgl[1, 1, 1] = -2*Δpp * cos(θ)
     #met.dgl[1, 1, 2] = 2*Δp * sin(θ)
 
     #met.dgl[1, 2, 1] = ((ϵ + Δp + r*Δpp) + r*(1/R0 + 2*Δpp)) * sin(θ)
@@ -229,7 +233,7 @@ function test_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float
     #met.dgl[3, 3, 1] = 2*R0*cos(θ)
     #met.dgl[3, 3, 2] = -2*R0^2*ϵ*sin(θ)
 
-    #met.dgu[1, 1, 1] = 2*Δpp * cos(θ)
+    met.dgu[1, 1, 1] = 2*Δpp * cos(θ)
     #met.dgu[1, 1, 2] = -2*Δp * sin(θ)
 
     #met.dgu[1, 2, 1] = (1/r^2 * (ϵ + Δp + r*Δpp) - 1/r*(1/R0 + 2*Δpp)) * sin(θ)
@@ -250,31 +254,31 @@ end
 
 #probably only used for testing
 #Unused so far, and probably not needed, can probably just set R0=1000 in other casees.
-function cylindrical_metric(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
+function cylindrical_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
 
     #doesn't equate to cylindrical limit or weird cylindrical coords
     #this is regular old cylindrical for comparing our weak form
 
-    met.J = r
+    met.J = r * R0
 
     met.gl[1, 1] = 1
 
     met.gl[2, 2] = r^2
 
-    met.gl[3, 3] = 1
+    met.gl[3, 3] = R0^2
 
 
     met.gu[1, 1] = 1
 
     met.gu[2, 2] = 1/r^2
 
-    met.gu[3, 3] = 1
+    met.gu[3, 3] = 1/R0^2
 
 
     met.dgl[2, 2, 1] = 2*r
 
-    met.dJ[1] = 1
+    met.dJ[1] = R0
     
-    met.dgu[2, 2, 1] = -2 * r / r^3
+    met.dgu[2, 2, 1] = -2 / r^2
 
 end
