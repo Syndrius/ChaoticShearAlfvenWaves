@@ -9,7 +9,7 @@ Then the grid resolution is increased and we solve using Arpack, using shift-and
 
 
 using MID
-using Plots; plotlyjs() #having this here, and installed in the global environment tricks it into using plotlyjs for interactive plots. This is an awful solution.
+#using Plots; plotlyjs() #having this here, and installed in the global environment tricks it into using plotlyjs for interactive plots. This is an awful solution.
 #also gives some fkn warning, I think becuase MID doesn't have PlotlyJS.
 
 #may want to use a more extreme example of a tae, eg fu_dam, so TAE is clearer.
