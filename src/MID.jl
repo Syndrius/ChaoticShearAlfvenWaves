@@ -5,15 +5,11 @@ Base class that just imports everything. We will want a description of the packa
 
  - May want to fix up W.jl... Should be more confident with this now, Worth doing properly so we can be confident about Bs≠0 -> note convergence tests where done with new weakforms, but we should be pretty confident that the new weak form is identical to the old!
  - Fix up plotting
- - Change rdata to store the clustered grid sep points rather than the entire grid. Done but there will be places that this still needs to be fixed. i.e. MIDParallel
  - Fix up/finish docstrings.
- - Island continuum? Not sure if we should do Zhisongs version, or wait for our approximate form to come, once this is done we should be able to finish/fix up numerical methods/MID section of thesis. -> Should be able to re-use Zhisongs form just replace hte parameters and note that it will only be accurate near the island due to taylor expansion.
  - Maybe function to read ith eigenfunction? May become very important with large parallel cases.
- - Probably just need to implment axels case directly...
- - Try damping with g_12 etc = 0, and perhaps the cylindrical metric for the current and I terms? - This essentially does not work, may have to more specifically try and replicate the equation specifically, meaning we will need to derive it fk me.
  - Should probably check the regularization condition for ϕ
- - Compute the continuum, 
- - run some tests with Gadi
+ - Check gadi results and see if we can confirm some convergence
+ - Make island continuum good, and see if we can figure out what the cut-off island A should be, and see if it matches our code.
  - Start writing the paper... :(
 
 """
@@ -113,7 +109,11 @@ using MID.ExtraSpectra; export analytical_construct_and_solve
 
 
 
-#TODO include("IslandContinuum/IslandContinuum.jl")
+include("IslandContinuum/IslandContinuum.jl")
+
+using MID.IslandContinuum; export trapped_continuum
+using MID.IslandContinuum; export passing_continuum
+using MID.IslandContinuum; export ContIslandT
 
 end
 
