@@ -3,14 +3,18 @@ Base class that just imports everything. We will want a description of the packa
 
 
 
- - May want to fix up W.jl... Should be more confident with this now, Worth doing properly so we can be confident about Bs≠0 -> note convergence tests where done with new weakforms, but we should be pretty confident that the new weak form is identical to the old!
  - Fix up plotting
  - Fix up/finish docstrings.
  - Maybe function to read ith eigenfunction? May become very important with large parallel cases.
  - Should probably check the regularization condition for ϕ
  - Check gadi results and see if we can confirm some convergence
  - Make island continuum good, and see if we can figure out what the cut-off island A should be, and see if it matches our code.
- - Start writing the paper... :(
+ - Would be good to do some kind of maybe bar graph with contributions from different poloidal mode numbers, would show the island coupling quite nicely I think.
+ - determine the width of the islands, much trickier with newest form, either need to approximate with r=0.5 or maybe make a root finding function?? Either way it is pretty cooked.
+ - see if we can engineer a case with an island without a TAE so that we can look at the island modes. This may be difficult, as it could be difficult to compare island frequency vs normal continuum frequency.
+ - Is it possible to test the theory that island damping is small because tae only interacts for limited r values? I.e frequnecy upshift is across fatest part of island (i think...) which may only be ~10% of the possible values? Ideally it would only be ~1% which might explain our significantly lower damping rate? Perhaps it would be ~10% of θ values and ~10% of ζ values, resulting in a total of ~1%?? Not sure how to argue this or test it or anything tbh.
+ - May need to change our profile/setup, seems like any island at all causes overlap, as tae freq is only just above lower gap.
+ - We should flip the sign of n, either in general or in island case. having a mix is no bloody good.
 
 """
 
@@ -113,6 +117,7 @@ include("IslandContinuum/IslandContinuum.jl")
 
 using MID.IslandContinuum; export trapped_continuum
 using MID.IslandContinuum; export passing_continuum
+using MID.IslandContinuum; export island_continuum
 using MID.IslandContinuum; export ContIslandT
 
 end

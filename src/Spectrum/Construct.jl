@@ -67,7 +67,7 @@ function construct(; prob::ProblemT, grids::GridsT)
     #and incredibly efficiently!
     #this essentially defines a plane to fft I, (and W as they are the same size), which can be exectued
     #via p * I, this is done in place and seems to be mad efficient.
-    p = plan_fft!(I, [4, 5])
+    p = plan_fft!(W, [4, 5])
 
     #Isum = 0.0 + 0.0im
     #Wsum = 0.0 + 0.0im
@@ -109,93 +109,90 @@ function construct(; prob::ProblemT, grids::GridsT)
 
         
         #loop over the fourier components of the trial function
-        for (k1,m1) in enumerate(mlist)
-            for (l1, n1) in enumerate(nlist)
+        for (k1,m1) in enumerate(mlist), (l1, n1) in enumerate(nlist)
 
-                create_local_basis!(Φ, H, dH, ddH, m1, n1, jac)
+            create_local_basis!(Φ, H, dH, ddH, m1, n1, jac)
 
-                for (k2, m2) in enumerate(mlist)
-                
-                    for (l2, n2) in enumerate(nlist)
+            for (k2, m2) in enumerate(mlist), (l2, n2) in enumerate(nlist)
 
-                        #negatives for conjugate
-                        create_local_basis!(Ψ, H, dH, ddH, -m2, -n2, jac)
+                #negatives for conjugate
+                create_local_basis!(Ψ, H, dH, ddH, -m2, -n2, jac)
 
-                        #extract the relevant indicies from the ffted matrices.
-                        mind = mod(k1-k2 + nθ, nθ) + 1
-                        nind = mod(l1-l2 + nζ, nζ) + 1
+                #extract the relevant indicies from the ffted matrices.
+                mind = mod(k1-k2 + nθ, nθ) + 1
+                nind = mod(l1-l2 + nζ, nζ) + 1
 
 
-                        for trialsf in 1:4
+                for trialsf in 1:4
 
-                            right_ind = grid_to_index(i, k1, l1, trialsf, grids.pmd.count, grids.tmd.count)
+                    right_ind = grid_to_index(i, k1, l1, trialsf, grids.pmd.count, grids.tmd.count)
 
-                            for testsf in 1:4
-                                #display("testsf")
-                                #display(testsf)
+                    for testsf in 1:4
+                        #display("testsf")
+                        #display(testsf)
 
+                        
+                        left_ind = grid_to_index(i, k2, l2, testsf, grids.pmd.count, grids.tmd.count)
+
+                        #only check for boundaries if this is true
+                        #no other i's can possibly give boundaries
+                        if i==1 || i==grids.rd.N-1
+
+
+                            if left_ind == right_ind && left_ind in boundary_inds
+
+                                rows[arr_count] = left_ind
+                                cols[arr_count] = right_ind
+                                Wdata[arr_count] = 1.0 + 0.0im
+                                Idata[arr_count] = 1.0 + 0.0im
                                 
-                                left_ind = grid_to_index(i, k2, l2, testsf, grids.pmd.count, grids.tmd.count)
+                                arr_count += 1
 
-                                #only check for boundaries if this is true
-                                #no other i's can possibly give boundaries
-                                if i==1 || i==grids.rd.N-1
+                                #bounds_count += 1
+                            
+                            #otherwise the boundaries are set to zero, which for sparse matrices
+                            #is the same as leaving blank.
+                            elseif left_ind in boundary_inds
+                                continue
+                            elseif right_ind in boundary_inds
+                                continue
+                            #otherwise a regular case for these indicies.
+                            else
+                                rows[arr_count] = left_ind
+                                cols[arr_count] = right_ind
+                                
 
-
-                                    if left_ind == right_ind && left_ind in boundary_inds
-
-                                        rows[arr_count] = left_ind
-                                        cols[arr_count] = right_ind
-                                        Wdata[arr_count] = 1.0 + 0.0im
-                                        Idata[arr_count] = 1.0 + 0.0im
-                                        
-                                        arr_count += 1
-
-                                        #bounds_count += 1
-                                    
-                                    #otherwise the boundaries are set to zero, which for sparse matrices
-                                    #is the same as leaving blank.
-                                    elseif left_ind in boundary_inds
-                                        continue
-                                    elseif right_ind in boundary_inds
-                                        continue
-                                    #otherwise a regular case for these indicies.
-                                    else
-                                        rows[arr_count] = left_ind
-                                        cols[arr_count] = right_ind
-                                        
-
-                                        Wsum = @views gauss_integrate(Ψ[:, testsf, :], Φ[:, trialsf, :], W[:, :, :, mind, nind], wg, jac, grids.rd.gp)
+                                Wsum = @views gauss_integrate(Ψ[:, testsf, :], Φ[:, trialsf, :], W[:, :, :, mind, nind], wg, jac, grids.rd.gp)
 
 
-                                        Isum = @views gauss_integrate(Ψ[:, testsf, :], Φ[:, trialsf, :], I[:, :, :, mind, nind], wg, jac, grids.rd.gp)
+                                Isum = @views gauss_integrate(Ψ[:, testsf, :], Φ[:, trialsf, :], I[:, :, :, mind, nind], wg, jac, grids.rd.gp)
 
-                                        Wdata[arr_count] = Wsum
-                                        Idata[arr_count] = Isum
-                                        
-                                        arr_count += 1
-                                    end
-                                else
-                                    
-                                    rows[arr_count] = left_ind
-                                    cols[arr_count] = right_ind
-                                        
-
-                                    Wsum = @views gauss_integrate(Ψ[:, testsf, :], Φ[:, trialsf, :], W[:, :, :, mind, nind], wg, jac, grids.rd.gp)
-
-
-                                    Isum = @views gauss_integrate(Ψ[:, testsf, :], Φ[:, trialsf, :], I[:, :, :, mind, nind], wg, jac, grids.rd.gp)
-
-                                    Wdata[arr_count] = Wsum
-                                    Idata[arr_count] = Isum
-                                    
-                                    arr_count += 1
-                                end
+                                Wdata[arr_count] = Wsum
+                                Idata[arr_count] = Isum
+                                
+                                arr_count += 1
                             end
+                        else
+                            
+                            rows[arr_count] = left_ind
+                            cols[arr_count] = right_ind
+                                
+
+                            Wsum = @views gauss_integrate(Ψ[:, testsf, :], Φ[:, trialsf, :], W[:, :, :, mind, nind], wg, jac, grids.rd.gp)
+
+
+                            Isum = @views gauss_integrate(Ψ[:, testsf, :], Φ[:, trialsf, :], I[:, :, :, mind, nind], wg, jac, grids.rd.gp)
+
+                            Wdata[arr_count] = Wsum
+                            Idata[arr_count] = Isum
+                            
+                            arr_count += 1
                         end
                     end
                 end
+
             end
+
         end
     end
 

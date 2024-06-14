@@ -15,6 +15,7 @@ export MetT
 export toroidal_metric!
 export no_delta_metric!
 export diagonal_toroidal_metric!
+export flux_toroidal_metric!
 export cylindrical_metric!
 
 

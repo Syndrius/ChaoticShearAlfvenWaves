@@ -35,6 +35,8 @@ function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, met::MetT, B
 
         #compute the magnetic field.
         compute_B!(B, met, prob.q, prob.isl, r[i], θ[j], ζ[k])
+        #note that this is actually wrong, B[2, 2] was being overwritten with zero.
+        #MagneticField.old_compute_B!(B, met, prob.q, prob.isl, r[i], θ[j], ζ[k])
         
         #comething about views here doesn't work, I assume it is do to with passing non-indexed things in ala met etc but who knows.
         #compute the W matrix

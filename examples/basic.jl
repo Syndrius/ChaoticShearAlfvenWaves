@@ -58,7 +58,7 @@ Followed by plotting the continuum, with the different modes labelled
 """;
 
 ω_cont = continuum(prob=prob, grids=grids);
-plot_continuum(ω = ω_cont, grids=grids)
+plot_continuum(ω = ω_cont, grids=grids, n=-2)
 
 """
 
@@ -66,7 +66,7 @@ Now we solve the full spectrum case, this returns the normalised eigenvalues and
 The flag full_spetrum, means the inbuild Julia solver is used, which is much slower than 
 Arpack, but returns all of the eigenvalues.
 
-"""
+""";
 
 ω, ϕ = construct_and_solve(prob=prob, grids=grids, full_spectrum=true);
 
@@ -77,7 +77,7 @@ From the eigenfunctions, we can crudely reconstruct the continuum, this is done 
 
 This is a flawed method, but retains most of the continuum structure and highlights any global modes inside gaps.
 
-"""
+""";
 
 reconstruct_continuum(ω = ω, ϕ = ϕ, grids = grids)
 
@@ -86,7 +86,7 @@ reconstruct_continuum(ω = ω, ϕ = ϕ, grids = grids)
 
 Next we find the index of the TAE, determining the frequency is most easily done with an interactive plotting library, such as PlotlyJs(). In this case the TAE occurs at ~0.380.
 
-"""
+""";
 
 tae_ind = find_ind(ω, 0.380)
 
@@ -94,7 +94,7 @@ tae_ind = find_ind(ω, 0.380)
 
 Now we can plot the mode structure of the tae
 
-"""
+""";
 
 plot_potential(grids=grids, ϕ=ϕ, ind=tae_ind, n=1)
 
@@ -103,7 +103,7 @@ plot_potential(grids=grids, ϕ=ϕ, ind=tae_ind, n=1)
 
 Now that we are certain we have found a TAE, we determine the un-normalised TAE frequency for the shift-and-invert algorithm.
 
-"""
+""";
 
 tae_freq = (ω[tae_ind] / geo.R0)^2
 
@@ -113,7 +113,7 @@ Now we can employ a higher resolution radial grid, which becomes very important 
 
 We redefine the grids used, while the problem remains the same.
 
-"""
+""";
 
 N = 2000;
 grids = init_grids(N=N, mstart=2, mcount=2, nstart=-2, ncount=1);
@@ -123,7 +123,7 @@ grids = init_grids(N=N, mstart=2, mcount=2, nstart=-2, ncount=1);
 
 Now we solve, noting that full_spectrum is set to false (default behaviour), and we have passed in the target frequency.
 
-"""
+""";
 
 ω, ϕ = construct_and_solve(prob=prob, grids=grids, full_spectrum=false, σ=tae_freq);
 
@@ -133,7 +133,7 @@ Now we solve, noting that full_spectrum is set to false (default behaviour), and
 Again, we can reconstruct the continuum, but now we only have a few eigenvalues.
 Then we can plot the mode structure again, noting that now the TAE is located at index 1.
 
-"""
+""";
 
 reconstruct_continuum(ω = ω, ϕ = ϕ, grids = grids)
 plot_potential(grids=grids, ϕ=ϕ, ind=1, n=1)

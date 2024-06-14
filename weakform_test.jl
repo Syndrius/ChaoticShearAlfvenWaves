@@ -4,21 +4,26 @@ using LinearAlgebra
 
 met =MID.MetT(zeros(3, 3), zeros(3, 3), zeros(3, 3, 3), zeros(3, 3, 3), 0.0, zeros(3))
 B = MID.BFieldT(zeros(3), zeros(3), zeros(3, 3), zeros(3, 3), 0.0, zeros(3))
+B_old = MID.BFieldT(zeros(3), zeros(3), zeros(3, 3), zeros(3, 3), 0.0, zeros(3))
 
 rt = 0.1
 θt = 0.2
 R0 = 10.0
 ζt = 0.3
 
-test_metric!(met, rt, θt, ζt, R0);
+MID.toroidal_metric!(met, rt, θt, ζt, R0);
 
 geo = GeoParamsT(R0=R0)
 
-isl = IslandT(m0=1, n0=1, A=0.1)
-prob = init_problem(q=Axel_q, geo=geo, isl=isl, met=MID.Geometry.cylindrical_metric); 
+isl = IslandT(m0=1, n0=2, A=0.01)
+prob = init_problem(q=Axel_q, geo=geo)#, isl=isl); 
 
-MID.MagneticField.compute_B!(B, met, prob.q, prob.isl, rt, θt, ζt);
+MID.MagneticField.compute_B!(B, met, prob.q, prob.isl, rt, θt, ζt)
+MID.MagneticField.old_compute_B!(B_old, met, prob.q, prob.isl, rt, θt, ζt)
 
+
+display(B.dB)
+display(B_old.dB)
 Γ = zeros(3, 3)
 
 Γ[1, 1] = 1
@@ -81,7 +86,7 @@ new = MID.WeakForm.new_compute_Tj(met, B)
 #still often very small, yet there are some cases which are exactly zero, seems inconsistent???
 #perhaps the lc tensor has some v small aspect to it? No evidence of this though!
 #diff is indep of metric???? seems odd? maybe it is just floating point error?
-diff = new .- old_combo
+diff = new .- old
 println(diff)
 
 #maybe we need to combine our methods and expand the lc and the other contractions, ie just write big ol sums... will be a nightmare though!

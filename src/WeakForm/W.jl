@@ -17,9 +17,10 @@ function compute_W!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT,
     #display("og")
 
     #contributions to W are split into two.
-    W[:, :] = compute_Tl(met, B) .* met.J
-    
-    Tj = compute_Tj(met, B)
+    W[:, :] = compute_Tl(met, B) .* met.J #Tl is fine I think.
+
+    W[:, :] -= compute_Tj(met, B) .* met.J .* jparonB(met, B) ./ 2
+    #Tj = compute_Tj(met, B)
 
     #display(W[:, :, co...])
     #need to set equal here, the fill function is not working as intended.
@@ -27,10 +28,10 @@ function compute_W!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT,
 
     #this could be total garbage.
     
-    for μ=1:9, i=1:3
-        W[i, μ] += Tj[i, μ] * met.J
-        W[μ, i] += Tj[i, μ] * met.J
-    end 
+    #for μ=1:9, i=1:3
+    #    W[i, μ] += Tj[i, μ] * met.J
+    #    W[μ, i] += Tj[i, μ] * met.J
+    #end 
     
     
     #println(W)
@@ -38,10 +39,117 @@ function compute_W!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT,
     
 end
 
+#appears to be giving the same results as other cases.
+#identical results to earlier
+#but we have changed compute B and are now getting different results
+function compute_Tj(met::MetT, B::BFieldT)
+    Tj = zeros(9, 9) #9x9 is overkill, as Tj[>3, >3] will always be zero.
+
+    Γ = zeros(3, 3)
+    dΓ = zeros(3, 3, 3) #last ind is deriv.
+
+    #Γ_i^j = δ_i^j - g_{im}b^m b^j
+    for i in 1:3, j in 1:3
+        Γ[i, j] = dδ(i, j) - dot(met.gl[i, :], B.b[:])*B.b[j]
+    end
+
+    for i in 1:3, j in 1:3, k in 1:3
+
+        dΓ[i, j, k] = (- B.b[j] * dot(B.b[:], met.dgl[i, :, k]) 
+                        - dot(met.gl[i, :], B.b[:]) * B.db[j, k]
+                        - B.b[j] * dot(met.gl[i, :], B.db[:, k]))
+    end
+    #Tj  is given by the expression
+    #Γ_i^n ∂_nΨ 1/J ϵ^{ijk}(Γ_k^q∂_j∂_qΦ + ∂_j(Γ_k^q)∂_qΦ) + Γ_i^n ∂_nΦ 1/J ϵ^{ijk}(Γ_k^q∂_j∂_qΨ + ∂_j(Γ_k^q)∂_qΨ)
+
+    #first we consdier the 3x3 of Tj, which only has first derivative terms.
+    #Γ_i^n ∂_nΨ 1/J ϵ^{ijk}∂_j(Γ_k^q)∂_qΦ + Γ_i^n ∂_nΦ 1/J ϵ^{ijk}∂_j(Γ_k^q)∂_qΨ
+    for n in 1:3, q in 1:3
+        val = 0
+        for i in 1:3, j in 1:3, k in 1:3
+            val += Γ[i, n] / met.J * lct[i, j, k] * dΓ[k, q, j]
+        end
+        Tj[n, q] += val
+        Tj[q, n] += val
+    end
+
+    #now we consider the second derivates.
+
+    for n in 1:3
+
+        #this still might be improvable, but is much more concise.
+        dds = zeros(6)
+
+        for i in 1:3, k in 1:3
+            dds[1] += Γ[i, n] * lc[i, 1, k] * Γ[k, 1] / met.J 
+
+            dds[2] += Γ[i, n] * (lc[i, 1, k] * Γ[k, 2] + lc[i, 2, k] * Γ[k, 1]) / met.J
+
+            dds[3] += Γ[i, n] * (lc[i, 1, k] * Γ[k, 3] + lc[i, 3, k] * Γ[k, 1]) / met.J
+
+            dds[4] += Γ[i, n] * lc[i, 2, k] * Γ[k, 2] / met.J
+
+            dds[5] += Γ[i, n] * (lc[i, 2, k] * Γ[k, 3] + lc[i, 3, k] * Γ[k, 2]) / met.J
+
+            dds[6] += Γ[i, n] * lc[i, 3, k] * Γ[k, 3] / met.J
+        end
+
+        Tj[n, 4:9] .+= dds
+
+        Tj[4:9, n] .+= dds
+    end
+         
+
+    return Tj
+
+end
+
+#const lct = cat(3, [0 0 0; 0 0 1; 0 -1 0], [0 0 -1; 0 0 0; 1 0 0], [0 1 0; -1 0 0; 0 0 0], dims=(3, 3, 3))
+
+function get_lc_tensor()
+    #probably a more elegant way to do this.
+    lc = zeros(3, 3, 3)
+    lc[1, 2, 3] = 1
+    lc[2, 3, 1] = 1
+    lc[3, 1, 2] = 1
+    lc[3, 2, 1] = -1
+    lc[1, 3, 2] = -1
+    lc[2, 1, 3] = -1
+    return lc
+end
+
+
+const lct = get_lc_tensor()
+
+function jparonB(met::MetT, B::BFieldT)
+
+    J = zeros(3)
+
+    #J^i = (∇×B)^i = 1/J * ϵ^{ijk}∂_j B_k = 1/J * ϵ^{ijk}∂_j (g_{kl} B^l)
+
+    for i in 1:3, j in 1:3, k in 1:3
+        J[i] += 1 / met.J * lc[i, j, k] * (dot(met.gl[k, :], B.dB[:, j]) + dot(met.dgl[k, :, j], B.B[:]))
+    end
+    jpar = 0
+    for i in 1:3, j in 1:3
+        jpar += met.gl[i, j] * B.b[i] * J[j]
+    end
+    return jpar/B.mag_B
+end
+
+function dδ(i, j)
+    if i==j
+        return 1.0
+    else
+        return 0.0
+    end
+end
+
+
 
 
 #this might be the worst function ever written...
-function compute_Tj(met::MetT, B::BFieldT)
+function old_compute_Tj(met::MetT, B::BFieldT)
 
     Γ = zeros(3, 3)
     dΓ = zeros(3, 3, 3)
@@ -337,7 +445,7 @@ end
 
 
 
-function jparonB(met::MetT, B::BFieldT)
+function old_jparonB(met::MetT, B::BFieldT)
 
     J = zeros(3)
 

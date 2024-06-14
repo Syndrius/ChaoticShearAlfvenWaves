@@ -20,18 +20,33 @@ mutable struct B_field{A<:Array{Float64}, B<:Array{Float64}}
     B2 :: B
 end
 
+mutable struct IslandBT
+    B :: Array{Float64}
+    B2 :: Float64
+end
+
 
 
 #just used for plotting
 #p is for passing, probably need to be clearer with p for passing vs p for plus.
 function ψ̄_p(isl, χ, sign)
     κ = @. (isl.A - χ) / (2*isl.A)
-    w = 4 * sqrt(isl.A  * isl.q0^2 /isl.qprime)
+    w = 4 * sqrt(isl.A  * isl.q0^2 /isl.qp)
 
     #may need a real for the elliptic fellas
-    Ω = @. -sign * sqrt(isl.A * isl.qprime / isl.q0^2) * π * sqrt(κ) / real(ellipticK(1/κ))
+    #this is computed at the same time in Zhisongs code, not sure if it is actually useful though!
+    Ω = @. -sign * sqrt(isl.A * isl.qp / isl.q0^2) * π * sqrt(κ) / real(Elliptic.K(1/κ))
     
-    return @. isl.ψ0 + sign * w / π * sqrt(κ) * real(ellipticE(1/κ))
+    return @. isl.ψ0 + sign * w / π * sqrt(κ) * real(Elliptic.E(1/κ))
+end
+
+function ψ̄_t(isl, χ)
+    κ = @. (isl.A - χ) / (2*isl.A)
+    w = 4 * sqrt(isl.A  * isl.q0^2 /isl.qp)
+
+    #Ω #not sure we need this?!?
+
+    return @. 2*w/(isl.m0*π) * ((κ-1)*Elliptic.K(κ) + Elliptic.E(κ))
 end
 
 
@@ -40,11 +55,11 @@ end
 #looks to be working!
 #may need to be able to handle lists of chi later though
 function ω_t(χ, params)
-    ω0 = sqrt(params.A * params.qprime / params.q0^2)
+    ω0 = sqrt(params.A * params.qp / params.q0^2)
 
     κ = (-χ + params.A)/(2*params.A)
 
-    K = real.(ellipticK(κ))
+    K = real.(Elliptic.K(κ))
     return -ω0 * params.m0*π / (2*K) #does julia need returns?
 end
 
@@ -58,13 +73,82 @@ function α_t(χ, ᾱ, params)
     #println("kap")
 
     #display(K(κ))
-    K = real.(ellipticK(κ))
+    K = real.(Elliptic.K(κ))
 
-    sn = @. real.(sin.(am.(2*K ./π .* ᾱ, κ))) #this is actually returing something wildly wrong for the last iteration!
+    sn = @. real.(sin.(Elliptic.Jacobi.am.(2*K ./π .* ᾱ, κ))) #this is actually returing something wildly wrong for the last iteration!
 
 
     return @. 2/params.m0 * asin.(sqrt.(κ)*sn)
 
+end
+
+function compute_α(χ, ᾱ, isl, sign)
+
+    κ = (-χ + isl.A) / (2*isl.A)
+
+    
+    #display(κ)
+    #should be able to do if κ>1 or whatever, more difficult because we are doing this for a range at a time.
+    #I think it would be clearer if we did it point by point, and it would match our other code more.
+    if sign == 0
+        #real seems bad.
+        K = real.(Elliptic.K(κ))
+        sn = real(sin(Elliptic.Jacobi.am(2*K /π * ᾱ, κ)))
+        return 2/isl.m0 * asin.(sqrt.(κ)*sn)
+    else
+        K = real(Elliptic.K(1/κ))
+        amval = Jacobi.am(isl.m0*K * ᾱ /π, 1/κ)
+        return 2 / isl.m0 * amval
+    end
+end
+
+
+
+
+function α_p(χ, ᾱ, params)
+    κ = (-χ + params.A)/(2*params.A)
+    #println("kap")
+    #display(χ)
+    #display(κ)
+    #display(params.A) #so this part of the code thinks A=2.5, makes sense that it is cooked...
+    #κ should always be bigger than 1 outside the island, 
+    #so 1/κ should be fine, I guess for the no island case we are getting some cookery?
+    K = real.(Elliptic.K(1/κ))
+
+    #display(params.m0*K .* ᾱ ./π)
+    #display(1/κ)
+
+    #whatever this am function is seems to be cooked for just the am, fine when you take the sin tho??
+    #amval = am.(params.m0*K .* ᾱ ./π, 1/κ)
+    #this form of am needs a real number though!
+    amval = @. Jacobi.am.(params.m0*K * ᾱ /π, 1/κ)
+    #display(amval)
+
+    return @. 2 / params.m0 * amval
+
+end
+
+function ψ_p(χ, α, isl, sign)
+
+    #this is being recomputed in the same call of gradpsibar
+    #α = α_p(χ, ᾱ, isl)
+
+    #display(α)
+
+    #println(sign)
+    #abs form is copied from python, not clear why it is in this form
+    return @. sign * sqrt(2*isl.q0^2/isl.qp) .* sqrt.(isl.A * cos.(isl.m0*α) .- χ) .+ isl.ψ0 
+end
+
+function compute_ψ(χ, α, ᾱ, isl, sign)
+
+    if sign == 0
+        fac = 2*mod.( floor.((ᾱ .- π/2) / π), 2) .- 1
+    else
+        fac = sign
+    end
+    #Think these can be combined by taking abs. As one will always be negative and one always positive.
+    return fac * sqrt(2*isl.q0^2/isl.qp) * sqrt(abs(isl.A * cos(isl.m0*α) - χ)) + isl.ψ0 
 end
 
 function ψ_t(χ, α, ᾱ, isl)
@@ -80,8 +164,26 @@ function ψ_t(χ, α, ᾱ, isl)
 
     #println(sign)
     #abs form is copied from python, not clear why it is in this form
-    return @. sign * sqrt(2*isl.q0^2/isl.qprime) .* sqrt.(abs.( (isl.A * cos.(isl.m0*α) .- χ))) .+ isl.ψ0 
+    return @. sign * sqrt(2*isl.q0^2/isl.qp) .* sqrt.(abs.( (isl.A * cos.(isl.m0*α) .- χ))) .+ isl.ψ0 
 end
+
+function compute_island_B!(B, met, isl, ψ, α)
+
+    q = 1 / (1 / isl.q0 - isl.qp /isl.q0^2 * (ψ - isl.ψ0))
+
+    B.B[1] = isl.A * isl.m0 *sin(isl.m0 * α)
+    B.B[2] = 1 / (met.J * q)
+    B.B[3] = 1 / met.J 
+
+    B.B2 = 0
+
+    for i in 1:3, j in 1:3
+
+        B.B2 += B.B[i] * met.gl[i, j] * B.B[j]
+    end
+
+end
+
 
 #don't think this is better for performance, but will be clearer what we are trying to do.
 #think B is not a great name, as that is the struct that contains a B
@@ -97,7 +199,7 @@ function compute_Bfield!(B::B_field, ψ, α, isl, metric)
     #I think this is the pre new coords magnetic field, really not clear though!
 
     #needs to be broadcast I think!
-    q = @. 1 / (1 / isl.q0 - isl.qprime /isl.q0^2 * (ψ - isl.ψ0))
+    q = @. 1 / (1 / isl.q0 - isl.qp /isl.q0^2 * (ψ - isl.ψ0))
 
     #Bζ = 1 ./ metric.J
     #Bθ = 1 ./ (metric.J .* q)
@@ -142,21 +244,47 @@ end
 
 function ∇ψ̄2_t!(∇ψ̄2, χ, ψ, α, metric, isl)
 
-    ω2 = ω_t(χ, isl)^2
+    #ω2 = ω_t(χ, isl)^2
+    ω2 = 1
 
-    @. ∇ψ̄2 =  1/ω2 * (isl.qprime ^2 /isl.q0^4 * (ψ - isl.ψ0)^2 * metric.gu[1, 1, :, :] +
-                isl.A^2 * isl.m0 *sin(α *isl.m0)^2 * (metric.gu[2, 2, :, :] + metric.gu[3, 3, :, :] / isl.q0^2) +
-                2*isl.qprime / isl.q0^2 * (ψ - isl.ψ0) * isl.A * isl.m0 *sin(isl.m0 *α) * metric.gu[1, 2, :, :])
+    #display(@. isl.A^2 * isl.m0^2 *sin(α *isl.m0)^2 * (metric.gu[2, 2, :, :] + metric.gu[3, 3, :, :] / isl.q0^2))
+
+    @. ∇ψ̄2 =  1/ω2 * (isl.qp ^2 /isl.q0^4 * (ψ - isl.ψ0)^2 * metric.gu[1, 1, :, :] +
+                isl.A^2 * isl.m0^2 *sin(α *isl.m0)^2 * (metric.gu[2, 2, :, :] + metric.gu[3, 3, :, :] / isl.q0^2) +
+                2*isl.qp / isl.q0^2 * (ψ - isl.ψ0) * isl.A * isl.m0 *sin(isl.m0 *α) * metric.gu[1, 2, :, :])
+end
+
+function compute_∇χ2(ψ, α, met, isl)
+
+    return (isl.qp ^2 /isl.q0^4 * (ψ - isl.ψ0)^2 * met.gu[1, 1] 
+            + isl.A^2 * isl.m0^2 *sin(α *isl.m0)^2 * (met.gu[2, 2] 
+            + met.gu[3, 3] / isl.q0^2) 
+            + 2*isl.qp / isl.q0^2 * (ψ - isl.ψ0) * isl.A * isl.m0 *sin(isl.m0*α) * met.gu[1, 2])
+end
+
+#not sure if this really needs to be differenent in the t or p case.
+function ∇ψ̄2_p!(∇ψ̄2, χ, ψ, α, metric, isl, sign)
+
+    ω2 = ω_p(χ, isl, sign)^2 #looks like we don't need this anymore...
+    ω2 = 1 #think we are now actually getting chi not psibar??
+
+    #display(metric.gu[1, 1, :, :])
+    #display(metric.J)
+
+    #this is gross
+    @. ∇ψ̄2 =  1/ω2 * (isl.qp ^2 /isl.q0^4 * (ψ - isl.ψ0)^2 * metric.gu[1, 1, :, :] +
+                isl.A^2 * isl.m0^2 *sin(α *isl.m0)^2 * (metric.gu[2, 2, :, :] + metric.gu[3, 3, :, :] / isl.q0^2) +
+                2*isl.qp / isl.q0^2 * (ψ - isl.ψ0) * isl.A * isl.m0 *sin(isl.m0 *α) * metric.gu[1, 2, :, :])
 end
 
 
 function ω_p(χ, params, sign)
-    ω0 = sqrt(params.A * params.qprime / params.q0^2)
+    ω0 = sqrt(params.A * params.qp / params.q0^2)
 
     κ = (-χ + params.A)/(2*params.A)
 
     
-    return -sign*ω0 * π * sqrt(κ)/ellipticK(1/κ)
+    return -sign*ω0 * π * sqrt(κ)/Elliptic.K(1/κ)
 end
 
 
@@ -167,7 +295,7 @@ end
 function α_p(χ, ᾱ, params)
     κ = (-χ + params.A)/(2*params.A)
     #println("kap")
-    print(κ)
+    #display(params.A) #so this part of the code thinks A=2.5, makes sense that it is cooked...
     #κ should always be bigger than 1 outside the island, 
     #so 1/κ should be fine, I guess for the no island case we are getting some cookery?
     K = real.(Elliptic.K(1/κ))
@@ -194,22 +322,10 @@ function ψ_p(χ, α, isl, sign)
 
     #println(sign)
     #abs form is copied from python, not clear why it is in this form
-    return @. sign * sqrt(2*isl.q0^2/isl.qprime) .* sqrt.(isl.A * cos.(isl.m0*α) .- χ) .+ isl.ψ0 
+    return @. sign * sqrt(2*isl.q0^2/isl.qp) .* sqrt.(isl.A * cos.(isl.m0*α) .- χ) .+ isl.ψ0 
 end
 
-#not sure if this really needs to be differenent in the t or p case.
-function ∇ψ̄2_p!(∇ψ̄2, χ, ψ, α, metric, isl, sign)
 
-    ω2 = ω_p(χ, isl, sign)^2 #looks like we don't need this anymore...
-    ω2 = 1 #think we are now actually getting chi not psibar??
-
-    #display(metric.gu[1, 1, :, :])
-    #display(metric.J)
-
-    @. ∇ψ̄2 =  1/ω2 * (isl.qprime ^2 /isl.q0^4 * (ψ - isl.ψ0)^2 * metric.gu[1, 1, :, :] +
-                isl.A^2 * isl.m0 *sin(α *isl.m0)^2 * (metric.gu[2, 2, :, :] + metric.gu[3, 3, :, :] / isl.q0^2) +
-                2*isl.qprime / isl.q0^2 * (ψ - isl.ψ0) * isl.A * isl.m0 *sin(isl.m0 *α) * metric.gu[1, 2, :, :])
-end
 
 
 function ψ_p_new(χ, α, isl, sign)
