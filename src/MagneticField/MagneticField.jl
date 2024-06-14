@@ -12,8 +12,9 @@ using MID.Geometry
 
 include("ComputeField.jl")
 
-export compute_B!
 export BFieldT
+export compute_B!
+export compute_island_B!
 
 
 include("qProfiles.jl")

@@ -4,11 +4,10 @@ Base class that just imports everything. We will want a description of the packa
 
 
  - Fix up plotting
- - Fix up/finish docstrings.
+ - Fix up/finish docstrings. Overall code still needs some cleaning, final results will depend on verification via CKA.
  - Maybe function to read ith eigenfunction? May become very important with large parallel cases.
  - Should probably check the regularization condition for ϕ
  - Check gadi results and see if we can confirm some convergence
- - Make island continuum good, and see if we can figure out what the cut-off island A should be, and see if it matches our code.
  - Would be good to do some kind of maybe bar graph with contributions from different poloidal mode numbers, would show the island coupling quite nicely I think.
  - determine the width of the islands, much trickier with newest form, either need to approximate with r=0.5 or maybe make a root finding function?? Either way it is pretty cooked.
  - see if we can engineer a case with an island without a TAE so that we can look at the island modes. This may be difficult, as it could be difficult to compare island frequency vs normal continuum frequency.
@@ -28,6 +27,7 @@ using MID.Geometry; export toroidal_metric!
 using MID.Geometry; export no_delta_metric!
 using MID.Geometry; export diagonal_toroidal_metric!
 using MID.Geometry; export IslandT
+using MID.Geometry; export ContIslandT
 
 
 
@@ -115,10 +115,7 @@ using MID.ExtraSpectra; export analytical_construct_and_solve
 
 include("IslandContinuum/IslandContinuum.jl")
 
-using MID.IslandContinuum; export trapped_continuum
-using MID.IslandContinuum; export passing_continuum
 using MID.IslandContinuum; export island_continuum
-using MID.IslandContinuum; export ContIslandT
 
 end
 

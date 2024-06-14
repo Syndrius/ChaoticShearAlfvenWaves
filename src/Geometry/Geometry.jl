@@ -22,6 +22,7 @@ export cylindrical_metric!
 include("Island.jl")
 
 export IslandT
+export ContIslandT
 
 
 end

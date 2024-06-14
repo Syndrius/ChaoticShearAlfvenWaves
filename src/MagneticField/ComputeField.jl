@@ -116,6 +116,38 @@ function magnitude_B!(B::BFieldT, met::MetT)
 end
 
 
+"""
+Function the fills the BFieldT struct specifically for the case of the island continuum.
+This employs special island flux coordinates, uses a specific q-profile
+and only requires the magnitude of B.
+
+# Args
+B::BfieldT - Struct where magnetic field information is stored
+met::MetT - Already computed struct containing the metric information at this coordinate.
+isl::ContIslandT - Struct containing the island parameters, specific for the continuum as extra variables are required to specify the q-profile.
+ψ::Float64 - Radial coordinate, 0≤ψ≤1, minor radius is assumed 1.
+α::Float64 - Helical angle describing island, 0≤α≤2π.
+"""
+function compute_island_B!(B::BFieldT, met::MetT, isl::ContIslandT, ψ::Float64, α::Float64)
+
+    #specifc q-profile required for the coordinate transformation.
+    q = 1 / (1 / isl.q0 - isl.qp /isl.q0^2 * (ψ - isl.ψ0))
+
+    #may want a factor or 1/4 in here to make this match our other cases.
+    B.B[1] = isl.A * isl.m0 *sin(isl.m0 * α)
+    B.B[2] = 1 / (met.J * q)
+    B.B[3] = 1 / met.J 
+
+
+    B2 = 0
+
+    for i in 1:3, j in 1:3
+
+        B2 += B.B[i] * met.gl[i, j] * B.B[j]
+    end
+    B.mag_B = sqrt(B2)
+
+end
 
 
 """

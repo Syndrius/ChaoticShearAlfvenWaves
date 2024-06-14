@@ -11,12 +11,12 @@ using LinearAlgebra
 include("W.jl")
 include("I.jl")
 
-include("new_I.jl")
-include("new_W.jl")
+#include("new_I.jl")
+#include("new_W.jl")
 
 
 export W_and_I!
-export stupid_W_and_I!
+#export stupid_W_and_I!
 
 
 function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, met::MetT, B::BFieldT, prob::ProblemT, r:: Array{Float64}, θ::LinRange{Float64, Int64}, ζ::LinRange{Float64, Int64})

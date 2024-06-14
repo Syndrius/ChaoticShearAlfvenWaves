@@ -23,7 +23,8 @@ geo = GeoParamsT(R0=3.0)
 #theoretically, κ should be within the domain everytime, so what is going on here.
 
 #this is far to many points for us to be using tbh.
-χlistplus = @. -noA - LinRange(0, 1, 801)[2:end]^2 * 0.044
+#χlistplus = @. -noA - LinRange(0, 1, 801)[2:end]^2 * 0.044
+χlistplus = @. -noA - LinRange(0, 1, 401)[2:end]^2 * 0.044
 #χlistplus = @. -noA - LinRange(0, 1, 2)[2:end]^2 * 0.044
 χlistminus = @. -noA - LinRange(0, 1, 401)[2:end]^2 * 0.00499
 
@@ -39,8 +40,8 @@ tmd = MID.ModeDataT(start=-5, count=3, incr=2)
 #ω2list_minus = passing_continuum(χlistminus, pmd, tmd, geo, no_isl, -1);
 ω2list_minus = island_continuum(χlistminus, pmd, tmd, geo, no_isl, -1);
 #ω2list_plus = compute_continuum_p(geo, isl, χlistplus, 1, 0, -1, 33, 1, 1, 1, compute_toroidal_metric!)|
-ψ̄list_plus = MID.IslandContinuum.ψ̄_p(no_isl, χlistplus, 1)
-ψ̄list_minus = MID.IslandContinuum.ψ̄_p(no_isl, χlistminus, -1)
+ψ̄list_plus = MID.IslandContinuum.compute_ψ̄(no_isl, χlistplus, 1)
+ψ̄list_minus = MID.IslandContinuum.compute_ψ̄(no_isl, χlistminus, -1)
 
 
 #33 * 1 is mcount by ncount, should be done more automatically in the future
@@ -50,8 +51,8 @@ rm = repeat(sqrt.(2 .* ψ̄list_minus), 1, pmd.count * tmd.count)
 #ayyy we have the very basic funcitonality back!!!!
 #now we just need to understand how it works and use it properly... Simple!
 #plotting this with some proper colours would be nice.
-scatter(rp, sqrt.(abs.(ω2list_plus .* 3^2)), ylimits=(0, 1), legend=false)
-scatter!(rm, sqrt.(abs.(ω2list_minus .* 3^2)))
+scatter(rp, sqrt.(abs.(ω2list_plus .* geo.R0^2)), ylimits=(0, 1), legend=false)
+scatter!(rm, sqrt.(abs.(ω2list_minus .* geo.R0^2)))
 
 
 
@@ -80,8 +81,8 @@ tmd = MID.ModeDataT(start=-5, count=6, incr=2)
 #ω2list_minus = passing_continuum(χlistminus, pmd, tmd, geo, small_isl, -1);
 ω2list_minus = island_continuum(χlistminus, pmd, tmd, geo, small_isl, -1);
 #ω2list_plus = compute_continuum_p(geo, isl, χlistplus, 1, 0, -1, 33, 1, 1, 1, compute_toroidal_metric!)|
-ψ̄list_plus = MID.IslandContinuum.ψ̄_p(small_isl, χlistplus, 1)
-ψ̄list_minus = MID.IslandContinuum.ψ̄_p(small_isl, χlistminus, -1)
+ψ̄list_plus = MID.IslandContinuum.compute_ψ̄(small_isl, χlistplus, 1)
+ψ̄list_minus = MID.IslandContinuum.compute_ψ̄(small_isl, χlistminus, -1)
 
 rp = repeat(sqrt.(2 .* ψ̄list_plus), 1,  pmd.count * tmd.count)
 rm = repeat(sqrt.(2 .* ψ̄list_minus), 1, pmd.count * tmd.count)
@@ -119,8 +120,8 @@ tmd = MID.ModeDataT(start=-5, count=6, incr=2)
 #ω2list_minus = passing_continuum(χlistminus, pmd, tmd, geo, isl, -1);
 ω2list_minus = island_continuum(χlistminus, pmd, tmd, geo, isl, -1);
 #ω2list_plus = compute_continuum_p(geo, isl, χlistplus, 1, 0, -1, 33, 1, 1, 1, compute_toroidal_metric!)|
-ψ̄list_plus = MID.IslandContinuum.ψ̄_p(isl, χlistplus, 1)
-ψ̄list_minus = MID.IslandContinuum.ψ̄_p(isl, χlistminus, -1)
+ψ̄list_plus = MID.IslandContinuum.compute_ψ̄(isl, χlistplus, 1)
+ψ̄list_minus = MID.IslandContinuum.compute_ψ̄(isl, χlistminus, -1)
 
 rp = repeat(sqrt.(2 .* ψ̄list_plus), 1,  pmd.count * tmd.count)
 rm = repeat(sqrt.(2 .* ψ̄list_minus), 1, pmd.count * tmd.count)
@@ -155,12 +156,14 @@ tmd = MID.ModeDataT(start=-8, count=9, incr=2)
 #ω2list = trapped_continuum(χlist, pmd, tmd, geo, isl);
 ω2list = island_continuum(χlist, pmd, tmd, geo, isl, 0);
 
+#display(ω2list)
+
 
 width = 4 * sqrt(isl.A * isl.q0^2/isl.qp)
 ψ_isl = 2 * width / (π * isl.m0)
 ψ̄m = ψ_isl
 
-ψ̄list = MID.IslandContinuum.ψ̄_t(isl, χlist)
+ψ̄list = MID.IslandContinuum.compute_ψ̄(isl, χlist, 0)
 r = repeat(sqrt.(2 .* ψ̄list), 1,  pmd.count * tmd.count)
 
 

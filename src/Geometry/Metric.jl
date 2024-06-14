@@ -284,6 +284,17 @@ function cylindrical_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0
 end
 
 
+"""
+Function for toroidal metric with flux as the radial coordinate. Used by island continuum. 
+Currently only computes only what is required for island continuum.
+
+# Args
+met::MetT - Struct where metric information is stored.
+ψ::Float64 -  Radial coordinate, 0≤ψ≤1, minor radius is assumed 1.
+θ::Float64 -  Poloidal angle, 0≤θ≤2π
+ζ::Float64  - Toroidal angle, 0≤θ≤2π, #unused in this case.
+R0::Float64 -  Major radius.
+"""
 function flux_toroidal_metric!(met::MetT, ψ::Float64, θ::Float64, ζ::Float64, R0::Float64)
 
     #this may not actually fill in every part of the metric yet.
@@ -317,41 +328,4 @@ function flux_toroidal_metric!(met::MetT, ψ::Float64, θ::Float64, ζ::Float64,
     met.gu[2, 2] = 1/r^2*(1-2*(ϵ+Δp)*cos(θ))
     met.gu[3, 3] = 1/R0^2*(1-2*ϵ*cos(θ))
 
-    #don't need derivs for this case yet, leave in case we want to swap to flux later.
-    """
-    met.dJ[1] = R0 + 4*r * cos(θ)
-    met.dJ[2] = -2 * r * R0*ϵ * sin(θ)
-
-    #first two indicies give metric element, while third is derivative,
-    #eg [1, 2, 3] is ∂g_{12}/∂ζ
-    met.dgl[1, 1, 1] = -2*Δpp * cos(θ)
-    met.dgl[1, 1, 2] = 2*Δp * sin(θ)
-
-    met.dgl[1, 2, 1] = ((ϵ + Δp + r*Δpp) + r*(1/R0 + 2*Δpp)) * sin(θ)
-    met.dgl[1, 2, 2] = r*(ϵ + Δp + r*Δpp) * cos(θ)
-
-    met.dgl[2, 1, 1] = ((ϵ + Δp + r*Δpp) + r*(1/R0 + 2*Δpp)) * sin(θ)
-    met.dgl[2, 1, 2] = r*(ϵ + Δp + r*Δpp) * cos(θ)
-
-    met.dgl[2, 2, 1] = 2*r*(1+4*η*cos(θ) + 4*η^2) + r^2 * (4*ηp*cos(θ) + 8*η * ηp)
-    met.dgl[2, 2, 2] = -r^2*(4*η*sin(θ))
-
-    met.dgl[3, 3, 1] = 2*R0*cos(θ)
-    met.dgl[3, 3, 2] = -2*R0^2*ϵ*sin(θ)
-
-    met.dgu[1, 1, 1] = 2*Δpp * cos(θ)
-    met.dgu[1, 1, 2] = -2*Δp * sin(θ)
-
-    met.dgu[1, 2, 1] = (1/r^2 * (ϵ + Δp + r*Δpp) - 1/r*(1/R0 + 2*Δpp)) * sin(θ)
-    met.dgu[1, 2, 2] = -1/r*(ϵ + Δp + r*Δpp) * cos(θ)
-
-    met.dgu[2, 1, 1] = (1/r^2 * (ϵ + Δp + r*Δpp) - 1/r*(1/R0 + 2*Δpp)) * sin(θ)
-    met.dgu[2, 1, 2] = -1/r*(ϵ + Δp + r*Δpp) * cos(θ)
-
-    met.dgu[2, 2, 1] = -2/r^3 * (1-2*(ϵ+Δp)*cos(θ)) + 1/r^2 * (-2*(1/R0+Δpp)*cos(θ))
-    met.dgu[2, 2, 2] = 2/r^2*(ϵ+Δp)*sin(θ)
-
-    met.dgu[3, 3, 1] = -2*cos(θ)/R0^3
-    met.dgu[3, 3, 2] = 2*ϵ*sin(θ)/R0^2
-    """
 end
