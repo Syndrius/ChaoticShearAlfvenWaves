@@ -274,9 +274,9 @@ function analytical_W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, m
 
         #Tj, the current term, is always computed under the cylindrical approxmiation
         #so we need to split up our computation of W.
-        Tl = WeakForm.new_compute_Tl(met, B) .* met.J
-        Tl_tor = WeakForm.new_compute_Tl(met_tor, B_tor) .* met_tor.J
-        Tj = WeakForm.new_compute_Tj(met, B) .* met.J .* WeakForm.new_jparonB(met, B) ./ 2
+        Tl = WeakForm.compute_Tl(met, B) .* met.J
+        Tl_tor = WeakForm.compute_Tl(met_tor, B_tor) .* met_tor.J
+        Tj = WeakForm.compute_Tj(met, B) .* met.J .* WeakForm.jparonB(met, B) ./ 2
         #@views new_compute_W!(W[:, :, i, j, k], met, B)
         
 

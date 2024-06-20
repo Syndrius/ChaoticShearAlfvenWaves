@@ -111,7 +111,7 @@ function magnitude_B!(B::BFieldT, met::MetT)
     B.dmag_B[:] = @. 1/(2*sqrt(B2)) * dB2
 
     for i in 1:3, j in 1:3
-        B.db[j, i] = B.dB[j, i]/sqrt(B2) - B.B[j]*B.dmag_B[i]/B.mag_B^2
+        B.db[j, i] = B.dB[j, i]/B.mag_B - B.B[j]*B.dmag_B[i]/B.mag_B^2
     end
 end
 

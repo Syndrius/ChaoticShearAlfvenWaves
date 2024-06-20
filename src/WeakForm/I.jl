@@ -47,7 +47,7 @@ function compute_I!(I::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT,
     #so I is not being reset to zero for some reason
     #this forces all 9x9 entries to be filled by the damping term first, then we modify the un-damped case.
     for j=1:3, i=1:3
-        I[i, j] += n*(met.gu[i, j] - B.b[i]*B.b[j]) * met.J /B.mag_B^2
+        I[i, j] += n*(met.gu[i, j] - B.b[i]*B.b[j]) * met.J / B.mag_B^2
     end
 
     return H

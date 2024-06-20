@@ -29,7 +29,8 @@ function ϕm_to_cont(ω, N, ϕm, ϕm1)
     rdata = zeros(length(ω));
     omdata = zeros(ComplexF64, length(ω));
     col = zeros(length(ω));
-    rgrid = clustered_grid(N, 0.93, 0.98, 0.25)
+    #rgrid = clustered_grid(N, 0.93, 0.98, 0.25)
+    rgrid = collect(LinRange(0, 1, N))
     for i in 1:1:length(ω)
         #this is much much better for cylinder case.
         #maybe this would be better in general then??
@@ -54,7 +55,8 @@ end
 
 function phi_2mode(N, m, R0, δ)
     #I think unfortunatly we have to do this now, think we are fked until we can replicated Axel's code.
-    rgrid = clustered_grid(N, 0.93, 0.98, 0.25) #will just assume Axel's case for this.
+    #rgrid = clustered_grid(N, 0.93, 0.98, 0.25) #will just assume Axel's case for this.
+    rgrid = collect(LinRange(0, 1, N))
     m1 = m+1
     n = -m
     gp = 5
@@ -114,13 +116,24 @@ function phi_2mode(N, m, R0, δ)
 
         dϵ = (Δpp - 2 / R0) * ones(length(r))
 
-        q = @. 1.05 + 0.55*r^2
+        #Axel's 
+        #q = @. 1.05 + 0.55*r^2
 
-        dq = @. 2 * 0.55 * r
+        #dq = @. 2 * 0.55 * r
 
-        dens = @. 1/2*(1-tanh((r-0.8)/0.1))
+        #dens = @. 1/2*(1-tanh((r-0.8)/0.1))
 
-        ddens  = @. -5 * sech(8-10*r)^2
+        #ddens  = @. -5 * sech(8-10*r)^2
+
+
+        #island damping case!
+
+        q = @. 1.15 + 0.4 * r^2
+
+        dq = @. 0.8 * r^2
+
+        dens = ones(length(r))
+        ddens = zeros(length(r))
 
         #think we can do the weak form so that we don't need the derivative of km...
         km = @. (m/q + n)/R0 #will need to confirm this? may be -n instead
@@ -153,6 +166,23 @@ function phi_2mode(N, m, R0, δ)
                 Wsum22 = 0
 
                 for j in 1:gp
+
+                    #so somehow Axel seems to have different equations,
+                    #main difference being the lack of derivatives on any non trial/test functions terms.
+                    #when comparing to Axle, jac and wg terms should be removed as they are added in later.
+                    #seems to also have been scaled by r or even r^2.. hard to tell.
+
+                    #looks like Axel multiplies by r right from the get go, which is what we did initially,
+                    #this does cook the damping term!
+                    #but I guess we should start with the real case
+                    #alternatively we can try and implement the contour method as a comparison???
+                    #His code actually has that fully.
+
+                    #coupling terms are only in B, which I think is I? wot the hek
+
+                    #note case 4 and case 6 are what we are most interested in
+                    #4 should be the normal case
+                    #6 I think it the path integral case.
                     
                     #ψ_m acting on equation 1.
                     ############################
@@ -173,6 +203,13 @@ function phi_2mode(N, m, R0, δ)
 
                     #m^2 term
                     Wsum11 += -jac * ϕm[1, test, j] * m^2/r[j]^2 * km[j]^2 * ϕm[1, trial, j] * wg[j]
+
+
+
+                    #from Axel
+                    #vala is value for A matrix, equiv to W. Treat X as test and Y as trial
+                    #vala = -km^2 * (r * ϕm[2, test, j] * ϕm[2, trial, j] + m^2/r * ϕm[1, test, j] * ϕm[1, test, j])
+                    #so no dk term???? wot.
 
                     ##ψ_m ϕ_m1 terms
                     ######
@@ -431,10 +468,10 @@ function phi_2mode(N, m, R0, δ)
     #then solve...
     #so looks like this form is not Hermitian, interesting, works if we don't specify Hermitian!
     #ω2, evals = eigen(Matrix(Hermitian(W)), Matrix(Hermitian(I)))
-    #ω2, evals = eigen(Matrix(W), Matrix(I))
+    ω2, evals = eigen(Matrix(W), Matrix(I))
     #ω2, evals = eigs(W, I, nev=5, ritzvec=true, sigma=(0.389/R0)^2)
     #case for R0=20
-    ω2, evals = eigs(W, I, nev=5, ritzvec=true, sigma=(0.395/R0)^2)
+    #ω2, evals = eigs(W, I, nev=5, ritzvec=true, sigma=(0.395/R0)^2)
 
     ϕmsol = evals[1:2:2*N, :]
     ϕm1sol = evals[2*N+1:2:end, :]
@@ -483,9 +520,9 @@ end
 #0.394967716139619 - 0.0004987521042342667im
 #-0.00039398195905847506
 
-N = 3000
-R0 = 20
-ω_a, ϕm, ϕm1 = phi_2mode(N, 2, R0, -4.0e-9);
+N = 200
+R0 = 10
+ω_a, ϕm, ϕm1 = phi_2mode(N, 2, R0, -0.0e-9);
 
 
 rdata, omdata, col = ϕm_to_cont(ω_a, N, ϕm, ϕm1);
@@ -497,12 +534,13 @@ rdata, omdata, col = ϕm_to_cont(ω_a, N, ϕm, ϕm1);
 #next we need to see if we can derive Axels equation from ours, 
 #then we should know what approximations are needed.
 #damping is good now! yayzees.
-scatter(rdata, real.(omdata).^2, ylimits=(-0.02, 0.25), group=col, markersize=4.0)
+scatter(rdata, real.(omdata), ylimits=(-0.05, 1.05), group=col, markersize=4.0)
 
-tae_ind = tae_ind = argmin(abs.(ω_a.^2 .- 0.15598)) 
+tae_ind = argmin(abs.(ω_a .- 0.43)) 
 tae_ind = 1
 
-rgrid = clustered_grid(N, 0.93, 0.98, 0.25)
+#rgrid = clustered_grid(N, 0.93, 0.98, 0.25)
+rgrid = collect(LinRange(0, 1, N))
 plot(rgrid, real.(ϕm[:, tae_ind]))
 plot!(rgrid, real.(ϕm1[:, tae_ind]))
 
@@ -513,6 +551,274 @@ a=1 #stop us going to the bottom.
 
 
 
+#implementation based on weak form given in cka, which seems to be total garbage.
+function Axel_phi_2mode(N, m, R0, δ)
+    #I think unfortunatly we have to do this now, think we are fked until we can replicated Axel's code.
+    rgrid = clustered_grid(N, 0.93, 0.98, 0.25) #will just assume Axel's case for this.
+    m1 = m+1
+    n = -m
+    gp = 5
+    ξ, wg = gausslegendre(gp)
+    H, dH, ddH = MID.Misc.hermite_basis(ξ)
+
+    W = zeros(ComplexF64, 4*N, 4*N)
+    I = zeros(ComplexF64, 4*N, 4*N)
+
+    ϕm = zeros(3, 4, gp)
+    ϕm1 = zeros(3, 4, gp)
+
+    ϕm[1, :, :] = H
+    ϕm[2, :, :] = dH
+    ϕm[3, :, :] = ddH
+
+    #probably not needed.
+    ϕm1[1, :, :] = H
+    ϕm1[2, :, :] = dH
+    ϕm1[3, :, :] = ddH
+
+    if abs(m)==0
+        bc1 = [2, 2*N-1]
+    else
+        bc1 = [1, 2*N-1]
+    end
+    if abs(m1)==0
+        bc2 = [2*N+2, 4*N-1]
+    else
+        bc2 = [2*N+1, 4*N-1]
+    end
+
+    bcinds = vcat(bc1, bc2)
+
+    rows = Array{Int64}(undef, 0)
+    cols = Array{Int64}(undef, 0)
+    Wdata = Array{ComplexF64}(undef, 0)
+    Idata = Array{ComplexF64}(undef, 0)
+
+    for i in 1:N-1
+
+        
+
+        r, dr = MID.Misc.local_to_global(i, ξ, collect(rgrid))
+
+        jac = dr/2 #this might need to be in terms of x...
+
+        #Δp = r/(4*R0)
+
+        #Δpp = 1/(4*R0)
+
+        #ϵg = @. 2*Δp
+
+        #dϵg = 2 * Δpp * ones(length(r))
+
+        #ϵb = @. - r/R0 
+
+        #ϵ = @. ϵg/2 - 2 * ϵb # 5/2 * r/R good sign.
+
+        
+
+        #dϵ = (Δpp - 2 / R0) * ones(length(r))
+
+        #q = @. 1.05 + 0.55*r^2
+
+       # dq = @. 2 * 0.55 * r
+
+       #dens = @. 1/2*(1-tanh((r-0.8)/0.1))
+
+        #ddens  = @. -5 * sech(8-10*r)^2
+
+        #think we can do the weak form so that we don't need the derivative of km...
+        #km = @. (m/q + n)/R0 #will need to confirm this? may be -n instead
+        #km1 = @. (m1/q + n)/R0
+
+        #dk2m = @. -2 * m * (n + m/q) * dq / (R0^2*q^2)
+        #dk2m1 = @. -2 * m1 * (n + m1/q) * dq / (R0^2*q^2)
+
+        #dkmkm1 = @. -m1 * (n + m/q) * dq / (R0^2*q^2) -  m * (n + m1/q) * dq / (R0^2*q^2)
+
+        #for complex path stuff.
+        #this seems to replicate Axel's results perfectly, v unclear on the weak form.
+        α = 0.03
+        x = @. r + α*r * (r-1.0) * 1im
+        d = @. 1.0 + α * (2.0*r - 1.0) * 1im
+
+        Δp = @. 0.25 * x /R0
+        ϵ = @. 2.0 * (x / R0 + Δp)
+
+        #Axel's case
+        #dens = @. 1/2*(1-tanh((x-0.8)/0.1))
+        #q = @. 1.05 + 0.55 * x^2
+
+        #Bowden Singular Case
+        dens = @. 1/2 * (1-tanh((x-0.7)/0.05))
+
+        q = @. 1 + 2 * x^2
+
+        km = @. (m/q + n)/R0 #will need to confirm this? may be -n instead
+        km1 = @. (m1/q + n)/R0
+
+        #non-complex just set d = 1.0
+        #and x = r.
+        #dd
+        for trial in 1:4
+
+            trial_ind_m = grid_to_ind_coupled(i, N, trial, 1)
+            trial_ind_m1 = grid_to_ind_coupled(i, N, trial, 2)
+            for test in 1:4
+                test_ind_m = grid_to_ind_coupled(i, N, test, 1)
+                test_ind_m1 = grid_to_ind_coupled(i, N, test, 2)
+
+                #I will be left hand side of Axel's equation.
+                #weak form will defo multiply by r.
+                #we will probably have to derive Axels result from equation given in paper.
+                Isum11 = 0
+                Isum12 = 0
+                Isum21 = 0
+                Isum22 = 0
+                Wsum11 = 0
+                Wsum12 = 0
+                Wsum21 = 0
+                Wsum22 = 0  
+
+                #no damping yet!
+                for j in 1:gp   
+
+                    ###############
+                    #first equation
+                    Wsum11 += -jac * km[j]^2 * (x[j] / d[j] * ϕm[2, test, j] * ϕm[2, trial, j] / jac^2 + m^2 * d[j] / x[j] * ϕm[1, test, j] * ϕm[1, trial, j] 
+                                - (ϕm[2, test, j] * ϕm[1, trial, j] + ϕm[1, test, j] * ϕm[2, trial, j]) / jac) * wg[j]
+
+                    Isum11 += - jac * dens[j] * (x[j] / d[j] * ϕm[2, test, j] * ϕm[2, trial, j] / jac^2 + m^2 * d[j] / x[j] * ϕm[1, test, j] * ϕm[1, trial, j]) * wg[j]
+
+                    #these two are the ones that make no sense
+                    #it seems possible for Wsum12 = 0.0, provide kmkm1 ≈ ω^2/v_A^2, which is probably true to O(ϵ)
+                    #but Isum12 is completly cooked.
+                    Wsum12 += 0.0
+
+                    #srsly how can there possibly be m's in this equation??
+                    Isum12 += - jac * dens[j] * (x[j] / d[j] * ϵ[j] * ϕm[2, test, j] * ϕm[2, trial, j] / jac^2 - 2*Δp[j] * m * (m+1) * d[j] / x[j] * ϕm[1, test, j] * ϕm[1, trial, j]) * wg[j]
+
+
+                    ###############
+                    #second equation
+                    Wsum22 += -jac * km1[j]^2 * (x[j] / d[j] * ϕm[2, test, j] * ϕm[2, trial, j] / jac^2 + (m+1)^2 * d[j] / x[j] * ϕm[1, test, j] * ϕm[1, trial, j] 
+                    - (ϕm[2, test, j] * ϕm[1, trial, j] + ϕm[1, test, j] * ϕm[2, trial, j]) / jac) * wg[j]
+
+                    Isum22 +=  - jac * dens[j] * (x[j] / d[j] * ϕm[2, test, j] * ϕm[2, trial, j] / jac^2 + (m+1)^2 * d[j] / x[j] * ϕm[1, test, j] * ϕm[1, trial, j]) * wg[j]
+
+                    #these two are the ones that make no sense
+                    #it seems possible for Wsum12 = 0.0, provide kmkm1 ≈ ω^2/v_A^2, which is probably true to O(ϵ)
+                    #but Isum12 is completly cooked.
+                    Wsum21 += 0.0
+
+                    #srsly how can there possibly be m's in this equation??
+                    Isum21 += - jac * dens[j] * (x[j] / d[j] * ϵ[j] * ϕm[2, test, j] * ϕm[2, trial, j] / jac^2 - 2*Δp[j] * m * (m+1) * d[j] / x[j] * ϕm[1, test, j] * ϕm[1, trial, j]) * wg[j]
+
+                    
+                end
+
+                
+                push!(rows, test_ind_m)
+                push!(cols, trial_ind_m)
+                push!(Idata, Isum11)
+                push!(Wdata, Wsum11)
+
+
+                push!(rows, test_ind_m)
+                push!(cols, trial_ind_m1)
+                push!(Idata, Isum12)
+                push!(Wdata, Wsum12)
+
+
+                push!(rows, test_ind_m1)
+                push!(cols, trial_ind_m)
+                push!(Idata, Isum21)
+                push!(Wdata, Wsum21)
+
+
+                push!(rows, test_ind_m1)
+                push!(cols, trial_ind_m1)
+                push!(Idata, Isum22)
+                push!(Wdata, Wsum22)
+
+            end
+        end
+    end
+
+    #still an awful way to do bc's but seems to work
+    rowsbc = findall(x->x in bcinds, rows)
+    colsbc = findall(x->x in bcinds, cols)
+    Idata[rowsbc] .= 0.0
+    Idata[colsbc] .= 0.0
+    #rowsbcW = findall(x->x in bcinds, rowsW)
+    #colsbcW = findall(x->x in bcinds, colsW)
+    Wdata[rowsbc] .= 0.0
+    Wdata[colsbc] .= 0.0
+    for i in bcinds
+        push!(rows, i)
+        push!(cols, i)
+        push!(Wdata, 1.0)
+        push!(Idata, 1.0)
+    end
+    #this is fast as fk boi, now we have sparse fellas.
+    W = sparse(rows, cols, Wdata)
+    I = sparse(rows, cols, Idata)
+
+
+    #then solve...
+    #so looks like this form is not Hermitian, interesting, works if we don't specify Hermitian!
+    #ω2, evals = eigen(Matrix(Hermitian(W)), Matrix(Hermitian(I)))
+    #ω2, evals = eigen(Matrix(W), Matrix(I))
+    #ω2, evals = eigs(W, I, nev=5, ritzvec=true, sigma=(0.389/R0)^2)
+    #case for R0=20
+    #ω2, evals = eigs(W, I, nev=5, ritzvec=true, sigma=(0.397/R0)^2)
+
+    #bowden singular case.
+    ω2, evals = eigs(W, I, nev=5, ritzvec=true, sigma=(0.326/R0)^2)
+
+
+    ϕmsol = evals[1:2:2*N, :]
+    ϕm1sol = evals[2*N+1:2:end, :]
+    return R0 .*sqrt.(ω2), ϕmsol, ϕm1sol
+
+        
+end
+
+
+
+
+N = 1000
+R0 = 10
+ω_a, ϕm, ϕm1 = Axel_phi_2mode(N, 1, R0, 0.0);
+
+
+rdata, omdata, col = ϕm_to_cont(ω_a, N, ϕm, ϕm1);
+
+#based on eye-test, actual tae frequency seems pretty spot on, but damping is way off.
+#Flipping signs to match Axel's paper made the tae much closer to MID's prediction, but seem to be a bit further of the eye test of Axel's paper.
+#either case has the damping completly wrong...
+#looks like there is a typo in Axel's case, seems like we have replicated it, required changing the sign to match our derivation!
+#next we need to see if we can derive Axels equation from ours, 
+#then we should know what approximations are needed.
+#damping is good now! yayzees.
+scatter(rdata, real.(omdata), ylimits=(-0.02, 1.05), group=col, markersize=4.0)
+
+tae_ind = tae_ind = argmin(abs.(ω_a.^2 .- 0.158)) 
+tae_ind = 1
+
+rgrid = clustered_grid(N, 0.93, 0.98, 0.25)
+plot(rgrid, real.(ϕm[:, tae_ind]))
+plot!(rgrid, real.(ϕm1[:, tae_ind]))
+
+display(ω_a[tae_ind])
+display(imag(ω_a[tae_ind]^2))
+
+(0.397)^2
+
+
+display(imag(ω_a[tae_ind])/real(ω_a[tae_ind]))
+
+
+a = 1
 
 #terms before we included the extra / r
 #= 

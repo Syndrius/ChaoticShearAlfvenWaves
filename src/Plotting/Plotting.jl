@@ -12,6 +12,7 @@ May want to change this to post-processing or something!
 module Plotting
 
 using MID.Inputs
+using MID.Misc
 
 using Plots
 using LaTeXStrings
@@ -24,6 +25,8 @@ include("PotentialPlot.jl")
 
 export plot_potential
 export find_ind
+export plot_surface
+export construct_surface
 
 include("ContinuumPlot.jl")
 

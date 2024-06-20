@@ -2,32 +2,48 @@
 #basic test of island damping
 using MID
 
-N = 300;
-grids = init_grids(N=N, mstart=2, mcount=2, nstart=-2, ncount=1);
 
-isl = IslandT(A=0.0e-4, m0=5, n0=4);
-geo = GeoParamsT(R0=3.0);
+#1e-4 seems to be to big to make sense, this predicts no gap
+#this could be because we don't have enough modes, hard to tell
+#5e-5 still predicts a gap, but the upshift is significantly bigger than island_continuum predicts
+#again this could be because of lack of modes, hard to tell.
+
+N = 400;
+grids = init_grids(N=N, mstart=-5, mcount=11, nstart=-10, ncount=6, nincr=4);
+
+isl = IslandT(A=5e-5, m0=5, n0=4);
+geo = GeoParamsT(R0=10.0);
 prob = init_problem(q=island_damping_q, isl=isl, geo=geo);
 
-ω_cont = continuum(prob=prob, grids=grids);
-plot_continuum(ω = ω_cont, grids=grids, n=-2)
+#ω_cont = continuum(prob=prob, grids=grids);
+#plot_continuum(ω = ω_cont, grids=grids, n=-2)
 
 gapmin = maximum(ω_cont[:, 1])
 gapmax = minimum(ω_cont[:, 2])
 
-ω, ϕ = construct_and_solve(prob=prob, grids=grids, full_spectrum=true);
+ω, ϕ = construct_and_solve(prob=prob, grids=grids, full_spectrum=false, σ=(0.395/geo.R0)^2, nev=100);
 
-
+#0.3846 is what island continuum predicts as upshift for A=1e-4
 reconstruct_continuum(ω = ω, ϕ = ϕ, grids = grids)
 
-tae_ind = find_ind(ω, 0.449)
+tae_ind = find_ind(ω, 0.377)
 
 #tae_freq=0.0014653584 may need to confirm this more accuratly!
 
 display(ω[tae_ind])
 
-plot_potential(grids=grids, ϕ=ϕ, ind=tae_ind, n=1)
+plot_potential(grids=grids, ϕ=ϕ, ind=tae_ind, n=3)
 
+
+scatter(ones(length(ω)), real.(ω))
+
+
+z = construct_surface(ϕ, length(ω), grids, 3);
+
+plot_surface(z, grids, tae_ind)
+
+
+island_width(isl, 5/4, 0.8)
 
 
 

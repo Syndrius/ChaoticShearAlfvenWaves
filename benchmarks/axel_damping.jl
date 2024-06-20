@@ -30,6 +30,9 @@ using Plots; plotlyjs()
 #-0.0010264858030824204
 #R0=20
 
+#increasing to R0=20 and comparing the the Axel contour method in phi_two_mode
+#our code with diagonal metrix is v v close. %diff of ~1.7%
+
 N = 3000; 
 #the collect is a bit annoying, but ok because we will typically use a clustered grid.
 #rgrid = collect(LinRange(0, 1, N));
@@ -46,7 +49,7 @@ geo = GeoParamsT(R0=10.0)
 #test metric is pretty cooked, real tae freq is pretty close, touch higher with og metric
 #damping is just completly cooked though, may need to check out damping 
 #implementation.
-prob = init_problem(q=Axel_q, geo=geo, δ=-4.0e-9, dens=axel_dens, met=diagonal_toroidal_metric!); #probbaly should use geo if it is part of prob,
+prob = init_problem(q=Axel_q, geo=geo, δ=-4.0e-8, dens=axel_dens, met=diagonal_toroidal_metric!); #probbaly should use geo if it is part of prob,
 #prob = init_problem(q=singular_bowden_q, geo=geo, δ=-4e-9, dens=bowden_singular_dens); #probbaly should use geo if it is part 
 #even if it is not really used.
 grids = init_grids(N=N, sep1=0.91, sep2=0.98, frac=0.25, mstart=2, mcount=2, nstart=-2, ncount=1);
@@ -54,7 +57,7 @@ grids = init_grids(N=N, sep1=0.91, sep2=0.98, frac=0.25, mstart=2, mcount=2, nst
 #tae_freq = (0.381 / geo.R0)^2
 
 
-ω, ϕ = construct_and_solve(prob=prob, grids=grids, full_spectrum=false, σ=(0.395/geo.R0)^2, reconstruct=true);
+ω, ϕ = construct_and_solve(prob=prob, grids=grids, full_spectrum=false, σ=(0.390/geo.R0)^2, reconstruct=true);
 tae_ind = 1
 display(ω[tae_ind])
 
@@ -79,3 +82,14 @@ display(imag(ω[tae_ind])/real(ω[tae_ind]))
 display(imag(ω[tae_ind]^2)/2)
 
 tae_freq = (ω[tae_ind] / geo.R0)^2
+
+
+
+ω, ϕ = analytical_construct_and_solve(prob=prob, grids=grids, full_spectrum=false, σ=(0.395/geo.R0)^2, reconstruct=true);
+
+tae_ind = 1
+plot_potential(grids=grids, ϕ=ϕ, ind=tae_ind, n=1)
+
+display(ω[tae_ind])
+
+display(imag(ω[tae_ind]^2))

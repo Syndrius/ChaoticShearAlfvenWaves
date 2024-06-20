@@ -2,6 +2,31 @@
 using MID
 using Plots; plotlyjs()
 
+
+#Comparing our code with Axel's contour method,
+#In axels case, we significanlty underestimate the damping computed, off by ~43%
+#Changing to diagonal metric we are overestimating by ~9%
+#increasing R0 to 20
+#with off diagonal we get within 2%.
+
+#But consider Bowden singular
+#Axel's contour method, with the ϕ equation, does not predict the same result
+#rather it predicts -0.018987110268100602, an ~8% difference.
+#our code predicts -0.01447212409495936, again underestimating the damping,
+#with diagonal metric, we predict -0.018822434541716268, which is almost identical to Axel's contour prediction. and much closer to Bowden Singular.
+
+#Cleary, this buisness is garbage wraped in rubbish
+#Seems like everyone's code is rubbish
+#big concern for us is that fixing the B error has drastically changed our predictions...
+#Seems like our code is good enough though!
+
+#but also why would our code match Contour so well for bowden's but not int he other case???
+#perhaps this is because the continuum overlap is closer to the tae peak, meaning the loss of toroidal-ness away from the gap is reduced.
+
+
+
+
+
 #here we verify the damping calculation by comparing to Bowden and Hole 2015.
 #They determine a TAE with normalised frequency of Ω = 0.326 - 0.00571i 
 #with a damping ratio of Ωi/Ωr = -0.0175

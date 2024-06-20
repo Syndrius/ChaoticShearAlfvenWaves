@@ -4,6 +4,8 @@
 using MID
 using Plots; plotlyjs()
 
+
+
 #actually including Δ does seem to make our overestimated damping predictions more overestimated.
 #something funny is going on here.
 
@@ -25,7 +27,7 @@ using Plots; plotlyjs()
 #0.32821226460709313 - 0.007118477121437926im
 #-0.021688638387598165
 
-N = 4000; 
+N = 3000; 
 #the collect is a bit annoying, but ok because we will typically use a clustered grid.
 #rgrid = collect(LinRange(0, 1, N));
 #rgrid = clustered_grid(N, 0.75, 0.8, 0.2)
@@ -38,7 +40,7 @@ geo = GeoParamsT(R0=10.0)
 #giving ratio as -0.021115097986236567, so consistently above what the literature is giving!
 
 
-prob = init_problem(q=singular_bowden_q, geo=geo, δ=-4.0e-9, dens=bowden_singular_dens)#, met=test_metric!); #probbaly should use geo if it is part 
+prob = init_problem(q=singular_bowden_q, geo=geo, δ=-4.0e-8, dens=bowden_singular_dens, met=diagonal_toroidal_metric!); #probbaly should use geo if it is part 
 #even if it is not really used.
 grids = init_grids(N=N, sep1=0.75, sep2=0.8, frac=0.2, mstart=1, mcount=2, nstart=-1, ncount=1, f_quad=4);
 #extra little spike is indep of clustered grid by the looks of it.

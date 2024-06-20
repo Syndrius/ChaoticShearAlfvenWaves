@@ -24,6 +24,8 @@ export island_continuum
 
 include("IslandCoordinates.jl")
 
+export island_width
+
 
 include("IslandWeakForm.jl")
 

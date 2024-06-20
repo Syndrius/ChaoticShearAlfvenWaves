@@ -37,3 +37,57 @@ function find_ind(ω, val)
 
     return argmin(abs.(ω.-val))
 end
+
+
+function plot_surface(z, grids, ind)
+
+    rgrid = construct_rgrid(grids)
+    nθ, mlist, θgrid = spectral_grid(grids.pmd)
+
+    if nθ < 50
+        nθ = 50
+        θgrid = LinRange(0, 2π, 50)
+    end
+
+    #currently construct only does a specific n.
+    surface(θgrid, rgrid, z[ind, :, :])
+
+
+end
+
+
+
+function construct_surface(ϕ, nevals, grids, n)
+
+    #slightly less arbitrary way of doing the θ stuff?
+    #this is hopeless when we only use a few modes.
+    nθ, mlist, θgrid = spectral_grid(grids.pmd)
+
+    if nθ < 50
+        nθ = 50
+        θgrid = LinRange(0, 2π, 50)
+    end
+    #nθ = 50 #this is arbitrary but I don't think it should be!
+    #maybe we need to inverse the fourier transform? Maybe that is what we are kind of doing?
+
+    #θgrid = LinRange(0, 2π, nθ) # I fell like this doesn't make sense to make our own arbitrary θgrid
+    #seems like it should be aligned with our island or solver or something.
+
+    z = zeros(nevals, grids.rd.N, nθ) #start with a single n value. can add extra dimension to this for n.
+
+    
+
+    for i in 1:grids.rd.N
+
+        for (j, θ) in enumerate(θgrid)
+
+            for (k, m) in enumerate(mlist)
+
+                z[:, i, j] += @. real(ϕ[:, i, k, n] * exp(1im * m * θ))
+            end
+        end
+    end
+
+    return z
+
+end

@@ -81,17 +81,17 @@ function compute_Tj(met::MetT, B::BFieldT)
         dds = zeros(6)
 
         for i in 1:3, k in 1:3
-            dds[1] += Γ[i, n] * lc[i, 1, k] * Γ[k, 1] / met.J 
+            dds[1] += Γ[i, n] * lct[i, 1, k] * Γ[k, 1] / met.J 
 
-            dds[2] += Γ[i, n] * (lc[i, 1, k] * Γ[k, 2] + lc[i, 2, k] * Γ[k, 1]) / met.J
+            dds[2] += Γ[i, n] * (lct[i, 1, k] * Γ[k, 2] + lct[i, 2, k] * Γ[k, 1]) / met.J
 
-            dds[3] += Γ[i, n] * (lc[i, 1, k] * Γ[k, 3] + lc[i, 3, k] * Γ[k, 1]) / met.J
+            dds[3] += Γ[i, n] * (lct[i, 1, k] * Γ[k, 3] + lct[i, 3, k] * Γ[k, 1]) / met.J
 
-            dds[4] += Γ[i, n] * lc[i, 2, k] * Γ[k, 2] / met.J
+            dds[4] += Γ[i, n] * lct[i, 2, k] * Γ[k, 2] / met.J
 
-            dds[5] += Γ[i, n] * (lc[i, 2, k] * Γ[k, 3] + lc[i, 3, k] * Γ[k, 2]) / met.J
+            dds[5] += Γ[i, n] * (lct[i, 2, k] * Γ[k, 3] + lct[i, 3, k] * Γ[k, 2]) / met.J
 
-            dds[6] += Γ[i, n] * lc[i, 3, k] * Γ[k, 3] / met.J
+            dds[6] += Γ[i, n] * lct[i, 3, k] * Γ[k, 3] / met.J
         end
 
         Tj[n, 4:9] .+= dds
@@ -128,7 +128,7 @@ function jparonB(met::MetT, B::BFieldT)
     #J^i = (∇×B)^i = 1/J * ϵ^{ijk}∂_j B_k = 1/J * ϵ^{ijk}∂_j (g_{kl} B^l)
 
     for i in 1:3, j in 1:3, k in 1:3
-        J[i] += 1 / met.J * lc[i, j, k] * (dot(met.gl[k, :], B.dB[:, j]) + dot(met.dgl[k, :, j], B.B[:]))
+        J[i] += 1 / met.J * lct[i, j, k] * (dot(met.gl[k, :], B.dB[:, j]) + dot(met.dgl[k, :, j], B.B[:]))
     end
     jpar = 0
     for i in 1:3, j in 1:3

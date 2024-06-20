@@ -14,6 +14,11 @@ Base class that just imports everything. We will want a description of the packa
  - Is it possible to test the theory that island damping is small because tae only interacts for limited r values? I.e frequnecy upshift is across fatest part of island (i think...) which may only be ~10% of the possible values? Ideally it would only be ~1% which might explain our significantly lower damping rate? Perhaps it would be ~10% of θ values and ~10% of ζ values, resulting in a total of ~1%?? Not sure how to argue this or test it or anything tbh.
  - May need to change our profile/setup, seems like any island at all causes overlap, as tae freq is only just above lower gap.
  - We should flip the sign of n, either in general or in island case. having a mix is no bloody good.
+ - See if we can find the top of up-shift as a frequency in our global code. i.e to a big island, and see if we can find a frequency that matches what the island continuum code predicts is the top. This does not match very well, hopefully due to not enough mode resolution.
+
+ - Think we are closer to understanding gaps, but we still need to think!
+ - Perhaps it would be worth directly implementing a two mode case without any simplifications, see if it matches our larger code. Hopefully not to much effort???
+
 
 """
 
@@ -82,6 +87,8 @@ using MID.Plotting; export reconstruct_continuum
 using MID.Plotting; export plot_potential
 using MID.Plotting; export find_ind
 using MID.Plotting; export plot_continuum
+using MID.Plotting; export plot_surface
+using MID.Plotting; export construct_surface
 
 
 
@@ -116,6 +123,7 @@ using MID.ExtraSpectra; export analytical_construct_and_solve
 include("IslandContinuum/IslandContinuum.jl")
 
 using MID.IslandContinuum; export island_continuum
+using MID.IslandContinuum; export island_width
 
 end
 

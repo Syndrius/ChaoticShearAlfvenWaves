@@ -111,3 +111,14 @@ function compute_Ω(χ::Float64, isl::ContIslandT, sign::Int64)
     end
 end
 
+
+#inputs are cooked becuase we mostly want to use the normal island for this!
+#probably possible to automate this with probs passed in, as then we could compute qp from dq
+#and we can get q0 from m0/n0 or whatever.
+function island_width(isl::IslandT, q0, qp)
+    #with our form of island, the width is cooked, need some kind of solver for this!
+
+    #for v small island, we can fix r(1-r) ≈ 0.25, and use normal width calculation,
+    return 4 * sqrt(isl.A * 0.25 * q0^2 / qp)
+
+end

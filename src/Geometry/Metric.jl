@@ -97,7 +97,7 @@ end
 
 
 """
-Function that fills out the MetT struct with Δ'=0, otherwise identical to totoidal_metric. Used for comparison with literature.
+Function that fills out the MetT struct with Δ'=0, otherwise identical to toroidal_metric. Used for comparison with literature.
 
 # Args
 met::MetT - Struct where metric information is stored.
