@@ -56,12 +56,18 @@
 
 #so one solution is like ϕ + B the other is like ϕ - B. (but with relative magnitude of B.)
 #I think the two options are co- and counter-propogating. We will need to show this properly!
+#Bill's review states quite clearly that they are counter propogating. Need to understand their propogating nature,
+#this may also help us undertsand tae's as they are standing waves? right...?
+
+#I guess gaps can only ever occur if one is going backwards and one forwards, otherwise both modes would have the same behaviour with r, ie both be increasing or decreasing with r.
 
 #is this perhap all the peices?? maybe... start trying to write this up and we will almost certainly find that it is not.
 
 function test_q(r)
-
-    return 1/r, 1
+    #test case for rsae from Bill's review
+    q = 1 - 0.5 * r + r^3
+    dq = -0.5 + 3 * r^2
+    return q, dq
 end
 
 
@@ -69,12 +75,13 @@ using MID
 
 using Plots; plotlyjs()
 
-N = 100;
-grids = init_grids(N=N, mstart=2, mcount=2, nstart=-2, ncount=1)#, nincr=4);
+N = 300;
+grids = init_grids(N=N, mstart=-10, mcount=26, nstart=-10, ncount=1, nincr=4);
 
 isl = IslandT(A=0e-5, m0=5, n0=4);
 geo = GeoParamsT(R0=10.0);
 prob = init_problem(q=island_damping_q, isl=isl, geo=geo);
+#prob = init_problem(q=fu_dam_q, isl=isl, geo=geo);
 #prob = init_problem(q=test_q, isl=isl, geo=geo);
 
 
@@ -90,8 +97,8 @@ reconstruct_continuum(ω = ω, ϕ = ϕ, grids = grids)#, ymax=10)
 tae_ind = find_ind(ω, 0.183)
 tae_ind = find_ind(ω, 0.66)
 
-tae_ind = find_ind(ω, 0.355)
-tae_ind = find_ind(ω, 0.36) #why is this one basically a cylindrical mode??? this occurs at large r so should have toroidal corrections?
+tae_ind = find_ind(ω, 0.1518)
+tae_ind = find_ind(ω, 0.383) #why is this one basically a cylindrical mode??? this occurs at large r so should have toroidal corrections?
 
 tae_ind = find_ind(ω, 3.576557)
 tae_ind = find_ind(ω, 4.46)
@@ -108,6 +115,10 @@ z = construct_surface(ϕ, length(ω), grids, 1);
 plot_surface(z, grids, tae_ind)
 
 
+
+ω_cont = continuum(prob=prob, grids=grids);
+#this doesn't tell me which n is which fk sake.
+plot_continuum(ω = ω_cont, grids=grids, n=-6, ymax=1)#, filename="data/continuum.png")
 #in cylindrical limit,
 
 #ω1^2 = (m/q + n)^2 with some R's or someshit.

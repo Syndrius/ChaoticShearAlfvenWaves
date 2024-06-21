@@ -13,7 +13,7 @@ using Plots
 #so with 1e-6 we actually expect the tae to not experience damping
 #but 1e-5 perhaps not? there is like 1 `strand` that it could interact with. But majority is below.
 #similar with 5e-5, perhaps we just don't have enough modes?
-A = 5e-5 / 4 #4 to reflect r(1-r) factor
+A = 9e-5 / 4 #4 to reflect r(1-r) factor
 
 #so with small islands the structures are almost independent?
 
@@ -23,8 +23,8 @@ isl = ContIslandT(5, 4, A, 5/4, 0.8, 0.125)
 geo = GeoParamsT(R0=10.0)
 
 #start with this???
-pmd = MID.ModeDataT(start=-5, count=11, incr=1)
-tmd = MID.ModeDataT(start=-10, count=6, incr=4)
+pmd = MID.ModeDataT(start=-12, count=26, incr=1)
+tmd = MID.ModeDataT(start=-10, count=5, incr=4)
 #tmd = MID.ModeDataT(start=-8, count=10, incr=2)
 
 #χlist = LinRange(-A+A*0.05, A-A*0.05, 50) #this is fked, think we need to cluster near the spratrix.
@@ -50,6 +50,7 @@ hline!([0.425, 0.425]) #top,
 hline!([0.3764, 0.3764]) #bottom
 hline!([0.380, 0.380]) #tae
 
+savefig("data/9e-5_continuum.png")
 #our gap has max at 0.424
 #min at 0.3764
 #tae at ~0.380

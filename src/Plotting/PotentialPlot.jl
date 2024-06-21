@@ -57,11 +57,12 @@ end
 
 
 
-function construct_surface(ϕ, nevals, grids, n)
+function construct_surface(ϕ, nevals, grids, ζ)
 
     #slightly less arbitrary way of doing the θ stuff?
     #this is hopeless when we only use a few modes.
     nθ, mlist, θgrid = spectral_grid(grids.pmd)
+    _, nlist, _ = spectral_grid(grids.tmd)
 
     if nθ < 50
         nθ = 50
@@ -83,11 +84,50 @@ function construct_surface(ϕ, nevals, grids, n)
 
             for (k, m) in enumerate(mlist)
 
-                z[:, i, j] += @. real(ϕ[:, i, k, n] * exp(1im * m * θ))
+                for (l, n) in enumerate(nlist)
+
+                    z[:, i, j] += @. real(ϕ[:, i, k, l] * exp(1im * (m * θ + n * ζ)))
+                end
             end
         end
     end
 
     return z
 
+end
+
+
+#plots the potential but sums different n values.
+function plot_sum_potential(; grids, ϕ, ind, filename=nothing)
+
+    #assumes only a single n
+    #would be nice if this could do some labelling somehow!
+    #but this at least works.
+
+    mlist = (grids.pmd.start:grids.pmd.incr:grids.pmd.start + grids.pmd.incr * grids.pmd.count)[1:end-1]
+
+    rgrid = construct_rgrid(grids)
+
+    #p = plot(r, real.(ϕ[ind, :, 1, n]), label=mlist[1], dpi=600)
+
+    p = plot(xlabel=L"r", ylabel=L"\phi", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10)
+
+    #will plot the 1,1 mode twice!
+    for i in 1:grids.pmd.count
+        res = zeros(size(ϕ[ind, :, i, 1]))
+
+        for j in 1:grids.tmd.count
+            #not sure what if this is correct, may need fourier exponent of each n part??
+            res += real.(ϕ[ind, :, i, j])
+        end
+        plot!(rgrid, res, label=@sprintf("m=%s", mlist[i]))
+        #plot!(rgrid, real.(ϕ[ind, :, i, n]), label=@sprintf("m=%s", mlist[i]))
+    end
+
+    display(p)
+    if !isnothing(filename)
+        savefig(p, filename)
+    end
+
+    
 end

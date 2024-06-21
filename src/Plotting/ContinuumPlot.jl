@@ -1,9 +1,9 @@
 
 
-function plot_continuum(; ω, grids, filename=nothing, n=1)
+function plot_continuum(; ω, grids, filename=nothing, n=1, ymin=-0.05, ymax=1.05)
     #colours of this are cooked, ie gaps dont flip like they should.
     #rotating it gives way to much whitespace between axis label and tickmarks.
-    p = scatter(xlabel=L"r", ylabel=L"\frac{\omega  R_0}{v_A}", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10)#, guidefontvalign=:hcentre)
+    p = scatter(xlabel=L"r", ylabel=L"\frac{\omega  R_0}{v_A}", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10, ylimits=(ymin, ymax))#, guidefontvalign=:hcentre)
     mlist = (grids.pmd.start:grids.pmd.incr:grids.pmd.start + grids.pmd.incr * grids.pmd.count)[1:end-1]
     rgrid = collect(LinRange(0, 1, grids.rd.N))[2:end]
     for (i, m) in enumerate(mlist)

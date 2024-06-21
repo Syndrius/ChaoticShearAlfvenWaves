@@ -5,16 +5,17 @@ Base class that just imports everything. We will want a description of the packa
 
  - Fix up plotting
  - Fix up/finish docstrings. Overall code still needs some cleaning, final results will depend on verification via CKA.
- - Maybe function to read ith eigenfunction? May become very important with large parallel cases.
  - Should probably check the regularization condition for ϕ
  - Check gadi results and see if we can confirm some convergence
  - Would be good to do some kind of maybe bar graph with contributions from different poloidal mode numbers, would show the island coupling quite nicely I think.
- - determine the width of the islands, much trickier with newest form, either need to approximate with r=0.5 or maybe make a root finding function?? Either way it is pretty cooked.
+ - determine the width of the islands, much trickier with newest form, either need to approximate with r=0.5 or maybe make a root finding function?? Either way it is pretty cooked. Version on mathematic does not seem to match mode structure, but mode structure seems unreliable for width, should compare with poincare plot.
  - see if we can engineer a case with an island without a TAE so that we can look at the island modes. This may be difficult, as it could be difficult to compare island frequency vs normal continuum frequency.
  - Is it possible to test the theory that island damping is small because tae only interacts for limited r values? I.e frequnecy upshift is across fatest part of island (i think...) which may only be ~10% of the possible values? Ideally it would only be ~1% which might explain our significantly lower damping rate? Perhaps it would be ~10% of θ values and ~10% of ζ values, resulting in a total of ~1%?? Not sure how to argue this or test it or anything tbh.
  - May need to change our profile/setup, seems like any island at all causes overlap, as tae freq is only just above lower gap.
  - We should flip the sign of n, either in general or in island case. having a mix is no bloody good.
- - See if we can find the top of up-shift as a frequency in our global code. i.e to a big island, and see if we can find a frequency that matches what the island continuum code predicts is the top. This does not match very well, hopefully due to not enough mode resolution.
+ - See if we can find the top of up-shift as a frequency in our global code. i.e to a big island, and see if we can find a frequency that matches what the island continuum code predicts is the top. This does not match very well, hopefully due to not enough mode resolution. -> matches better with Gadi results!
+ - combine individual parts of TAE to see if we can see resonance with island, not sure how best to do this... will have to modify our surface function thing! -> i.e. see if we can understand what our eigenfunctions actually mean?
+ - Perhaps change θ to finite elements. This may be better for our memory problems.
 
  - Think we are closer to understanding gaps, but we still need to think!
  - Perhaps it would be worth directly implementing a two mode case without any simplifications, see if it matches our larger code. Hopefully not to much effort???
@@ -85,6 +86,7 @@ include("Plotting/Plotting.jl") #bit of a disaster atm!
 
 using MID.Plotting; export reconstruct_continuum
 using MID.Plotting; export plot_potential
+using MID.Plotting; export plot_sum_potential
 using MID.Plotting; export find_ind
 using MID.Plotting; export plot_continuum
 using MID.Plotting; export plot_surface

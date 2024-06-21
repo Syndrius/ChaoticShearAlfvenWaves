@@ -24,6 +24,7 @@ using Printf
 include("PotentialPlot.jl")
 
 export plot_potential
+export plot_sum_potential
 export find_ind
 export plot_surface
 export construct_surface
