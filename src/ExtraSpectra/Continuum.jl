@@ -7,18 +7,23 @@ Finds the continuum by solving the second order derivatives on each flux surface
 prob::ProblemT - Struct containing the functions and parameters that define the problem we are solving
 grids::GridT - Grids to solve over.
 """
-function continuum(; prob::ProblemT, grids::GridsT)
+function continuum(; prob::ProblemT, grids::FSSGridsT)
+
+    #don't think this will work with fem the whole time.
 
     #maybe should assert that the rgrid doesn't start from zero, as fem case avoids the zero,
     #cont case does not.
 
     #maybe easier to just assume that it will start from 0???
     #for contiinuum case we ignore the clustered region.
-    rlist = collect(LinRange(0, 1, grids.rd.N))[2:end]
+    #rlist = collect(LinRange(0, 1, grids.r.N))[2:end]
 
-    if rlist[1] == 0
-        display("Don't start from 0 you goose.")
-        #exit() #not sure if exit is correct.
+    rgrid, Nθ, mlist, θgrid, Nζ, nlist, ζgrid = instantiate_grids(grids)
+
+    
+
+    if rgrid[1] == 0
+        rgrid = rgrid[2:end] #remove zero from the list
     end
 
     if prob.isl.A != 0.0
@@ -31,29 +36,30 @@ function continuum(; prob::ProblemT, grids::GridsT)
         #exit()
     end
 
-    nθ, mlist, θgrid = spectral_grid(grids.pmd)
-    nζ, nlist, ζgrid = spectral_grid(grids.tmd)
+    #nθ, mlist, θgrid = spectral_grid(grids.pmd)
+    #nζ, nlist, ζgrid = spectral_grid(grids.tmd)
 
     met = MetT(zeros(3, 3), zeros(3, 3), zeros(3, 3, 3), zeros(3, 3, 3), 0.0, zeros(3))
     B = BFieldT(zeros(3), zeros(3), zeros(3, 3), zeros(3, 3), 0.0, zeros(3))
 
 
 
-    matrix_dim = grids.pmd.count * grids.tmd.count
+    matrix_dim = grids.θ.count * grids.ζ.count
 
     #efuncs are useless in this case I think.
     #ϕlist = zeros(matrix_dim, length(rlist), pmd.count, tmd.count)
-    ωlist = zeros(length(rlist), matrix_dim)
+    ωlist = zeros(length(rgrid), matrix_dim)
 
-    I = zeros(ComplexF64, 9, 9, 1, nθ, nζ)
-    W = zeros(ComplexF64, 9, 9, 1, nθ, nζ)
+    I = zeros(ComplexF64, 9, 9, 1, Nθ, Nζ)
+    W = zeros(ComplexF64, 9, 9, 1, Nθ, Nζ)
 
     #plan wont work the same as we are changing the size of I.
+    #could probably still be done tbh! would be more complicated and maybe not worth it tbh!
     #p = plan_fft!(I, [4, 5])
 
     #now we loop through the grid
 
-    for (i, r) in enumerate(rlist) 
+    for (i, r) in enumerate(rgrid) 
 
 
         #compute_met(met, [r], θgrid, ζgrid, R0)
@@ -78,32 +84,30 @@ function continuum(; prob::ProblemT, grids::GridsT)
 
 
         #loop over the fourier components of the trial function
-        for (k1,m1) in enumerate(mlist)
-            for (l1, n1) in enumerate(nlist)
+        for (k1,m1) in enumerate(mlist), (l1, n1) in enumerate(nlist)
+            left_ind = cont_grid_to_index(k1, l1, grids.ζ.count)
+            
+            for (k2, m2) in enumerate(mlist), (l2, n2) in enumerate(nlist)
+                right_ind = cont_grid_to_index(k2, l2, grids.ζ.count)
+                Φ = [1, m1*1im, n1*1im]
+                Ψ = [1, -m2*1im, -n2*1im]
 
-                for (k2, m2) in enumerate(mlist)
-                    for (l2, n2) in enumerate(nlist)
+                #mind = mod(m1-m2 + nθ, nθ) + 1
+                #nind = mod(n1-n2 + nζ, nζ) + 1
+                mind = mod(k1-k2 + Nθ, Nθ) + 1
+                nind = mod(l1-l2 + Nζ, Nζ) + 1
 
-                        Φ = [1, m1*1im, n1*1im]
-                        Ψ = [1, -m2*1im, -n2*1im]
+                
+                
 
-                        #mind = mod(m1-m2 + nθ, nθ) + 1
-                        #nind = mod(n1-n2 + nζ, nζ) + 1
-                        mind = mod(k1-k2 + nθ, nθ) + 1
-                        nind = mod(l1-l2 + nζ, nζ) + 1
+                #silly matrix dims, but keeps it consistent.
+                Imat[left_ind, right_ind] += Ifft[1, 1, 1, mind, nind]
 
-                        right_ind = cont_grid_to_index(k2, l2, grids.tmd.count)
-                        left_ind = cont_grid_to_index(k1, l1, grids.tmd.count)
-
-                        #silly matrix dims, but keeps it consistent.
-                        Imat[left_ind, right_ind] += Ifft[1, 1, 1, mind, nind]
-
-                        for j in 1:3
-                            for k in 1:3
-                                Wmat[left_ind, right_ind] += Ψ[j] * Wfft[j, k, 1, mind, nind] * Φ[k]
-                            end
-                        end
+                for j in 1:3
+                    for k in 1:3
+                        Wmat[left_ind, right_ind] += Ψ[j] * Wfft[j, k, 1, mind, nind] * Φ[k]
                     end
+                         
                 end
             end
         end

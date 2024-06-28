@@ -1,4 +1,5 @@
 """
+This is now basic case for 1d fem!! needs to be adjusted appropriatly.
 
 This file gives a basic use case of using the MID package to find TAE. This file does not consider a magnetic island chain or continuum damping. Please see island_damping.jl in examples for this.
 

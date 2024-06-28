@@ -1,5 +1,8 @@
 
 """
+#TODO - probably want to create a continuum module with this in it!
+
+
 Module for computing the island continuum. Think it would be better to have a continuum module in general.
 May have to see how ExtraSpectra ends up. If we verify with CKA it could all be useless.
 
@@ -50,14 +53,14 @@ geo::GeoParamsT - struct storing the geometrical parameters, i.e major radius.
 isl::ContIslandT - expanded struct storing the island paramaters needed for the continuum calculation.
 sign::Int64 - Sign of the particles, ±1 for passing on either side, or 0 for trapped particles.
 """
-function island_continuum(χlist::Array{Float64}, pmd::ModeDataT, tmd::ModeDataT, geo::GeoParamsT, isl::ContIslandT, sign::Int64)
+function island_continuum(χlist::Array{Float64}, pmd::Inputs.SMGridDataT, tmd::Inputs.SMGridDataT, geo::GeoParamsT, isl::ContIslandT, sign::Int64)
 
     #in all cases inouts are taken to be θ̄ and ζ, in trapped case, θ̄ is equivalent to ᾱ.
-    nθ, mlist, θ̄grid = spectral_grid(pmd) 
-    nζ, nlist, ζgrid = spectral_grid(tmd)
+    nθ, mlist, θ̄grid = Inputs.sm_grid(pmd) 
+    nζ, nlist, ζgrid = Inputs.sm_grid(tmd)
 
     if sign == 0
-        ζgrid = LinRange(0, 2*π / tmd.incr * isl.m0, nζ+1)[1:end-1]
+        ζgrid = range(0, 2*π / tmd.incr * isl.m0, nζ+1)[1:end-1]
     end
 
     

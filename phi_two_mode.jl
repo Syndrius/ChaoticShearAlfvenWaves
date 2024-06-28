@@ -645,13 +645,13 @@ function Axel_phi_2mode(N, m, R0, δ)
         ϵ = @. 2.0 * (x / R0 + Δp)
 
         #Axel's case
-        #dens = @. 1/2*(1-tanh((x-0.8)/0.1))
-        #q = @. 1.05 + 0.55 * x^2
+        dens = @. 1/2*(1-tanh((x-0.8)/0.1))
+        q = @. 1.05 + 0.55 * x^2
 
         #Bowden Singular Case
-        dens = @. 1/2 * (1-tanh((x-0.7)/0.05))
+        #dens = @. 1/2 * (1-tanh((x-0.7)/0.05))
 
-        q = @. 1 + 2 * x^2
+        #q = @. 1 + 2 * x^2
 
         km = @. (m/q + n)/R0 #will need to confirm this? may be -n instead
         km1 = @. (m1/q + n)/R0
@@ -767,13 +767,13 @@ function Axel_phi_2mode(N, m, R0, δ)
     #then solve...
     #so looks like this form is not Hermitian, interesting, works if we don't specify Hermitian!
     #ω2, evals = eigen(Matrix(Hermitian(W)), Matrix(Hermitian(I)))
-    #ω2, evals = eigen(Matrix(W), Matrix(I))
+    ω2, evals = eigen(Matrix(W), Matrix(I))
     #ω2, evals = eigs(W, I, nev=5, ritzvec=true, sigma=(0.389/R0)^2)
     #case for R0=20
     #ω2, evals = eigs(W, I, nev=5, ritzvec=true, sigma=(0.397/R0)^2)
 
     #bowden singular case.
-    ω2, evals = eigs(W, I, nev=5, ritzvec=true, sigma=(0.326/R0)^2)
+    #ω2, evals = eigs(W, I, nev=5, ritzvec=true, sigma=(0.326/R0)^2)
 
 
     ϕmsol = evals[1:2:2*N, :]
@@ -786,9 +786,9 @@ end
 
 
 
-N = 1000
+N = 100
 R0 = 10
-ω_a, ϕm, ϕm1 = Axel_phi_2mode(N, 1, R0, 0.0);
+ω_a, ϕm, ϕm1 = Axel_phi_2mode(N, 2, R0, -4e-7);
 
 
 rdata, omdata, col = ϕm_to_cont(ω_a, N, ϕm, ϕm1);
@@ -800,9 +800,9 @@ rdata, omdata, col = ϕm_to_cont(ω_a, N, ϕm, ϕm1);
 #next we need to see if we can derive Axels equation from ours, 
 #then we should know what approximations are needed.
 #damping is good now! yayzees.
-scatter(rdata, real.(omdata), ylimits=(-0.02, 1.05), group=col, markersize=4.0)
+scatter(rdata, real.(omdata), ylimits=(-0.02, 0.50), group=col, markersize=4.0)
 
-tae_ind = tae_ind = argmin(abs.(ω_a.^2 .- 0.158)) 
+tae_ind = argmin(abs.(ω_a.^2 .- 0.158)) 
 tae_ind = 1
 
 rgrid = clustered_grid(N, 0.93, 0.98, 0.25)

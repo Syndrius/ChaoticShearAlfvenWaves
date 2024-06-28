@@ -2,10 +2,9 @@
 
 
 """
-Density function from Axel's paper, should be renamed.
+    axel_dens(r::Float64)
 
-# Args
-r::Float64 - Radial point.
+Density function from Axel's paper, should be renamed.
 """
 function axel_dens(r::Float64)
     #Axel's density function
@@ -14,30 +13,27 @@ function axel_dens(r::Float64)
 end
 
 """
-UniformdDensity function, default density.
+    uniform_dens(r::Float64)
 
-# Args
-r::Float64 - Radial point.
+Uniformd density function, default density, returns 1.0.
 """
 function uniform_dens(r::Float64)
     return 1.0
 end
 
 """
-Density function from Bowden Singular paper, should be renamed.
+    bowden_singular_dens(r::Float64)
 
-# Args
-r::Float64 - Radial point.
+Density function from Bowden Singular paper, should be renamed.
 """
 function bowden_singular_dens(r::Float64)
     return 1/2 * (1-tanh((r-0.7)/0.05))
 end
 
 """
-Density function from Bowden comparison paper, should be renamed or removed as that paper seems dodge, only 800 points?.
+    comparison_bowden_dens(r::Float64)
 
-# Args
-r::Float64 - Radial point.
+Density function from Bowden comparison paper, should be renamed or removed as that paper seems dodge, only 800 points?.
 """
 function comparison_bowden_dens(r::Float64)
 

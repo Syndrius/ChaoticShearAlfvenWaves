@@ -1,4 +1,7 @@
 """
+#TODO
+This module is a complete mess and will almost certainly need to change. I think we will just create a continuum module, unsure where convergence tests will go, they may not be as useful anymore
+as most convergence tests will need parallel.
 
 Module for auxillary spectra functions we are interested in. In particular contains function for
  - Computing the continuum without islands

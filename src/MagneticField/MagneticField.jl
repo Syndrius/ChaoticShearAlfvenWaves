@@ -1,6 +1,6 @@
 """
 
-Contains the Magnetic field and functions to calculate it, inlcudes
+Contains the Magnetic field and functions to calculate it, includes
  - BFieldT struct and function to fill it.
  - Variety of q and density profiles that are passed in as arguments.
 
@@ -21,7 +21,7 @@ include("qProfiles.jl")
 
 export Axel_q
 export island_damping_q
-export singular_bowden_q
+export bowden_singular_q
 export comparison_bowden_q
 export fu_dam_q
 

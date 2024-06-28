@@ -1,6 +1,7 @@
 
 
 #Grids Indexing and Matrices!
+#may be worth splitting this up tbh!
 
 
 """
@@ -32,44 +33,33 @@ function compute_boundary_inds(nr::Int64, nm::Int64, nn::Int64, mlist::Array{Int
 
 end
 
+function compute_boundary_inds(grids::FSSGridsT)
 
-"""
-Modifies the matrix storing the basis functions, Φ, to reflect the local derivatives being taken.
+    Nr = grids.r.N
+    Nm = grids.θ.count
+    Nn = grids.ζ.count
 
-#Args
-Φ::Array{ComplexF64, 3} - 9x4xgp matrix, stores the 9 derivtaives of the potential for each 4 Hermite basis functions at each gauss point.
-H::Array{Float64, 2} - Hermite basis functions.
-dH::Array{Float64, 2} - Derivtive of Hermite basis functions.
-ddH::Array{Float64, 2} - Second derivtive of Hermite basis functions.
-m::Int64 - Poloidal mode number, i.e. scale factor for derivative of Fourier basis.
-n::Int64 - Toroidal mode number, i.e. scale factor for derivative of Fourier basis.
-jac::Float64 - Jacobian of local to global transformation, not to be confused with geometric Jacobian.
-"""
-function create_local_basis!(Φ::Array{ComplexF64, 3}, H::Array{Float64, 2}, dH::Array{Float64, 2}, ddH::Array{Float64, 2}, m::Int64, n::Int64, jac::Float64)
+    _, mlist, _ = Inputs.sm_grid(grids.θ) #think this is pointless!
 
-    #Φ_s
-    @. Φ[1, :, :] = dH / jac
-    #Φ_θ
-    @. Φ[2, :, :] = H * m * 1im
-    #Φ_ζ
-    @. Φ[3, :, :] = H * n * 1im
-    #Φ_ss
-    @. Φ[4, :, :] = ddH / jac^2
-    #Φ_sθ
-    @. Φ[5, :, :] = dH * m * 1im / jac
-    #Φ_sζ   
-    @. Φ[6, :, :] = dH * n * 1im / jac
-    #Φ_θθ
-    @. Φ[7, :, :] = H * (-m^2)
-    #Φ_θζ
-    @. Φ[8, :, :] = H * (-m*n)
-    #Φ_ζζ
-    @. Φ[9, :, :] = H * (-n^2)
+    left_boundary = 1:2:2*Nm*Nn
+    #tried to make the distinction between nθ and nm clearer.
+    #think this is a waste of time, hard to know for sure though!
+    if 0 in mlist
+        zero_ind = argmin(abs.(mlist))
+        left_boundary = collect(left_boundary)
+        #more complicated regularization condition
+        #shift the m=0 conditions to the derivative,
+        for i in (length(mlist) - zero_ind)*Nn+1:(zero_ind)*Nn
+            left_boundary[i] += 1
+        end
+    end
 
-    #test case with no derivative!
-    #@. Φ[10, :, :] = H
+    #could probably use grid_to_index for this
+    right_boundary = 1+(Nr-1)*2*Nm*Nn:2:Nr*2*Nm*Nn
 
+    return vcat(left_boundary, right_boundary)
 end
+
 
 
 """
@@ -87,7 +77,10 @@ hbind::Int64 - Index of Hermite basis functions
 nm::Int64 - Number of poloidal modes, i.e. how many poloidal points are in the matrix.
 nn::Int64 - Number of toroidal modes, i.e. how many toroidal points are in the matrix.
 """
-function grid_to_index(rind::Int64, θind::Int64, ζind::Int64, hbind::Int64, nm::Int64, nn::Int64)
+function grid_to_index(rind::Int64, θind::Int64, ζind::Int64, hbind::Int64, grids::FSSGridsT)
+
+    Nm = grids.θ.count
+    Nn = grids.ζ.count
 
     #id's for the heremite basis
     #tells us which node the basis belongs to, 0 for left, 1 for right of current element
@@ -106,9 +99,16 @@ function grid_to_index(rind::Int64, θind::Int64, ζind::Int64, hbind::Int64, nm
 
     #the index from 1 is going to change things a bit.
     #can be made clearer but does seem to be working ish.
-    return 1+2*nm*nn*(rind-1) + basis_id[hbind] + 2*nn*(θind-1) + 2*(ζind-1) + 2*nm*nn*grid_id[hbind]
+    return 1+2*Nm*Nn*(rind-1) + basis_id[hbind] + 2*Nn*(θind-1) + 2*(ζind-1) + 2*Nm*Nn*grid_id[hbind]
 
 end
+
+function matrix_dim(grids::FSSGridsT)
+
+    return 2 * grids.r.N * grids.θ.count * grids.ζ.count
+end
+
+
 
 
 """
@@ -119,7 +119,7 @@ i::Int64 Matrix index
 nm::Int64 - Number of poloidal modes, i.e. how many poloidal points are in the matrix.
 nn::Int64 - Number of toroidal modes, i.e. how many toroidal points are in the matrix.
 """
-function index_to_grid(i::Int64, nm::Int64, nn::Int64)
+function index_to_grid_fss(i::Int64, nm::Int64, nn::Int64)
     s = div(i-1, 2*nm*nn) + 1
     θ = mod(div(i-1, 2*nn), nm) + 1
     ζ = mod(div(i-1, 2), nn) + 1
@@ -128,6 +128,20 @@ function index_to_grid(i::Int64, nm::Int64, nn::Int64)
 
     return s, θ, ζ, h
 end
+
+
+function index_to_grid(i::Int64, grids::FSSGridsT)
+    r = div(i-1, 2*grids.θ.count*grids.ζ.count) + 1
+    θ = mod(div(i-1, 2*grids.ζ.count), grids.θ.count) + 1
+    ζ = mod(div(i-1, 2), grids.ζ.count) + 1
+
+    h = mod(i-1, 2) + 1 #ie even or odd
+
+    return r, θ, ζ, h
+
+end
+
+
 
 """
 Reconstructs the 1d eigenfunction output back to the 3d grid.
@@ -139,50 +153,22 @@ nr::Int64 - Number of radial grid points
 nm::Int64 - Number of poloidal modes, i.e. how many poloidal points are in the matrix.
 nn::Int64 - Number of toroidal modes, i.e. how many toroidal points are in the matrix.
 """
-function reconstruct_phi(efuncs::Array{ComplexF64, 2}, nevals::Int64, nr::Int64, nm::Int64, nn::Int64)
-    phi = zeros(ComplexF64, nevals, nr, nm, nn)
+function reconstruct_phi(efuncs::Array{ComplexF64, 2}, nevals::Int64, grids::FSSGridsT)
+    phi = zeros(ComplexF64, nevals, grids.r.N, grids.θ.count, grids.ζ.count)
     #maybe one day we will want dphidr???
+    #note that this is the same for both!
 
-    for i in 1:2*nr*nm*nn
+    for i in 1:matrix_dim(grids)
 
         #note these are the indicies.
-        s, θ, ζ, hs = index_to_grid(i, nm, nn)
+        r, θ, ζ, hs = index_to_grid(i, grids)
 
         if hs == 1
             #may be the wrong way around!
-            phi[:, s, θ, ζ] = efuncs[i, :]
+            phi[:, r, θ, ζ] = efuncs[i, :]
         end
     end
     return phi
-end
-
-
-"""
-Creates a grid with values clusered between two points.
-
-# Args
-N::Int64 - Size of the grid
-sep1::Float64 - Location of the start of the clustered region.
-sep2::Float64 - Location of the end of the clustered region.
-frac::Float64 - Fraction of N that should be in the clustered region.
-"""
-function clustered_grid(N::Int64, sep1::Float64, sep2::Float64, frac::Float64)
-
-    nclust = Int(floor(frac*N))
-
-    rclust = LinRange(sep1, sep2, nclust)
-
-    nrest = N-nclust
-
-    nright = Int(floor((1-sep2)*nrest))
-
-    nleft = nrest-nright
-
-    rleft = LinRange(0, sep1, nleft+1)[1:end-1]
-
-    rright = LinRange(sep2, 1, nright+1)[2:end]
-
-    return vcat(rleft, rclust, rright)
 end
 
 
@@ -222,3 +208,33 @@ function compute_length(nr, nm, nn)
 
     return total - bounds + equal_bounds
 end
+
+
+
+
+
+"""
+Converts the local grid where the finite elements are defined to the global coordinates.
+
+# Args
+node::Int64 - Current node in the finite elements grid.
+ξ::Array{Float64} - Local grid, -1≤ξ≤1.
+grid::Array{Float64} - Global grid.
+"""
+function local_to_global(node::Int64, ξ::Array{Float64}, grid::Array{Float64})
+
+    dr = grid[node+1] - grid[node]
+
+    #first we map the (-1, 1) local coords to (0, 1)
+    mp = @. (ξ+1) / 2
+
+    #then we sale by the width of grid points
+    mp = mp .* dr
+
+    #finally we add this to our grid, so this gives us go points between our global grid point i and i+1
+    rglobal = mp .+ grid[node]
+
+    
+    return rglobal, dr
+end 
+

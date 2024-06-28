@@ -5,7 +5,6 @@ Module for the geometry. This includes
  - The struct storing the island information.
 
 """
-
 module Geometry
 
 

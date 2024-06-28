@@ -1,10 +1,9 @@
-
+#TODO -> should change these names and probably provide the function in the doc.
 
 """
-Devised q-profile such that gap and 5/4 island both occur at r=0.5.
+    island_damping_q(r)
 
-# Args
-r::Float64 - Radial point.
+Devised q-profile such that gap and 5/4 island both occur at r=0.5.
 """
 function island_damping_q(r)
     a = 1.15
@@ -15,10 +14,9 @@ function island_damping_q(r)
 end
 
 """
-Q profile from Axel's paper, should be renamed.
+    Axel_q(r::Float64) 
 
-# Args
-r::Float64 - Radial point.
+Q profile from Axel's paper, should be renamed.
 """
 function Axel_q(r::Float64) 
 
@@ -29,10 +27,9 @@ function Axel_q(r::Float64)
 end
 
 """
-Q profile from Bowden comparison paper, should be renamed, or removed.
+    comparison_bowden_q(r::Float64)
 
-# Args
-r::Float64 - Radial point.
+Q profile from Bowden comparison paper, should be renamed, or removed.
 """
 function comparison_bowden_q(r::Float64)
     q = 1.5+(2-1.5)*r^2
@@ -43,12 +40,11 @@ function comparison_bowden_q(r::Float64)
 end
 
 """
-Q profile from Bowden singular paper, should be renamed.
+    bowden_singular_q(r::Float64)
 
-# Args
-r::Float64 - Radial point.
+Q profile from Bowden singular paper, should be renamed.
 """
-function singular_bowden_q(r::Float64)
+function bowden_singular_q(r::Float64)
 
     q = 1+(3-1)*r^2
     dq = 4*r
@@ -57,10 +53,9 @@ function singular_bowden_q(r::Float64)
 end
 
 """
-Q profile from Fu and Van Dam paper, should be renamed.
+    fu_dam_q(r::Float64)
 
-# Args
-r::Float64 - Radial point.
+Q profile from Fu and Van Dam paper, should be renamed.
 """
 function fu_dam_q(r::Float64)
     q = @. 1 + r^2
@@ -69,10 +64,9 @@ function fu_dam_q(r::Float64)
 end
 
 """
-Q profile from Qu's paper, should be renamed.
+    default_island_q(r::Float64)
 
-# Args
-r::Float64 - Radial point.
+Q profile from Qu's paper, should be renamed.
 """
 function default_island_q(r::Float64)
 

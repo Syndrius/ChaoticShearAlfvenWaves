@@ -2,10 +2,11 @@
 
 """
 Struct storing the geometrical parameters.
-# Fields
-R0::Float64  - The major radius
-a::Float64=1 - The minor radius
-B0::Float64=1 - The magnetic field strength at the axis.
+
+### Fields
+- R0::Float64 - The major radius.
+- a::Float64=1.0 - The minor radius. Not implemented yet, assumed to be 1.0 everywhere.
+- B0::Float64=1.0 - The magnetic field strength at the axis. Not implemented yet, assumed to be 1.0 everywhere.
 """
 @kwdef struct GeoParamsT
     R0 :: Float64
@@ -16,15 +17,15 @@ end
 
 """
 This struct stores the key information that defines the problem to be solved.
-Main input for matrix construction functions.
+One of the main inputs for matrix construction functions.
 
-# Fields
-q::Function - The q-profile, function of r that return (q, dq)
-met::Function=toroidal_metric! - Computes the metric at each coordinates, defaults to toroidal.
-dens::Function=uniform_dens - Computes the density as a function of r, defaults to uniform density.
-isl::IslandT=no_isl Struct - storing the island parameters, defaults to no island.
-geo::GeoParamsT - Struct storing the geometrical parameters.
-δ::Float64=0.0 - Artifical damping.    
+### Fields
+- q::Function - The q-profile, function of r that return (q, dq)
+- met::Function=toroidal_metric! - Computes the metric at each coordinates, defaults to toroidal.
+- dens::Function=uniform_dens - Computes the density as a function of r, defaults to uniform density.
+- isl::IslandT=no_isl Struct - storing the island parameters, defaults to no island.
+- geo::GeoParamsT - Struct storing the geometrical parameters.
+- δ::Float64=0.0 - Artifical damping.    
 """
 @kwdef struct ProblemT
     q :: Function 

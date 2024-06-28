@@ -17,6 +17,7 @@ using MID.Misc
 using Plots
 using LaTeXStrings
 using Printf
+using FFTW
 #Plots.set_default_backend!(:plotlyjs)
 #we probbaly want to use the plotly backend for inspection of specific frequencies.
 #using PlotlyJS
@@ -26,13 +27,14 @@ include("PotentialPlot.jl")
 export plot_potential
 export plot_sum_potential
 export find_ind
-export plot_surface
+export plot_phi_surface
 export construct_surface
 
 include("ContinuumPlot.jl")
 
 export plot_continuum
 export reconstruct_continuum
+export mode_structure
 
 
 end

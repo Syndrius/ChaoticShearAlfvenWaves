@@ -1,13 +1,8 @@
 
 """
-Computes the I matrix for the weak form at a single coordinate. Still a bit unoptimised. See thesis for details on what is being computed.
+    compute_I!(I::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT, B::BFieldT, n::Float64, δ::Float64)
 
-# Args 
-- I Stupid type due to using views.
-- met::MetT Struct containing the metric information.
-- B::BfieldT Struct containing the magnetic field information.
-- n::Float64 Density.
-- δ::Float64 Artifical resistivity, for damping calculations.
+Computes the I matrix for the weak form at a single coordinate. Still a bit unoptimised. See thesis for details on what is being computed.
 """
 function compute_I!(I::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT, B::BFieldT, n::Float64, δ::Float64)
 

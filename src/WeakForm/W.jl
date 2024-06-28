@@ -2,12 +2,9 @@
 #this is the worst file in the whole package!!
 
 """
-Computes the W matrix for the weak form at a single coordinate. Awful function that is built from awful functions! This file needs work!
+    compute_W!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT, B::BFieldT)
 
-# Args 
-- I Stupid type due to using views.
-- met::MetT Struct containing the metric information.
-- B::BfieldT Struct containing the magnetic field information.
+Computes the W matrix for the weak form at a single coordinate. Awful function that is built from awful functions! This file needs work!
 """
 function compute_W!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT, B::BFieldT)
 
@@ -42,11 +39,16 @@ end
 #appears to be giving the same results as other cases.
 #identical results to earlier
 #but we have changed compute B and are now getting different results
+"""
+    compute_Tj(met::MetT, B::BFieldT)
+
+Computes the current term contribution to W.
+"""
 function compute_Tj(met::MetT, B::BFieldT)
     Tj = zeros(9, 9) #9x9 is overkill, as Tj[>3, >3] will always be zero.
 
-    Γ = zeros(3, 3)
-    dΓ = zeros(3, 3, 3) #last ind is deriv.
+    Γ = zeros(Float64, 3, 3)
+    dΓ = zeros(Float64, 3, 3, 3) #last ind is deriv.
 
     #Γ_i^j = δ_i^j - g_{im}b^m b^j
     for i in 1:3, j in 1:3
@@ -105,7 +107,9 @@ function compute_Tj(met::MetT, B::BFieldT)
 end
 
 #const lct = cat(3, [0 0 0; 0 0 1; 0 -1 0], [0 0 -1; 0 0 0; 1 0 0], [0 1 0; -1 0 0; 0 0 0], dims=(3, 3, 3))
-
+"""
+Function for the levi-civita tensor.
+"""
 function get_lc_tensor()
     #probably a more elegant way to do this.
     lc = zeros(3, 3, 3)
@@ -121,6 +125,11 @@ end
 
 const lct = get_lc_tensor()
 
+"""
+    jparonB(met::MetT, B::BFieldT)
+
+Computes the parrallel current divided by the magnitude of B, needed for the current term of W.
+"""
 function jparonB(met::MetT, B::BFieldT)
 
     J = zeros(3)

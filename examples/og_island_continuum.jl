@@ -32,8 +32,8 @@ geo = GeoParamsT(R0=3.0)
 #display(@. (-χlistplus[1:5]+noA) / (2*noA))
 
 #I guess we need to export modedataT..
-pmd = MID.ModeDataT(start=0, count=33, incr=1)
-tmd = MID.ModeDataT(start=-5, count=3, incr=2)
+pmd = init_sm_grid(start=0, count=33, incr=1)
+tmd = init_sm_grid(start=-5, count=3, incr=2)
 
 #ω2list_plus = passing_continuum(χlistplus, pmd, tmd, geo, no_isl, 1);
 ω2list_plus = island_continuum(χlistplus, pmd, tmd, geo, no_isl, 1);
@@ -73,8 +73,8 @@ geo = GeoParamsT(R0=3.0)
 χlistminus = @. -smallA - LinRange(0, 1, 401)[2:end]^2 * 0.003
 
 
-pmd = MID.ModeDataT(start=-20, count=41, incr=1)
-tmd = MID.ModeDataT(start=-5, count=6, incr=2)
+pmd = init_sm_grid(start=-20, count=41, incr=1)
+tmd = init_sm_grid(start=-5, count=6, incr=2)
 
 #ω2list_plus = passing_continuum(χlistplus, pmd, tmd, geo, small_isl, 1);
 ω2list_plus = island_continuum(χlistplus, pmd, tmd, geo, small_isl, 1);
@@ -112,8 +112,8 @@ geo = GeoParamsT(R0=3.0)
 χlistminus = @. -A - LinRange(0, 1, 401)[2:end]^2 * 0.003
 
 
-pmd = MID.ModeDataT(start=-20, count=41, incr=1)
-tmd = MID.ModeDataT(start=-5, count=6, incr=2)
+pmd = init_sm_grid(start=-20, count=41, incr=1)
+tmd = init_sm_grid(start=-5, count=6, incr=2)
 
 #ω2list_plus = passing_continuum(χlistplus, pmd, tmd, geo, isl, 1);
 ω2list_plus = island_continuum(χlistplus, pmd, tmd, geo, isl, 1);
@@ -142,8 +142,8 @@ scatter!(rm, sqrt.(abs.(ω2list_minus .* 3^2)))
 #with lower mode numbers, the gaps still seems to be the same
 #good for us, hopefully means we can test gap width more quickly.
 #kind of seems like the behaviour further from the gap gets more and more cooked.
-pmd = MID.ModeDataT(start=-30, count=61, incr=1)
-tmd = MID.ModeDataT(start=-8, count=9, incr=2)
+pmd = init_sm_grid(start=-30, count=61, incr=1)
+tmd = init_sm_grid(start=-8, count=9, incr=2)
 
 #@. doesn't work with exp of linrange for some reason!
 χlist1 =  1 .- 0.01 * exp.( -1 .* collect(LinRange(0, 12, 11)))

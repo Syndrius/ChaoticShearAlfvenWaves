@@ -1,9 +1,11 @@
 
 
 """
-Uses Julias inbuild eigen function from LinearAlgebra. Solves the generalised eigenvalue problem Wϕ = ω^2Iϕ, finding the full spectrum of eigenvalues.
+    full_spectrum_solve(; Wmat, Imat, grids::GridsT, efuncs=true::Bool, reconstruct=true::Bool, resistivity=false::Bool, R0::Float64)
 
-# Args
+Uses Julias inbuilt eigen function from LinearAlgebra. Solves the generalised eigenvalue problem Wϕ = ω^2Iϕ, finding the full spectrum of eigenvalues.
+
+### Args
 Wmat - W matrix.
 Imat - I matrix.
 grids::GridsT - Grids used in the problem, used for reconstruction.
@@ -12,13 +14,13 @@ reconstruct::Bool - Whether to reconstruct the eigenfunctions into 3d.
 resistivity::Bool - Whether we are solving with resistivity, if not matricies are Hermitian.
 R0::Float64 - Major radius, used for normalising.
 """
-function full_spectrum_solve(;Wmat, Imat, grids::GridsT, efuncs=true::Bool, reconstruct=true::Bool, resistivity=false::Bool, R0::Float64)
+function full_spectrum_solve(; Wmat, Imat, grids::GridsT, efuncs=true::Bool, reconstruct=true::Bool, resistivity=false::Bool, R0::Float64)
 
     if efuncs
         if resistivity
             vals, funcs = eigen(Matrix(Wmat), Matrix(Imat))
             if reconstruct
-                phi = reconstruct_phi(funcs, length(vals), nr, nθ, nζ)
+                phi = reconstruct_phi(funcs, length(vals), grids)
                 return R0 .* sqrt.(vals), phi
             else
                 return R0 .* sqrt.(vals), funcs
@@ -27,7 +29,8 @@ function full_spectrum_solve(;Wmat, Imat, grids::GridsT, efuncs=true::Bool, reco
             #may need a reconstruct flag in the future or a better way to write phi to files.
             vals, funcs = eigen(Hermitian(Matrix(Wmat)), Hermitian(Matrix(Imat)))
             if reconstruct
-                phi = reconstruct_phi(funcs, length(vals), grids.rd.N, grids.pmd.count, grids.tmd.count)
+                #needs to change!
+                phi = reconstruct_phi(funcs, length(vals), grids)
                 #abs needed for comparison bowden case...
                 return R0 .* sqrt.(abs.(vals)), phi
             else
@@ -49,10 +52,12 @@ end
 
 
 """
+    arpack_solve(; Wmat, Imat, grids::GridsT, efuncs=true::Bool, nev=20::Int64, σ=0.0::Float64, reconstruct=false::Bool, R0::Float64)
+
 Uses shift and invert to solve for the nev nearest eigenvalues to σ using Arpack. Solves the generalised eigenvalue problem Wϕ = ω^2Iϕ.
 Note that Arpack version 0.5.4 is broken but is the default version installed with packagemanger. Install version 0.5.3 with add Arpack@0.5.3
 
-# Args
+### Args
 Wmat - W matrix.
 Imat - I matrix.
 grids::GridsT - Grids used in the problem, used for reconstruction.
@@ -64,21 +69,23 @@ R0::Float64 - Major radius, used for normalising.
 """
 function arpack_solve(; Wmat, Imat, grids::GridsT, efuncs=true::Bool, nev=20::Int64, σ=0.0::Float64, reconstruct=false::Bool, R0::Float64)
 
+    #un-normalise the target frequency for the shift and invert
+    tae_freq = σ^2 / R0^2
     if efuncs
         #which=:LM here seems to cook it in the same way 0.5.4 does
         #wonder why this ever worked???
         #changing maxiter to 1000, did not change result...
         #tol-1.0-14 did not change result...
         #both are tested for axel case.
-        vals, funcs = eigs(Wmat, Imat, nev=nev, ritzvec=true, sigma=σ)
+        vals, funcs = eigs(Wmat, Imat, nev=nev, ritzvec=true, sigma=tae_freq)
         if reconstruct
-            phi = reconstruct_phi(funcs, length(vals), grids.rd.N, grids.pmd.count, grids.tmd.count)
+            phi = reconstruct_phi(funcs, length(vals), grids)
             return R0 .* sqrt.(vals), phi
         else
             return R0 .* sqrt.(vals), funcs
         end
     end
 
-    return R0 .* sqrt.(eigs(Wmat, Imat, nev=nev, ritzvec=false, sigma=σ))
+    return R0 .* sqrt.(eigs(Wmat, Imat, nev=nev, ritzvec=false, sigma=tae_freq))
 
 end

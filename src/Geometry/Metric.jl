@@ -1,13 +1,14 @@
 
 """
 Struct for storing the metric which describes the geometry and related derivatives at each coordinate.
-# Fields
-gl::Array{Float64, 2} - 3x3 matrix storing the lowered metric g_{ij}
-gu::Array{Float64, 2} - 3x3 matrix storing the raised metric g^{ij}
-dgl::Array{Float64, 3} - Derivative of gl, 3rd index labels coordinate that derivative is taken with respect to.
-dgl::Array{Float64, 3} - Derivative of gu, 3rd index labels coordinate that derivative is taken with respect to.
-J::Float64 - Jacobian of the metric. #may want to change to single element array so struct is immutable.
-dJ::Array{Float64, 1} - Derivative of J, index labels coordinate that derivative is taken with respect to.
+
+### Fields
+- gl::Array{Float64, 2} - 3x3 matrix storing the lowered metric g_{ij}
+- gu::Array{Float64, 2} - 3x3 matrix storing the raised metric g^{ij}
+- dgl::Array{Float64, 3} - Derivative of gl, 3rd index labels coordinate that derivative is taken with respect to.
+- dgl::Array{Float64, 3} - Derivative of gu, 3rd index labels coordinate that derivative is taken with respect to.
+- J::Float64 - Jacobian of the metric. #may want to change to single element array so struct is immutable.
+- dJ::Array{Float64, 1} - Derivative of J, index labels coordinate that derivative is taken with respect to.
 """
 mutable struct MetT
     gl :: Array{Float64, 2} 
@@ -20,14 +21,9 @@ end
 
 
 """
-Function that fills out the MetT struct for toroidal geometry. Metric elements taken from Energetic Particles in Tokamak Plasmas by Sergai Sharapov. Straight field line coordinates are radius (r), generalised poloidal angle (θ) and generalised toroidal angle (ζ), equal to negative of true toroidal angle. Additionally we assume low shear and approximate Δ' ≈ r/(4*R0).
+    toroidal_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
 
-# Args
-met::MetT - Struct where metric information is stored.
-r::Float64 -  Radial coordinate, 0≤r≤1, minor radius is assumed 1.
-θ::Float64 -  Poloidal angle, 0≤θ≤2π
-ζ::Float64  - Toroidal angle, 0≤θ≤2π, #unused in this case.
-R0::Float64 -  Major radius.
+Function that fills out the MetT struct for toroidal geometry. Metric elements taken from Energetic Particles in Tokamak Plasmas by Sergai Sharapov. Straight field line coordinates are radius (r), generalised poloidal angle (θ) and generalised toroidal angle (ζ), equal to negative of true toroidal angle. Additionally we assume low shear and approximate Δ' ≈ r/(4*R0).
 """
 function toroidal_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
     
@@ -97,14 +93,9 @@ end
 
 
 """
-Function that fills out the MetT struct with Δ'=0, otherwise identical to toroidal_metric. Used for comparison with literature.
+    no_delta_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
 
-# Args
-met::MetT - Struct where metric information is stored.
-r::Float64 -  Radial coordinate, 0≤r≤1, minor radius is assumed 1.
-θ::Float64 -  Poloidal angle, 0≤θ≤2π
-ζ::Float64  - Toroidal angle, 0≤θ≤2π, #unused in this case.
-R0::Float64 -  Major radius.
+Function that fills out the MetT struct with Δ'=0, otherwise identical to toroidal_metric. Used for comparison with literature.
 """
 function no_delta_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
     
@@ -173,16 +164,13 @@ function no_delta_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::F
 end
 
 """
+    diagonal_toroidal_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
 
-# Args
-met::MetT - Struct where metric information is stored.
-r::Float64 -  Radial coordinate, 0≤r≤1, minor radius is assumed 1.
-θ::Float64 -  Poloidal angle, 0≤θ≤2π
-ζ::Float64  - Toroidal angle, 0≤θ≤2π, #unused in this case.
-R0::Float64 -  Major radius.
+Toroidal metric retaining only the diagonal elements. Used for comparison with two mode models.
 """
 function diagonal_toroidal_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
-    
+    #TODO
+
     #this is cooked in its current form.
     #gives a completly different frequency.
     #pretty cooked, :(
@@ -255,7 +243,8 @@ end
 #probably only used for testing
 #Unused so far, and probably not needed, can probably just set R0=1000 in other casees.
 function cylindrical_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
-
+    #TODO!
+    #may be able to just use R0=1000 or whatever.
     #doesn't equate to cylindrical limit or weird cylindrical coords
     #this is regular old cylindrical for comparing our weak form
 
@@ -285,15 +274,10 @@ end
 
 
 """
+    flux_toroidal_metric!(met::MetT, ψ::Float64, θ::Float64, ζ::Float64, R0::Float64)
+
 Function for toroidal metric with flux as the radial coordinate. Used by island continuum. 
 Currently only computes only what is required for island continuum.
-
-# Args
-met::MetT - Struct where metric information is stored.
-ψ::Float64 -  Radial coordinate, 0≤ψ≤1, minor radius is assumed 1.
-θ::Float64 -  Poloidal angle, 0≤θ≤2π
-ζ::Float64  - Toroidal angle, 0≤θ≤2π, #unused in this case.
-R0::Float64 -  Major radius.
 """
 function flux_toroidal_metric!(met::MetT, ψ::Float64, θ::Float64, ζ::Float64, R0::Float64)
 

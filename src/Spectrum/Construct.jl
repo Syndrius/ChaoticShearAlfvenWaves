@@ -1,23 +1,28 @@
 """
+    construct(prob::ProblemT, grids::FSSGridsT)
+
 Constructs the two matrices using the WeakForm of the SAW governing equation. Uses Finite elements with cubic Hermite polynomials in r, and the fourier spectral method in θ and ζ. Returns two sparse matrices.
 
-# Args
+### Args
 prob::ProblemT - Struct containing the functions and parameters that define the problem we are solving
-grids::GridT - Grids to solve over.
+grids::FSSGridT - Grids to solve over.
 """
-function construct(; prob::ProblemT, grids::GridsT)
+function construct(prob::ProblemT, grids::FSSGridsT)
 
+    #removing the kwargs from here seems to have helped with the weird warnings, I think they are just a symptom of a previously compiled version!
     #island being nothing is stupid, either need to separate cases with and without island, or construct an empty (A=0) island if it is nothing.
 
-    nθ, mlist, θgrid = spectral_grid(grids.pmd)
-    nζ, nlist, ζgrid = spectral_grid(grids.tmd)
+    #nθ, mlist, θgrid = spectral_grid(grids.pmd)
+    #nζ, nlist, ζgrid = spectral_grid(grids.tmd)
+
+    rgrid, Nθ, mlist, θgrid, Nζ, nlist, ζgrid = instantiate_grids(grids)
 
 
     #initialise the two structs.
     met = MetT(zeros(3, 3), zeros(3, 3), zeros(3, 3, 3), zeros(3, 3, 3), 0.0, zeros(3))
     B = BFieldT(zeros(3), zeros(3), zeros(3, 3), zeros(3, 3), 0.0, zeros(3))
 
-    ξ, wg = gausslegendre(grids.rd.gp) #same as python!
+    ξ, wg = gausslegendre(grids.r.gp) #same as python!
 
     #gets the basis 
     H, dH, ddH = hermite_basis(ξ)
@@ -26,9 +31,9 @@ function construct(; prob::ProblemT, grids::GridsT)
     #4 is the number of Hermite shape functions
     #10 is Φ and all its relevant derivatives.
     #under new method we don't use the zeroth derivative, so these could be replaced with 9 
-    Φ = zeros(ComplexF64, 9, 4, grids.rd.gp)
+    Φ = zeros(ComplexF64, 9, 4, grids.r.gp)
     #the test function.
-    Ψ = zeros(ComplexF64, 9, 4, grids.rd.gp)   
+    Ψ = zeros(ComplexF64, 9, 4, grids.r.gp)   
 
 
     #generalised eval problem WΦ = ω^2 I Φ
@@ -39,7 +44,7 @@ function construct(; prob::ProblemT, grids::GridsT)
     #can probably determine the maximum sized int we need based on size of matrix.
     #need to determine the size of these bad bois, they are eating up a bit of time.
     #this seems to have made a minimal difference, but is surely better practise right.
-    arr_length = compute_length(grids.rd.N, grids.pmd.count, grids.tmd.count)
+    arr_length = compute_length(grids.r.N, grids.θ.count, grids.ζ.count)
 
     arr_count = 1 #this may be wrong... gives error for v small matrix...
 
@@ -55,12 +60,12 @@ function construct(; prob::ProblemT, grids::GridsT)
 
 
     #either need a condition in case m=0 or just an error message.
-    boundary_inds = compute_boundary_inds(grids.rd.N, grids.pmd.count, grids.tmd.count, collect(mlist))
+    boundary_inds = compute_boundary_inds(grids.r.N, grids.θ.count, grids.ζ.count, collect(mlist))
     #display(size(boundary_inds))
     #display(boundary_inds)
 
-    I = zeros(ComplexF64, 9, 9, grids.rd.gp, nθ, nζ)
-    W = zeros(ComplexF64, 9, 9, grids.rd.gp, nθ, nζ)
+    I = zeros(ComplexF64, 9, 9, grids.r.gp, Nθ, Nζ)
+    W = zeros(ComplexF64, 9, 9, grids.r.gp, Nθ, Nζ)
 
 
     #this gives a warning but seems to work perfectly
@@ -76,9 +81,9 @@ function construct(; prob::ProblemT, grids::GridsT)
 
     #now we loop through the grid
 
-    rgrid = construct_rgrid(grids)
+    #rgrid = construct_rgrid(grids)
 
-    for i in 1:grids.rd.N-1
+    for i in 1:grids.r.N-1
 
         r, dr = local_to_global(i, ξ, rgrid)
 
@@ -119,24 +124,24 @@ function construct(; prob::ProblemT, grids::GridsT)
                 create_local_basis!(Ψ, H, dH, ddH, -m2, -n2, jac)
 
                 #extract the relevant indicies from the ffted matrices.
-                mind = mod(k1-k2 + nθ, nθ) + 1
-                nind = mod(l1-l2 + nζ, nζ) + 1
+                mind = mod(k1-k2 + Nθ, Nθ) + 1
+                nind = mod(l1-l2 + Nζ, Nζ) + 1
 
 
                 for trialsf in 1:4
 
-                    right_ind = grid_to_index(i, k1, l1, trialsf, grids.pmd.count, grids.tmd.count)
+                    right_ind = grid_to_index(i, k1, l1, trialsf, grids)
 
                     for testsf in 1:4
                         #display("testsf")
                         #display(testsf)
 
                         
-                        left_ind = grid_to_index(i, k2, l2, testsf, grids.pmd.count, grids.tmd.count)
+                        left_ind = grid_to_index(i, k2, l2, testsf, grids)
 
                         #only check for boundaries if this is true
                         #no other i's can possibly give boundaries
-                        if i==1 || i==grids.rd.N-1
+                        if i==1 || i==grids.r.N-1
 
 
                             if left_ind == right_ind && left_ind in boundary_inds
@@ -162,10 +167,10 @@ function construct(; prob::ProblemT, grids::GridsT)
                                 cols[arr_count] = right_ind
                                 
 
-                                Wsum = @views gauss_integrate(Ψ[:, testsf, :], Φ[:, trialsf, :], W[:, :, :, mind, nind], wg, jac, grids.rd.gp)
+                                Wsum = @views gauss_integrate(Ψ[:, testsf, :], Φ[:, trialsf, :], W[:, :, :, mind, nind], wg, jac, grids.r.gp)
 
 
-                                Isum = @views gauss_integrate(Ψ[:, testsf, :], Φ[:, trialsf, :], I[:, :, :, mind, nind], wg, jac, grids.rd.gp)
+                                Isum = @views gauss_integrate(Ψ[:, testsf, :], Φ[:, trialsf, :], I[:, :, :, mind, nind], wg, jac, grids.r.gp)
 
                                 Wdata[arr_count] = Wsum
                                 Idata[arr_count] = Isum
@@ -178,10 +183,10 @@ function construct(; prob::ProblemT, grids::GridsT)
                             cols[arr_count] = right_ind
                                 
 
-                            Wsum = @views gauss_integrate(Ψ[:, testsf, :], Φ[:, trialsf, :], W[:, :, :, mind, nind], wg, jac, grids.rd.gp)
+                            Wsum = @views gauss_integrate(Ψ[:, testsf, :], Φ[:, trialsf, :], W[:, :, :, mind, nind], wg, jac, grids.r.gp)
 
 
-                            Isum = @views gauss_integrate(Ψ[:, testsf, :], Φ[:, trialsf, :], I[:, :, :, mind, nind], wg, jac, grids.rd.gp)
+                            Isum = @views gauss_integrate(Ψ[:, testsf, :], Φ[:, trialsf, :], I[:, :, :, mind, nind], wg, jac, grids.r.gp)
 
                             Wdata[arr_count] = Wsum
                             Idata[arr_count] = Isum
@@ -195,6 +200,232 @@ function construct(; prob::ProblemT, grids::GridsT)
 
         end
     end
+
+    #maybe more consisnt for this function to return the rows and data as per parallal case.
+    Wmat = sparse(rows, cols, Wdata)
+    Imat = sparse(rows, cols, Idata)
+
+    return Wmat, Imat
+end
+
+
+
+"""
+    construct(prob::ProblemT, grids::FFSGridsT)
+
+Constructs the two matrices using the WeakForm of the SAW governing equation. Uses Finite elements with cubic Hermite polynomials in r and θ and the fourier spectral method in ζ. Returns two sparse matrices.
+
+### Args
+prob::ProblemT - Struct containing the functions and parameters that define the problem we are solving
+grids::FFSGridT - Grids to solve over.
+"""
+function construct(prob::ProblemT, grids::FFSGridsT)
+
+
+    #island being nothing is stupid, either need to separate cases with and without island, or construct an empty (A=0) island if it is nothing.
+
+    
+
+    rgrid, θgrid, Nζ, nlist, ζgrid = instantiate_grids(grids)
+
+
+    #initialise the two structs.
+    met = MetT(zeros(3, 3), zeros(3, 3), zeros(3, 3, 3), zeros(3, 3, 3), 0.0, zeros(3))
+    B = BFieldT(zeros(3), zeros(3), zeros(3, 3), zeros(3, 3), 0.0, zeros(3))
+
+    #not sure if this should be combined into 1 or something, focus on getting to work first.
+    ξr, wgr = gausslegendre(grids.r.gp) #same as python!
+    ξθ, wgθ = gausslegendre(grids.θ.gp)
+
+    #gets the basis 
+
+    S, dSr, dSθ, ddSrr, ddSrθ, ddSθθ = hermite_basis(ξr, ξθ)
+
+    #the trial function
+    #4 is the number of Hermite shape functions
+    #10 is Φ and all its relevant derivatives.
+    #under new method we don't use the zeroth derivative, so these could be replaced with 9 
+
+    #shape of this will be cooked, expect 4-> 16, unsure if we combined rd and θd yet, leave separate for now.
+    Φ = zeros(ComplexF64, 9, 16, grids.r.gp, grids.θ.gp)
+    #the test function.
+    Ψ = zeros(ComplexF64, 9, 16, grids.r.gp, grids.θ.gp)   
+
+
+    #generalised eval problem WΦ = ω^2 I Φ
+    #Imat = zeros(ComplexF64, 2 * rd.grid_size * pmd.count * tmd.count, 2 * rd.grid_size * pmd.count * tmd.count)
+    #Wmat = zeros(ComplexF64, 2 * rd.grid_size * pmd.count * tmd.count, 2 * rd.grid_size * pmd.count * tmd.count)
+
+    #probably possible to know the size of this first.
+    #can probably determine the maximum sized int we need based on size of matrix.
+    #need to determine the size of these bad bois, they are eating up a bit of time.
+    #this seems to have made a minimal difference, but is surely better practise right.
+    #arr_length = compute_length(grids.rd.N, grids.pmd.count, grids.tmd.count)
+
+    #arr_count = 1 #this may be wrong... gives error for v small matrix...
+
+    #probably won't know the lengths anymore!
+    #rows = Array{Int64}(undef, arr_length) #ints
+    #cols = Array{Int64}(undef, arr_length) #ints
+    #Idata = Array{ComplexF64}(undef, arr_length)
+    #Wdata = Array{ComplexF64}(undef, arr_length)
+
+    rows = Array{Int64}(undef, 0) #ints
+    cols = Array{Int64}(undef, 0) #ints
+    Idata = Array{ComplexF64}(undef, 0)
+    Wdata = Array{ComplexF64}(undef, 0)
+
+
+    #either need a condition in case m=0 or just an error message.
+    boundary_inds = compute_boundary_inds(grids)
+    #display(size(boundary_inds))
+    #display(boundary_inds)
+
+    #these will hopefully be smaller I think!
+    I = zeros(ComplexF64, 9, 9, grids.r.gp, grids.θ.gp, Nζ)
+    W = zeros(ComplexF64, 9, 9, grids.r.gp, grids.θ.gp, Nζ)
+
+
+    #this gives a warning but seems to work perfectly
+    #and incredibly efficiently!
+    #this essentially defines a plane to fft I, (and W as they are the same size), which can be exectued
+    #via p * I, this is done in place and seems to be mad efficient.
+    #only a single ft now!
+    p = plan_fft!(W, [5])
+
+    #Isum = 0.0 + 0.0im
+    #Wsum = 0.0 + 0.0im
+
+
+    #now we loop through the grid
+
+    #will we want a clustered θgrid??? probably not???
+    #but we can generalise this function as well if we want it to work with θ, even without clustering!
+    #rgrid, θgrid = construct_grids_zf(grids)
+
+    for i in 1:grids.r.N-1, j in 1:grids.θ.N #go to N for periodicity!
+
+
+        r, θ, dr, dθ = local_to_global(i, j, ξr, ξθ, rgrid, θgrid) #wot is θgrid? will need to be constructed I think.
+
+        #Hopefully this is correct!
+        jac = dr * dθ / 4 #following thesis!
+
+
+        #I_and_W!(I, W, B, q_profile, met, compute_met, dens, r, θgrid, ζgrid, δ, isl, R0)
+
+        #hopefully this step will be smaller! but we have twice the loop, so everything else will be longer!
+        W_and_I!(W, I, met, B, prob, r, θ, ζgrid)
+        #W_tor, I_tor = stupid_W_and_I!(W, I, met, B, prob, r, θgrid, ζgrid)
+        #stupid_W_and_I!(W, I, met, B, prob, r, θgrid, ζgrid)
+
+        #display(W[:, :, 1, 1, 1])
+
+
+        #uses the fft plan to take the fft of our two matrices.
+        p * W
+        p * I
+
+
+        
+        #loop over the fourier components of the trial function
+        for (l1, n1) in enumerate(nlist)
+
+            #note we haven't implemented pf for r, seems pointless.
+            create_local_basis!(Φ, S, dSr, dSθ, ddSrr, ddSrθ, ddSθθ, grids.θ.pf, n1, dr, dθ)
+
+            for (l2, n2) in enumerate(nlist)
+
+                #negatives for conjugate, will assume the phase factor is conjugate as well.
+                create_local_basis!(Ψ, S, dSr, dSθ, ddSrr, ddSrθ, ddSθθ, -grids.θ.pf, -n2, dr, dθ)
+
+                #extract the relevant indicies from the ffted matrices.
+                #mind = mod(k1-k2 + nθ, nθ) + 1
+                nind = mod(l1-l2 + Nζ, Nζ) + 1
+
+
+                for trialsf in 1:16
+                    
+                    #may need a θN or something!
+                    right_ind = grid_to_index(i, j, l1, trialsf, grids)
+
+                    for testsf in 1:16
+                        #display("testsf")
+                        #display(testsf)
+
+                        
+                        left_ind = grid_to_index(i, j, l2, testsf, grids)
+
+                        #only check for boundaries if this is true
+                        #no other i's can possibly give boundaries
+                        
+                        if i==1 || i==grids.r.N-1
+
+
+                            if left_ind == right_ind && left_ind in boundary_inds
+
+                                #rows[arr_count] = left_ind
+                                #cols[arr_count] = right_ind
+                                #Wdata[arr_count] = 1.0 + 0.0im
+                                #Idata[arr_count] = 1.0 + 0.0im
+
+                                push!(rows, left_ind)
+                                push!(cols, right_ind)
+                                push!(Wdata, 1.0 + 0.0im)
+                                push!(Idata, 1.0 + 0.0im)
+                                
+                                #arr_count += 1
+
+                                #bounds_count += 1
+                            
+                            #otherwise the boundaries are set to zero, which for sparse matrices
+                            #is the same as leaving blank.
+                            elseif left_ind in boundary_inds
+                                continue
+                            elseif right_ind in boundary_inds
+                                continue
+                            #otherwise a regular case for these indicies.
+                            else
+                                #rows[arr_count] = left_ind
+                                #cols[arr_count] = right_ind
+                                push!(rows, left_ind)
+                                push!(cols, right_ind)
+                                
+
+                                #TODO -> should be almost the same, 
+                                Wsum = @views gauss_integrate(Ψ[:, testsf, :, :], Φ[:, trialsf, :, :], W[:, :, :, :, nind], wgr, wgθ, jac, grids.r.gp, grids.θ.gp)
+
+
+                                Isum = @views gauss_integrate(Ψ[:, testsf, :, :], Φ[:, trialsf, :, :], I[:, :, :, :, nind], wgr, wgθ, jac, grids.r.gp, grids.θ.gp)
+
+                                push!(Wdata, Wsum)
+                                push!(Idata, Isum)
+                            end
+                        else
+                            
+                            #rows[arr_count] = left_ind
+                            #cols[arr_count] = right_ind
+                            push!(rows, left_ind)
+                            push!(cols, right_ind)
+                                
+
+                            Wsum = @views gauss_integrate(Ψ[:, testsf, :, :], Φ[:, trialsf, :, :], W[:, :, :, :, nind], wgr, wgθ, jac, grids.r.gp, grids.θ.gp)
+
+
+                            Isum = @views gauss_integrate(Ψ[:, testsf, :, :], Φ[:, trialsf, :, :], I[:, :, :, :, nind], wgr, wgθ, jac, grids.r.gp, grids.θ.gp)
+
+                            push!(Wdata, Wsum)
+                            push!(Idata, Isum)
+                            
+                        end
+                    end
+                end
+
+            end
+
+        end
+    end
+
 
     #maybe more consisnt for this function to return the rows and data as per parallal case.
     Wmat = sparse(rows, cols, Wdata)
