@@ -31,7 +31,7 @@ Solving generalised eigenvalue problem Wϕ = ω^2Iϕ
 - θ::Float64 - Poloidal angle, 0≤θ≤2π.
 - ζ::Float64 - Toroidal angle, 0≤θ≤2π.
 """
-function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, met::MetT, B::BFieldT, prob::ProblemT, r::Array{Float64}, θ::AbstractArray, ζ::AbstractRange)
+function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, met::MetT, B::BFieldT, prob::ProblemT, r::Array{Float64}, θ::AbstractArray, ζ::AbstractArray)
 
     #have removed the type for θ, needs to be a vector for zf, but a linrange for normal, need a better way of defining these types.
     

@@ -40,7 +40,7 @@ geo = GeoParamsT(R0=10.0)
 #giving ratio as -0.021115097986236567, so consistently above what the literature is giving!
 
 
-prob = init_problem(q=bowden_singular_q, geo=geo, δ=-0.0e-8, dens=bowden_singular_dens)#, met=diagonal_toroidal_metric!); #probbaly should use geo if it is part 
+prob = init_problem(q=bowden_singular_q, geo=geo, δ=-4.0e-8, dens=bowden_singular_dens)#, met=diagonal_toroidal_metric!); #probbaly should use geo if it is part 
 #even if it is not really used.
 rgrid = init_fem_grid(N=Nr, frac=0.2, sep1=0.73, sep2=0.8)
 θgrid = init_sm_grid(start=1, count=2)

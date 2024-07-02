@@ -18,7 +18,9 @@ using Printf
 
 
 using MID.Geometry
-using MID.Misc
+using MID.Basis
+using MID.Indexing
+using MID.Integration
 using MID.MagneticField
 using MID.WeakForm
 using MID.Inputs

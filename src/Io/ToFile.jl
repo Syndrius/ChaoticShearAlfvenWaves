@@ -35,8 +35,10 @@ function grids_to_file(; grids::GridsT, filename::String)
     open(filename, "w") do file
         if grids.θ isa SMGridDataT
             write(file, "Grids: FSS\n")
-        else
+        elseif grids.ζ isa SMGridDataT
             write(file, "Grids: FFS\n")
+        else
+            write(file, "Grids: FFF\n")
         end
         write(file, "Radial Grid:\n")
         grid_to_file(file, grids.r)

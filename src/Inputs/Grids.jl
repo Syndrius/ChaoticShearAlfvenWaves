@@ -76,6 +76,21 @@ Struct storing the grids in the FFS case.
     ζ :: SMGridDataT
 end
 
+"""
+Struct storing the grids in the FFS case.
+
+### Fields
+- r::FEMGridDataT - Struct storing the finite elements radial grid information.
+- θ::FEMGridDataT - Struct storing the finite element grid.
+- ζ::FEMGridDataT - Struct storing the finite element grid information.
+"""
+@kwdef struct FFFGridsT <: GridsT
+    r :: FEMGridDataT
+    θ :: FEMGridDataT
+    ζ :: FEMGridDataT
+end
+
+
 
 """
     init_grids(rgrid::GridDataT, θgrid::GridDataT, ζgrid::GridDataT)
@@ -92,10 +107,34 @@ function init_grids(rgrid::GridDataT, θgrid::GridDataT, ζgrid::GridDataT)
         else
             return FFSGridsT(rgrid, θgrid, ζgrid)
         end
+    elseif ζgrid isa FEMGridDataT && θgrid isa FEMGridDataT
+        return FFFGridsT(rgrid, θgrid, ζgrid)
     end
 
     display("Not implemented yet...")
     return 0
+end
+
+"""
+    instantiate_grids(grids::FFFGridsT)
+
+Creates the grids used in the computation from the GridDataT structures.
+"""
+function instantiate_grids(grids::FFFGridsT)
+
+    if grids.r.frac == 0.0
+        #rgrid needs to be collected to be consistent with the clustered grid.
+        rgrid = collect(range(0, 1, grids.r.N))
+    else
+        rgrid = clustered_grid(grids.r)
+    end
+
+    #any island contribution here??
+    θgrid = range(0, 2π, grids.θ.N+1)[1:end-1]
+    ζgrid = range(0, 2π, grids.ζ.N+1)[1:end-1]
+
+    return rgrid, θgrid, ζgrid
+
 end
 
 

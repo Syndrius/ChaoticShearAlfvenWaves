@@ -142,6 +142,54 @@ function reconstruct_continuum(ω, ϕms, grids::FFSGridsT, filename=nothing, ymi
 end
 
 
+#note this requires that ϕ has been transformed into the mode structure version.
+#either here or in the mode structure it might be nice to remove the v large modes perhaps.
+function reconstruct_continuum(ω, ϕms, grids::FFFGridsT, filename=nothing, ymin=-0.05, ymax=1.05)
+    omdata = zeros(length(ω)) 
+    rdata = zeros(length(ω))
+    #col = zeros(length(ω))
+
+    #nlist = (grids.tmd.start:grids.tmd.incr:grids.tmd.start + grids.tmd.incr * grids.tmd.count)[1:end-1]
+
+    rgrid, _, _, = instantiate_grids(grids)
+
+    col = Tuple{Int, Int}[]
+
+    #wont generalise to clustred grids obvs.
+    #rgrid = LinRange(0, 1, grids.rd.N)
+    #θgrid = LinRange(0, 2π, grids.θd.N)
+
+    for i in 1:1:length(ω)
+
+        rm = zeros(Int64, grids.θ.N, grids.ζ.N)
+        ϕm = zeros(Float64, grids.θ.N, grids.ζ.N)
+
+        for j in 1:grids.θ.N, k in 1:grids.ζ.N
+
+            rm[j, k] = argmax(abs.(real.(ϕms[i, :, j, k])))
+            ϕm[j, k] = abs.(real.(ϕms[i, rm[j, k], j, k]))
+        end
+
+        max_mode = argmax(ϕm)
+
+        rdata[i] = rgrid[rm[max_mode]]
+        #col[i] = (mlist[max_mode[1]], nlist[max_mode[2]])
+        #not sure how this will handle the different n's tbh!
+        #we probably need a bigger version to test this out bh.
+        push!(col, (max_mode[1], 1))
+        #probably don't need this anymore tbh.
+        omdata[i] = abs.(ω[i]) #already normalised now!
+    end
+
+    p = scatter(rdata, omdata, group=col, ylimits=(ymin, ymax))#, xlabel=L"r", ylabel=L"\frac{\omega  R_0}{v_A}", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10)
+    #return rdata, omdata, col
+    display(p)
+    if !isnothing(filename)
+        savefig(p, filename)
+    end
+end
+
+
 
 
 #this actually seems to work pretty darn well!
@@ -161,7 +209,29 @@ function mode_structure(ϕ, grids::FFSGridsT)
     #this will get v large as θ gets v large.
     for i in 1:grids.r.N
         #assume single n for now!
-        ϕms[:, i, :, 1] = fft(ϕ[:, i, :, 1], [2])
+        for n in 1:grids.ζ.count
+            ϕms[:, i, :, n] = fft(ϕ[:, i, :, n], [2])
+        end
+
+    end
+
+    return ϕms
+end
+
+
+function mode_structure(ϕ, grids::FFFGridsT)
+
+    ϕms = zeros(ComplexF64, size(ϕ))
+
+    #i guess we fourier transform at each radial point? Perhap?
+
+    #rgrid = LinRange(0, 1, grids.rd.N) #this obvs won't work in general.
+
+    #may be necesary that we only keep the nth largest modes or something tbh.
+    #this will get v large as θ gets v large.
+    for i in 1:grids.r.N
+        #hopefully the 2d case works as expected
+        ϕms[:, i, :, :] = fft(ϕ[:, i, :, :], [2, 3])
 
     end
 

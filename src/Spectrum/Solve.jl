@@ -34,7 +34,7 @@ function full_spectrum_solve(; Wmat, Imat, grids::GridsT, efuncs=true::Bool, rec
                 #abs needed for comparison bowden case...
                 return R0 .* sqrt.(abs.(vals)), phi
             else
-                return R0 .* sqrt.(vals), funcs
+                return R0 .* sqrt.(abs.(vals)), funcs
             end
             
         end

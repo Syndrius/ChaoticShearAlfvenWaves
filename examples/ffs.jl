@@ -2,6 +2,9 @@
 using MID
 using Plots; plotlyjs()
 
+#with individual parts.
+#different ways of doing it are basically identical.
+#10.992975 seconds (15.38 M allocations: 1.195 GiB, 4.40% gc time)
 
 #start very small, matrix scales much more extremly
 Nr = 50;
@@ -45,7 +48,7 @@ rgrid = init_fem_grid(N=Nr)
 grids = init_grids(rgrid, θgrid, ζgrid)
 
 
-tae_freq = 0.30
+tae_freq = 0.39
 
 ω, ϕ = construct_and_solve(prob=prob, grids=grids, full_spectrum=false, σ=tae_freq, reconstruct=true);
 

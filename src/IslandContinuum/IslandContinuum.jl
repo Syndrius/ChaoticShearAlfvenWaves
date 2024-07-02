@@ -12,7 +12,7 @@ May have to see how ExtraSpectra ends up. If we verify with CKA it could all be 
 module IslandContinuum
 
 
-using MID.Misc
+#using MID.Misc
 using MID.Geometry
 using MID.MagneticField
 using MID.Inputs

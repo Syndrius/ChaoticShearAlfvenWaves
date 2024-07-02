@@ -146,7 +146,7 @@ function jparonB(met::MetT, B::BFieldT)
     return jpar/B.mag_B
 end
 
-function dδ(i, j)
+function dδ(i::Int64, j::Int64)
     if i==j
         return 1.0
     else

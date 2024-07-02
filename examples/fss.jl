@@ -24,7 +24,7 @@ grids = init_grids(rgrid, θgrid, ζgrid)
 reconstruct_continuum(ω, ϕ, grids)#, filename="data/fu_dam_spectrum.png")
 
 #unsure why it is flipped... hopefully a resolution problemo
-tae_ind = find_ind(ω, 0.296)
+tae_ind = find_ind(ω, 0.39)
 tae_freq = ω[tae_ind]
 plot_potential(ϕ, grids, tae_ind, 1)
 
@@ -32,15 +32,17 @@ plot_potential(ϕ, grids, tae_ind, 1)
 #now increase the resolution,
 Nr = 500
 
-geo = GeoParamsT(R0=4.0)
-prob = init_problem(q=fu_dam_q, geo=geo, met=no_delta_metric!); 
+geo = GeoParamsT(R0=10.0)
+
+prob = init_problem(q=Axel_q, geo=geo)#, met=no_delta_metric!); 
 
 rgrid = init_fem_grid(N=Nr)
-θgrid = init_sm_grid(start=0, count=5)
-ζgrid = init_sm_grid(start=-1, count=1)
+θgrid = init_sm_grid(start=2, count=2)
+ζgrid = init_sm_grid(start=-2, count=1)
+#grids = init_grids(N=N, mstart=1, mcount=2, nstart=-1, ncount=1);
 grids = init_grids(rgrid, θgrid, ζgrid)
 
-tae_freq=0.30
+#tae_freq=0.30
 ω, ϕ = construct_and_solve(prob=prob, grids=grids, full_spectrum=false, σ=tae_freq, reconstruct=true);
 
 
@@ -48,7 +50,7 @@ tae_freq=0.30
 reconstruct_continuum(ω, ϕ, grids)#, filename="data/fu_dam_spectrum.png")
 
 #unsure why it is flipped... hopefully a resolution problemo
-tae_ind = find_ind(ω, 0.30)
+tae_ind = find_ind(ω, 0.38)
 tae_freq = ω[tae_ind]
 #now tae modes are same sign, is that correct??? would match the fem1d case.
 

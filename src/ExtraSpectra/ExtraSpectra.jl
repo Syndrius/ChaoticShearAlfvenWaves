@@ -14,7 +14,7 @@ Module for auxillary spectra functions we are interested in. In particular conta
 module ExtraSpectra
 
 using MID.Geometry
-using MID.Misc
+using MID.Indexing
 using MID.MagneticField
 using MID.WeakForm
 using MID.Inputs

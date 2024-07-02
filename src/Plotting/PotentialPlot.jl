@@ -65,6 +65,41 @@ function plot_potential(ϕms, grids::FFSGridsT, ind, n=1, filename=nothing)
 end
 
 
+#requires that mode structure has been passed in here!
+function plot_potential(ϕms, grids::FFFGridsT, ind, n=1, filename=nothing)
+
+    #assumes only a single n
+    #would be nice if this could do some labelling somehow!
+    #but this at least works.
+
+    #mlist = (grids.pmd.start:grids.pmd.incr:grids.pmd.start + grids.pmd.incr * grids.pmd.count)[1:end-1]
+
+    #rgrid = construct_rgrid(grids)
+
+    rgrid, _, _ = instantiate_grids(grids)
+
+    #p = plot(r, real.(ϕ[ind, :, 1, n]), label=mlist[1], dpi=600)
+
+    p = plot(xlabel=L"r", ylabel=L"\phi", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10)
+
+    #will plot the 1,1 mode twice!
+    #this will be way to many modes!
+    for i in 1:grids.θ.N
+        
+        #label should be a function of pf!!!
+        #based on simple example with m=1, looks like last ind reps m=0 in some sense, i.e it wraps around?? Not sure how -m's will work for fem2d method.
+        plot!(rgrid, real.(ϕms[ind, :, i, n]), label=@sprintf("m=%s", i))
+    end
+
+    display(p)
+    if !isnothing(filename)
+        savefig(p, filename)
+    end
+
+    
+end
+
+
 #
 function find_ind(ω, val)
 
