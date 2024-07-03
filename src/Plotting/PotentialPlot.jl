@@ -107,7 +107,7 @@ function find_ind(ω, val)
 end
 
 
-function plot_phi_surface(ϕ, grids::FFSGridsT, ind, n=1)
+function plot_phi_surface(ϕ, grids::FFSGridsT, ind, n=1, filename=nothing)
     #not sure how to treat n in this case
 
 
@@ -115,14 +115,34 @@ function plot_phi_surface(ϕ, grids::FFSGridsT, ind, n=1)
 
 
     #currently construct only does a specific n.
-    surface(θgrid, rgrid, real.(ϕ[ind, :, :, n]))
+    p = surface(θgrid, rgrid, real.(ϕ[ind, :, :, n]))
+    display(p)
+    if !isnothing(filename)
+        savefig(p, filename)
+    end
 
+end
+
+
+function plot_phi_surface(ϕ, grids::FFFGridsT, ind, ζ=1, filename=nothing)
+    #pass in a zeta index, ideally could map that to a position or something.
+
+
+    rgrid, θgrid, _ = instantiate_grids(grids)   
+
+
+    #currently construct only does a specific n.
+    p = surface(θgrid, rgrid, real.(ϕ[ind, :, :, ζ]))
+    display(p)
+    if !isnothing(filename)
+        savefig(p, filename)
+    end
 
 end
 
 
 #note requires that phi surface has been called.
-function plot_phi_surface(ϕsur, grids::FSSGridsT, ind)
+function plot_phi_surface(ϕsur, grids::FSSGridsT, ind, filename=nothing)
 
     rgrid, Nθ, mlist, θgrid, _, _, _ = instantiate_grids(grids)
 
@@ -133,8 +153,11 @@ function plot_phi_surface(ϕsur, grids::FSSGridsT, ind)
     end
 
     #currently construct only does a specific n.
-    surface(θgrid, rgrid, ϕsur[ind, :, :])
-
+    p = surface(θgrid, rgrid, ϕsur[ind, :, :])
+    display(p)
+    if !isnothing(filename)
+        savefig(p, filename)
+    end
 
 end
 
