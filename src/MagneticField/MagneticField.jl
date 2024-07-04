@@ -25,6 +25,7 @@ export bowden_singular_q
 export comparison_bowden_q
 export fu_dam_q
 export default_island_q
+export island_3_2_q
 
 
 

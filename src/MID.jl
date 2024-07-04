@@ -8,8 +8,6 @@ Base class that just imports everything. We will want a description of the packa
  - WeakForm -> Bit cooked, mainly needs a good clean!
 
  - Fix up/finish docstrings. Overall code still needs some cleaning, final results will depend on verification via CKA. -> use @doc macro
- - Would be good to do some kind of maybe bar graph with contributions from different poloidal mode numbers, would show the island coupling quite nicely I think.
- - determine the width of the islands, much trickier with newest form, either need to approximate with r=0.5 or maybe make a root finding function?? Either way it is pretty cooked. Version on mathematic does not seem to match mode structure, but mode structure seems unreliable for width, should compare with poincare plot.
  - see if we can engineer a case with an island without a TAE so that we can look at the island modes. This may be difficult, as it could be difficult to compare island frequency vs normal continuum frequency.
  - Is it possible to test the theory that island damping is small because tae only interacts for limited r values? I.e frequnecy upshift is across fatest part of island (i think...) which may only be ~10% of the possible values? Ideally it would only be ~1% which might explain our significantly lower damping rate? Perhaps it would be ~10% of θ values and ~10% of ζ values, resulting in a total of ~1%?? Not sure how to argue this or test it or anything tbh.
  - May need to change our profile/setup, seems like any island at all causes overlap, as tae freq is only just above lower gap. -> could be good to have a 3/2 or even 2/1 island or something.
@@ -35,6 +33,8 @@ Base class that just imports everything. We will want a description of the packa
  - Plot continuum is probably the most cooked function going around!
  - Boundaries are being added twice... not sure why... -> this may be because of the two θbasis funcs, then in 3d it is added 4 times for the two θ and two ζ basis functions. -> has no effect on the frequency. I think this would just scale those basis functions by 2, but because they are zero it doesn't matter. Would be a problemo if we had non-zero boundaries.
  - Maybe create a grid type for continuum, i.e. just the spectral method??
+ - Move Gauss quadrature to integration.jl
+ - Why is ffs case spiking at r=0 in island cases?
 
 
  Two things to try:
@@ -42,7 +42,7 @@ Base class that just imports everything. We will want a description of the packa
     - change to FFF as this seems easier to underttand, then we can consider ζ cross section over different parts of the island.
 
 Two ways to increase the damping/interaction
-    - Make the tae and the island have the same toroidal mode number, will require modification, and don't think it is possible to have the island at the gap.
+    - Make the tae and the island have the same toroidal mode number, will require modification, and don't think it is possible to have the island at the gap. -> doesn't seem to work.
     - Make the interaction between the neighbouring toroidal mode (i.e. + n0) and the continuum stronger.
 
 
@@ -81,6 +81,7 @@ using MID.MagneticField; export bowden_singular_q
 using MID.MagneticField; export comparison_bowden_dens
 using MID.MagneticField; export comparison_bowden_q
 using MID.MagneticField; export fu_dam_q
+using MID.MagneticField; export island_3_2_q
 
 
 

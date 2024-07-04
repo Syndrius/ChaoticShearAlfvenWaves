@@ -13,6 +13,18 @@ function island_damping_q(r)
     return q, dq
 end
 
+
+#q-profile designed for tae at r=0.5 for (2, -2), (3, -2) with a (3,2) island at r=0.75.
+function island_3_2_q(r)
+    a = 1.05
+    b = 0.8
+
+    q = a+b*r^2
+    dq = 2*b*r
+    return q, dq
+end
+
+
 """
     Axel_q(r::Float64) 
 

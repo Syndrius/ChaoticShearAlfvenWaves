@@ -18,6 +18,7 @@ const basis_id = [0, 1, 0, 1]
 include("FSSIndexing.jl")
 include("FFSIndexing.jl")
 include("FFFIndexing.jl")
+include("ContIndexing.jl")
 
 
 export compute_boundary_inds

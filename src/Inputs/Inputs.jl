@@ -18,6 +18,7 @@ export GridsT
 export FSSGridsT
 export FFSGridsT
 export FFFGridsT
+export ContGridsT
 export FEMGridDataT
 export SMGridDataT
 export init_fem_grid

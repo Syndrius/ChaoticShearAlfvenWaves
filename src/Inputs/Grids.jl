@@ -91,6 +91,21 @@ Struct storing the grids in the FFS case.
 end
 
 
+"""
+Struct storing the grids for the continuum case.
+
+### Fields
+- r::Array{Float64} - Array storing the radial points.
+- θ::SMGridDataT - Struct storing the spectral method poloidal grid information.
+- ζ::SMGridDataT - Struct storing the spectral method toroidal grid information.
+"""
+@kwdef struct ContGridsT <: GridsT
+    rN :: Int64
+    θ :: SMGridDataT
+    ζ :: SMGridDataT
+end
+
+
 
 """
     init_grids(rgrid::GridDataT, θgrid::GridDataT, ζgrid::GridDataT)
@@ -114,6 +129,18 @@ function init_grids(rgrid::GridDataT, θgrid::GridDataT, ζgrid::GridDataT)
     display("Not implemented yet...")
     return 0
 end
+
+
+"""
+    init_grids(N::Int64, θgrid::SMGridDataT, ζgrid::SMGridDataT)
+
+Initialises the grid structure for the continuum case.
+"""
+function init_grids(N::Int64, θgrid::SMGridDataT, ζgrid::SMGridDataT)
+
+    return ContGridsT(N, θgrid, ζgrid)
+end
+
 
 """
     instantiate_grids(grids::FFFGridsT)
@@ -175,6 +202,24 @@ function instantiate_grids(grids::FSSGridsT)
     return rgrid, sm_grid(grids.θ)..., sm_grid(grids.ζ)...
 
 end
+
+
+"""
+    instantiate_grids(grids::ContGridsT)
+
+Creates the grids used in the computation from the GridDataT structures.
+"""
+function instantiate_grids(grids::ContGridsT)
+
+    rgrid = range(0, 1, grids.rN+1)[2:end] #skip zero for continuum case.
+
+    return rgrid, sm_grid(grids.θ)..., sm_grid(grids.ζ)...
+
+end
+
+
+
+
 
 """
     sm_grid(gd::SMGridDataT)
