@@ -1,39 +1,11 @@
 
-"""
-#TODO - probably want to create a continuum module with this in it!
-
-
-Module for computing the island continuum. Think it would be better to have a continuum module in general.
-May have to see how ExtraSpectra ends up. If we verify with CKA it could all be useless.
-
- - Maybe some conditions on input χ values?
 
 """
-module IslandContinuum
+    island_continuum(χlist::Array{Float64}, pmd::Inputs.SMGridDataT, tmd::Inputs.SMGridDataT, geo::GeoParamsT, isl::ContIslandT, sign::Int64)
+
+Computes the continuum with a magnetic island chain. Exact for case with linear rotational transform as outlined by Qu and Hole. Can also approximated the local continuum around the island via a linear taylor expansion of the rotational transform.
 
 
-#using MID.Misc
-using MID.Geometry
-using MID.MagneticField
-using MID.Inputs
-
-
-using Elliptic 
-using FFTW
-using LinearAlgebra
-
-
-export island_continuum
-
-include("IslandCoordinates.jl")
-
-export island_width
-
-
-include("IslandWeakForm.jl")
-
-
-"""
 So inputs assume a form of Φ = ∑ Φ_{m,n} exp(im(ANGLE1) - in(ANGLE2))
 
 In both cases ANGLE2 is ζ, however in the trapped case, the domain of ζ has to be scaled by m0
@@ -135,7 +107,5 @@ function island_continuum(χlist::Array{Float64}, pmd::Inputs.SMGridDataT, tmd::
     end
 
     return ω2list
-
-end
 
 end

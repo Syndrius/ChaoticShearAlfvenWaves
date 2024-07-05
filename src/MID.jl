@@ -8,16 +8,9 @@ Base class that just imports everything. We will want a description of the packa
  - WeakForm -> Bit cooked, mainly needs a good clean!
 
  - Fix up/finish docstrings. Overall code still needs some cleaning, final results will depend on verification via CKA. -> use @doc macro
- - see if we can engineer a case with an island without a TAE so that we can look at the island modes. This may be difficult, as it could be difficult to compare island frequency vs normal continuum frequency.
- - Is it possible to test the theory that island damping is small because tae only interacts for limited r values? I.e frequnecy upshift is across fatest part of island (i think...) which may only be ~10% of the possible values? Ideally it would only be ~1% which might explain our significantly lower damping rate? Perhaps it would be ~10% of θ values and ~10% of ζ values, resulting in a total of ~1%?? Not sure how to argue this or test it or anything tbh.
- - May need to change our profile/setup, seems like any island at all causes overlap, as tae freq is only just above lower gap. -> could be good to have a 3/2 or even 2/1 island or something.
  - We should flip the sign of n, either in general or in island case. having a mix is no bloody good.
- - See if we can find the top of up-shift as a frequency in our global code. i.e to a big island, and see if we can find a frequency that matches what the island continuum code predicts is the top. This does not match very well, hopefully due to not enough mode resolution. -> matches better with Gadi results! -> need to redo with ffs if that is significantly better.
- - combine individual parts of TAE to see if we can see resonance with island, not sure how best to do this... will have to modify our surface function thing! -> i.e. see if we can understand what our eigenfunctions actually mean?
  - Perhaps make our parallel code more specific to the memory used by each proc, i.e get each proc to work over the indicies it owns? Should be possible with the index_to_grid thingo right? At least to make them mostly on their own memory shouldn't be that bad, will be difficult to deal with the overlap though!
- - Two methods give extremly different results... not good! Probably need to get fem2d working in parallel for proper testing, but we can try the non-damping results, and see if we can replicate the tae freq.
  - maybe we should change problem to accept strings so we can explain the possible options when something doesn't work!
- - FFS seems much better at predicting bowden singular, will need to check with a higher resolution though! and also actually check the damping! -> with diagonal met it and lowish res, it seems to be basically perfect! (without damping!) Predicts 0.3258 vs 0.3259, and there is one clear tae (maybe 2!) vs FSS case which has like 10 tae like things. Still obvs need to predict damping!
  - Alot of plotting needs to be fixed, in particular, ms plot, continuum plot have wrong labels.
  - Check Axel's case with FFS, as it is almost perf for bowden singular.
  - Why is parallel mode structure of tae so much better??? Doesn't really make sense...
@@ -25,16 +18,13 @@ Base class that just imports everything. We will want a description of the packa
  - Probably should add the periodic part to any final plots, I think that will make our periodicity clearer.
  - Add try catch to sqrt in solve, most of the time it is just because of ~0 numbers, but it owuld be good to have a warning rather than just always take abs. -> Maybe in this case we dont return the normalised ones? Or should we always have a normalise flag???
  - May need to change how efuncs are read in, ffs case is already having problemo's. May need to do a single n at a time. Or if we do FFF, we will want a particular slice of ζ I guess.
- - Wonder if we are seeing small damping because n0=4 and tae is n=2?? Think it is time to change our test case unfort. Changing to FFF would probably also fix this!
- - consider normal damping case without island but with mulitple n's. This may highlight that the tae does not get damped by n ≠2 modes even if the continuum is overlapping. May add some evidence that our theory that we need an n=2 island for an n=2 tae to experience significant damping.
- - Similarly, we probbaly need to understand what the different n's mean in the island case.
- - Put all our thoughts onto paper, ideally with pictures of our justification of each. Eg show island influence, show damping not being effected by different n's in no island case etc.
  - Reonstruct phi could probably be sped up by skipping every 2/4/8 indexes.
  - Plot continuum is probably the most cooked function going around!
  - Boundaries are being added twice... not sure why... -> this may be because of the two θbasis funcs, then in 3d it is added 4 times for the two θ and two ζ basis functions. -> has no effect on the frequency. I think this would just scale those basis functions by 2, but because they are zero it doesn't matter. Would be a problemo if we had non-zero boundaries.
- - Maybe create a grid type for continuum, i.e. just the spectral method??
- - Move Gauss quadrature to integration.jl
- - Why is ffs case spiking at r=0 in island cases?
+
+ - Really could do with some even very basic tae identification, ie make sure that a specific n (ie of the tae) is actually the maximum, and perhaps make sure that the major m's of the tae are like at least 50% of the max or something? -> ffs is less of a problem, the tae stays a bit more stable when an island is introduced
+ - With new mode structure method, we could have a single reconstruct phi, just need to make a potential_size(grids) function.
+ - Looks like we need to implement KAW/finite Epar corrections for this to actually work... fk me.
 
 
  Two things to try:
@@ -48,6 +38,7 @@ Two ways to increase the damping/interaction
 
  - Think we are closer to understanding gaps, but we still need to think!
  - Perhaps it would be worth directly implementing a two mode case without any simplifications, see if it matches our larger code. Hopefully not to much effort???
+ - Need to try and find a gae again I think!
 
 
 
@@ -133,6 +124,7 @@ using MID.Io; export eigfuncs_to_file
 include("Plotting/Plotting.jl") #bit of a disaster atm!
 
 using MID.Plotting; export reconstruct_continuum
+using MID.Plotting; export reconstruct_continuum_n
 using MID.Plotting; export plot_potential
 using MID.Plotting; export plot_sum_potential
 using MID.Plotting; export find_ind
@@ -161,23 +153,23 @@ using MID.Spectrum; export solve_from_file_from_inputs
 
 
 
-include("ExtraSpectra/ExtraSpectra.jl")
+include("Continuum/Continuum.jl")
 
-using MID.ExtraSpectra; export continuum
+using MID.Continuum; export island_continuum
+using MID.Continuum; export island_width
+using MID.Continuum; export continuum
+
+
+#include("ExtraSpectra/ExtraSpectra.jl")
+
+#using MID.ExtraSpectra; export continuum
 #much of this is probably garbage!
-using MID.ExtraSpectra; export two_mode
-using MID.ExtraSpectra; export convergence_test
-using MID.ExtraSpectra; export read_convergence_data
-using MID.ExtraSpectra; export two_mode_convergence
-using MID.ExtraSpectra; export analytical_construct_and_solve
+#using MID.ExtraSpectra; export two_mode
+#using MID.ExtraSpectra; export convergence_test
+#using MID.ExtraSpectra; export read_convergence_data
+#using MID.ExtraSpectra; export two_mode_convergence
+#using MID.ExtraSpectra; export analytical_construct_and_solve
 
-
-
-
-include("IslandContinuum/IslandContinuum.jl")
-
-using MID.IslandContinuum; export island_continuum
-using MID.IslandContinuum; export island_width
 
 end
 

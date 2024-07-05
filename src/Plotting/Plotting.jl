@@ -34,6 +34,7 @@ include("ContinuumPlot.jl")
 
 export plot_continuum
 export reconstruct_continuum
+export reconstruct_continuum_n
 export mode_structure
 
 

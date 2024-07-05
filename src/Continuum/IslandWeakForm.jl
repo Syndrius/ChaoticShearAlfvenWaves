@@ -1,6 +1,7 @@
 
-
 """
+    island_W_and_I!(W::Array{ComplexF64, 2}, I::Array{ComplexF64, 2}, χ::Float64, θ̄grid::AbstractRange, ζgrid::AbstractRange, met::MetT, B::BFieldT, isl::ContIslandT, geo::GeoParamsT, sign::Int64)
+    
 Function to compute the two matrices, W and I, that make up the weak form in the island ocntinuum case,
 essentially equation (23) of Qu and Hole, before Fourier transforming or acting the parallel gradient.
 

@@ -50,10 +50,15 @@ function plot_potential(ϕms, grids::FFSGridsT, ind, n=1, filename=nothing)
     #will plot the 1,1 mode twice!
     #this will be way to many modes!
     for i in 1:grids.θ.N
+        #the order of this is completly cooked, but the labels seem correct.
+        mlab = mod(i-1 + grids.θ.pf, grids.θ.N)
+        if mlab > grids.θ.N/2
+            mlab = mlab - grids.θ.N
+        end
         
         #label should be a function of pf!!!
         #based on simple example with m=1, looks like last ind reps m=0 in some sense, i.e it wraps around?? Not sure how -m's will work for fem2d method.
-        plot!(rgrid, real.(ϕms[ind, :, i, n]), label=@sprintf("m=%s", i))
+        plot!(rgrid, real.(ϕms[ind, :, i, n]), label=@sprintf("m=%s", mlab))
     end
 
     display(p)
@@ -86,9 +91,13 @@ function plot_potential(ϕms, grids::FFFGridsT, ind, n=1, filename=nothing)
     #this will be way to many modes!
     for i in 1:grids.θ.N
         
+        mlab = mod(i-1 + grids.θ.pf, grids.θ.N)
+        if mlab > grids.θ.N/2
+            mlab = mlab - grids.θ.N
+        end
         #label should be a function of pf!!!
         #based on simple example with m=1, looks like last ind reps m=0 in some sense, i.e it wraps around?? Not sure how -m's will work for fem2d method.
-        plot!(rgrid, real.(ϕms[ind, :, i, n]), label=@sprintf("m=%s", i))
+        plot!(rgrid, real.(ϕms[ind, :, i, n]), label=@sprintf("m=%s", mlab))
     end
 
     display(p)

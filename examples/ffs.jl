@@ -26,13 +26,18 @@ grids = init_grids(rgrid, θgrid, ζgrid)
 
 
 ϕms = mode_structure(ϕ, grids);
-reconstruct_continuum(ω, ϕms, grids)#, filename="data/fu_dam_spectrum.png")
+reconstruct_continuum(ω, ϕms, grids, ymax=3)#, filename="data/fu_dam_spectrum.png")
 
 #unsure why it is flipped... hopefully a resolution problemo
 #this is an extremly different tae frequency... real good lol
 tae_ind = find_ind(ω, 0.396)
 tae_freq = ω[tae_ind]
 plot_potential(ϕms, grids, tae_ind, 1)
+
+
+
+a = -2
+mod(a-1 + θgrid.pf, θgrid.N)
 
 
 #now increase the resolution,

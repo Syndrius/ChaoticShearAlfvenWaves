@@ -27,6 +27,28 @@ function plot_continuum(; ω, grids::FSSGridsT, filename=nothing, n=1, ymin=-0.0
 end
 
 
+function plot_continuum(ω, grids::ContGridsT; filename=nothing, ymin=-0.05, ymax=1.05)
+
+    p = scatter(ylimits=(ymin, ymax))
+    rgrid, _, mlist, _, _, nlist, _ = instantiate_grids(grids)
+    if rgrid[1]==0
+        #same condition used when recontsructing
+        rgrid = rgrid[2:end]
+    end
+    rgrid_plot = repeat(rgrid, 1, size(ω)[2])
+    for (i, n) in enumerate(nlist)
+        scatter!(vcat(rgrid_plot...), vcat(ω[:, :, i]...), label=@sprintf("n=%d", n))
+    end
+
+    display(p)
+
+    if !isnothing(filename)
+        savefig(p, filename)
+    end
+
+end
+
+
 
 
 #this probably shouldn't be here!
@@ -39,7 +61,7 @@ end
 #this is also reduced as the resolution goes up.
 #think a better method would be to find the point of greatest change, but that seems more difficult.
 
-function reconstruct_continuum(ω, ϕ, grids::FSSGridsT, ymin=-0.05, ymax=1.05, filename=nothing)
+function reconstruct_continuum(ω, ϕ, grids::FSSGridsT; ymin=-0.05, ymax=1.05, filename=nothing)
     #assumes only 2 modes atm.
     omdata = zeros(length(ω)) 
     rdata = zeros(length(ω))
@@ -98,7 +120,7 @@ end
 
 #note this requires that ϕ has been transformed into the mode structure version.
 #either here or in the mode structure it might be nice to remove the v large modes perhaps.
-function reconstruct_continuum(ω, ϕms, grids::FFSGridsT, filename=nothing, ymin=-0.05, ymax=1.05)
+function reconstruct_continuum(ω, ϕms, grids::FFSGridsT; filename=nothing, ymin=-0.05, ymax=1.05)
     omdata = zeros(length(ω)) 
     rdata = zeros(length(ω))
     #col = zeros(length(ω))
@@ -128,7 +150,17 @@ function reconstruct_continuum(ω, ϕms, grids::FFSGridsT, filename=nothing, ymi
 
         rdata[i] = rgrid[rm[max_mode]]
         #col[i] = (mlist[max_mode[1]], nlist[max_mode[2]])
-        push!(col, (max_mode[1], nlist[max_mode[2]]))
+        #mod is there to correct the mode labels, -1 for julia indexing.
+        #this is obvs flawed as we can only resolve Nθ modes, but this should be fine for the neighbouring modes to pf.
+        #still not perf, one particular issue is the negative mode numbers.
+        mlab = mod(max_mode[1]-1 + grids.θ.pf, grids.θ.N)
+        if mlab > grids.θ.N/2
+            mlab = mlab - grids.θ.N
+        end
+
+        #push!(col, (mod(max_mode[1]-1 + grids.θ.pf, grids.θ.N), nlist[max_mode[2]]))
+        push!(col, (mlab, nlist[max_mode[2]]))
+        #push!(col, (max_mode, nlist[max_mode[2]]))
         #probably don't need this anymore tbh.
         omdata[i] = abs.(ω[i]) #already normalised now!
     end
@@ -144,7 +176,7 @@ end
 
 #note this requires that ϕ has been transformed into the mode structure version.
 #either here or in the mode structure it might be nice to remove the v large modes perhaps.
-function reconstruct_continuum(ω, ϕms, grids::FFFGridsT, filename=nothing, ymin=-0.05, ymax=1.05)
+function reconstruct_continuum(ω, ϕms, grids::FFFGridsT; filename=nothing, ymin=-0.05, ymax=1.05)
     omdata = zeros(length(ω)) 
     rdata = zeros(length(ω))
     #col = zeros(length(ω))
@@ -171,14 +203,79 @@ function reconstruct_continuum(ω, ϕms, grids::FFFGridsT, filename=nothing, ymi
         end
 
         max_mode = argmax(ϕm)
+        #this kind of assumes θ.pf > 0, which will mostly be true I think!
+        mlab = mod(max_mode[1]-1 + grids.θ.pf, grids.θ.N)
+        if mlab > grids.θ.N/2
+            mlab = mlab - grids.θ.N
+        end
 
         rdata[i] = rgrid[rm[max_mode]]
         #col[i] = (mlist[max_mode[1]], nlist[max_mode[2]])
         #not sure how this will handle the different n's tbh!
         #we probably need a bigger version to test this out bh.
-        push!(col, (max_mode[1], 1))
+        #think the labels are good now, but v cooked due to negative!
+        #hard to be certain this will generalise, but does look good!
+        push!(col, (mlab, -mod(-(max_mode[2]-1) - grids.ζ.pf, grids.ζ.N)))
         #probably don't need this anymore tbh.
         omdata[i] = abs.(ω[i]) #already normalised now!
+    end
+
+    p = scatter(rdata, omdata, group=col, ylimits=(ymin, ymax))#, xlabel=L"r", ylabel=L"\frac{\omega  R_0}{v_A}", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10)
+    #return rdata, omdata, col
+    display(p)
+    if !isnothing(filename)
+        savefig(p, filename)
+    end
+end
+
+#reconstructs the continuum but only for a given n to reduce the clutter that occurs in the fff case.
+#mainly only works for case when n=ζ.pf
+function reconstruct_continuum_n(ω, ϕms, grids::FFFGridsT, n::Int64; filename=nothing, ymin=-0.05, ymax=1.05)
+    #omdata = zeros(length(ω)) 
+    #rdata = zeros(length(ω))
+
+    rdata = Array{Float64}(undef, 0)
+    omdata = Array{Float64}(undef, 0) #not complex as we take abs for plotting
+    #col = zeros(length(ω))
+
+    #nlist = (grids.tmd.start:grids.tmd.incr:grids.tmd.start + grids.tmd.incr * grids.tmd.count)[1:end-1]
+
+    rgrid, _, _, = instantiate_grids(grids)
+
+    col = Tuple{Int, Int}[]
+
+    #wont generalise to clustred grids obvs.
+    #rgrid = LinRange(0, 1, grids.rd.N)
+    #θgrid = LinRange(0, 2π, grids.θd.N)
+
+    for i in 1:1:length(ω)
+
+        rm = zeros(Int64, grids.θ.N, grids.ζ.N)
+        ϕm = zeros(Float64, grids.θ.N, grids.ζ.N)
+
+        for j in 1:grids.θ.N, k in 1:grids.ζ.N
+
+            rm[j, k] = argmax(abs.(real.(ϕms[i, :, j, k])))
+            ϕm[j, k] = abs.(real.(ϕms[i, rm[j, k], j, k]))
+        end
+
+        max_mode = argmax(ϕm)
+
+        nlab = -mod(-(max_mode[2]-1) - grids.ζ.pf, grids.ζ.N)
+
+        if nlab == n
+            push!(rdata, rgrid[rm[max_mode]])
+            #rdata[i] = rgrid[rm[max_mode]]
+        #col[i] = (mlist[max_mode[1]], nlist[max_mode[2]])
+        #not sure how this will handle the different n's tbh!
+        #we probably need a bigger version to test this out bh.
+        #think the labels are good now, but v cooked due to negative!
+        #hard to be certain this will generalise, but does look good!
+            push!(col, (mod(max_mode[1]-1 + grids.θ.pf, grids.θ.N), nlab))
+        #probably don't need this anymore tbh.
+            #omdata[i] = abs.(ω[i]) #already normalised now!
+            push!(omdata, abs.(ω[i]))
+        end
     end
 
     p = scatter(rdata, omdata, group=col, ylimits=(ymin, ymax))#, xlabel=L"r", ylabel=L"\frac{\omega  R_0}{v_A}", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10)

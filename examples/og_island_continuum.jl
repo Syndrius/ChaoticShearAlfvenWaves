@@ -40,12 +40,12 @@ tmd = init_sm_grid(start=-5, count=3, incr=2)
 #ω2list_minus = passing_continuum(χlistminus, pmd, tmd, geo, no_isl, -1);
 ω2list_minus = island_continuum(χlistminus, pmd, tmd, geo, no_isl, -1);
 #ω2list_plus = compute_continuum_p(geo, isl, χlistplus, 1, 0, -1, 33, 1, 1, 1, compute_toroidal_metric!)|
-ψ̄list_plus = MID.IslandContinuum.compute_ψ̄(no_isl, χlistplus, 1)
-ψ̄list_minus = MID.IslandContinuum.compute_ψ̄(no_isl, χlistminus, -1)
+ψ̄list_plus = MID.Continuum.compute_ψ̄(no_isl, χlistplus, 1)
+ψ̄list_minus = MID.Continuum.compute_ψ̄(no_isl, χlistminus, -1)
 
 
 #33 * 1 is mcount by ncount, should be done more automatically in the future
-rp = repeat(sqrt.(2 .* ψ̄list_plus), 1,  pmd.count * tmd.count)
+rp = repeat(sqrt.(2 .* ψ̄list_plus), 1,  pmd.count * tmd.count);
 rm = repeat(sqrt.(2 .* ψ̄list_minus), 1, pmd.count * tmd.count)
 
 #ayyy we have the very basic funcitonality back!!!!
@@ -81,8 +81,8 @@ tmd = init_sm_grid(start=-5, count=6, incr=2)
 #ω2list_minus = passing_continuum(χlistminus, pmd, tmd, geo, small_isl, -1);
 ω2list_minus = island_continuum(χlistminus, pmd, tmd, geo, small_isl, -1);
 #ω2list_plus = compute_continuum_p(geo, isl, χlistplus, 1, 0, -1, 33, 1, 1, 1, compute_toroidal_metric!)|
-ψ̄list_plus = MID.IslandContinuum.compute_ψ̄(small_isl, χlistplus, 1)
-ψ̄list_minus = MID.IslandContinuum.compute_ψ̄(small_isl, χlistminus, -1)
+ψ̄list_plus = MID.Continuum.compute_ψ̄(small_isl, χlistplus, 1)
+ψ̄list_minus = MID.Continuum.compute_ψ̄(small_isl, χlistminus, -1)
 
 rp = repeat(sqrt.(2 .* ψ̄list_plus), 1,  pmd.count * tmd.count)
 rm = repeat(sqrt.(2 .* ψ̄list_minus), 1, pmd.count * tmd.count)
@@ -120,8 +120,8 @@ tmd = init_sm_grid(start=-5, count=6, incr=2)
 #ω2list_minus = passing_continuum(χlistminus, pmd, tmd, geo, isl, -1);
 ω2list_minus = island_continuum(χlistminus, pmd, tmd, geo, isl, -1);
 #ω2list_plus = compute_continuum_p(geo, isl, χlistplus, 1, 0, -1, 33, 1, 1, 1, compute_toroidal_metric!)|
-ψ̄list_plus = MID.IslandContinuum.compute_ψ̄(isl, χlistplus, 1)
-ψ̄list_minus = MID.IslandContinuum.compute_ψ̄(isl, χlistminus, -1)
+ψ̄list_plus = MID.Continuum.compute_ψ̄(isl, χlistplus, 1)
+ψ̄list_minus = MID.Continuum.compute_ψ̄(isl, χlistminus, -1)
 
 rp = repeat(sqrt.(2 .* ψ̄list_plus), 1,  pmd.count * tmd.count)
 rm = repeat(sqrt.(2 .* ψ̄list_minus), 1, pmd.count * tmd.count)
@@ -163,7 +163,7 @@ width = 4 * sqrt(isl.A * isl.q0^2/isl.qp)
 ψ_isl = 2 * width / (π * isl.m0)
 ψ̄m = ψ_isl
 
-ψ̄list = MID.IslandContinuum.compute_ψ̄(isl, χlist, 0)
+ψ̄list = MID.Continuum.compute_ψ̄(isl, χlist, 0)
 r = repeat(sqrt.(2 .* ψ̄list), 1,  pmd.count * tmd.count)
 
 

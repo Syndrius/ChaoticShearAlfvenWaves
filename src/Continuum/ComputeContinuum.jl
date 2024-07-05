@@ -1,5 +1,9 @@
 
+"""
+    continuum(prob::ProblemT, grids::ContGridsT, perN=true::Bool)
 
+Computes the shear Aflven continuum for the non-island case. Has the default option to compute the continuum for each n (toroidal mode number) individually.
+"""
 function continuum(prob::ProblemT, grids::ContGridsT, perN=true::Bool)
 
     #we can do this because usual cases (i.e. no island) have no toroidal coupling
@@ -26,11 +30,9 @@ end
 
 
 """ 
-Finds the continuum by solving the second order derivatives on each flux surface individually. Much faster than reconstructing the continuum from the full solver, but cannot handle islands, resistivity and won't find any global modes.
+    compute_continuum(prob::ProblemT, grids::ContGridsT)
 
-# Args
-prob::ProblemT - Struct containing the functions and parameters that define the problem we are solving
-grids::GridT - Grids to solve over.
+Finds the continuum by solving the second order derivatives on each flux surface individually. Much faster than reconstructing the continuum from the full solver, but cannot handle islands, resistivity and won't find any global modes.
 """
 function compute_continuum(prob::ProblemT, grids::ContGridsT)
 
@@ -173,4 +175,3 @@ function compute_continuum(prob::ProblemT, grids::ContGridsT)
     
     return ωlist
 end
-

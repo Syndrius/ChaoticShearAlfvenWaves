@@ -1,11 +1,8 @@
 
 """
-Function to compute ψ̄, used for plotting.
+    compute_ψ̄(isl::ContIslandT, χ::Array{Float64}, sign::Int64)
 
-# Args
-isl::ContIslandT - Struct storing island parameters.
-χ::Array{Float64} - Energy values to consider.
-sign::Int64 - Sign of the particles, ±1 for passing on either side, or 0 for trapped particles.
+Function to compute ψ̄, used for plotting. Sign is ±1 for passing on either side, or 0 for trapped particles.
 """
 function compute_ψ̄(isl::ContIslandT, χ::Array{Float64}, sign::Int64)
     κ = @. (isl.A - χ) / (2*isl.A)
@@ -21,14 +18,11 @@ function compute_ψ̄(isl::ContIslandT, χ::Array{Float64}, sign::Int64)
     end
 end
 
-"""
-Compute α in the original toroidal coordinates.
 
-# Args
-χ::Float64 - Energy value.
-ᾱ::Float64 - α in new coordinates to be transformed.
-isl::ContIslandT - Struct storing island parameters.
-sign::Int64 - Sign of the particles, ±1 for passing on either side, or 0 for trapped particles.
+"""
+    compute_α(χ::Float64, ᾱ::Float64, isl::ContIslandT, sign::Int64)
+
+Compute α in the original toroidal coordinates. Sign is ±1 for passing on either side, or 0 for trapped particles.
 """
 function compute_α(χ::Float64, ᾱ::Float64, isl::ContIslandT, sign::Int64)
 
@@ -49,14 +43,9 @@ function compute_α(χ::Float64, ᾱ::Float64, isl::ContIslandT, sign::Int64)
 end
 
 """
-Compute ψ in the original toroidal coordinates.
+    compute_ψ(χ::Float64, α::Float64, ᾱ::Float64, isl::ContIslandT, sign::Int64)
 
-# Args
-χ::Float64 - Energy value.
-α::Float64 - α in old coordinates.
-ᾱ::Float64 - α in new coordinates.
-isl::ContIslandT - Struct storing island parameters.
-sign::Int64 - Sign of the particles, ±1 for passing on either side, or 0 for trapped particles.
+Compute ψ in the original toroidal coordinates. Sign is ±1 for passing on either side, or 0 for trapped particles.
 """
 function compute_ψ(χ::Float64, α::Float64, ᾱ::Float64, isl::ContIslandT, sign::Int64)
 
@@ -73,13 +62,9 @@ end
 
         
 """
-Compute ∇χ^2, the main term in the weakform.
+    compute_∇χ2(ψ::Float64, α::Float64, met::MetT, isl::ContIslandT)
 
-# Args
-ψ::Float64 - Radial coordinate.
-α::Float64 - Helical angle.
-met::MetT - metric.
-isl::ContIslandT - Struct storing island parameters.
+Compute ∇χ^2, the main term in the weakform.
 """
 function compute_∇χ2(ψ::Float64, α::Float64, met::MetT, isl::ContIslandT)
 
@@ -91,12 +76,9 @@ end
 
 
 """
-Computes Ω, the local rotational transform.
+    compute_Ω(χ::Float64, isl::ContIslandT, sign::Int64)
 
-# Args
-χ::Float64 - Energy value.
-isl::ContIslandT - Struct storing island parameters.
-sign::Int64 - Sign of the particles, ±1 for passing on either side, or 0 for trapped particles.
+Computes Ω, the local rotational transform. Sign is ±1 for passing on either side, or 0 for trapped particles.
 """
 function compute_Ω(χ::Float64, isl::ContIslandT, sign::Int64)
     Ω0 = sqrt(isl.A * isl.qp / isl.q0^2)
@@ -115,6 +97,8 @@ end
 #inputs are cooked becuase we mostly want to use the normal island for this!
 #probably possible to automate this with probs passed in, as then we could compute qp from dq
 #and we can get q0 from m0/n0 or whatever.
+#this is still cooked I think! -> will need to come back to this
+#TODO
 function island_width(isl::IslandT, q0, qp)
     #with our form of island, the width is cooked, need some kind of solver for this!
 

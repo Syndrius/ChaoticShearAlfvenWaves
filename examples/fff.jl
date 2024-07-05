@@ -6,7 +6,7 @@ using Plots; plotlyjs()
 #~90% of the time is spent numerically integrating. Wonder if there is anything we can do???
 rgrid = init_fem_grid(N=20);
 θgrid = init_fem_grid(N=5, pf=2);
-ζgrid = init_fem_grid(N=2, pf=-2);
+ζgrid = init_fem_grid(N=3, pf=-2);
 
 grids = init_grids(rgrid, θgrid, ζgrid);
 
@@ -23,7 +23,7 @@ prob = init_problem(q=Axel_q, geo=geo);
 
 
 ϕms = mode_structure(ϕ, grids);
-reconstruct_continuum(ω, ϕms, grids)
+reconstruct_continuum_n(ω, ϕms, grids, -2)#, ymax=0.25)#, filename="label_test.png")
 
 
 #almost impossible to tell from the continuum reconstruction,
