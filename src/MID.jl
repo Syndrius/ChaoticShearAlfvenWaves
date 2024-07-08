@@ -132,6 +132,7 @@ using MID.Plotting; export plot_continuum
 using MID.Plotting; export plot_phi_surface
 using MID.Plotting; export construct_surface
 using MID.Plotting; export mode_structure
+using MID.Plotting; export contour_plot
 
 
 

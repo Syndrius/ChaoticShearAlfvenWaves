@@ -247,3 +247,18 @@ function plot_sum_potential(; grids, ϕ, ind, filename=nothing)
 
     
 end
+
+
+#probably just for ffs atm.
+function contour_plot(ϕ, grids, ind; ymin=nothing, ymax=nothing, filename=nothing)
+
+    rgrid, θgrid, _, _, _ = instantiate_grids(grids)
+    z = zeros(Float64, grids.r.N, grids.θ.N)
+    for n in grids.ζ.count
+        z += ϕ[ind, :, :, n]
+    end
+
+    #if nothing, this still work, just gives warning.
+    contour(θgrid, rgrid, real.(z), ylimits=(ymin, ymax))
+
+end

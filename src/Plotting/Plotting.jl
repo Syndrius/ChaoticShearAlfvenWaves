@@ -29,6 +29,7 @@ export plot_sum_potential
 export find_ind
 export plot_phi_surface
 export construct_surface
+export contour_plot
 
 include("ContinuumPlot.jl")
 
