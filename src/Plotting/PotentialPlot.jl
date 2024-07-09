@@ -3,22 +3,31 @@
 
 #this is much more important to have the docstrings stuff, always forget these args.
 #plots all the poloidal modes of the eigenfunction for a given n.
-function plot_potential(ϕ, grids::FSSGridsT, ind, n=1, filename=nothing)
+function plot_potential(ϕ, grids::FSSGridsT, ind; n=nothing, filename=nothing)
 
     #assumes only a single n
     #would be nice if this could do some labelling somehow!
     #but this at least works.
 
-    rgrid, _, mlist, _, _, _, _= instantiate_grids(grids)
+    rgrid, _, mlist, _, _, nlist, _= instantiate_grids(grids)
 
     #p = plot(r, real.(ϕ[ind, :, 1, n]), label=mlist[1], dpi=600)
 
     p = plot(xlabel=L"r", ylabel=L"\phi", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10)
 
     #will plot the 1,1 mode twice!
-    for i in 1:grids.θ.count
-        
-        plot!(rgrid, real.(ϕ[ind, :, i, n]), label=@sprintf("m=%s", mlist[i]))
+    if isnothing(n)
+        for i in 1:grids.θ.count
+            for j in 1:grids.ζ.count
+                plot!(rgrid, real.(ϕ[ind, :, i, j]), label=@sprintf("(%s, %s)", mlist[i], nlist[j]))
+            end
+        end
+    else
+
+        for i in 1:grids.θ.count
+            
+            plot!(rgrid, real.(ϕ[ind, :, i, n]), label=@sprintf("m=%s", mlist[i]))
+        end
     end
 
     display(p)
@@ -250,15 +259,94 @@ end
 
 
 #probably just for ffs atm.
-function contour_plot(ϕ, grids, ind; ymin=nothing, ymax=nothing, filename=nothing)
+function contour_plot(ϕ, grids::FFSGridsT, ind; ymin=nothing, ymax=nothing, filename=nothing)
 
     rgrid, θgrid, _, _, _ = instantiate_grids(grids)
     z = zeros(Float64, grids.r.N, grids.θ.N)
-    for n in grids.ζ.count
+    for n in 1:grids.ζ.count
         z += ϕ[ind, :, :, n]
     end
 
     #if nothing, this still work, just gives warning.
-    contour(θgrid, rgrid, real.(z), ylimits=(ymin, ymax))
+    contour(θgrid, rgrid, real.(z))#, levels=50, ylimits=(ymin, ymax))
+
+end
+
+
+
+function contour_plot(ϕ, grids::FSSGridsT, ind; ymin=nothing, ymax=nothing, filename=nothing)
+    Nθ = 50
+    rgrid, _, mlist, _, _, _, _ = instantiate_grids(grids)
+    θgrid = range(0, 2π, Nθ + 1)[1:end-1]
+    z = zeros(Float64, grids.r.N, Nθ)
+    for (j, m) in enumerate(mlist)
+        for n in 1:grids.ζ.count
+            for i in 1:Nθ
+                z[:, i] += real(ϕ[ind, :, j, n] .* exp(1im*m *θgrid[i]))
+            end
+        end
+    end
+
+    #if nothing, this still work, just gives warning.
+    contour(θgrid, rgrid, real.(z), levels = 50)
+
+end
+
+
+#this is a stupid function that doesn't belong here, should probbaly be in MIDViz.
+function plot_contour_poincare(ϕ, grids::FFSGridsT, ind, rp, θp; ymin=nothing, ymax=nothing, filename=nothing)
+
+    rgrid, θgrid, _, _, _ = instantiate_grids(grids)
+    z = zeros(Float64, grids.r.N, grids.θ.N)
+    for n in 1:grids.ζ.count
+        z += ϕ[ind, :, :, n]
+    end
+
+    ms = 1.3
+    Ntraj = size(rd)[1]
+    p = scatter(markersize=ms, legend=false, dpi=600)
+    for i in 1:Ntraj
+        scatter!(rd[i, :], θd[i, :], markersize=ms)
+    end
+   
+
+    #if nothing, this still work, just gives warning.
+    contour!(θgrid, rgrid, real.(z))#, levels=50, ylimits=(ymin, ymax))
+
+    display(p)
+    if !isnothing(filename)
+        savefig(p, filename)
+    end
+
+end
+
+#maybe rp for poincare not d?
+function plot_contour_poincare(ϕ, grids::FSSGridsT, ind, rd, θd; ymin=nothing, ymax=nothing, filename=nothing)
+    Nθ = 50
+    rgrid, _, mlist, _, _, _, _ = instantiate_grids(grids)
+    θgrid = range(0, 2π, Nθ + 1)[1:end-1]
+    z = zeros(Float64, grids.r.N, Nθ)
+    for (j, m) in enumerate(mlist)
+        for n in 1:grids.ζ.count
+            for i in 1:Nθ
+                z[:, i] += real(ϕ[ind, :, j, n] .* exp(1im*m *θgrid[i]))
+            end
+        end
+    end
+
+    ms = 1.3
+    Ntraj = size(rd)[1]
+    p = scatter(markersize=ms, legend=false, dpi=600)
+    for i in 1:Ntraj
+        scatter!(rd[i, :], θd[i, :], markersize=ms, alpha=0.2)
+    end
+
+    #if nothing, this still work, just gives warning.
+    contour!(θgrid, rgrid, real.(z), levels = 50, fill=true)
+
+    display(p)
+    if !isnothing(filename)
+        savefig(p, filename)
+    end
 
 end

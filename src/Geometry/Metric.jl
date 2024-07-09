@@ -92,6 +92,23 @@ function toroidal_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::F
 end
 
 
+function slab_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
+
+    met.gl[1, 1] = 1.0
+    met.gl[2, 2] = 1.0
+    met.gl[3, 3] = R0^2
+
+    met.gu[1, 1] = 1.0
+    met.gu[2, 2] = 1.0
+    met.gu[3, 3] = 1 / R0^2
+
+    met.J = R0
+
+
+end
+
+
+
 """
     no_delta_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
 

@@ -58,8 +58,9 @@ Constructs the two matrices and solves. Can either solve the full spectrum via i
 """
 function construct_and_solve(; prob::ProblemT, grids::GridsT, efuncs=true::Bool, σ=0.0::Float64, reconstruct=true::Bool, full_spectrum=false::Bool, nev=20::Int64)
 
+    display("Constructing...")
     W, I = construct(prob, grids)
-    
+    display("Solving...")
     if full_spectrum 
         if prob.δ == 0.0
             ω, ϕ = full_spectrum_solve(Wmat=W, Imat=I, grids=grids, efuncs=efuncs, reconstruct=reconstruct, resistivity=false, R0=prob.geo.R0)

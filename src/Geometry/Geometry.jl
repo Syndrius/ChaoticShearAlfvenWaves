@@ -16,6 +16,7 @@ export no_delta_metric!
 export diagonal_toroidal_metric!
 export flux_toroidal_metric!
 export cylindrical_metric!
+export slab_metric!
 
 
 include("Island.jl")

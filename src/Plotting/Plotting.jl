@@ -30,11 +30,13 @@ export find_ind
 export plot_phi_surface
 export construct_surface
 export contour_plot
+export plot_contour_poincare
 
 include("ContinuumPlot.jl")
 
 export plot_continuum
 export reconstruct_continuum
+export reconstruct_slab_continuum
 export reconstruct_continuum_n
 export mode_structure
 

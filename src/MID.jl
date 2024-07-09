@@ -52,6 +52,7 @@ include("Geometry/Geometry.jl")
 
 using MID.Geometry; export toroidal_metric!
 using MID.Geometry; export no_delta_metric!
+using MID.Geometry; export slab_metric!
 using MID.Geometry; export diagonal_toroidal_metric!
 using MID.Geometry; export IslandT
 using MID.Geometry; export ContIslandT
@@ -124,6 +125,8 @@ using MID.Io; export eigfuncs_to_file
 include("Plotting/Plotting.jl") #bit of a disaster atm!
 
 using MID.Plotting; export reconstruct_continuum
+using MID.Plotting; export reconstruct_slab_continuum
+using MID.Plotting; export plot_contour_poincare
 using MID.Plotting; export reconstruct_continuum_n
 using MID.Plotting; export plot_potential
 using MID.Plotting; export plot_sum_potential

@@ -102,7 +102,8 @@ function reconstruct_continuum(ω, ϕ, grids::FSSGridsT; ymin=-0.05, ymax=1.05, 
         rdata[i] = rgrid[rm[max_mode]]
         #col[i] = (mlist[max_mode[1]], nlist[max_mode[2]])
         push!(col, (mlist[max_mode[1]], nlist[max_mode[2]]))
-        omdata[i] = abs.(ω[i]) #already normalised now!
+        #if the problem is with a slab_metric, we need to divide by r for the continuum to match, it is ugly though!
+        omdata[i] = abs.(ω[i])  #already normalised now!
         #omdata[i] = sqrt.(abs.(ω[i])) * R0
 
 
@@ -116,6 +117,66 @@ function reconstruct_continuum(ω, ϕ, grids::FSSGridsT; ymin=-0.05, ymax=1.05, 
     end
 end
 
+
+#this has a different normalisation so needs to be different
+function reconstruct_slab_continuum(ω, ϕ, grids::FSSGridsT; ymin=-0.05, ymax=1.05, filename=nothing)
+    #assumes only 2 modes atm.
+    omdata = zeros(length(ω)) 
+    rdata = zeros(length(ω))
+    #col = zeros(length(ω))
+
+    col = Tuple{Int, Int}[]
+
+    #rm = zeros(Int, pmd.count, tmd.count)
+    #ϕm = zeros(pmd.count, tmd.count)
+    #labels = zeros(grids.pmd.count, grids.tmd.count)
+
+    #may be better to use other modules and call spectral_grid or whatever
+    #mlist = (grids.θ.start:grids.θ.incr:grids.θ.start + grids.θ.incr * grids.θ.count)[1:end-1]
+    #nlist = (grids.ζ.start:grids.ζ.incr:grids.ζ.start + grids.ζ.incr * grids.ζ.count)[1:end-1]
+    
+    #rgrid = construct_rgrid(grids)
+    rgrid, _, mlist, _, _, nlist, _= instantiate_grids(grids)
+    #labels = [collect(pmd.start:pmd.start+pmd.count), collect(tmd.start:tmd.start+tmd.count)]
+
+    for i in 1:1:length(ω)
+        #still assumes only a single n value!
+        rm = zeros(Int64, grids.θ.count, grids.ζ.count)
+        ϕm = zeros(grids.θ.count, grids.ζ.count)
+        for j in 1:grids.θ.count
+
+            for k in 1:grids.ζ.count
+                rm[j, k] = argmax(abs.(real.(ϕ[i, :, j, k])))
+                ϕm[j, k] = abs.(real.(ϕ[i, rm[j, k], j, k]))
+            end
+        end
+
+        max_mode = argmax(ϕm)
+
+        #display(max_mode)
+        #display(max_mode[2])
+        #display(rm[max_mode])
+
+        rdata[i] = rgrid[rm[max_mode]]
+        #col[i] = (mlist[max_mode[1]], nlist[max_mode[2]])
+        push!(col, (mlist[max_mode[1]], nlist[max_mode[2]]))
+        #if the problem is with a slab_metric, we need to divide by r for the continuum to match, it is ugly though!
+        #omdata[i] = abs.(ω[i]) / rdata[i] #already normalised now!
+        omdata[i] = abs.(ω[i]) / rdata[i] #already normalised now!
+        #omdata[i] = sqrt.(abs.(ω[i])) * R0
+
+
+    end
+
+    p = scatter(rdata, omdata, group=col, ylimits=(ymin, ymax), xlabel=L"r", ylabel=L"\frac{\omega  R_0}{v_A}", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10)
+    #return rdata, omdata, col
+    display(p)
+    if !isnothing(filename)
+        savefig(p, filename)
+    end
+    #temp usage fo
+    return omdata
+end
 
 
 #note this requires that ϕ has been transformed into the mode structure version.
@@ -171,6 +232,60 @@ function reconstruct_continuum(ω, ϕms, grids::FFSGridsT; filename=nothing, ymi
     if !isnothing(filename)
         savefig(p, filename)
     end
+end
+
+function reconstruct_slab_continuum(ω, ϕms, grids::FFSGridsT; filename=nothing, ymin=-0.05, ymax=1.05)
+    omdata = zeros(length(ω)) 
+    rdata = zeros(length(ω))
+    #col = zeros(length(ω))
+
+    #nlist = (grids.tmd.start:grids.tmd.incr:grids.tmd.start + grids.tmd.incr * grids.tmd.count)[1:end-1]
+
+    rgrid, _, _, nlist, _= instantiate_grids(grids)
+
+    col = Tuple{Int, Int}[]
+
+    #wont generalise to clustred grids obvs.
+    #rgrid = LinRange(0, 1, grids.rd.N)
+    #θgrid = LinRange(0, 2π, grids.θd.N)
+
+    for i in 1:1:length(ω)
+
+        rm = zeros(Int64, grids.θ.N, grids.ζ.count)
+        ϕm = zeros(Float64, grids.θ.N, grids.ζ.count)
+
+        for j in 1:grids.θ.N, k in 1:grids.ζ.count
+
+            rm[j, k] = argmax(abs.(real.(ϕms[i, :, j, k])))
+            ϕm[j, k] = abs.(real.(ϕms[i, rm[j, k], j, k]))
+        end
+
+        max_mode = argmax(ϕm)
+
+        rdata[i] = rgrid[rm[max_mode]]
+        #col[i] = (mlist[max_mode[1]], nlist[max_mode[2]])
+        #mod is there to correct the mode labels, -1 for julia indexing.
+        #this is obvs flawed as we can only resolve Nθ modes, but this should be fine for the neighbouring modes to pf.
+        #still not perf, one particular issue is the negative mode numbers.
+        mlab = mod(max_mode[1]-1 + grids.θ.pf, grids.θ.N)
+        if mlab > grids.θ.N/2
+            mlab = mlab - grids.θ.N
+        end
+
+        #push!(col, (mod(max_mode[1]-1 + grids.θ.pf, grids.θ.N), nlist[max_mode[2]]))
+        push!(col, (mlab, nlist[max_mode[2]]))
+        #push!(col, (max_mode, nlist[max_mode[2]]))
+        #probably don't need this anymore tbh.
+        omdata[i] = abs.(ω[i]) / rdata[i] #already normalised now!
+    end
+
+    p = scatter(rdata, omdata, group=col, ylimits=(ymin, ymax))#, xlabel=L"r", ylabel=L"\frac{\omega  R_0}{v_A}", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10)
+    #return rdata, omdata, col
+    display(p)
+    if !isnothing(filename)
+        savefig(p, filename)
+    end
+    return omdata
 end
 
 
