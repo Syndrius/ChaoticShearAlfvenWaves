@@ -214,7 +214,8 @@ function reconstruct_continuum(ω, ϕms, grids::FFSGridsT; filename=nothing, ymi
         #mod is there to correct the mode labels, -1 for julia indexing.
         #this is obvs flawed as we can only resolve Nθ modes, but this should be fine for the neighbouring modes to pf.
         #still not perf, one particular issue is the negative mode numbers.
-        mlab = mod(max_mode[1]-1 + grids.θ.pf, grids.θ.N)
+        #mlab = mod(max_mode[1]-1 + grids.θ.pf, grids.θ.N)
+        mlab = mod(max_mode[1]-1, grids.θ.N)
         if mlab > grids.θ.N/2
             mlab = mlab - grids.θ.N
         end
@@ -235,8 +236,9 @@ function reconstruct_continuum(ω, ϕms, grids::FFSGridsT; filename=nothing, ymi
 end
 
 function reconstruct_slab_continuum(ω, ϕms, grids::FFSGridsT; filename=nothing, ymin=-0.05, ymax=1.05)
-    omdata = zeros(length(ω)) 
-    rdata = zeros(length(ω))
+    num_vals = size(ϕms)[1] #chosen for cases where we can't read all the functions in.
+    omdata = zeros(num_vals) 
+    rdata = zeros(num_vals)
     #col = zeros(length(ω))
 
     #nlist = (grids.tmd.start:grids.tmd.incr:grids.tmd.start + grids.tmd.incr * grids.tmd.count)[1:end-1]
@@ -249,7 +251,7 @@ function reconstruct_slab_continuum(ω, ϕms, grids::FFSGridsT; filename=nothing
     #rgrid = LinRange(0, 1, grids.rd.N)
     #θgrid = LinRange(0, 2π, grids.θd.N)
 
-    for i in 1:1:length(ω)
+    for i in 1:1:num_vals
 
         rm = zeros(Int64, grids.θ.N, grids.ζ.count)
         ϕm = zeros(Float64, grids.θ.N, grids.ζ.count)
@@ -267,7 +269,9 @@ function reconstruct_slab_continuum(ω, ϕms, grids::FFSGridsT; filename=nothing
         #mod is there to correct the mode labels, -1 for julia indexing.
         #this is obvs flawed as we can only resolve Nθ modes, but this should be fine for the neighbouring modes to pf.
         #still not perf, one particular issue is the negative mode numbers.
-        mlab = mod(max_mode[1]-1 + grids.θ.pf, grids.θ.N)
+        #mlab = mod(max_mode[1]-1 + grids.θ.pf, grids.θ.N)
+        mlab = mod(max_mode[1]-1, grids.θ.N)
+        
         if mlab > grids.θ.N/2
             mlab = mlab - grids.θ.N
         end
@@ -319,7 +323,8 @@ function reconstruct_continuum(ω, ϕms, grids::FFFGridsT; filename=nothing, ymi
 
         max_mode = argmax(ϕm)
         #this kind of assumes θ.pf > 0, which will mostly be true I think!
-        mlab = mod(max_mode[1]-1 + grids.θ.pf, grids.θ.N)
+        #mlab = mod(max_mode[1]-1 + grids.θ.pf, grids.θ.N)
+        mlab = mod(max_mode[1]-1, grids.θ.N)
         if mlab > grids.θ.N/2
             mlab = mlab - grids.θ.N
         end
@@ -449,3 +454,5 @@ function mode_structure(ϕ, grids::FFFGridsT)
 
     return ϕms
 end
+
+

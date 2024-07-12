@@ -74,6 +74,7 @@ using MID.MagneticField; export comparison_bowden_dens
 using MID.MagneticField; export comparison_bowden_q
 using MID.MagneticField; export fu_dam_q
 using MID.MagneticField; export island_3_2_q
+using MID.MagneticField; export symmetric_q
 
 
 

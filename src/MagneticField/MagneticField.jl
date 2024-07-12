@@ -26,7 +26,7 @@ export comparison_bowden_q
 export fu_dam_q
 export default_island_q
 export island_3_2_q
-
+export symmetric_q
 
 
 include("DensityProfiles.jl") #weird spot!

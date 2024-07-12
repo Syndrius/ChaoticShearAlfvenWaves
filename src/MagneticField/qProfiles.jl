@@ -14,6 +14,14 @@ function island_damping_q(r)
 end
 
 
+function symmetric_q(r)
+    a = 1
+    q = 1 + a * r * (1-r)
+    dq = a - 2*a * r
+    return q, dq
+end
+
+
 #q-profile designed for tae at r=0.5 for (2, -2), (3, -2) with a (3,2) island at r=0.75.
 function island_3_2_q(r)
     a = 1.05
