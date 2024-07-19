@@ -216,7 +216,8 @@ function reconstruct_continuum(ω, ϕms, grids::FFSGridsT; filename=nothing, ymi
         #still not perf, one particular issue is the negative mode numbers.
         #mlab = mod(max_mode[1]-1 + grids.θ.pf, grids.θ.N)
         mlab = mod(max_mode[1]-1, grids.θ.N)
-        if mlab > grids.θ.N/2
+        #think the extra pf here should centre the modes on pf, only really relavant for small Nθ cases.
+        if mlab > grids.θ.N/2 + grids.θ.pf
             mlab = mlab - grids.θ.N
         end
 
