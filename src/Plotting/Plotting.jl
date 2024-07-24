@@ -29,8 +29,7 @@ export plot_sum_potential
 export find_ind
 export plot_phi_surface
 export construct_surface
-export contour_plot
-export plot_contour_poincare
+
 
 include("ContinuumPlot.jl")
 
@@ -40,5 +39,10 @@ export reconstruct_slab_continuum
 export reconstruct_continuum_n
 export mode_structure
 
+
+include("ContourPlot.jl")
+
+export contour_plot
+export plot_contour_poincare
 
 end

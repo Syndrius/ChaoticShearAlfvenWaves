@@ -7,8 +7,8 @@ using Plots; plotlyjs()
 #10.992975 seconds (15.38 M allocations: 1.195 GiB, 4.40% gc time)
 
 #start very small, matrix scales much more extremly
-Nr = 50;
-Nθ = 5
+Nr = 40;
+Nθ = 6
 
 geo = GeoParamsT(R0=10.0)
 
@@ -26,18 +26,20 @@ grids = init_grids(rgrid, θgrid, ζgrid)
 
 
 ϕms = mode_structure(ϕ, grids);
-reconstruct_continuum(ω, ϕms, grids, ymax=3)#, filename="data/fu_dam_spectrum.png")
+reconstruct_continuum(ω, ϕms, grids)#, ymax=3)#, filename="data/fu_dam_spectrum.png")
 
 #unsure why it is flipped... hopefully a resolution problemo
 #this is an extremly different tae frequency... real good lol
 tae_ind = find_ind(ω, 0.396)
 tae_freq = ω[tae_ind]
-plot_potential(ϕms, grids, tae_ind, 1)
 
+ind = 7
+plot_potential(ϕms, grids, ind, 1)
 
+plot_phi_surface(ϕ, grids, ind)
 
-a = -2
-mod(a-1 + θgrid.pf, θgrid.N)
+#phase factor seems to be fine, need to check with island modes though!
+
 
 
 #now increase the resolution,

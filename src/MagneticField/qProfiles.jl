@@ -14,10 +14,22 @@ function island_damping_q(r)
 end
 
 
+function symmetric_q(r)
+    a = 1
+    q = 1 + a * r * (1-r)
+    dq = a - 2*a * r
+    return q, dq
+end
+
+
 #q-profile designed for tae at r=0.5 for (2, -2), (3, -2) with a (3,2) island at r=0.75.
+#used to be 
+#a=1.05
+#b=0.8
+#changed to form such that m0=n of tae, to try and get overlap.
 function island_3_2_q(r)
-    a = 1.05
-    b = 0.8
+    a = 1.4
+    b = 6 - 4*a
 
     q = a+b*r^2
     dq = 2*b*r

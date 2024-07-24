@@ -70,9 +70,9 @@ function reconstruct_phi(efuncs::Array{ComplexF64, 2}, nevals::Int64, grids::FFS
     #maybe one day we will want dphidr???
     #note that this is the same for both!
 
-    #m = grids.θ.pf
+    m = grids.θ.pf
 
-    #_, θgrid, _, _, _ = instantiate_grids(grids)
+    _, θgrid, _, _, _ = instantiate_grids(grids)
 
     for i in 1:matrix_dim(grids)
 
@@ -82,7 +82,8 @@ function reconstruct_phi(efuncs::Array{ComplexF64, 2}, nevals::Int64, grids::FFS
         if hs == 1
             #may be the wrong way around!
             #this doesn't seem to have worked as expected tbh!
-            phi[:, r, θ, ζ] = efuncs[i, :] #.* exp(1im * m * θgrid[θ])
+            #hard to tell what is needed here!
+            phi[:, r, θ, ζ] = efuncs[i, :] .* exp(1im * m * θgrid[θ])
         end
     end
     return phi
