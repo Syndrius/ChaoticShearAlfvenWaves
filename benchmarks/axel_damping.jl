@@ -33,7 +33,7 @@ using Plots; plotlyjs()
 #increasing to R0=20 and comparing the the Axel contour method in phi_two_mode
 #our code with diagonal metrix is v v close. %diff of ~1.7%
 
-N = 3000; 
+N = 1000; 
 #the collect is a bit annoying, but ok because we will typically use a clustered grid.
 #rgrid = collect(LinRange(0, 1, N));
 
@@ -49,31 +49,36 @@ geo = GeoParamsT(R0=10.0)
 #test metric is pretty cooked, real tae freq is pretty close, touch higher with og metric
 #damping is just completly cooked though, may need to check out damping 
 #implementation.
-prob = init_problem(q=Axel_q, geo=geo, δ=-4.0e-8, dens=axel_dens, met=diagonal_toroidal_metric!); #probbaly should use geo if it is part of prob,
+prob = init_problem(q=Axel_q, geo=geo, δ=-4.0e-7, dens=axel_dens, met=diagonal_toroidal_metric!); #probbaly should use geo if it is part of prob,
 #prob = init_problem(q=singular_bowden_q, geo=geo, δ=-4e-9, dens=bowden_singular_dens); #probbaly should use geo if it is part 
 #even if it is not really used.
-grids = init_grids(N=N, sep1=0.91, sep2=0.98, frac=0.25, mstart=2, mcount=2, nstart=-2, ncount=1);
+#grids = init_grids(N=N, sep1=0.91, sep2=0.98, frac=0.25, mstart=2, mcount=2, nstart=-2, ncount=1);
+rgrid = init_fem_grid(N=N)
+θgrid = init_sm_grid(start=2, count=2)
+ζgrid = init_sm_grid(start=-2, count=1)
+grids = init_grids(rgrid, θgrid, ζgrid)
 #grids = init_grids(N=N, mstart=2, mcount=2, nstart=-2, ncount=1);
 #tae_freq = (0.381 / geo.R0)^2
 
 
-ω, ϕ = construct_and_solve(prob=prob, grids=grids, full_spectrum=false, σ=(0.390/geo.R0)^2, reconstruct=true);
+ω, ϕ = construct_and_solve(prob=prob, grids=grids, full_spectrum=false, σ=0.390, reconstruct=true);
 tae_ind = 1
 display(ω[tae_ind])
+(0.38761929918593957 - 0.0013047632651995039im)^2
 
-display(imag(ω[tae_ind]^2))
+display((ω[tae_ind]^2))
 
 
 
 #scale of eigenfunctions is v different here.
 #also singularity is much much more pronounced...
 
-reconstruct_continuum(ω = ω.^2, ϕ = ϕ, grids = grids, ymax=0.25, ymin=-0.02)
+reconstruct_continuum(ω.^2, ϕ, grids, ymax=0.25, ymin=-0.02)
 
-tae_ind = find_ind(ω.^2, 0.157)
+tae_ind = find_ind(ω.^2, 0.151)
 
 tae_ind = 1
-plot_potential(grids=grids, ϕ=ϕ, ind=tae_ind, n=1)
+plot_potential(ϕ, grids, tae_ind)
 
 display(ω[tae_ind])
 display(imag(ω[tae_ind])/real(ω[tae_ind]))

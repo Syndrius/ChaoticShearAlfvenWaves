@@ -13,7 +13,7 @@ using Plots
 #so with 1e-6 we actually expect the tae to not experience damping
 #but 1e-5 perhaps not? there is like 1 `strand` that it could interact with. But majority is below.
 #similar with 5e-5, perhaps we just don't have enough modes?
-A = 9e-5 / 4 #4 to reflect r(1-r) factor
+A = 4e-4 / 4 #4 to reflect r(1-r) factor
 
 #so with small islands the structures are almost independent?
 
@@ -23,8 +23,8 @@ isl = ContIslandT(5, 4, A, 5/4, 0.8, 0.125)
 geo = GeoParamsT(R0=10.0)
 
 #start with this???
-pmd = MID.ModeDataT(start=-12, count=26, incr=1)
-tmd = MID.ModeDataT(start=-10, count=5, incr=4)
+pmd = init_sm_grid(start=-12, count=26, incr=1)
+tmd = init_sm_grid(start=-10, count=5, incr=4)
 #tmd = MID.ModeDataT(start=-8, count=10, incr=2)
 
 #χlist = LinRange(-A+A*0.05, A-A*0.05, 50) #this is fked, think we need to cluster near the spratrix.
@@ -40,7 +40,7 @@ tmd = MID.ModeDataT(start=-10, count=5, incr=4)
 #width = 4 * sqrt(isl.A * isl.q0^2/isl.qp)
 #ψ_isl = 2 * width / (π * isl.m0)
 #ψ̄m = ψ_isl
-ψ̄list = MID.IslandContinuum.compute_ψ̄(isl, χlist, 0)
+ψ̄list = MID.Continuum.compute_ψ̄(isl, χlist, 0)
 r = repeat(sqrt.(2 .* ψ̄list), 1,  pmd.count * tmd.count)
 
 #we should normalise the x-axis, it is going from centre of island to edge I think.

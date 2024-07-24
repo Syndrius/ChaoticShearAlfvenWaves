@@ -21,10 +21,15 @@ Base class that just imports everything. We will want a description of the packa
  - Reonstruct phi could probably be sped up by skipping every 2/4/8 indexes.
  - Plot continuum is probably the most cooked function going around!
  - Boundaries are being added twice... not sure why... -> this may be because of the two θbasis funcs, then in 3d it is added 4 times for the two θ and two ζ basis functions. -> has no effect on the frequency. I think this would just scale those basis functions by 2, but because they are zero it doesn't matter. Would be a problemo if we had non-zero boundaries.
+ - see if we can estimate how much memory we should be using, and make sure it is not way more than that! -> would help with gadi inputs as well.
+ - Maybe a reconstruct continuum from file, so that we can see the continuum for bigger files!
+ - change filename to savefile in all cases for clarity.
 
  - Really could do with some even very basic tae identification, ie make sure that a specific n (ie of the tae) is actually the maximum, and perhaps make sure that the major m's of the tae are like at least 50% of the max or something? -> ffs is less of a problem, the tae stays a bit more stable when an island is introduced
  - With new mode structure method, we could have a single reconstruct phi, just need to make a potential_size(grids) function.
  - Looks like we need to implement KAW/finite Epar corrections for this to actually work... fk me.
+ - Consider integrals.jl as alternative numerical integration
+ - Also consider julia --track-allocation=user i.e. run julia with track allocations to get more detailed data on memory allocations.
 
 
  Two things to try:
