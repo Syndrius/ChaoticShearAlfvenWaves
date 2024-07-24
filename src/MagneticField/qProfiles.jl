@@ -14,6 +14,17 @@ function island_damping_q(r)
 end
 
 
+function flr_q(r)
+    a = 1.05
+    b = 0.55
+
+    q = a + b*r^2
+    dq = 2 * b * r
+    return q, dq
+
+end
+
+
 function symmetric_q(r)
     a = 1
     q = 1 + a * r * (1-r)

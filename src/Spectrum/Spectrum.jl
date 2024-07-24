@@ -62,7 +62,7 @@ function construct_and_solve(; prob::ProblemT, grids::GridsT, efuncs=true::Bool,
     W, I = construct(prob, grids)
     display("Solving...")
     if full_spectrum 
-        if prob.δ == 0.0
+        if prob.flr.δ == 0.0 && prob.flr.ρ_i == 0 && prob.flr.δ_e == 0
             ω, ϕ = full_spectrum_solve(Wmat=W, Imat=I, grids=grids, efuncs=efuncs, reconstruct=reconstruct, resistivity=false, R0=prob.geo.R0)
         else
             ω, ϕ = full_spectrum_solve(Wmat=W, Imat=I, grids=grids, efuncs=efuncs, reconstruct=reconstruct, resistivity=true, R0=prob.geo.R0)

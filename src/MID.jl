@@ -10,7 +10,7 @@ Base class that just imports everything. We will want a description of the packa
  - Fix up/finish docstrings. Overall code still needs some cleaning, final results will depend on verification via CKA. -> use @doc macro
  - We should flip the sign of n, either in general or in island case. having a mix is no bloody good.
  - Perhaps make our parallel code more specific to the memory used by each proc, i.e get each proc to work over the indicies it owns? Should be possible with the index_to_grid thingo right? At least to make them mostly on their own memory shouldn't be that bad, will be difficult to deal with the overlap though!
- - maybe we should change problem to accept strings so we can explain the possible options when something doesn't work!
+ - maybe we should change problem to accept strings - or symbols like plot :green etc so we can explain the possible options when something doesn't work!
  - Alot of plotting needs to be fixed, in particular, ms plot, continuum plot have wrong labels.
  - Check Axel's case with FFS, as it is almost perf for bowden singular.
  - Why is parallel mode structure of tae so much better??? Doesn't really make sense...
@@ -24,6 +24,7 @@ Base class that just imports everything. We will want a description of the packa
  - see if we can estimate how much memory we should be using, and make sure it is not way more than that! -> would help with gadi inputs as well.
  - Maybe a reconstruct continuum from file, so that we can see the continuum for bigger files!
  - change filename to savefile in all cases for clarity.
+ - boundary conditions may need modification for flr, and perhaps the m=1 stuff is still not working properly.
 
  - Really could do with some even very basic tae identification, ie make sure that a specific n (ie of the tae) is actually the maximum, and perhaps make sure that the major m's of the tae are like at least 50% of the max or something? -> ffs is less of a problem, the tae stays a bit more stable when an island is introduced
  - With new mode structure method, we could have a single reconstruct phi, just need to make a potential_size(grids) function.
@@ -80,6 +81,7 @@ using MID.MagneticField; export comparison_bowden_q
 using MID.MagneticField; export fu_dam_q
 using MID.MagneticField; export island_3_2_q
 using MID.MagneticField; export symmetric_q
+using MID.MagneticField; export flr_q
 
 
 
@@ -89,6 +91,7 @@ include("Inputs/Inputs.jl")
 using MID.Inputs; export GeoParamsT
 using MID.Inputs; export ProblemT
 using MID.Inputs; export GridsT
+using MID.Inputs; export FLRT
 using MID.Inputs; export init_fem_grid
 using MID.Inputs; export init_sm_grid
 using MID.Inputs; export init_grids

@@ -15,11 +15,14 @@ function compute_boundary_inds(grids::FFSGridsT)
     #may need to do grid_to_ind first...
     left_boundary1 = 1:4:4*Nθ * Nn
     left_boundary2 = 2:4:4*Nθ * Nn
+    
+    #derivs is also set to zero for lfr
+    left_boundary3 = 3:4:4*Nθ * Nn
    
     right_boundary1 = 1 + (Nr - 1) * 4 * Nθ * Nn:4:4*Nr * Nθ * Nn
     right_boundary2 = 2 + (Nr - 1) * 4 * Nθ * Nn:4:4*Nr * Nθ * Nn
 
-    return vcat(left_boundary1, left_boundary2, right_boundary1, right_boundary2)
+    return vcat(left_boundary1, left_boundary2, left_boundary3, right_boundary1, right_boundary2)
 
 end
 

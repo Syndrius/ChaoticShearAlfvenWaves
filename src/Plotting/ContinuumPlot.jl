@@ -65,6 +65,8 @@ function reconstruct_continuum(ω, ϕ, grids::FSSGridsT; ymin=-0.05, ymax=1.05, 
     #assumes only 2 modes atm.
     omdata = zeros(length(ω)) 
     rdata = zeros(length(ω))
+
+    display("this function is being called")
     #col = zeros(length(ω))
 
     col = Tuple{Int, Int}[]
@@ -103,7 +105,7 @@ function reconstruct_continuum(ω, ϕ, grids::FSSGridsT; ymin=-0.05, ymax=1.05, 
         #col[i] = (mlist[max_mode[1]], nlist[max_mode[2]])
         push!(col, (mlist[max_mode[1]], nlist[max_mode[2]]))
         #if the problem is with a slab_metric, we need to divide by r for the continuum to match, it is ugly though!
-        omdata[i] = abs.(ω[i])  #already normalised now!
+        omdata[i] = real(ω[i])  #already normalised now!
         #omdata[i] = sqrt.(abs.(ω[i])) * R0
 
 

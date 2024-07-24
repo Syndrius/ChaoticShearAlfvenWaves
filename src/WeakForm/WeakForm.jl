@@ -59,7 +59,7 @@ function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, met::MetT, B
         #views are giving us some warnings, may be better to just define the view of I/W not the entire @views thing.
         #compute the I matrix
         #@views new_compute_I!(I[:, :, i, j, k], met, B, n[i], prob.δ)
-        @views compute_I!(I[:, :, i, j, k], met, B, n[i], prob.δ)
+        @views compute_I!(I[:, :, i, j, k], met, B, n[i], prob.flr)
         #@views newest_compute_I!(I[:, :, i, j, k], met, B, n[i], prob.δ, dn[i], r[i])
 
     end

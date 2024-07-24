@@ -4,7 +4,7 @@
 
 Computes the I matrix for the weak form at a single coordinate. Still a bit unoptimised. See thesis for details on what is being computed.
 """
-function compute_I!(I::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT, B::BFieldT, n::Float64, δ::Float64)
+function compute_I!(I::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT, B::BFieldT, n::Float64, flr::FLRT)
 
     #fill!(I, 0.0 + 0.0im)
     #display(I)
@@ -35,7 +35,13 @@ function compute_I!(I::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT,
 
     #probably want to do this as an outer product perhaps.
     for j=1:9, i=1:9
-        I[i, j] = -H[i] * H[j] * met.J * n / B.mag_B^2*1.0im * δ
+        #computes the non-ideal effects
+        #assumes that Te ≈ Ti
+        #then ρ_s = ρ_i
+        #δ is artifical resitivity
+        #ρ_i is ion gyro radius
+        #δ_e is electron resistivity
+        I[i, j] = -H[i] * H[j] * met.J * n / B.mag_B^2*(1.0im * flr.δ + 3/4 * flr.ρ_i + (1-flr.δ_e*1im) * flr.ρ_i)
     end
     #display(I)
     #ugly fix!
