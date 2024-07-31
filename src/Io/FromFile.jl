@@ -42,14 +42,21 @@ function problem_from_file(; filename::String)
     s = readline(file)
     B0 = parse(Float64, s[8:end])
 
+    #flr
+    readline(file)
     s = readline(file)
-    δ = parse(Float64, s[15:end])
+    δ = parse(Float64, s[11:end])
+    s = readline(file)
+    ρ_i = parse(Float64, s[11:end])
+    s = readline(file)
+    δ_e = parse(Float64, s[13:end])
     close(file)
 
     isl = IslandT(A=A, m0=m0, n0=n0)
     geo = GeoParamsT(R0=R0, a=a, B0=B0) #a and B0 will not do anything!
+    flr = FLRT(δ=δ, ρ_i = ρ_i, δ_e=δ_e)
 
-    return ProblemT(q=q_prof, compute_met=met, dens=dens, isl=isl, geo=geo, δ=δ)
+    return ProblemT(q=q_prof, compute_met=met, dens=dens, isl=isl, geo=geo, flr=flr)
             
 end
 

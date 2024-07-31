@@ -41,7 +41,7 @@ function compute_I!(I::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT,
         #δ is artifical resitivity
         #ρ_i is ion gyro radius
         #δ_e is electron resistivity
-        I[i, j] = -H[i] * H[j] * met.J * n / B.mag_B^2*(1.0im * flr.δ + 3/4 * flr.ρ_i + (1-flr.δ_e*1im) * flr.ρ_i)
+        I[i, j] = -H[i] * H[j] * met.J * n / B.mag_B^2*(1.0im * flr.δ + 3/4 * flr.ρ_i^2 + (1-flr.δ_e*1im) * flr.ρ_i^2)
     end
     #display(I)
     #ugly fix!

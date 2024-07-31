@@ -19,7 +19,10 @@ function problem_to_file(; prob::ProblemT, filename::String)
         write(file, " - R0: " * string(prob.geo.R0) * "\n")
         write(file, " - a: " * string(prob.geo.a) * "\n")
         write(file, " - B0: " * string(prob.geo.B0) * "\n")
-        write(file, "Resisitivity: " * string(prob.δ))
+        write(file, "FLR:\n")
+        write(file, " - delta: " * string(prob.flr.δ) * "\n")
+        write(file, " - rho_i: " * string(prob.flr.ρ_i) * "\n")
+        write(file, " - delta_e: " * string(prob.flr.δ_e) * "\n")
     end
 
 end
