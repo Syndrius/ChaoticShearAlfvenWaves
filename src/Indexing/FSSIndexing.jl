@@ -11,13 +11,16 @@ function compute_boundary_inds(grids::FSSGridsT)
     Nm = grids.θ.count
     Nn = grids.ζ.count
 
-    _, mlist, _ = Inputs.sm_grid(grids.θ) #think this is pointless!
+    #_, mlist, _ = Inputs.sm_grid(grids.θ) #think this is pointless!
 
     #for radiative case the deriv needs to be zero as well.
-    #left_boundary = 1:2:2*Nm*Nn
-    left_boundary = 1:1:2*Nm*Nn
+    left_boundary = 1:2:2*Nm*Nn
+
+    #flr stuff.
+    #left_boundary = 1:1:2*Nm*Nn
     #tried to make the distinction between nθ and nm clearer.
     #think this is a waste of time, hard to know for sure though!
+    """
     if 0 in mlist
         #fu and berk radiative paper seem to imply it should still be m=1 even for phi case...
         zero_ind = argmin(abs.(mlist))
@@ -28,6 +31,7 @@ function compute_boundary_inds(grids::FSSGridsT)
             left_boundary[i] += 1
         end
     end
+    """
 
     #could probably use grid_to_index for this
     right_boundary = 1+(Nr-1)*2*Nm*Nn:2:Nr*2*Nm*Nn

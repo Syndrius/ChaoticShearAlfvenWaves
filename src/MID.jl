@@ -25,6 +25,8 @@ Base class that just imports everything. We will want a description of the packa
  - Maybe a reconstruct continuum from file, so that we can see the continuum for bigger files!
  - change filename to savefile in all cases for clarity.
  - boundary conditions may need modification for flr, and perhaps the m=1 stuff is still not working properly.
+ - Maybe change count to N..
+ - We can probbaly remove the par_ for functions, and just use the args being petsc matrices to split them.
 
  - Really could do with some even very basic tae identification, ie make sure that a specific n (ie of the tae) is actually the maximum, and perhaps make sure that the major m's of the tae are like at least 50% of the max or something? -> ffs is less of a problem, the tae stays a bit more stable when an island is introduced
  - With new mode structure method, we could have a single reconstruct phi, just need to make a potential_size(grids) function.
