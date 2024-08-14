@@ -18,7 +18,14 @@ grids = init_grids(rgrid, θgrid, ζgrid)
 
 
 
-ω, ϕ = construct_and_solve(prob=prob, grids=grids, full_spectrum=true);
+cr, _, ϕft = construct_and_solve(prob=prob, grids=grids, full_spectrum=true);
+
+scatter(cr.r, real.(cr.ω), ylimits=(-0.05, 1.05))
+
+ind = find_ind(cr.ω, 0.376)
+plot_potential(ϕft, grids, ind)
+
+
 
 
 reconstruct_continuum(ω, ϕ, grids)#, filename="data/fu_dam_spectrum.png")
@@ -43,7 +50,7 @@ rgrid = init_fem_grid(N=Nr)
 grids = init_grids(rgrid, θgrid, ζgrid)
 
 #tae_freq=0.30
-ω, ϕ = construct_and_solve(prob=prob, grids=grids, full_spectrum=false, σ=tae_freq, reconstruct=true);
+ω, ϕ = construct_and_solve(prob=prob, grids=grids, full_spectrum=false, σ=0.376);
 
 
 

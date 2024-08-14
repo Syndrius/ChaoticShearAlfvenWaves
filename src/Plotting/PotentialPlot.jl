@@ -39,6 +39,42 @@ function plot_potential(ϕ, grids::FSSGridsT, ind; n=nothing, filename=nothing)
 end
 
 
+function plot_potential(ϕ, grids::FSSGridsT; n=nothing, filename=nothing)
+
+    #assumes only a single n
+    #would be nice if this could do some labelling somehow!
+    #but this at least works.
+
+    rgrid, _, mlist, _, _, nlist, _= instantiate_grids(grids)
+
+    #p = plot(r, real.(ϕ[ind, :, 1, n]), label=mlist[1], dpi=600)
+
+    p = plot(xlabel=L"r", ylabel=L"\phi", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10)
+
+    #will plot the 1,1 mode twice!
+    if isnothing(n)
+        for i in 1:grids.θ.count
+            for j in 1:grids.ζ.count
+                plot!(rgrid, real.(ϕ[:, i, j]), label=@sprintf("(%s, %s)", mlist[i], nlist[j]))
+            end
+        end
+    else
+
+        for i in 1:grids.θ.count
+            
+            plot!(rgrid, real.(ϕ[:, i, n]), label=@sprintf("m=%s", mlist[i]))
+        end
+    end
+
+    display(p)
+    if !isnothing(filename)
+        savefig(p, filename)
+    end
+
+    
+end
+
+
 #requires that mode structure has been passed in here!
 function plot_potential(ϕms, grids::FFSGridsT, ind, n=nothing, filename=nothing)
 
@@ -138,6 +174,11 @@ function plot_potential(ϕms, grids::FFFGridsT, ind, n=1, filename=nothing)
     
 end
 
+
+function find_ind(evals::EvalsT, val)
+
+    return argmin(abs.(evals.ω .-val))
+end
 
 #
 function find_ind(ω, val)

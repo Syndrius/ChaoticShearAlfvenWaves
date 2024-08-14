@@ -17,7 +17,7 @@ using MID.Geometry
 using MID.Indexing
 using MID.MagneticField
 using MID.WeakForm
-using MID.Inputs
+using MID.Structures
 using MID.Spectrum
 
 

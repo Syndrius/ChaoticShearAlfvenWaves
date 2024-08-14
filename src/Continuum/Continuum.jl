@@ -6,7 +6,7 @@ module Continuum
 
 using MID.Geometry
 using MID.MagneticField
-using MID.Inputs
+using MID.Structures
 using MID.Indexing
 using MID.WeakForm
 

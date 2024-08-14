@@ -7,19 +7,23 @@ Module for the reading and writing files. Includes
 """
 module Io
 
-using MID.Inputs
-using MID.Geometry
+using MID.Structures
+using JLD2
+using Printf
 
 include("FromFile.jl")
 
 export inputs_from_file
+export evals_from_file
+export efunc_from_file
 
 
 include("ToFile.jl")
 
 export inputs_to_file
-export eigfuncs_to_file
-export eigvals_to_file
+export evals_to_file
+export efuncs_to_file
+
 
 
 end

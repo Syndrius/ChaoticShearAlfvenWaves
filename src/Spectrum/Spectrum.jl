@@ -23,7 +23,8 @@ using MID.Indexing
 using MID.Integration
 using MID.MagneticField
 using MID.WeakForm
-using MID.Inputs
+using MID.Structures
+using MID.Io
 
 
 export construct_and_solve
@@ -41,6 +42,9 @@ export arpack_solve
 export full_spectrum_solve
 
 
+include("PostProcess.jl")
+
+
 
 """
     construct_and_solve(; prob::ProblemT, grids::GridsT, efuncs=true::Bool, σ=0.0::Float64, reconstruct=true::Bool, full_spectrum=false::Bool, nev=20::Int64)
@@ -56,20 +60,33 @@ Constructs the two matrices and solves. Can either solve the full spectrum via i
 - full_spectrum::Bool=false - Whether to solve for the full spectrum with inbuilt solver (slow) or use arpack (fast).
 - nev::Int64=20 - Number of eigenvalues to solve for if using Arpack.
 """
-function construct_and_solve(; prob::ProblemT, grids::GridsT, efuncs=true::Bool, σ=0.0::Float64, reconstruct=true::Bool, full_spectrum=false::Bool, nev=20::Int64)
+#should rename this to compute spectrum.
+function compute_spectrum(; prob::ProblemT, grids::GridsT, σ=0.0::Float64, full_spectrum=false::Bool, nev=100::Int64)
 
     display("Constructing...")
     W, I = construct(prob, grids)
+    mat_dim = matrix_dim(grids)
+    @printf("Construction of %dx%d matrices complete.\n", mat_dim, mat_dim)
     display("Solving...")
     if full_spectrum 
+        #with no non-ideal effects the matrices are Hermitian.
         if prob.flr.δ == 0.0 && prob.flr.ρ_i == 0 && prob.flr.δ_e == 0
-            ω, ϕ = full_spectrum_solve(Wmat=W, Imat=I, grids=grids, efuncs=efuncs, reconstruct=reconstruct, resistivity=false, R0=prob.geo.R0)
+            evals, efuncs = full_spectrum_solve(Wmat=W, Imat=I, resistivity=false)
+        #other wise use a non-hermitian solver.
         else
-            ω, ϕ = full_spectrum_solve(Wmat=W, Imat=I, grids=grids, efuncs=efuncs, reconstruct=reconstruct, resistivity=true, R0=prob.geo.R0)
+            evals, efuncs = full_spectrum_solve(Wmat=W, Imat=I, resistivity=true)
         end
     else
-        ω, ϕ = arpack_solve(Wmat=W, Imat=I, grids=grids, efuncs=efuncs, nev=nev, σ=σ, reconstruct=reconstruct, R0=prob.geo.R0)
+        evals, efuncs = arpack_solve(Wmat=W, Imat=I, nev=nev, σ=σ, geo=prob.geo)
     end
+    @printf("Solving complete, %d eigenvalues found.\n", length(evals))
+    display("Post Processing...")
+
+    evals, ϕ, ϕft = post_process(evals, efuncs, grids, prob.geo)
+
+    display("Finished.")
+    return evals, ϕ, ϕft
+
 end
 
 
@@ -87,10 +104,10 @@ function spectrum_from_file(; dir::String, σ::Float64, nev=20::Int64)
 
     prob, grids = inputs_from_file(dir=dir)
 
-    ω, ϕ = construct_and_solve(prob=prob, grids=grids, σ=σ, nev=nev, reconstruct=false)
+    evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, σ=σ, nev=nev)
 
-    eigvals_to_file(ω=ω, filename=dir * "eigvals.dat")
-    eigfuncs_to_file(ϕ=ϕ, filename=dir * "eigfuncs.dat")
+    evals_to_file(evals, dir)
+    efuncs_to_file(ϕ, ϕft, dir)
 end
 
 end

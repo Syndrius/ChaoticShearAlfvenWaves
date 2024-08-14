@@ -14,36 +14,14 @@ reconstruct::Bool - Whether to reconstruct the eigenfunctions into 3d.
 resistivity::Bool - Whether we are solving with resistivity, if not matricies are Hermitian.
 R0::Float64 - Major radius, used for normalising.
 """
-function full_spectrum_solve(; Wmat, Imat, grids::GridsT, efuncs=true::Bool, reconstruct=true::Bool, resistivity=false::Bool, R0::Float64)
+function full_spectrum_solve(; Wmat, Imat, resistivity=false::Bool)
 
-    if efuncs
-        if resistivity
-            vals, funcs = eigen(Matrix(Wmat), Matrix(Imat))
-            if reconstruct
-                phi = reconstruct_phi(funcs, length(vals), grids)
-                return R0 .* sqrt.(vals), phi
-            else
-                return R0 .* sqrt.(vals), funcs
-            end
-        else
-            #may need a reconstruct flag in the future or a better way to write phi to files.
-            vals, funcs = eigen(Hermitian(Matrix(Wmat)), Hermitian(Matrix(Imat)))
-            if reconstruct
-                #needs to change!
-                phi = reconstruct_phi(funcs, length(vals), grids)
-                #abs needed for comparison bowden case...
-                return R0 .* sqrt.(abs.(vals)), phi
-            else
-                return R0 .* sqrt.(abs.(vals)), funcs
-            end
-            
-        end
+    if resistivity
+        vals, funcs = eigen(Matrix(Wmat), Matrix(Imat))
+        return evals, efuncs
     else
-        if resistivity 
-            return R0 .* sqrt.(eigvals(Matrix(Wmat), Matrix(Imat)))
-        else
-            return R0 .* sqrt.(eigvals(Hermitian(Matrix(Wmat)), Hermitian(Matrix(Imat))))
-        end
+        evals, efuncs = eigen(Hermitian(Matrix(Wmat)), Hermitian(Matrix(Imat)))
+        return evals, efuncs
     end
 
 
@@ -67,25 +45,13 @@ reconstruct::Bool - Whether to reconstruct the eigenfunctions into 3d.
 nev::Int64 - Number of eigenvalues to solve for.
 R0::Float64 - Major radius, used for normalising.
 """
-function arpack_solve(; Wmat, Imat, grids::GridsT, efuncs=true::Bool, nev=20::Int64, σ=0.0::Float64, reconstruct=false::Bool, R0::Float64)
+function arpack_solve(; Wmat, Imat, nev=100::Int64, σ=0.0::Float64, geo::GeoParamsT)
 
     #un-normalise the target frequency for the shift and invert
-    tae_freq = σ^2 / R0^2
-    if efuncs
-        #which=:LM here seems to cook it in the same way 0.5.4 does
-        #wonder why this ever worked???
-        #changing maxiter to 1000, did not change result...
-        #tol-1.0-14 did not change result...
-        #both are tested for axel case.
-        vals, funcs = eigs(Wmat, Imat, nev=nev, ritzvec=true, sigma=tae_freq)
-        if reconstruct
-            phi = reconstruct_phi(funcs, length(vals), grids)
-            return R0 .* sqrt.(vals), phi
-        else
-            return R0 .* sqrt.(vals), funcs
-        end
-    end
+    tae_freq = σ^2 / geo.R0^2
 
-    return R0 .* sqrt.(eigs(Wmat, Imat, nev=nev, ritzvec=false, sigma=tae_freq))
+    evals, efuncs = eigs(Wmat, Imat, nev=nev, ritzvec=true, sigma=tae_freq)
+
+    return evals, efuncs
 
 end

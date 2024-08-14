@@ -25,11 +25,11 @@ geo::GeoParamsT - struct storing the geometrical parameters, i.e major radius.
 isl::ContIslandT - expanded struct storing the island paramaters needed for the continuum calculation.
 sign::Int64 - Sign of the particles, ±1 for passing on either side, or 0 for trapped particles.
 """
-function island_continuum(χlist::Array{Float64}, pmd::Inputs.SMGridDataT, tmd::Inputs.SMGridDataT, geo::GeoParamsT, isl::ContIslandT, sign::Int64)
+function island_continuum(χlist::Array{Float64}, pmd::SMGridDataT, tmd::SMGridDataT, geo::GeoParamsT, isl::ContIslandT, sign::Int64)
 
     #in all cases inouts are taken to be θ̄ and ζ, in trapped case, θ̄ is equivalent to ᾱ.
-    nθ, mlist, θ̄grid = Inputs.sm_grid(pmd) 
-    nζ, nlist, ζgrid = Inputs.sm_grid(tmd)
+    nθ, mlist, θ̄grid = Structures.sm_grid(pmd) 
+    nζ, nlist, ζgrid = Structures.sm_grid(tmd)
 
     if sign == 0
         ζgrid = range(0, 2*π / tmd.incr * isl.m0, nζ+1)[1:end-1]

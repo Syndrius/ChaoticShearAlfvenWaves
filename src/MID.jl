@@ -27,6 +27,8 @@ Base class that just imports everything. We will want a description of the packa
  - boundary conditions may need modification for flr, and perhaps the m=1 stuff is still not working properly.
  - Maybe change count to N..
  - We can probbaly remove the par_ for functions, and just use the args being petsc matrices to split them.
+ - Should change σ to target_freq or something.
+ - fix all the examples and extra spectra garbage
 
  - Really could do with some even very basic tae identification, ie make sure that a specific n (ie of the tae) is actually the maximum, and perhaps make sure that the major m's of the tae are like at least 50% of the max or something? -> ffs is less of a problem, the tae stays a bit more stable when an island is introduced
  - With new mode structure method, we could have a single reconstruct phi, just need to make a potential_size(grids) function.
@@ -87,21 +89,21 @@ using MID.MagneticField; export flr_q
 
 
 
-include("Inputs/Inputs.jl")
+include("Structures/Structures.jl")
 
 #seems like we don't have to export the structure, and instead can just use the constructors.
-using MID.Inputs; export GeoParamsT
-using MID.Inputs; export ProblemT
-using MID.Inputs; export GridsT
-using MID.Inputs; export FLRT
-using MID.Inputs; export init_fem_grid
-using MID.Inputs; export init_sm_grid
-using MID.Inputs; export init_grids
-using MID.Inputs; export init_problem
-using MID.Inputs; export inputs_to_file
-using MID.Inputs; export inputs_from_file
-using MID.Inputs; export eigvals_to_file
-using MID.Inputs; export eigfuncs_to_file
+using MID.Structures; export GeoParamsT
+using MID.Structures; export ProblemT
+using MID.Structures; export GridsT
+using MID.Structures; export FLRT
+using MID.Structures; export init_fem_grid
+using MID.Structures; export init_sm_grid
+using MID.Structures; export init_grids
+using MID.Structures; export init_problem
+using MID.Structures; export inputs_to_file
+using MID.Structures; export inputs_from_file
+using MID.Structures; export eigvals_to_file
+using MID.Structures; export eigfuncs_to_file
 
 
 
@@ -126,10 +128,11 @@ using MID.Integration; export gauss_integrate
 
 include("Io/Io.jl")
 
-using MID.Io; export inputs_from_file
+
 using MID.Io; export inputs_to_file
-using MID.Io; export eigvals_to_file
-using MID.Io; export eigfuncs_to_file
+using MID.Io; export inputs_from_file
+using MID.Io; export evals_from_file
+using MID.Io; export efunc_from_file
 
 
 

@@ -1,4 +1,14 @@
 
+function plot_continuum(evals::EvalsT; filename=nothing, ymin=-0.05, ymax=1.05)
+
+    p = scatter(evals.r, real.(evals.ω), group=evals.modelabs, xlabel=L"r", ylabel=L"\frac{\omega  R_0}{v_A}", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10, ylimits=(ymin, ymax))
+
+    display(p)
+    if !isnothing(filename)
+        savefig(p, filename)
+    end
+end
+
 
 #only work for FSS atm. not sure if it will work in general tbh!
 #this function is cooked and needs to be fixed.

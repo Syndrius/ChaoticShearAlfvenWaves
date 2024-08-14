@@ -5,11 +5,12 @@ Contains the structures and constructors of our inputs to our main functions, in
  - The GridsT type.
 
 """
-module Inputs
+module Structures
 
 
 using MID.Geometry
 using MID.MagneticField
+
 
 
 include("Grids.jl")
@@ -27,12 +28,19 @@ export init_grids
 export instantiate_grids
 
 
+
 include("Problem.jl")
 
 export ProblemT
 export GeoParamsT
 export FLRT
 export init_problem
+
+
+
+include("Output.jl")
+
+export EvalsT
 
 
 end

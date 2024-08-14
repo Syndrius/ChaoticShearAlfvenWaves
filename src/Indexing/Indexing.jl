@@ -5,7 +5,7 @@ Module for indexing our matrices. Deals with the mapping between 3d space and th
 module Indexing
 
 
-using MID.Inputs
+using MID.Structures
 
 
 """

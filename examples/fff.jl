@@ -4,7 +4,7 @@ using Plots; plotlyjs()
 
 #Integration has been massivly sped up, but this is still slow af, probbaly requires multiproc.
 #~90% of the time is spent numerically integrating. Wonder if there is anything we can do???
-rgrid = init_fem_grid(N=20);
+rgrid = init_fem_grid(N=8);
 θgrid = init_fem_grid(N=5, pf=2);
 ζgrid = init_fem_grid(N=3, pf=-2);
 
@@ -19,7 +19,10 @@ prob = init_problem(q=Axel_q, geo=geo);
 #fk load more allocations and gc without views.
 #outrageous spead up shifting the ϕ[:, test, :, ...] to ϕ[:, testr, testθ, :, :]
 
-ω, ϕ = construct_and_solve(prob=prob, grids=grids, full_spectrum=true, reconstruct=true); 
+cr, ϕ, ϕft = construct_and_solve(prob=prob, grids=grids, full_spectrum=true); 
+
+display(cr)
+scatter(cr.r, real.(cr.ω))
 
 
 ϕms = mode_structure(ϕ, grids);

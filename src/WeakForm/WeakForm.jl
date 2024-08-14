@@ -4,7 +4,7 @@ module WeakForm
 
 using MID.Geometry
 using MID.MagneticField
-using MID.Inputs
+using MID.Structures
 
 using LinearAlgebra
 

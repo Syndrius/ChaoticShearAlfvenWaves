@@ -22,8 +22,9 @@ grids = init_grids(rgrid, θgrid, ζgrid)
 
 
 
-ω, ϕ = construct_and_solve(prob=prob, grids=grids, full_spectrum=true);
+cr, ϕ, ϕft = construct_and_solve(prob=prob, grids=grids, full_spectrum=true);
 
+scatter(cr.r, real.(cr.ω), ylimits=(-0.05, 1.05))
 
 ϕms = mode_structure(ϕ, grids);
 reconstruct_continuum(ω, ϕms, grids)#, ymax=3)#, filename="data/fu_dam_spectrum.png")

@@ -5,7 +5,7 @@ Deals with the Hermite basis functions in 1, 2 and 3 dimensions and modifies the
 module Basis
 
 
-using MID.Inputs
+using MID.Structures
 
 
 include("FSSBasis.jl")

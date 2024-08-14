@@ -11,7 +11,7 @@ May want to change this to post-processing or something!
 
 module Plotting
 
-using MID.Inputs
+using MID.Structures
 #using MID.
 
 using Plots
