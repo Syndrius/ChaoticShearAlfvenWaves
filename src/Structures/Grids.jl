@@ -106,7 +106,6 @@ Struct storing the grids for the continuum case.
 end
 
 
-
 """
     init_grids(rgrid::GridDataT, θgrid::GridDataT, ζgrid::GridDataT)
 
@@ -218,9 +217,6 @@ function instantiate_grids(grids::ContGridsT)
 end
 
 
-
-
-
 """
     sm_grid(gd::SMGridDataT)
 
@@ -268,6 +264,7 @@ function clustered_grid(grid::FEMGridDataT)
 
     return vcat(rleft, rclust, rright)
 end
+
 
 """
     init_fem_grid(;N::Int64, sep1::Float64=0.0, sep2::Float64=1.0, frac::Float64=0.0, gp::Int64=4, pf::Int64=0)

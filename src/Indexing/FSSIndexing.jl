@@ -140,15 +140,16 @@ function reconstruct_phi(efuncs::Array{ComplexF64, 2}, nevals::Int64, grids::FSS
     #maybe one day we will want dphidr???
     #note that this is the same for both!
 
-    for i in 1:matrix_dim(grids)
+    for i in 1:2:matrix_dim(grids)
 
         #note these are the indicies.
         r, θ, ζ, hs = index_to_grid(i, grids)
+        phi[:, r, θ, ζ] = efuncs[i, :]
 
-        if hs == 1
+        #if hs == 1
             #may be the wrong way around!
-            phi[:, r, θ, ζ] = efuncs[i, :]
-        end
+        #    phi[:, r, θ, ζ] = efuncs[i, :]
+        #end
     end
     return phi
 end

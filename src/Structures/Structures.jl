@@ -1,8 +1,9 @@
 """
 
-Contains the structures and constructors of our inputs to our main functions, including
+Contains the structures and constructors used, includes
  - The ProblemT type.
  - The GridsT type.
+ - The EvalsT type.
 
 """
 module Structures
@@ -28,14 +29,12 @@ export init_grids
 export instantiate_grids
 
 
-
 include("Problem.jl")
 
 export ProblemT
 export GeoParamsT
 export FLRT
 export init_problem
-
 
 
 include("Output.jl")

@@ -1,4 +1,8 @@
+"""
+    inputs_to_file(; prob::ProblemT, grids::GridsT, dir::String)
 
+Writes the prob and grids structs to file using JLD2.
+"""
 function inputs_to_file(; prob::ProblemT, grids::GridsT, dir::String)
 
     save_object(dir*"prob.jld2", prob)
@@ -6,13 +10,24 @@ function inputs_to_file(; prob::ProblemT, grids::GridsT, dir::String)
 
 end
 
+
+"""
+    evals_to_file(evals::EvalsT, dir::String)
+
+Writes the evals struct to file using JLD2.
+"""
 function evals_to_file(evals::EvalsT, dir::String)
 
     save_object(dir*"evals.jld2", evals)
 
 end
 
+"""
+    efuncs_to_file(ϕ, ϕft, dir::String)
 
+Writes the eigenfunctions and the fourier transformed eigenfunctions
+to file. Each eigenfunction is written to an individual file.
+"""
 function efuncs_to_file(ϕ, ϕft, dir::String)
     nevals = size(ϕft)[1]
     efunc_base = dir*"/efuncs/"
