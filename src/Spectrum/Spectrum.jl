@@ -76,7 +76,9 @@ function compute_spectrum(; prob::ProblemT, grids::GridsT, target_freq=0.0::Floa
             evals, efuncs = full_spectrum_solve(Wmat=W, Imat=I, ideal=false)
         end
     else
-        evals, efuncs = arpack_solve(Wmat=W, Imat=I, nev=nev, target_freq=target_freq, geo=prob.geo)
+        #un-normalise the target frequency for the shift and invert
+        target_freq = target_freq^2 / prob.geo.R0^2 
+        evals, efuncs = arpack_solve(Wmat=W, Imat=I, nev=nev, target_freq=target_freq)
     end
     @printf("Solving complete, %d eigenvalues found.\n", length(evals))
     display("Post Processing...")

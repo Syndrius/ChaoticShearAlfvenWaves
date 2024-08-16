@@ -15,11 +15,12 @@ Base class that just imports everything. We will want a description of the packa
  - Add try catch to sqrt in solve, most of the time it is just because of ~0 numbers, but it owuld be good to have a warning rather than just always take abs. -> Maybe in this case we dont return the normalised ones? Or should we always have a normalise flag???
  - change filename to savefile in all cases for clarity.
  - boundary conditions may need modification for flr, and perhaps the m=1 stuff is still not working properly.
- - Maybe change count to N..
- - We can probbaly remove the par_ for functions, and just use the args being petsc matrices to split them.
+ - Maybe change count to N...
  - fix all the examples and extra spectra garbage
  - Reconstruct phi can probbaly be made more efficient
  - remove extra exports from this file.
+ - Maybe write a function that finds mlab and nlab, given it is used in multiple places.
+ - Use of kwargs is inconsistent and sometimes annoying.
 
 
 """
@@ -74,6 +75,8 @@ using MID.Structures; export inputs_to_file
 using MID.Structures; export inputs_from_file
 using MID.Structures; export eigvals_to_file
 using MID.Structures; export eigfuncs_to_file
+using MID.Structures; export instantiate_grids
+
 
 
 

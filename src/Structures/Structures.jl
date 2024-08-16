@@ -23,6 +23,7 @@ export FFFGridsT
 export ContGridsT
 export FEMGridDataT
 export SMGridDataT
+export mode_label
 export init_fem_grid
 export init_sm_grid
 export init_grids

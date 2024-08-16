@@ -36,12 +36,9 @@ Note that Arpack version 0.5.4 is broken but is the default version installed wi
 - nev::Int64 - Number of eigenvalues to solve for.
 - geo::GeoParamsT - Geometry struct, used for un-normalising target frequency.
 """
-function arpack_solve(; Wmat::SparseMatrixCSC, Imat::SparseMatrixCSC, nev=100::Int64, target_freq=0.0::Float64, geo::GeoParamsT)
+function arpack_solve(; Wmat::SparseMatrixCSC, Imat::SparseMatrixCSC, nev=100::Int64, target_freq=0.0::Float64)
 
-    #un-normalise the target frequency for the shift and invert
-    tae_freq = target_freq^2 / geo.R0^2
-
-    evals, efuncs = eigs(Wmat, Imat, nev=nev, ritzvec=true, sigma=tae_freq)
+    evals, efuncs = eigs(Wmat, Imat, nev=nev, ritzvec=true, sigma=target_freq)
 
     return evals, efuncs
 

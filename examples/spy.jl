@@ -7,11 +7,11 @@ using Plots; plotlyjs()
 using SparseArrays
 
 
-
+#4x5x3 probably shows the pattern the best, but we will want to plot this withot java probably for real discussion.
 rgrid = init_fem_grid(N=3);
-θgrid = init_fem_grid(N=4, pf=2);
+θgrid = init_fem_grid(N=5, pf=2);
 #θgrid = init_sm_grid(start=1, count=4)
-ζgrid = init_fem_grid(N=4, pf=-2);
+ζgrid = init_fem_grid(N=3, pf=-2);
 #ζgrid = init_sm_grid(start=1, count=3)
 
 grids = init_grids(rgrid, θgrid, ζgrid);

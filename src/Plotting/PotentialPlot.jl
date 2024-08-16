@@ -1,82 +1,46 @@
-#need to split this into the different types of plotiing for ease of access.
 
+#file seems to be ok, hard to tell without better resolution.
 
-#this is much more important to have the docstrings stuff, always forget these args.
-#plots all the poloidal modes of the eigenfunction for a given n.
-function plot_potential(ϕ, grids::FSSGridsT, ind; n=nothing, filename=nothing)
-
-    #assumes only a single n
-    #would be nice if this could do some labelling somehow!
-    #but this at least works.
+function plot_potential(ϕ::Array{ComplexF64}, grids::FSSGridsT, ind=1::Int64; n=nothing, savefile=nothing)
 
     rgrid, _, mlist, _, _, nlist, _= instantiate_grids(grids)
 
     #p = plot(r, real.(ϕ[ind, :, 1, n]), label=mlist[1], dpi=600)
-
+    #may want the eigenvalue inside the title?
     p = plot(xlabel=L"r", ylabel=L"\phi", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10)
 
-    #will plot the 1,1 mode twice!
+    #this will allow plotting if all eigenfunctions are passed in (i.e. from MID)
+    #or if a single is passed in (i.e. from file/MIDParallel)
+    if length(size(ϕ)) == 4
+        ϕ_plot = ϕ[ind, :, :, :]
+    else
+        ϕ_plot = ϕ
+    end
+
     if isnothing(n)
         for i in 1:grids.θ.count
             for j in 1:grids.ζ.count
-                plot!(rgrid, real.(ϕ[ind, :, i, j]), label=@sprintf("(%s, %s)", mlist[i], nlist[j]))
+                plot!(rgrid, real.(ϕ_plot[ :, i, j]), label=@sprintf("(%s, %s)", mlist[i], nlist[j]))
             end
         end
     else
-
         for i in 1:grids.θ.count
             
-            plot!(rgrid, real.(ϕ[ind, :, i, n]), label=@sprintf("m=%s", mlist[i]))
+            plot!(rgrid, real.(ϕ_plot[:, i, n]), label=@sprintf("(%s, %s)", mlist[i], n))
         end
     end
 
     display(p)
-    if !isnothing(filename)
-        savefig(p, filename)
+
+    if !isnothing(savefile)
+        savefig(p, savefile)
     end
 
-    
+
 end
 
 
-function plot_potential(ϕ, grids::FSSGridsT; n=nothing, filename=nothing)
-
-    #assumes only a single n
-    #would be nice if this could do some labelling somehow!
-    #but this at least works.
-
-    rgrid, _, mlist, _, _, nlist, _= instantiate_grids(grids)
-
-    #p = plot(r, real.(ϕ[ind, :, 1, n]), label=mlist[1], dpi=600)
-
-    p = plot(xlabel=L"r", ylabel=L"\phi", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10)
-
-    #will plot the 1,1 mode twice!
-    if isnothing(n)
-        for i in 1:grids.θ.count
-            for j in 1:grids.ζ.count
-                plot!(rgrid, real.(ϕ[:, i, j]), label=@sprintf("(%s, %s)", mlist[i], nlist[j]))
-            end
-        end
-    else
-
-        for i in 1:grids.θ.count
-            
-            plot!(rgrid, real.(ϕ[:, i, n]), label=@sprintf("m=%s", mlist[i]))
-        end
-    end
-
-    display(p)
-    if !isnothing(filename)
-        savefig(p, filename)
-    end
-
-    
-end
-
-
-#requires that mode structure has been passed in here!
-function plot_potential(ϕms, grids::FFSGridsT, ind, n=nothing, filename=nothing)
+function plot_potential(ϕ::Array{ComplexF64}, grids::FFSGridsT, ind=1::Int64; n=nothing, savefile=nothing)
 
     #assumes only a single n
     #would be nice if this could do some labelling somehow!
@@ -92,6 +56,12 @@ function plot_potential(ϕms, grids::FFSGridsT, ind, n=nothing, filename=nothing
 
     p = plot(xlabel=L"r", ylabel=L"\phi", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10)
 
+    if length(size(ϕ)) == 4
+        ϕ_plot = ϕ[ind, :, :, :]
+    else
+        ϕ_plot = ϕ
+    end
+
     #will plot the 1,1 mode twice!
     #this will be way to many modes!
     if isnothing(n)
@@ -99,46 +69,41 @@ function plot_potential(ϕms, grids::FFSGridsT, ind, n=nothing, filename=nothing
             #mlab = mod(i-1 + grids.θ.pf, grids.θ.N)
             #think pf is not needed for the labels. v hard to tell though!
             #seems like it is needed for tae modes, but not island modes.
-            mlab = mod(i-1, grids.θ.N)
-            if mlab > grids.θ.N/2
-                mlab = mlab - grids.θ.N
-            end
+            mlab = mode_label(i, grids.θ)
             for n in 1:grids.ζ.count
                 #the order of this is completly cooked, but the labels seem correct.
                 
                 
                 #label should be a function of pf!!!
                 #based on simple example with m=1, looks like last ind reps m=0 in some sense, i.e it wraps around?? Not sure how -m's will work for fem2d method.
-                plot!(rgrid, real.(ϕms[ind, :, i, n]), label=@sprintf("%s, %s", mlab, nlist[n]))
+                plot!(rgrid, real.(ϕ_plot[:, i, n]), label=@sprintf("%s, %s", mlab, nlist[n]))
             end
         end
     else
         for i in 1:grids.θ.N
             #the order of this is completly cooked, but the labels seem correct.
             #mlab = mod(i-1 + grids.θ.pf, grids.θ.N)
-            mlab = mod(i-1, grids.θ.N)
-            if mlab > grids.θ.N/2
-                mlab = mlab - grids.θ.N
-            end
+            mlab = mode_label(i, grids.θ)
+            
             
             #label should be a function of pf!!!
             #based on simple example with m=1, looks like last ind reps m=0 in some sense, i.e it wraps around?? Not sure how -m's will work for fem2d method.
-            plot!(rgrid, real.(ϕms[ind, :, i, n]), label=@sprintf("m=%s", mlab))
+            plot!(rgrid, real.(ϕ_plot[:, i, n]), label=@sprintf("%s, %s", mlab, n))
         end
     end
 
     display(p)
-    if !isnothing(filename)
-        savefig(p, filename)
+    if !isnothing(savefile)
+        savefig(p, savefile)
     end
 
     
 end
 
 
-#requires that mode structure has been passed in here!
-function plot_potential(ϕms, grids::FFFGridsT, ind, n=1, filename=nothing)
 
+
+function plot_potential(ϕ::Array{ComplexF64}, grids::FFFGridsT, ind=1::Int64; n=nothing, savefile=nothing)
     #assumes only a single n
     #would be nice if this could do some labelling somehow!
     #but this at least works.
@@ -149,180 +114,58 @@ function plot_potential(ϕms, grids::FFFGridsT, ind, n=1, filename=nothing)
 
     rgrid, _, _ = instantiate_grids(grids)
 
+    if length(size(ϕ)) == 4
+        ϕ_plot = ϕ[ind, :, :, :]
+    else
+        ϕ_plot = ϕ
+    end
+
     #p = plot(r, real.(ϕ[ind, :, 1, n]), label=mlist[1], dpi=600)
 
     p = plot(xlabel=L"r", ylabel=L"\phi", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10)
 
     #will plot the 1,1 mode twice!
     #this will be way to many modes!
-    for i in 1:grids.θ.N
-        
-        mlab = mod(i-1 + grids.θ.pf, grids.θ.N)
-        if mlab > grids.θ.N/2
-            mlab = mlab - grids.θ.N
+    if isnothing(n)
+        for i in 1:grids.θ.N
+
+            for j in 1:grids.ζ.N
+            
+                mlab = mode_label(i, grids.θ)
+                nlab = mode_label(j, grids.ζ)
+                #label should be a function of pf!!!
+                #based on simple example with m=1, looks like last ind reps m=0 in some sense, i.e it wraps around?? Not sure how -m's will work for fem2d method.
+                plot!(rgrid, real.(ϕ_plot[:, i, j]), label=@sprintf("%s, %s", mlab, nlab))
+            end
         end
-        #label should be a function of pf!!!
-        #based on simple example with m=1, looks like last ind reps m=0 in some sense, i.e it wraps around?? Not sure how -m's will work for fem2d method.
-        plot!(rgrid, real.(ϕms[ind, :, i, n]), label=@sprintf("m=%s", mlab))
+    else
+        for i in 1:grids.θ.N
+            
+            for j in 1:grids.ζ.N
+            
+                mlab = mode_label(i, grids.θ)
+                nlab = mode_label(j, grids.ζ)
+                #i.e only plot desired n.
+                if nlab==n
+                    #label should be a function of pf!!!
+                    #based on simple example with m=1, looks like last ind reps m=0 in some sense, i.e it wraps around?? Not sure how -m's will work for fem2d method.
+                    plot!(rgrid, real.(ϕ_plot[:, i, j]), label=@sprintf("%s, %s", mlab, nlab))
+                end
+            end
+        end
     end
 
     display(p)
-    if !isnothing(filename)
-        savefig(p, filename)
+    if !isnothing(savefile)
+        savefig(p, savefile)
     end
 
     
 end
+
 
 
 function find_ind(evals::EvalsT, val)
 
     return argmin(abs.(evals.ω .-val))
 end
-
-#
-function find_ind(ω, val)
-
-    return argmin(abs.(ω.-val))
-end
-
-
-function plot_phi_surface(ϕ, grids::FFSGridsT, ind, n=nothing, filename=nothing)
-    #not sure how to treat n in this case
-
-
-    rgrid, θgrid, _, _, _ = instantiate_grids(grids)   
-
-    z = zeros(Float64, grids.r.N,grids.θ.N)
-    #currently construct only does a specific n.
-    if isnothing(n)
-        for i in 1:grids.ζ.count
-            z += real.(ϕ[ind, :, :, i])
-        end
-        p = surface(θgrid, rgrid, z)
-    else
-        p = surface(θgrid, rgrid, real.(ϕ[ind, :, :, n]))
-    end
-    display(p)
-    if !isnothing(filename)
-        savefig(p, filename)
-    end
-
-end
-
-
-function plot_phi_surface(ϕ, grids::FFFGridsT, ind, ζ=1, filename=nothing)
-    #pass in a zeta index, ideally could map that to a position or something.
-
-
-    rgrid, θgrid, _ = instantiate_grids(grids)   
-
-
-    #currently construct only does a specific n.
-    p = surface(θgrid, rgrid, real.(ϕ[ind, :, :, ζ]))
-    display(p)
-    if !isnothing(filename)
-        savefig(p, filename)
-    end
-
-end
-
-
-#note requires that phi surface has been called.
-function plot_phi_surface(ϕsur, grids::FSSGridsT, ind, filename=nothing)
-
-    rgrid, Nθ, mlist, θgrid, _, _, _ = instantiate_grids(grids)
-
-   
-    if Nθ < 50
-        Nθ = 50
-        θgrid = LinRange(0, 2π, 50)
-    end
-
-    #currently construct only does a specific n.
-    p = surface(θgrid, rgrid, ϕsur[ind, :, :])
-    display(p)
-    if !isnothing(filename)
-        savefig(p, filename)
-    end
-
-end
-
-
-
-function construct_surface(ϕ, nevals, grids, ζ)
-
-    #slightly less arbitrary way of doing the θ stuff?
-    #this is hopeless when we only use a few modes.
-    rgrid, Nθ, mlist, θgrid, _, nlist, _ = instantiate_grids(grids)
-
-    #this is a stupid condition but makes it look smoother so idk
-    if Nθ < 50
-        Nθ = 50
-        θgrid = LinRange(0, 2π, 50)
-    end
-    #nθ = 50 #this is arbitrary but I don't think it should be!
-    #maybe we need to inverse the fourier transform? Maybe that is what we are kind of doing?
-
-    #θgrid = LinRange(0, 2π, nθ) # I fell like this doesn't make sense to make our own arbitrary θgrid
-    #seems like it should be aligned with our island or solver or something.
-
-    ϕsur = zeros(nevals, grids.r.N, Nθ) #start with a single n value. can add extra dimension to this for n.
-
-    
-
-    for i in 1:grids.r.N
-
-        for (j, θ) in enumerate(θgrid)
-
-            for (k, m) in enumerate(mlist)
-
-                for (l, n) in enumerate(nlist)
-
-                    #-ve here? perhap?
-                    ϕsur[:, i, j] += @. real(ϕ[:, i, k, l] * exp(1im * (m * θ + n * ζ)))
-                end
-            end
-        end
-    end
-
-    return ϕsur
-
-end
-
-
-#plots the potential but sums different n values.
-function plot_sum_potential(; grids, ϕ, ind, filename=nothing)
-
-    #assumes only a single n
-    #would be nice if this could do some labelling somehow!
-    #but this at least works.
-
-    mlist = (grids.pmd.start:grids.pmd.incr:grids.pmd.start + grids.pmd.incr * grids.pmd.count)[1:end-1]
-
-    rgrid = construct_rgrid(grids)
-
-    #p = plot(r, real.(ϕ[ind, :, 1, n]), label=mlist[1], dpi=600)
-
-    p = plot(xlabel=L"r", ylabel=L"\phi", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10)
-
-    #will plot the 1,1 mode twice!
-    for i in 1:grids.pmd.count
-        res = zeros(size(ϕ[ind, :, i, 1]))
-
-        for j in 1:grids.tmd.count
-            #not sure what if this is correct, may need fourier exponent of each n part??
-            res += real.(ϕ[ind, :, i, j])
-        end
-        plot!(rgrid, res, label=@sprintf("m=%s", mlist[i]))
-        #plot!(rgrid, real.(ϕ[ind, :, i, n]), label=@sprintf("m=%s", mlist[i]))
-    end
-
-    display(p)
-    if !isnothing(filename)
-        savefig(p, filename)
-    end
-
-    
-end
-

@@ -286,3 +286,19 @@ function init_sm_grid(;start::Int64, count::Int64, incr::Int64=1, f_quad=3)
 
     return SMGridDataT(start, count, incr, f_quad)
 end
+
+
+"""
+    mode_label(i::Int64, grid::FEMGridDataT)
+
+Converts a fourier transformed grid point into the proper mode label.
+"""
+function mode_label(i::Int64, grid::FEMGridDataT)
+
+    mlab = mod(i-1 + grid.pf, grid.N)
+    if mlab > grid.N/2
+        mlab = mlab - grid.N
+    end
+
+    return mlab + grid.pf
+end
