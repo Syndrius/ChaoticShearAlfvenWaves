@@ -22,22 +22,25 @@ grids = init_grids(rgrid, θgrid, ζgrid)
 
 
 
-cr, ϕ, ϕft = construct_and_solve(prob=prob, grids=grids, full_spectrum=true);
+evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, full_spectrum=true);
 
-scatter(cr.r, real.(cr.ω), ylimits=(-0.05, 1.05))
+#scatter(cr.r, real.(cr.ω), ylimits=(-0.05, 1.05))
+plot_continuum(evals)
 
-ϕms = mode_structure(ϕ, grids);
-reconstruct_continuum(ω, ϕms, grids)#, ymax=3)#, filename="data/fu_dam_spectrum.png")
+#ϕms = mode_structure(ϕ, grids);
+#reconstruct_continuum(ω, ϕms, grids)#, ymax=3)#, filename="data/fu_dam_spectrum.png")
 
 #unsure why it is flipped... hopefully a resolution problemo
 #this is an extremly different tae frequency... real good lol
-tae_ind = find_ind(ω, 0.396)
-tae_freq = ω[tae_ind]
+tae_ind = find_ind(evals, 0.396)
+tae_freq = evals.ω[tae_ind]
 
-ind = 7
-plot_potential(ϕms, grids, ind, 1)
+#ind = 7
+plot_potential(ϕft, grids, tae_ind)
 
-plot_phi_surface(ϕ, grids, ind)
+contour_plot(ϕ, grids, tae_ind)
+#so not symmetric or the correct mode number????? wot.
+#plot_phi_surface(ϕ, grids, ind)
 
 #phase factor seems to be fine, need to check with island modes though!
 

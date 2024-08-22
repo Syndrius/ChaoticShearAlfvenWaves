@@ -41,6 +41,7 @@ export init_problem
 include("Output.jl")
 
 export EvalsT
+export find_ind
 
 
 end

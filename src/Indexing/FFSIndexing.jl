@@ -124,10 +124,19 @@ function local_to_global(rnode::Int64, θnode::Int64, ξr::Array{Float64}, ξθ:
 
     #hopefully handles periodicity!
     #this probably assumes θgrid is evenly spaced, at least across the periodic part.
-    θnode = mod(θnode, length(θgrid)-1) + 1
+    #wot is this even doing????
+    #θnode = mod(θnode, length(θgrid)-1) + 1
+    if θnode == length(θgrid)
+        dθ = 2π + θgrid[1] - θgrid[θnode]
+    else
+        dθ = θgrid[θnode+1] - θgrid[θnode]
+    end
+
 
     dr = rgrid[rnode+1] - rgrid[rnode]
-    dθ = θgrid[θnode+1] - θgrid[θnode]
+    
+    #this grid is always uniform.
+    #dθ = θgrid[2] - θgrid[1]
 
     #first we map the (-1, 1) local coords to (0, 1)
     mpr = @. (ξr+1) / 2

@@ -295,7 +295,8 @@ Converts a fourier transformed grid point into the proper mode label.
 """
 function mode_label(i::Int64, grid::FEMGridDataT)
 
-    mlab = mod(i-1 + grid.pf, grid.N)
+    #so this is cooked.
+    mlab = rem(i-1, grid.N)
     if mlab > grid.N/2
         mlab = mlab - grid.N
     end

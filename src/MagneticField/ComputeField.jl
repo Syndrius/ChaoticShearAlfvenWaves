@@ -33,7 +33,7 @@ function compute_B!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, r::Fl
 
     q, dq = q_prof(r)
 
-    arg = isl.m0 * θ - isl.n0 * ζ
+    arg = isl.m0 * θ + isl.n0 * ζ
 
     #assumes B0=1
     B.B[1] = 1 / (met.J) * isl.A * isl.m0 * r^2 * (1-r) * sin(arg)
@@ -47,7 +47,7 @@ function compute_B!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, r::Fl
     B.dB[1, 2] = (1 / (met.J) * isl.A * isl.m0^2 * r^2 * (1-r) * cos(arg)
                     - isl.A * isl.m0 * r^2 * (1-r) * sin(arg) * met.dJ[2] / met.J^2)
 
-    B.dB[1, 3] = - isl.n0 / (met.J) * isl.A * isl.m0 * r^2 * (1-r) * cos(arg)
+    B.dB[1, 3] = isl.n0 / (met.J) * isl.A * isl.m0 * r^2 * (1-r) * cos(arg)
 
 
 
@@ -59,7 +59,7 @@ function compute_B!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, r::Fl
                     - (r / q + isl.A * (1-2*r) * cos(arg)) * met.dJ[2] / met.J^2)
     
     #doing this correctly has changed a few things...
-    B.dB[2, 3] =  - isl.n0 * isl.A / met.J * (1-2*r) * sin(arg)
+    B.dB[2, 3] = isl.n0 * isl.A / met.J * (1-2*r) * sin(arg)
 
 
 

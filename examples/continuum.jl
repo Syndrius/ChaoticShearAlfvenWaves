@@ -9,11 +9,11 @@ using Printf
 Nr = 100;
 geo = GeoParamsT(R0=10.0)
 
-prob = init_problem(q=Axel_q, geo=geo)#, met=no_delta_metric!); 
+prob = init_problem(q=island_damping_q, geo=geo)#, met=no_delta_metric!); 
 
-rgrid = init_fem_grid(N=Nr)
-θgrid = init_sm_grid(start=1, count=3)
-ζgrid = init_sm_grid(start=-3, count=3)
+#rgrid = init_fem_grid(N=Nr)
+θgrid = init_sm_grid(start=-12, count=40)
+ζgrid = init_sm_grid(start=-12, count=30)
 #grids = init_grids(N=N, mstart=1, mcount=2, nstart=-1, ncount=1);
 grids = init_grids(Nr, θgrid, ζgrid)
 

@@ -1,48 +1,43 @@
 
 """
-May want to change this to post-processing or something!
 
-#this module still hasn't been fixed up yet!
-#this is in a weird spot as much of the functionality is in MIDViz.
-#not sure exactly what we want in here!
-#this is still ~90% of the compilation, could be worth removing all plotting from MID
-
+Contains functions for plotting the output potential and frequencies, includes
+ - Plotting the shear Alfven continuum.
+ - Plotting the mode structure as a function of radius.
+ - Plotting r, θ contours of the potential.
+ - Plotting the r, θ surface of the potential.
+ 
+Additional plotting functions can be found in the separate package MIDViz.jl.
 """
 
 module Plotting
 
 using MID.Structures
-#using MID.
 
 using Plots
 using LaTeXStrings
 using Printf
 using FFTW
-#Plots.set_default_backend!(:plotlyjs)
-#we probbaly want to use the plotly backend for inspection of specific frequencies.
-#using PlotlyJS
+
 
 include("PotentialPlot.jl")
 
 export plot_potential
-export plot_sum_potential
-export find_ind
-export plot_phi_surface
-export construct_surface
-
-
-include("ContinuumPlot.jl")
-
-export plot_continuum
-export reconstruct_continuum
-export reconstruct_slab_continuum
-export reconstruct_continuum_n
-export mode_structure
 
 
 include("ContourPlot.jl")
 
 export contour_plot
-export plot_contour_poincare
+
+
+include("SurfacePlot.jl")
+
+export surface_plot
+
+
+include("ContinuumPlot.jl")
+
+export plot_continuum
+
 
 end

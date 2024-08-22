@@ -11,3 +11,14 @@ Struct storing the eigenvalues and associated data.
     r :: Array{Float64}
     modelabs :: Array{Tuple{Int64, Int64}}
 end
+
+
+"""
+    find_ind(evals::EvalsT, val)
+
+Finds the index of an eigenvalue, useful for plotting.
+"""
+function find_ind(evals::EvalsT, val)
+
+    return argmin(abs.(evals.ω .-val))
+end

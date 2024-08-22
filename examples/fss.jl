@@ -18,12 +18,16 @@ grids = init_grids(rgrid, θgrid, ζgrid)
 
 
 
-cr, _, ϕft = construct_and_solve(prob=prob, grids=grids, full_spectrum=true);
+evals, _, ϕft = compute_spectrum(prob=prob, grids=grids, full_spectrum=true);
 
-scatter(cr.r, real.(cr.ω), ylimits=(-0.05, 1.05))
+#scatter(cr.r, real.(cr.ω), ylimits=(-0.05, 1.05))
+plot_continuum(evals)
 
-ind = find_ind(cr.ω, 0.376)
+ind = find_ind(evals, 0.376)
 plot_potential(ϕft, grids, ind)
+
+
+contour_plot(ϕft, grids, ind)
 
 
 

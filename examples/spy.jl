@@ -3,22 +3,22 @@
 
 using MID
 #using UnicodePlots
-using Plots; plotlyjs()
+using Plots#; plotlyjs()
 using SparseArrays
 
 
 #4x5x3 probably shows the pattern the best, but we will want to plot this withot java probably for real discussion.
-rgrid = init_fem_grid(N=3);
+rgrid = init_fem_grid(N=5);
 θgrid = init_fem_grid(N=5, pf=2);
 #θgrid = init_sm_grid(start=1, count=4)
-ζgrid = init_fem_grid(N=3, pf=-2);
+ζgrid = init_fem_grid(N=5, pf=-2);
 #ζgrid = init_sm_grid(start=1, count=3)
 
 grids = init_grids(rgrid, θgrid, ζgrid);
 
 geo = GeoParamsT(R0=10.0)
 
-isl = IslandT(m0=5, n0=4, A=0.001)
+isl = IslandT(m0=5, n0=4, A=0.0)
 prob = init_problem(q=Axel_q, geo=geo, isl=isl); 
 
 
@@ -42,4 +42,14 @@ W, I = construct(prob, grids);
 
 #findall(!iszero, W)
 
-spy(real.(W), legend=false)
+#p = scatter(ylimits=(0, 8*25))
+#spy!(real.(W))
+
+#awful way to zoom but does seem to work for some reason...
+#this will be useful for our write up on anpreallocation
+#which we should do...
+display(xlims!(ylims!(spy(real.(W), legend=false), (205,395)), (205,395)))
+
+spy(real.(W), legend=false, ylims=(0, 8*25), dpi=600)
+
+savefig("CanZoom.png")

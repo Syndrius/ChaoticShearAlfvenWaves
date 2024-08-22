@@ -1,97 +1,95 @@
+"""
+    contour_plot(ϕ, grids::FFSGridsT, ind, ζ=1; savefile=nothing)
 
+Plots the contours for a given ζ slice. Expects the un-fourier transformed solution.
+"""
+function contour_plot(ϕ, grids::FFSGridsT, ζ=1; ind, savefile=nothing)
 
-#probably just for ffs atm.
-function contour_plot(ϕ, grids::FFSGridsT, ind; ymin=nothing, ymax=nothing, filename=nothing)
-
+    if length(size(ϕ)) == 4
+        ϕ_plot = ϕ[ind, :, :, :]
+    else
+        ϕ_plot = ϕ
+    end
     rgrid, θgrid, _, _, _ = instantiate_grids(grids)
-    θgrid = range(0, 2π, grids.θ.N)
-    z = zeros(Float64, grids.r.N, grids.θ.N)
-    for n in 1:grids.ζ.count
-        z += ϕ[ind, :, :, n]
-    end
 
-    #if nothing, this still work, just gives warning.
-    contourf(θgrid, rgrid, real.(z), levels=100, color=:turbo,)# ylimits=(ymin, ymax))
+    #adds back the periodicity.
+    z = zeros(ComplexF64, grids.r.N, grids.θ.N+1)
 
-end
+    z[:, 1:end-1] = ϕ_plot[ :, :, ζ]
+    z[:, end] = ϕ_plot[ :, 1, ζ]
 
-
-
-function contour_plot(ϕ, grids::FSSGridsT, ind; ymin=nothing, ymax=nothing, filename=nothing)
-    Nθ = 50
-    rgrid, _, mlist, _, _, _, _ = instantiate_grids(grids)
-    θgrid = range(0, 2π, Nθ + 1)[1:end-1]
-    z = zeros(Float64, grids.r.N, Nθ)
-    for (j, m) in enumerate(mlist)
-        for n in 1:grids.ζ.count
-            for i in 1:Nθ
-                z[:, i] += real(ϕ[ind, :, j, n] .* exp(1im*m *θgrid[i]))
-            end
-        end
-    end
-
-    #if nothing, this still work, just gives warning.
-    contour(θgrid, rgrid, real.(z), levels = 50)
-
-end
-
-
-#this is a stupid function that doesn't belong here, should probbaly be in MIDViz.
-function plot_contour_poincare(ϕ, grids::FFSGridsT, ind, rp, θp; ymin=0.0, ymax=1.0, filename=nothing)
-
-    rgrid, θgrid, _, _, _ = instantiate_grids(grids)
-    #hack to fix plotting, not sure what we are supposed to do tbh
-    θgrid = range(0, 2π, grids.θ.N)
-    z = zeros(Float64, grids.r.N, grids.θ.N)
-    for n in 1:grids.ζ.count
-        z += ϕ[ind, :, :, n]
-    end
-
-    ms = 1.3
-    Ntraj = size(rp)[1]
-    p = scatter(markersize=ms, dpi=600)
-    for i in 1:Ntraj
-        scatter!(rp[i, :], θp[i, :], markersize=ms, alpha=0.2, label=false)
-    end
-   
-
-    #if nothing, this still work, just gives warning.
-    contour!(θgrid, rgrid, real.(z), levels=50, fill=true, color=:turbo, ylimits=(ymin, ymax))
+    θgrid = range(0, 2π, grids.θ.N+1)
+    p = contourf(θgrid, rgrid, real.(z), levels=100, color=:turbo)
 
     display(p)
-    if !isnothing(filename)
-        savefig(p, filename)
+
+    if !isnothing(savefile)
+        savefig(p, savefile)
     end
 
 end
 
-#maybe rp for poincare not d?
-function plot_contour_poincare(ϕ, grids::FSSGridsT, ind, rd, θd; ymin=nothing, ymax=nothing, filename=nothing)
-    Nθ = 50
-    rgrid, _, mlist, _, _, _, _ = instantiate_grids(grids)
-    θgrid = range(0, 2π, Nθ + 1)[1:end-1]
-    z = zeros(Float64, grids.r.N, Nθ)
-    for (j, m) in enumerate(mlist)
-        for n in 1:grids.ζ.count
-            for i in 1:Nθ
-                z[:, i] += real(ϕ[ind, :, j, n] .* exp(1im*m *θgrid[i]))
-            end
-        end
-    end
 
-    ms = 1.3
-    Ntraj = size(rd)[1]
-    p = scatter(markersize=ms, legend=false, dpi=600)
-    for i in 1:Ntraj
-        scatter!(rd[i, :], θd[i, :], markersize=ms, alpha=0.2)
-    end
+"""
+    contour_plot(ϕ, grids::FFFGridsT, ind, ζ=1; savefile=nothing)
 
-    #if nothing, this still work, just gives warning.
-    contour!(θgrid, rgrid, real.(z), levels = 50, fill=true)
+Plots the contours for a given ζ slice. Expects the un-fourier transformed solution.
+"""
+function contour_plot(ϕ, grids::FFFGridsT, ζ=1; ind, savefile=nothing)
+
+    if length(size(ϕ)) == 4
+        ϕ_plot = ϕ[ind, :, :, :]
+    else
+        ϕ_plot = ϕ
+    end
+    rgrid, θgrid, _ = instantiate_grids(grids)
+
+    #adds back the periodicity.
+    z = zeros(ComplexF64, grids.r.N, grids.θ.N+1)
+
+    z[:, 1:end-1] = ϕ_plot[ :, :, ζ]
+    z[:, end] = ϕ_plot[ :, 1, ζ]
+
+    θgrid = range(0, 2π, grids.θ.N+1)
+
+    p = contourf(θgrid, rgrid, real.(z), levels=100, color=:turbo)
 
     display(p)
-    if !isnothing(filename)
-        savefig(p, filename)
+
+    if !isnothing(savefile)
+        savefig(p, savefile)
+    end
+
+end
+
+
+"""
+    contour_plot(ϕ, grids::FSSGridsT, ind, ζ=1; savefile=nothing)
+
+Plots the contours for a given ζ slice. Expects the un-fourier transformed solution.
+"""
+function contour_plot(ϕ, grids::FSSGridsT, ζ=1; ind, savefile=nothing)
+
+    if length(size(ϕ)) == 4
+        ϕ_plot = ϕ[ind, :, :, :]
+    else
+        ϕ_plot = ϕ
+    end
+    rgrid, _, _, _, _, _, _ = instantiate_grids(grids)
+
+    #adds back the periodicity.
+    z = zeros(ComplexF64, grids.r.N, grids.θ.count+1)
+
+    z[:, 1:end-1] = ϕ_plot[:, :, ζ]
+    z[:, end] = ϕ_plot[ :, 1, ζ]
+
+    θgrid = range(0, 2π, grids.θ.count+1)
+    p = contourf(θgrid, rgrid, real.(z), levels=100, color=:turbo)
+
+    display(p)
+
+    if !isnothing(savefile)
+        savefig(p, savefile)
     end
 
 end

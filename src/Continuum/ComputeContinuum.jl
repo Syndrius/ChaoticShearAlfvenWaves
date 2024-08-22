@@ -54,7 +54,7 @@ function compute_continuum(prob::ProblemT, grids::ContGridsT)
         #exit()
     end
 
-    if prob.δ != 0.0
+    if prob.flr.δ != 0.0
         display("Continuum can't handle resisitivity you goose.")
         #exit()
     end
