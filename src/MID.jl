@@ -17,6 +17,7 @@ Base class that just imports everything. We will want a description of the packa
  - Reconstruct phi can probbaly be made more efficient
  - remove extra exports from this file.
  - Use of kwargs is inconsistent and sometimes annoying.
+ - Naming of the plotting functions could be more consistent.
  
 
 """
@@ -79,6 +80,7 @@ using MID.Structures; export find_ind
 
 include("Indexing/Indexing.jl")
 
+using MID.Indexing; export matrix_dim
 
 
 include("Basis/Basis.jl")

@@ -3,7 +3,7 @@
 
 Plots a surface of the potential for a given ζ slice. Expects the un-fourier transformed solution.
 """
-function surface_plot(ϕ, grids::FFSGridsT, ζ=1; ind, savefile=nothing)
+function surface_plot(ϕ, grids::FFSGridsT, ζ=1; ind=1, savefile=nothing)
 
     if length(size(ϕ)) == 4
         ϕ_plot = ϕ[ind, :, :, :]
@@ -34,7 +34,7 @@ end
 
 Plots a surface of the potential for a given ζ slice. Expects the un-fourier transformed solution.
 """
-function surface_plot(ϕ, grids::FSSGridsT, ζ=1; ind, savefile=nothing)
+function surface_plot(ϕ, grids::FSSGridsT, ζ=1; ind=1, savefile=nothing)
    
     if length(size(ϕ)) == 4
         ϕ_plot = ϕ[ind, :, :, :]
@@ -64,7 +64,7 @@ end
 
 Plots a surface of the potential for a given ζ slice. Expects the un-fourier transformed solution.
 """
-function surface_plot(ϕ, grids::FFFGridsT, ζ=1; ind, savefile=nothing)
+function surface_plot(ϕ, grids::FFFGridsT, ζ=1; ind=1, savefile=nothing)
 
     if length(size(ϕ)) == 4
         ϕ_plot = ϕ[ind, :, :, :]
