@@ -79,9 +79,9 @@ function local_to_global(rnode::Int64, θnode::Int64, ζnode::Int64, ξr::Array{
     end
 
     if ζnode == length(ζgrid)
-        dζ = 2π + ζgrid[1] - θgrid[ζnode]
+        dζ = 2π + ζgrid[1] - ζgrid[ζnode]
     else
-        dζ = ζgrid[ζnode+1] - θgrid[ζnode]
+        dζ = ζgrid[ζnode+1] - ζgrid[ζnode]
     end
 
     dr = rgrid[rnode+1] - rgrid[rnode]

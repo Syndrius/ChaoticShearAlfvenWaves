@@ -40,7 +40,7 @@ end
 #changed to form such that m0=n of tae, to try and get overlap.
 function island_3_2_q(r)
     a = 1.4
-    b = 6 - 4*a
+    b = 0.4
 
     q = a+b*r^2
     dq = 2*b*r
