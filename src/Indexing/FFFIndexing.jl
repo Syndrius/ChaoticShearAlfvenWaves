@@ -145,10 +145,10 @@ function reconstruct_phi(efuncs::Array{ComplexF64, 2}, nevals::Int64, grids::FFF
     #maybe one day we will want dphidr???
     #note that this is the same for both!
 
-    #m = grids.θ.pf
-    #n = grids.ζ.pf
+    m = grids.θ.pf
+    n = grids.ζ.pf
 
-    #_, θgrid, ζgrid = instantiate_grids(grids)
+    _, θgrid, ζgrid = instantiate_grids(grids)
 
     #should skip over derivative inds.
     for i in 1:8:matrix_dim(grids)
@@ -156,7 +156,7 @@ function reconstruct_phi(efuncs::Array{ComplexF64, 2}, nevals::Int64, grids::FFF
         #note these are the indicies.
         r, θ, ζ, hs = index_to_grid(i, grids)
         #the 8 should fix this
-        phi[:, r, θ, ζ] = efuncs[i, :]
+        phi[:, r, θ, ζ] = efuncs[i, :] .* exp(1im * (m * θgrid[θ] + n * ζgrid[ζ]))
 
         #if hs == 1
             #may be the wrong way around!

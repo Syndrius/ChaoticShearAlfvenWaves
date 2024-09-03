@@ -28,7 +28,14 @@ evals_fss, ϕ_fss, ϕft_fss = compute_spectrum(prob=prob, grids=grids_fss, full_
 
 plot_continuum(evals_fss)
 
+ind = find_ind(evals_fss, 0.82537)
+
+plot_potential(ϕft_fss, grids_fss, ind)
+contour_plot(ϕ_fss, grids_fss, ind=ind)
+surface_plot(ϕ_fss, grids_fss, ind=ind)
+
 tae_ind_fss = find_ind(evals_fss, 0.29)
+
 
 plot_potential(ϕft_fss, grids_fss, tae_ind_fss)
 
@@ -66,6 +73,14 @@ evals_ffs, ϕ_ffs, ϕft_ffs = compute_spectrum(prob=prob, grids=grids_ffs, full_
 plot_continuum(evals_ffs)
 
 
+ind = find_ind(evals_ffs, 0.218343)
+
+plot_potential(ϕft_ffs, grids_ffs, ind)
+contour_plot(ϕ_ffs, grids_ffs, ind=ind)
+surface_plot(ϕ_ffs, grids_ffs, ind=ind)
+
+
+
 tae_ind_ffs = find_ind(evals_ffs, 0.31)
 
 plot_potential(ϕft_ffs, grids_ffs, tae_ind_ffs)
@@ -94,6 +109,12 @@ evals_fff, ϕ_fff, ϕft_fff = compute_spectrum(prob=prob, grids=grids_fff, full_
 
 plot_continuum(evals_fff)
 
+
+ind = find_ind(evals_fff, 0.3140)
+
+plot_potential(ϕft_fff, grids_fff, ind)
+contour_plot(ϕ_fff, grids_fff, ind=ind)
+surface_plot(ϕ_fff, grids_fff, ind=ind)
 
 tae_ind_fff = find_ind(evals_fff, 0.3011)
 #fk me this is perf now!

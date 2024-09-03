@@ -9,17 +9,88 @@ function post_process(evals::AbstractArray, efuncs::Array{ComplexF64}, grids::FS
 
     ϕft = reconstruct_phi(efuncs, length(evals), grids)
 
-    ϕ = zeros(ComplexF64, size(ϕft))
+    θgrid_size = compute_ifft_grid(grids.θ)
+    ζgrid_size = compute_ifft_grid(grids.ζ)
 
-    for i in 1:grids.r.N
-
-
-        ϕ[:, i, :, :] = ifft(ϕft[:, i, :, :], [2, 3])
-
-    end
-
+    #ϕ = zeros(ComplexF64, size(ϕft)) 
+    ϕ = zeros(ComplexF64, length(evals), grids.r.N, θgrid_size, ζgrid_size)
 
     rgrid, _, mlist, _, _, nlist, _= instantiate_grids(grids)
+
+    maxm = maximum(abs.(mlist))
+    maxn = maximum(abs.(nlist))
+
+    #if maxm < 20
+    #    maxm = 20
+    #end
+    #if maxn < 20
+    #    maxn = 20
+    #end
+
+    
+
+    #ϕ = zeros(ComplexF64, length(evals), grids.r.N, 2*maxm+1, 2*maxn+1)
+    ftmlist = vcat(0:maxm, -maxm:-1)
+    
+    ftnlist = vcat(0:maxn, -maxn:-1)
+
+    ft_array = zeros(ComplexF64, 2*maxm+1, 2*maxn+1)
+    """
+    for k in 1:length(evals)
+        for l in 1:grids.r.N
+            ft_array = zeros(ComplexF64, 2*maxm+1, 2*maxn+1)
+
+            for i in 1:1:length(mlist)
+                for j in 1:1:length(nlist)
+
+                    indm = maxm + mlist[i] + 1
+                    indn = maxn + nlist[j] + 1
+
+                    ft_array[indm, indn] = ϕft[k, l, i, j]
+
+                end
+            end
+            ϕ[k, l, :, :] = ifft(ft_array)
+
+        end
+    end
+    """
+
+
+    #TODO, cannot just iffft. need to think about what mode labels we actually have
+    #think we probably don't actually want to use ifft at all,
+    #but we have done this before and loss the phase info,
+    #so need to be careful.
+    #for i in 1:grids.r.N
+
+        #this works, assuming the mode list is symmetric...
+    #    ϕ[:, i, :, :] = ifft(ifftshift(ϕft[:, i, :, :], [2]), [2])
+
+    #end
+
+    θgrid = LinRange(0, 2π, θgrid_size+1)[1:end-1]
+    ζgrid = LinRange(0, 2π, ζgrid_size+1)[1:end-1]
+
+    #this works, and for general list of m's
+    #probably not as efficeint though!
+    #think we are better off creating the overkill array and taking ifft.
+    
+    for i in 1:length(evals)
+        for j in 1:grids.r.N
+            #for k in 1:grids.ζ.count
+            for k in 1:1:length(nlist)
+                for l in 1:1:length(mlist)
+
+                    ϕ[i, j, :, :] += ϕft[i, j, l, k] .* exp.(1im * mlist[l] .* θgrid .+ 1im * nlist[k] .* ζgrid' )
+                end
+            end
+        end
+    end
+    
+
+
+
+    
 
 
     rm = zeros(Int64, grids.θ.count, grids.ζ.count)
@@ -64,27 +135,38 @@ function post_process(evals::AbstractArray, efuncs::AbstractArray, grids::FFSGri
 
     ω = geo.R0 .* sqrt.(evals)
 
-    ϕ_ffs = reconstruct_phi(efuncs, length(evals), grids)
+    ϕfss = reconstruct_phi(efuncs, length(evals), grids)
+
+    ζgrid_size = compute_ifft_grid(grids.ζ)
 
 
-    ϕft = zeros(ComplexF64, size(ϕ_ffs))
-    ϕ = zeros(ComplexF64, size(ϕ_ffs))
+    ϕ = zeros(ComplexF64, length(evals), grids.r.N, grids.θ.N, ζgrid_size)
+    #ϕ = zeros(ComplexF64, size(ϕ_ffs))
 
-    
-    for i in 1:grids.r.N
+    ϕft = fft(ϕfss, [3])
 
-        for n in 1:grids.ζ.count
-        #hopefully the 2d case works as expected
-            ϕft[:, i, :, n] = fft(ϕ_ffs[:, i, :, n], [2])
-        end
-
-        for j in 1:grids.θ.N
-            ϕ[:, i, j, :] = ifft(ϕ_ffs[:, i, j, :], [2])
-        end
-
-    end
+    ζgrid = LinRange(0, 2π, ζgrid_size+1)[1:end-1]
 
     rgrid, _, _, nlist, _= instantiate_grids(grids)
+
+    #this is kind of pointless, given we don't have any way to look
+    #at the ζ components yet
+    #but future proofing I guess.
+    #perhaps we should write our own function for this weird custom ifft.
+    for i in 1:length(evals)
+        for j in 1:grids.r.N
+            
+            for k in 1:grids.θ.N
+                for l in 1:1:length(nlist)
+
+                    ϕ[i, j, k, :] += ϕfss[i, j, k, l] .* exp.(1im * nlist[l] .* ζgrid)
+                end
+            end
+        end
+    end
+    
+
+    
 
     rm = zeros(Int64, grids.θ.N, grids.ζ.count)
     ϕm = zeros(Float64, grids.θ.N, grids.ζ.count)

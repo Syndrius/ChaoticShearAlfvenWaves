@@ -43,13 +43,14 @@ function surface_plot(ϕ, grids::FSSGridsT, ζ=1; ind=1, savefile=nothing)
     end
     rgrid, _, _, _, _, _, _ = instantiate_grids(grids)
 
+    θgrid_size = compute_ifft_grid(grids.θ)
     #adds back the periodicity.
-    z = zeros(ComplexF64, grids.r.N, grids.θ.count+1)
+    z = zeros(ComplexF64, grids.r.N, θgrid_size+1)
 
     z[:, 1:end-1] = ϕ_plot[:, :, ζ]
     z[:, end] = ϕ_plot[ :, 1, ζ]
 
-    θgrid = range(0, 2π, grids.θ.count+1)
+    θgrid = range(0, 2π, θgrid_size+1)
     p = surface(θgrid, rgrid, real.(z))
     display(p)
     if !isnothing(savefile)

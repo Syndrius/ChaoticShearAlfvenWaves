@@ -28,6 +28,7 @@ export init_fem_grid
 export init_sm_grid
 export init_grids
 export instantiate_grids
+export compute_ifft_grid
 
 
 include("Problem.jl")

@@ -549,17 +549,44 @@ display(imag(ω_a[tae_ind]^2))
 
 a=1 #stop us going to the bottom.
 
+function clustered_grid(N, sep1, sep2, frac)
+
+    #done so old way still works!
+    #N = grid.N
+    #sep1 = grid.sep1
+    #sep2 = grid.sep2
+    #frac = grid.frac
+
+    nclust = Int(floor(frac*N))
+
+    rclust = LinRange(sep1, sep2, nclust)
+
+    nrest = N-nclust
+
+    nright = Int(floor((1-sep2)*nrest))
+
+    nleft = nrest-nright
+
+    rleft = LinRange(0, sep1, nleft+1)[1:end-1]
+
+    rright = LinRange(sep2, 1, nright+1)[2:end]
+
+    return vcat(rleft, rclust, rright)
+end
 
 
 #implementation based on weak form given in cka, which seems to be total garbage.
 function Axel_phi_2mode(N, m, R0, δ)
     #I think unfortunatly we have to do this now, think we are fked until we can replicated Axel's code.
-    rgrid = clustered_grid(N, 0.93, 0.98, 0.25) #will just assume Axel's case for this.
+    #clustered grid cooks a bunch of shit.
+    #v worrying...
+    #rgrid = clustered_grid(N, 0.93, 0.98, 0.25) #will just assume Axel's case for this.
+    rgrid = collect(LinRange(0, 1, N))
     m1 = m+1
     n = -m
     gp = 5
     ξ, wg = gausslegendre(gp)
-    H, dH, ddH = MID.Misc.hermite_basis(ξ)
+    H, dH, ddH = MID.Basis.hermite_basis(ξ)
 
     W = zeros(ComplexF64, 4*N, 4*N)
     I = zeros(ComplexF64, 4*N, 4*N)
@@ -598,7 +625,7 @@ function Axel_phi_2mode(N, m, R0, δ)
 
         
 
-        r, dr = MID.Misc.local_to_global(i, ξ, collect(rgrid))
+        r, dr = MID.Indexing.local_to_global(i, ξ, collect(rgrid))
 
         jac = dr/2 #this might need to be in terms of x...
 
@@ -637,7 +664,7 @@ function Axel_phi_2mode(N, m, R0, δ)
 
         #for complex path stuff.
         #this seems to replicate Axel's results perfectly, v unclear on the weak form.
-        α = 0.03
+        α = 0.0
         x = @. r + α*r * (r-1.0) * 1im
         d = @. 1.0 + α * (2.0*r - 1.0) * 1im
 
@@ -645,7 +672,8 @@ function Axel_phi_2mode(N, m, R0, δ)
         ϵ = @. 2.0 * (x / R0 + Δp)
 
         #Axel's case
-        dens = @. 1/2*(1-tanh((x-0.8)/0.1))
+        #dens = @. 1/2*(1-tanh((x-0.8)/0.1))
+        dens = ones(length(x))
         q = @. 1.05 + 0.55 * x^2
 
         #Bowden Singular Case
@@ -786,7 +814,7 @@ end
 
 
 
-N = 100
+N = 200
 R0 = 10
 ω_a, ϕm, ϕm1 = Axel_phi_2mode(N, 2, R0, -4e-7);
 
@@ -800,12 +828,14 @@ rdata, omdata, col = ϕm_to_cont(ω_a, N, ϕm, ϕm1);
 #next we need to see if we can derive Axels equation from ours, 
 #then we should know what approximations are needed.
 #damping is good now! yayzees.
-scatter(rdata, real.(omdata), ylimits=(-0.02, 0.50), group=col, markersize=4.0)
+scatter(rdata, real.(omdata), ylimits=(-0.05, 1.05), group=col, markersize=4.0)
 
 tae_ind = argmin(abs.(ω_a.^2 .- 0.158)) 
+tae_ind = argmin(abs.(ω_a .- 0.11075)) 
 tae_ind = 1
 
-rgrid = clustered_grid(N, 0.93, 0.98, 0.25)
+#rgrid = clustered_grid(N, 0.93, 0.98, 0.25)
+rgrid = LinRange(0, 1, N)
 plot(rgrid, real.(ϕm[:, tae_ind]))
 plot!(rgrid, real.(ϕm1[:, tae_ind]))
 

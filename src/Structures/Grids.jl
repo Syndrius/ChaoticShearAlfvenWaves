@@ -295,11 +295,29 @@ Converts a fourier transformed grid point into the proper mode label.
 """
 function mode_label(i::Int64, grid::FEMGridDataT)
 
-    #so this is cooked.
-    mlab = rem(i-1, grid.N)
+    #subtract pf here to return the grid to what it would have been 
+    #without pf.
+    #still a bit sketchy.
+    mlab = rem(i-1-grid.pf, grid.N)
+
+    #this reflects that fft returns modes as
+    #[0, 1, ... N/2, -N/2..., -2, -1]
     if mlab > grid.N/2
         mlab = mlab - grid.N
     end
 
     return mlab + grid.pf
+end
+
+
+#mainly just so we can have consistency for plotting etc.
+#should probbaly just return the grid???
+#unsure if this is just fake when plotting, but seems to work so oh well.
+function compute_ifft_grid(grid::SMGridDataT)
+    _, modelist, _ = sm_grid(grid)
+    if length(modelist) > 20
+        return length(modelist)
+    else 
+        return 20
+    end
 end

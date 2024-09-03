@@ -27,18 +27,21 @@ evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, full_spectrum=true);
 #scatter(cr.r, real.(cr.ω), ylimits=(-0.05, 1.05))
 plot_continuum(evals)
 
+println(ϕft[164, 1:2, :, :])
+display(size(ϕft))
 #ϕms = mode_structure(ϕ, grids);
 #reconstruct_continuum(ω, ϕms, grids)#, ymax=3)#, filename="data/fu_dam_spectrum.png")
 
 #unsure why it is flipped... hopefully a resolution problemo
 #this is an extremly different tae frequency... real good lol
-tae_ind = find_ind(evals, 0.396)
+tae_ind = find_ind(evals, 0.3835)
 tae_freq = evals.ω[tae_ind]
-
+tae_ind = 45
+display(tae_ind)
 #ind = 7
 plot_potential(ϕft, grids, tae_ind)
 
-contour_plot(ϕ, grids, tae_ind)
+contour_plot(ϕ, grids, 1, ind=tae_ind)
 #so not symmetric or the correct mode number????? wot.
 #plot_phi_surface(ϕ, grids, ind)
 

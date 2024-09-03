@@ -1,18 +1,30 @@
 
-#basis case of computing the continuum
 
 using MID
 using Plots; plotlyjs()
 using Printf
 
 
-Nr = 100;
-geo = GeoParamsT(R0=10.0)
+function calculation_q(r)
 
-prob = init_problem(q=Axel_q, geo=geo)#, met=no_delta_metric!); 
+    ι = 0.95016-0.67944*r^2+0.62286*r^4-0.41244*r^6+0.1219*r^8+0.0042185*r^10-0.0013979*r^12
+
+    dι = -2*0.67944*r+4*0.62286*r^3-6*0.41244*r^5+8*0.1219*r^7+10*0.0042185*r^9-12*0.0013979*r^11
+
+    q = 1/ι
+
+    dq = -dι/ι^2
+    return q, dq
+end
+
+
+Nr = 100;
+geo = GeoParamsT(R0=10.444)
+
+prob = init_problem(q=calculation_q, geo=geo, dens=axel_dens)#, met=no_delta_metric!); 
 
 #rgrid = init_fem_grid(N=Nr)
-θgrid = init_sm_grid(start=-1, count=7)
+θgrid = init_sm_grid(start=2, count=2)
 ζgrid = init_sm_grid(start=-2, count=1)#, incr=2)
 #grids = init_grids(N=N, mstart=1, mcount=2, nstart=-1, ncount=1);
 grids = init_grids(Nr, θgrid, ζgrid)
@@ -20,19 +32,9 @@ grids = init_grids(Nr, θgrid, ζgrid)
 
 ω_cont = continuum(prob, grids);
 
-plot_continuum(ω_cont, grids, ymax=1)
+plot_continuum(ω_cont.^2, grids, ymax=1)
 
 
-function test_q(r)
-
-    a = 1.2
-    b = 8/15
-    q = a + b*r^2
-    dq = 2 * b * r
-    return q, dq
-end
-
-display(island_damping_q(1))
 
 function anal_cont(grids)
 
@@ -40,11 +42,7 @@ function anal_cont(grids)
     #display(collect(rgrid))
     q = zeros(length(rgrid))
     for (i, r) in enumerate(rgrid)
-        #tq, _ = default_island_q(r)
-        tq, _ = Axel_q(r)
-        #tq, _ = island_damping_q(r)
-        #tq, _ = test_q(r)
-        #tq, _ = island_3_2_q(r)
+        tq, _ = default_island_q(r)
         q[i] = tq
     end
     p = scatter(ylimits=(-0.05, 1))
@@ -68,5 +66,3 @@ function anal_cont(grids)
 end
 
 anal_cont(grids)
-
-

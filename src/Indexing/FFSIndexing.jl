@@ -16,6 +16,7 @@ function compute_boundary_inds(grids::FFSGridsT)
     left_boundary1 = 1:4:4*Nθ * Nn
     left_boundary2 = 2:4:4*Nθ * Nn
     
+    
     #derivs is also set to zero for lfr
     #not sure about this tbh.
     #left_boundary3 = 3:4:4*Nθ * Nn
@@ -24,7 +25,8 @@ function compute_boundary_inds(grids::FFSGridsT)
     right_boundary2 = 2 + (Nr - 1) * 4 * Nθ * Nn:4:4*Nr * Nθ * Nn
 
     return vcat(left_boundary1, left_boundary2, right_boundary1, right_boundary2)
-    #return vcat(left_boundary1, left_boundary2, left_boundary3, right_boundary1, right_boundary2)
+    #return vcat(left_boundary2, right_boundary1, right_boundary2)
+    #return vcat(left_boundary1, left_boundary2)
 
 end
 
@@ -55,7 +57,18 @@ function grid_to_index(rind::Int64, θind::Int64, ζind::Int64, hr::Int64, hθ::
     # - Each increment of ζind moves us one segment.
     # - Each increment of θind moves us Nζ segments.
     # - Each increment of rind moves us Nθ * Nζ segments.
-    segment = (ζind-1) + Nn * mod(θind-1 + grid_id[hθ], Nθ) + Nθ * Nn * (rind - 1 + grid_id[hr]) 
+
+    #think this is equivalent to earlier work.
+    #not sure if this is correct though!
+    θgrid = θind + grid_id[hθ]
+    if θgrid == Nθ+1
+        θgrid = 1
+    end
+    #    display(mod(θind-1 + grid_id[hθ], Nθ))
+    #end
+    #segment = (ζind-1) + Nn * mod(θind-1 + grid_id[hθ], Nθ) + Nθ * Nn * (rind - 1 + grid_id[hr]) 
+    #the -1 doesn't seem to matter inside the mod...
+    segment = (ζind-1) + Nn * (θgrid-1) + Nθ * Nn * (rind - 1 + grid_id[hr]) 
 
     #Once we have the segment, we need to find the correct index.
     return 1 + basis_id[hθ] + 2 * basis_id[hr] + 4 * segment
@@ -75,15 +88,15 @@ function reconstruct_phi(efuncs::Array{ComplexF64, 2}, nevals::Int64, grids::FFS
     #maybe one day we will want dphidr???
     #note that this is the same for both!
 
-    #m = grids.θ.pf
+    m = grids.θ.pf
 
-    #_, θgrid, _, _, _ = instantiate_grids(grids)
+    _, θgrid, _, _, _ = instantiate_grids(grids)
 
     for i in 1:4:matrix_dim(grids)
 
         #note these are the indicies.
         r, θ, ζ, hs = index_to_grid(i, grids)
-        phi[:, r, θ, ζ] = efuncs[i, :]
+        phi[:, r, θ, ζ] = efuncs[i, :] * exp(1im * m * θgrid[θ])
 
         #if hs == 1
             #may be the wrong way around!

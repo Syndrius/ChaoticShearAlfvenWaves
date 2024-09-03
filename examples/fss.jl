@@ -4,30 +4,31 @@ using Plots; plotlyjs()
 
 
 #start very small, matrix scales much more extremly
-Nr = 100;
+Nr = 40;
 
 geo = GeoParamsT(R0=10.0)
 
 prob = init_problem(q=Axel_q, geo=geo)#, met=no_delta_metric!); 
 
 rgrid = init_fem_grid(N=Nr)
-θgrid = init_sm_grid(start=2, count=2)
+θgrid = init_sm_grid(start=0, count=6)
 ζgrid = init_sm_grid(start=-2, count=1)
 #grids = init_grids(N=N, mstart=1, mcount=2, nstart=-1, ncount=1);
 grids = init_grids(rgrid, θgrid, ζgrid)
 
 
 
-evals, _, ϕft = compute_spectrum(prob=prob, grids=grids, full_spectrum=true);
+evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, full_spectrum=true);
 
 #scatter(cr.r, real.(cr.ω), ylimits=(-0.05, 1.05))
 plot_continuum(evals)
 
-ind = find_ind(evals, 0.376)
+ind = find_ind(evals, 0.3762)
+ind = 348
 plot_potential(ϕft, grids, ind)
 
 
-contour_plot(ϕft, grids, ind)
+contour_plot(ϕ, grids, ind=ind)
 
 
 
