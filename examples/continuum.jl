@@ -9,10 +9,10 @@ using Printf
 Nr = 100;
 geo = GeoParamsT(R0=10.0)
 
-prob = init_problem(q=Axel_q, geo=geo)#, met=no_delta_metric!); 
+prob = init_problem(q=test_q, geo=geo)#, met=no_delta_metric!); 
 
 #rgrid = init_fem_grid(N=Nr)
-θgrid = init_sm_grid(start=-1, count=7)
+θgrid = init_sm_grid(start=2, count=2)
 ζgrid = init_sm_grid(start=-2, count=1)#, incr=2)
 #grids = init_grids(N=N, mstart=1, mcount=2, nstart=-1, ncount=1);
 grids = init_grids(Nr, θgrid, ζgrid)
@@ -66,6 +66,12 @@ function anal_cont(grids)
     #savefig(p, "label_test.png")
 
 end
+
+rid = init_fem_grid(N=Nr)
+θgrid = init_sm_grid(start=-10, count=21)
+ζgrid = init_sm_grid(start=-6, count=13)#, incr=2)
+#grids = init_grids(N=N, mstart=1, mcount=2, nstart=-1, ncount=1);
+grids = init_grids(Nr, θgrid, ζgrid)
 
 anal_cont(grids)
 

@@ -24,7 +24,7 @@ prob = init_problem(q=Axel_q, geo=geo);
 
 evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, full_spectrum=true); 
 
-plot_continuum(evals)
+plot_continuum(evals, ymax=2)
 
 
 ind = find_ind(evals, 0.383)

@@ -12,9 +12,9 @@ Uses Julias inbuilt eigen function from LinearAlgebra. Solves the generalised ei
 function full_spectrum_solve(; Wmat::SparseMatrixCSC, Imat::SparseMatrixCSC, ideal=true::Bool)
 
     if ideal
-        evals, efuncs = eigen(Matrix(Wmat), Matrix(Imat))
-    else
         evals, efuncs = eigen(Hermitian(Matrix(Wmat)), Hermitian(Matrix(Imat)))
+    else
+        evals, efuncs = eigen(Matrix(Wmat), Matrix(Imat))
     end
 
     return evals, efuncs
