@@ -3,7 +3,7 @@
 
 Plots a surface of the potential for a given ζ slice. Expects the un-fourier transformed solution.
 """
-function surface_plot(ϕ, grids::FFSGridsT, ζ=1; ind=1, savefile=nothing)
+function surface_plot(ϕ, grids::FFSGridsT, ζ=1; ind=1, savefile=nothing, rmin=0, rmax=1, θmin=0, θmax=2π)
 
     if length(size(ϕ)) == 4
         ϕ_plot = ϕ[ind, :, :, :]
@@ -19,7 +19,7 @@ function surface_plot(ϕ, grids::FFSGridsT, ζ=1; ind=1, savefile=nothing)
     z[:, end] = ϕ_plot[ :, 1, ζ]
 
     θgrid = range(0, 2π, grids.θ.N+1)
-    p = surface(θgrid, rgrid, real.(z))
+    p = surface(θgrid, rgrid, real.(z), ylimits=(rmin, rmax), xlimits=(θmin, θmax))
     display(p)
 
     if !isnothing(savefile)
@@ -65,7 +65,7 @@ end
 
 Plots a surface of the potential for a given ζ slice. Expects the un-fourier transformed solution.
 """
-function surface_plot(ϕ, grids::FFFGridsT, ζ=1; ind=1, savefile=nothing)
+function surface_plot(ϕ, grids::FFFGridsT, ζ=1; ind=1, savefile=nothing, rmin=0, rmax=1, θmin=0, θmax=2π)
 
     if length(size(ϕ)) == 4
         ϕ_plot = ϕ[ind, :, :, :]
@@ -81,7 +81,7 @@ function surface_plot(ϕ, grids::FFFGridsT, ζ=1; ind=1, savefile=nothing)
     z[:, end] = ϕ_plot[ :, 1, ζ]
 
     θgrid = range(0, 2π, grids.θ.N+1)
-    p = surface(θgrid, rgrid, real.(z))
+    p = surface(θgrid, rgrid, real.(z), ylimits=(rmin, rmax), xlimits=(θmin, θmax))
 
     display(p)
 

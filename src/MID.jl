@@ -18,6 +18,12 @@ Base class that just imports everything. We will want a description of the packa
  - remove extra exports from this file.
  - Use of kwargs is inconsistent and sometimes annoying.
  - Naming of the plotting functions could be more consistent.
+ - post processing seems to be working much better now, but could be made much clearer.
+ - Combine post processing 
+ - Would be nice to be able to pass in the island width and automatically find the appropriate Amplitude.
+ - Maybe we should start removing the modes far from the centre as they tend to be garbage.
+ - note that og q may be an interesting case with 3,2 island, as in that case it is placed on the edge. at 0.9 or so.
+ - should move to gadi's version of Julia I think. -> we are also running out of space in home directory...
  
 
 """
@@ -54,6 +60,7 @@ using MID.MagneticField; export fu_dam_q
 using MID.MagneticField; export island_3_2_q
 using MID.MagneticField; export symmetric_q
 using MID.MagneticField; export flr_q
+using MID.MagneticField; export test_q
 
 
 

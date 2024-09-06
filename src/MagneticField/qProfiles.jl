@@ -48,6 +48,18 @@ function island_3_2_q(r)
 end
 
 
+function test_q(r)
+
+    #with 6/5 and 8/15 (3, 2) island will form at r=0.75,
+    #and (5/6, 4) tae will form at r~0.57
+    a = 6/5
+    b = 8/15
+    q = a+b*r^2
+    dq = 2 * b * r
+    return q, dq
+end
+
+
 """
     Axel_q(r::Float64) 
 
