@@ -1,5 +1,23 @@
 #TODO -> should change these names and probably provide the function in the doc.
 
+
+#q profile based of Axel's 2024 iota profile
+#similar to Zhisongs case, but we now have a 5/5 island.
+#island is located at ~0.859
+#ideally the island would be a wee bit closer to r=0.5...
+function Axel_island_q(r::Float64)
+    #note 0.7381 is r0^2/a^2, 
+    #our case has a=1, not true for Axel...
+    r02 = 0.7381
+    ιp = 0.2039716
+    q = 1 / (1 + ιp * (r^2 - r02))
+    dq = -2 * ιp * r / (ιp * (r^2-r02) + 1)^2
+
+    return q, dq
+end
+
+
+
 """
     island_damping_q(r)
 
