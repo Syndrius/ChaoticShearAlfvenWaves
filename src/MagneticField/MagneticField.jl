@@ -30,6 +30,7 @@ export symmetric_q
 export flr_q
 export test_q
 export Axel_island_q
+export island_mode_q
 
 
 include("DensityProfiles.jl") #weird spot!

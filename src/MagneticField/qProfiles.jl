@@ -17,6 +17,18 @@ function Axel_island_q(r::Float64)
 end
 
 
+#based on Zhisongs q-profile, but modifed to have m0=3 rather than 5 
+#to increase the resolution of island modes.
+function island_mode_q(r::Float64)
+    q0 = 3/2
+    qp = 1.6
+    ψ0 = 0.125
+    q = 1 / (1 / q0 - qp / (q0)^2 * (r^2/2-ψ0))
+    dq = 4*(q0)^2* qp * r / (2*(q0)-qp*r^2 + 2*qp*ψ0)^2
+    return q, dq
+end
+
+
 
 """
     island_damping_q(r)
