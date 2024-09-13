@@ -309,6 +309,13 @@ function mode_label(i::Int64, grid::FEMGridDataT)
     return mlab + grid.pf
 end
 
+function mode_label(i::Int64, grid::SMGridDataT)
+
+    _, mlist, _ = sm_grid(grid)
+
+    return mlist[i]
+end
+
 
 #mainly just so we can have consistency for plotting etc.
 #should probbaly just return the grid???

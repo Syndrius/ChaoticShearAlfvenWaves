@@ -26,6 +26,7 @@ export matrix_dim
 export grid_to_index
 export index_to_grid
 export reconstruct_phi 
+export reconstruct_phi_deriv
 export cont_grid_to_index
 export local_to_global
 

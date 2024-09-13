@@ -60,7 +60,7 @@ Constructs the two matrices, solves for the eigenvalues and eigenfunctions then 
 - full_spectrum::Bool=false - Whether to solve for the full spectrum with inbuilt solver (slow) or use arpack (fast).
 - nev::Int64=100 - Number of eigenvalues to solve for if using Arpack.
 """
-function compute_spectrum(; prob::ProblemT, grids::GridsT, target_freq=0.0::Float64, full_spectrum=false::Bool, nev=100::Int64)
+function compute_spectrum(; prob::ProblemT, grids::GridsT, target_freq=0.0::Float64, full_spectrum=false::Bool, nev=100::Int64, deriv=false::Bool)
 
     display("Constructing...")
     W, I = construct(prob, grids)
@@ -83,7 +83,7 @@ function compute_spectrum(; prob::ProblemT, grids::GridsT, target_freq=0.0::Floa
     @printf("Solving complete, %d eigenvalues found.\n", length(evals))
     display("Post Processing...")
 
-    evals, ϕ, ϕft = post_process(evals, efuncs, grids, prob.geo)
+    evals, ϕ, ϕft = post_process(evals, efuncs, grids, prob.geo, deriv)
 
     display("Finished.")
     return evals, ϕ, ϕft

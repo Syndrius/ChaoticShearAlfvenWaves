@@ -114,7 +114,7 @@ end
 
 Reconstructs the 1d eigenfunction output back to the 3d grid. This case for a single eigenfunction.
 """
-function reconstruct_phi(efuncs::Array{ComplexF64}, grids::FFSGridsT)
+function reconstruct_phi(efunc::Array{ComplexF64}, grids::FFSGridsT)
     phi = zeros(ComplexF64, grids.r.N, grids.θ.N, grids.ζ.count)
     #maybe one day we will want dphidr???
     #note that this is the same for both!
@@ -127,7 +127,39 @@ function reconstruct_phi(efuncs::Array{ComplexF64}, grids::FFSGridsT)
 
         #note these are the indicies.
         r, θ, ζ, hs = index_to_grid(i, grids)
-        phi[r, θ, ζ] = efuncs[i] * exp(1im * m * θgrid[θ])
+        phi[r, θ, ζ] = efunc[i] * exp(1im * m * θgrid[θ])
+
+        #if hs == 1
+            #may be the wrong way around!
+            #this doesn't seem to have worked as expected tbh!
+            #hard to tell what is needed here!
+            #phi[:, r, θ, ζ] = efuncs[i, :] .* exp(1im * m * θgrid[θ])
+        #end
+    end
+    return phi
+end
+
+
+"""
+    reconstruct_phi(efuncs::Array{ComplexF64, 2}, nevals::Int64, grids::FFSGridsT)
+
+Reconstructs the 1d eigenfunction output back to the 3d grid. This case for a single eigenfunction.
+"""
+function reconstruct_phi_deriv(efunc::Array{ComplexF64}, grids::FFSGridsT)
+
+    phi = zeros(ComplexF64, grids.r.N, grids.θ.N, grids.ζ.count, 4)
+    #maybe one day we will want dphidr???
+    #note that this is the same for both!
+
+    m = grids.θ.pf
+
+    _, θgrid, _, _, _ = instantiate_grids(grids)
+
+    for i in 1:1:matrix_dim(grids)
+
+        #note these are the indicies.
+        r, θ, ζ, hs = index_to_grid(i, grids)
+        phi[r, θ, ζ, hs] = efunc[i] * exp(1im * m * θgrid[θ])
 
         #if hs == 1
             #may be the wrong way around!

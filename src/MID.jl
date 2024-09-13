@@ -7,8 +7,6 @@ Base class that just imports everything. We will want a description of the packa
  - Spectrum -> Mainly just construct, bit of a nightmare!
 
 
- - We should flip the sign of n, either in general or in island case. having a mix is no bloody good. -> have done this now, I am sure issues will arise lol.
- - pf is cooked again, have to actually modify the mode structure when it is used. Not sure how. (maybe best to ignore.) Seems like the eigenvalues are fine though lol.
  - maybe we should change problem to accept strings - or symbols like plot :green etc so we can explain the possible options when something doesn't work!
  - Add try catch to sqrt in solve, most of the time it is just because of ~0 numbers, but it owuld be good to have a warning rather than just always take abs. -> Maybe in this case we dont return the normalised ones? Or should we always have a normalise flag???
  - boundary conditions may need modification for flr, and perhaps the m=1 stuff is still not working properly.
@@ -24,8 +22,18 @@ Base class that just imports everything. We will want a description of the packa
  - Maybe we should start removing the modes far from the centre as they tend to be garbage.
  - note that og q may be an interesting case with 3,2 island, as in that case it is placed on the edge. at 0.9 or so.
  - should move to gadi's version of Julia I think. -> we are also running out of space in home directory...
- - Make a true cylinder metric I think...
+ - Make a true cylinder metric I think... -> got one lol.
  - Add a find ind for a normal array, can be distinguished by type of arg.
+ - May want to allow for two different island inputs, one with the island q and one without. Unsure how much we will want to move the island around etc.
+ - We may also just want to swap to flux....
+ - Probably be good if we didn't have to instantiate grids a billion times. -> maybe just change the way it is done to be less stupid..., very often we only want part of the instatiation.
+ - Maybe add ellipses notation for clarity, maybe a bad idea though! (https://github.com/SciML/EllipsisNotation.jl)
+ - Probably try and remove the allocate zeros everywhere. In particular, reusing some memory in postprocessing would be ideal.
+ - Create a function for making periodic grids. And use it lol.
+ - Plotting for derivative case doesn't work atm. may need to fix.
+ - Implement island coords metric. -> this will be annoying -> can check the metric is done properly (hopefully) by comparing the continuum.
+ - Think we need another big cleanup.
+ - Combine our interpolation thing into MID. (or perhaps make a new package???)
  
 
 """

@@ -157,6 +157,32 @@ end
 
 
 """
+    reconstruct_phi(efuncs::Array{ComplexF64, 2}, nevals::Int64, grids::FSSGridsT)
+
+Reconstructs the 1d eigenfunction output back to the 3d grid. Single efunc case.
+"""
+function reconstruct_phi(efunc::Array{ComplexF64}, grids::FSSGridsT)
+    phi = zeros(ComplexF64, grids.r.N, grids.θ.count, grids.ζ.count)
+    #maybe one day we will want dphidr???
+    #note that this is the same for both!
+
+    for i in 1:2:matrix_dim(grids)
+
+        #note these are the indicies.
+        r, θ, ζ, hs = index_to_grid(i, grids)
+        phi[r, θ, ζ] = efunc[i]
+
+        #if hs == 1
+            #may be the wrong way around!
+        #    phi[:, r, θ, ζ] = efuncs[i, :]
+        #end
+    end
+    return phi
+end
+
+
+
+"""
 Converts the grid point to the appropriate index in the matrix, for the continuum case.
 
 # Args

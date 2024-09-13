@@ -92,6 +92,14 @@ function toroidal_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::F
 end
 
 
+
+function island_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
+
+    #TODO
+
+end
+
+
 function slab_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
 
     met.gl[1, 1] = 1.0
