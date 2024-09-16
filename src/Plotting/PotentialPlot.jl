@@ -15,8 +15,17 @@ function plot_potential(ϕ::Array{ComplexF64}, grids::FSSGridsT, ind=1::Int64; n
 
     #this will allow plotting if all eigenfunctions are passed in (i.e. from MID)
     #or if a single is passed in (i.e. from file/MIDParallel)
-    if length(size(ϕ)) == 4
-        ϕ_plot = ϕ[ind, :, :, :]
+    #there are more cases now big rip
+    if length(size(ϕ)) == 5 #all solutions and derivs case
+        ϕ_plot = ϕ[ind, :, :, :, 1]
+    elseif length(size(ϕ)) == 4
+        #probably the derivative case, with both conditions this should be fine right???
+        if size(ϕ)[end] == 8 && size(ϕ)[1] == grids.r.N 
+            ϕ_plot = ϕ[:, :, :, 1]
+        else
+            ϕ_plot = ϕ[ind, :, :, :]
+        end
+
     else
         ϕ_plot = ϕ
     end
@@ -59,8 +68,17 @@ function plot_potential(ϕ::Array{ComplexF64}, grids::FFSGridsT, ind=1::Int64; n
 
     p = plot(xlabel=L"r", ylabel=L"\phi", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10)
 
-    if length(size(ϕ)) == 4
-        ϕ_plot = ϕ[ind, :, :, :]
+    #there are more cases now big rip
+    if length(size(ϕ)) == 5 #all solutions and derivs case
+        ϕ_plot = ϕ[ind, :, :, :, 1]
+    elseif length(size(ϕ)) == 4
+        #probably the derivative case, with both conditions this should be fine right???
+        if size(ϕ)[end] == 8 && size(ϕ)[1] == grids.r.N 
+            ϕ_plot = ϕ[:, :, :, 1]
+        else
+            ϕ_plot = ϕ[ind, :, :, :]
+        end
+
     else
         ϕ_plot = ϕ
     end
@@ -106,8 +124,17 @@ function plot_potential(ϕ::Array{ComplexF64}, grids::FFFGridsT, ind=1::Int64; n
 
     rgrid, _, _ = instantiate_grids(grids)
 
-    if length(size(ϕ)) == 4
-        ϕ_plot = ϕ[ind, :, :, :]
+    #there are more cases now big rip
+    if length(size(ϕ)) == 5 #all solutions and derivs case
+        ϕ_plot = ϕ[ind, :, :, :, 1]
+    elseif length(size(ϕ)) == 4
+        #probably the derivative case, with both conditions this should be fine right???
+        if size(ϕ)[end] == 8 && size(ϕ)[1] == grids.r.N 
+            ϕ_plot = ϕ[:, :, :, 1]
+        else
+            ϕ_plot = ϕ[ind, :, :, :]
+        end
+
     else
         ϕ_plot = ϕ
     end

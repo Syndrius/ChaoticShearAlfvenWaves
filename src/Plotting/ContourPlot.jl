@@ -5,8 +5,17 @@ Plots the contours for a given ζ slice. Expects the un-fourier transformed solu
 """
 function contour_plot(ϕ, grids::FFSGridsT, ζ=1; ind=1, savefile=nothing)
 
-    if length(size(ϕ)) == 4
-        ϕ_plot = ϕ[ind, :, :, :]
+    #there are more cases now big rip
+    if length(size(ϕ)) == 5 #all solutions and derivs case
+        ϕ_plot = ϕ[ind, :, :, :, 1]
+    elseif length(size(ϕ)) == 4
+        #probably the derivative case, with both conditions this should be fine right???
+        if size(ϕ)[end] == 8 && size(ϕ)[1] == grids.r.N 
+            ϕ_plot = ϕ[:, :, :, 1]
+        else
+            ϕ_plot = ϕ[ind, :, :, :]
+        end
+
     else
         ϕ_plot = ϕ
     end
@@ -37,8 +46,17 @@ Plots the contours for a given ζ slice. Expects the un-fourier transformed solu
 """
 function contour_plot(ϕ, grids::FFFGridsT, ζ=1; ind=1, savefile=nothing)
 
-    if length(size(ϕ)) == 4
-        ϕ_plot = ϕ[ind, :, :, :]
+    #there are more cases now big rip
+    if length(size(ϕ)) == 5 #all solutions and derivs case
+        ϕ_plot = ϕ[ind, :, :, :, 1]
+    elseif length(size(ϕ)) == 4
+        #probably the derivative case, with both conditions this should be fine right???
+        if size(ϕ)[end] == 8 && size(ϕ)[1] == grids.r.N 
+            ϕ_plot = ϕ[:, :, :, 1]
+        else
+            ϕ_plot = ϕ[ind, :, :, :]
+        end
+
     else
         ϕ_plot = ϕ
     end
@@ -70,8 +88,17 @@ Plots the contours for a given ζ slice. Expects the un-fourier transformed solu
 """
 function contour_plot(ϕ, grids::FSSGridsT, ζ=1; ind=1, savefile=nothing)
 
-    if length(size(ϕ)) == 4
-        ϕ_plot = ϕ[ind, :, :, :]
+    #there are more cases now big rip
+    if length(size(ϕ)) == 5 #all solutions and derivs case
+        ϕ_plot = ϕ[ind, :, :, :, 1]
+    elseif length(size(ϕ)) == 4
+        #probably the derivative case, with both conditions this should be fine right???
+        if size(ϕ)[end] == 8 && size(ϕ)[1] == grids.r.N 
+            ϕ_plot = ϕ[:, :, :, 1]
+        else
+            ϕ_plot = ϕ[ind, :, :, :]
+        end
+
     else
         ϕ_plot = ϕ
     end

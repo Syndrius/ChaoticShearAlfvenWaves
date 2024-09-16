@@ -22,6 +22,8 @@ function coords_isl_to_tor(κ, ᾱ, φ, isl::ContIslandT)
 
     θ = α + φ/isl.q0
     #no fkn idea if this is actually flux or not lol.
+    #return sqrt(2*ψ), θ, φ
+    #changing this along wtih ψ0 seems to have very minimal effect.
     return ψ, θ, φ
 
 end

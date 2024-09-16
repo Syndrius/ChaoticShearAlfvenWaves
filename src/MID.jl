@@ -38,6 +38,8 @@ Base class that just imports everything. We will want a description of the packa
  - Islands almost needs to be it's own module or something -> structure for island is annoying af.
  - For grid instantiation, would be nice if it was more symmetric. i.e. even fff case should be able to get the mlist etc. This should reduce differences between cases as well.
  - Maybe we should have a struct for the grid description, i.e. what we currently have, used for file IO, but then also a struct with the instantiated grid for actual use???
+ - Mayhap post process should be outside spectrum???
+ - Perhaps function for extracting the plotting part of phi??
 
 
  

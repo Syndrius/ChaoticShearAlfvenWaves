@@ -31,10 +31,16 @@ end
 
 Reads a single eigenfunction from file using JLD2. Set ft=false to read the non-ft eigenfunction.
 """
-function efunc_from_file(; dir::String, ind, ft=true)
+function efunc_from_file(; dir::String, ind, ft=true, deriv=false)
 
     if ft
-        filename = dir * @sprintf("efuncs_ft/efunc%04d.jld2", ind)
+        if deriv
+            filename = dir * @sprintf("efuncs_ft_deriv/efunc%04d.jld2", ind)
+        else
+            filename = dir * @sprintf("efuncs_ft/efunc%04d.jld2", ind)
+        end
+    elseif deriv
+        filename = dir * @sprintf("efuncs_deriv/efunc%04d.jld2", ind)
     else
         filename = dir * @sprintf("efuncs/efunc%04d.jld2", ind)
     end
