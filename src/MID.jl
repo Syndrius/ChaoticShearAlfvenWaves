@@ -34,6 +34,12 @@ Base class that just imports everything. We will want a description of the packa
  - Implement island coords metric. -> this will be annoying -> can check the metric is done properly (hopefully) by comparing the continuum.
  - Think we need another big cleanup.
  - Combine our interpolation thing into MID. (or perhaps make a new package???)
+ - upload pictures of coord transformation once island coords are understood -> do this for regular toroidal coordinates as well.
+ - Islands almost needs to be it's own module or something -> structure for island is annoying af.
+ - For grid instantiation, would be nice if it was more symmetric. i.e. even fff case should be able to get the mlist etc. This should reduce differences between cases as well.
+ - Maybe we should have a struct for the grid description, i.e. what we currently have, used for file IO, but then also a struct with the instantiated grid for actual use???
+
+
  
 
 """
@@ -149,6 +155,12 @@ include("Continuum/Continuum.jl")
 using MID.Continuum; export island_continuum
 using MID.Continuum; export island_width
 using MID.Continuum; export continuum
+
+
+
+include("Mapping/Mapping.jl")
+
+using MID.Mapping; export tor_to_isl
 
 
 #include("ExtraSpectra/ExtraSpectra.jl")

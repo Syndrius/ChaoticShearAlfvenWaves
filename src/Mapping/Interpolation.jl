@@ -1,69 +1,12 @@
 
-#can we do some hermite interpolation???
-#come on down...
-using MID
-using FFTW
-using Plots; plotlyjs()
 
-Nr = 30
-Nθ = 6
-Nζ = 2
-rgrid = init_fem_grid(N=Nr);
-θgrid = init_fem_grid(N=Nθ, pf=2);
-ζgrid = init_fem_grid(N=Nζ, pf=-2);
-#θgrid = init_sm_grid(start=2, count = 2)
-#ζgrid = init_sm_grid(start=-2, count=1);
+function hermite_interpolation(r::Float64, θ::Float64, ζ::Float64, ϕ::Array{ComplexF64}, grids::FFFGridsT)
 
-grids = init_grids(rgrid, θgrid, ζgrid);
+    #currently restricted to FFF
+    #may also want a restriction of ϕ to ensure the derivative
+    #although maybe that should be outside this function.
 
-geo = GeoParamsT(R0=10.0)
-
-prob = init_problem(q=Axel_q, geo=geo); 
-
-
-#with @views. 22.907080 seconds (8.07 M allocations: 721.379 MiB, 1.36% gc time)
-#fk load more allocations and gc without views.
-#outrageous spead up shifting the ϕ[:, test, :, ...] to ϕ[:, testr, testθ, :, :]
-
-evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, full_spectrum=true, deriv=true); 
-
-
-plot_continuum(evals)
-
-
-ind = find_ind(evals, 0.383)
-#ind = 348
-plot_potential(ϕft, grids, ind)
-
-plot_potential(ϕ, grids, ind)
-
-contour_plot(ϕ, grids, ind=ind)
-
-test_fn = ϕ[ind, :, :, :, :];
-#test_fn = ϕ[ind, :, :, :];
-
-
-function hb(x, ind) #think this needs to be kept in 1d actually!
-
-    #big yucky.
-    if ind == 1
-        return h00(x)
-    elseif ind == 2
-        return h10(x)
-    elseif ind == 3
-        return h01(x)
-    else
-        return h11(x)
-    end
-
-end
-
-
-#alot of this could probably make use of some non-existant functions inside basis
-#and indexing...
-#not sure where this will belong lol.
-function interpolate_phi(r, θ, ζ, ϕ, grids)
-
+    #fkn stupid af to instantiate this each time....
     rgrid, θgrid, ζgrid = instantiate_grids(grids)
     #display(θgrid) 
     #display(ζgrid) 
@@ -198,7 +141,7 @@ function interpolate_phi(r, θ, ζ, ϕ, grids)
 
     #not sure about the order of this...
     #S = rθζ, r'θζ, rθ'ζ, rθζ', r'θ'ζ, r'θζ', rθ'ζ', r'θ'ζ'
-
+    #this should obviously not be defined here lol.
     grid_id = [0, 0, 1, 1]
     basis_id = [0, 1, 0, 1]
 
@@ -216,13 +159,6 @@ function interpolate_phi(r, θ, ζ, ϕ, grids)
         ϕ_int += ϕ[gi..., bi] * hb(Δr, hr) * hb(Δθ, hθ) * hb(Δζ, hζ)
     end
 
-    #this is going to take too much thinking to do now!
-    #may want to put the basis functions into an array to match how we cosntructed them? may be best way to ensure consistency.
-    #or maybe a function that takes an index to return the correct h function.
-
-
-
-#    display(Δr)
 
 
     return ϕ_int
@@ -232,43 +168,9 @@ function interpolate_phi(r, θ, ζ, ϕ, grids)
 end
 
 
-#can we interpolate this bad boi???
-Nrtest = 100
-Nθtest = 30
-Nζtest = 15
-
-rtest = LinRange(0, 1, Nrtest)
-θtest = LinRange(0, 2π, Nθtest+1)[1:end-1]
-ζtest = LinRange(0, 2π, Nζtest+1)[1:end-1]
-
-ϕ_int = zeros(ComplexF64, Nrtest, Nθtest, Nζtest);
-for (i, r) in enumerate(rtest), (j, θ) in enumerate(θtest), (k, ζ) in enumerate(ζtest)
-
-    ϕ_int[i, j, k] = interpolate_phi(r, θ, ζ, test_fn, grids)
-
-
-end
-
-
-ϕ_int_fft = fft(ϕ_int, [2, 3]);
-
-p = plot()
-for i in 1:Nθtest
-    plot!(rtest, real.(ϕ_int_fft[:, i, 1]))
-    #plot!(rtest, real.(ϕ_int[:, i, 1]))
-end
-display(p)
-
-#This is not working lol.
-#seems to be much worse than before...
-#needs θ interp as well for this to look anything like the og tae
-#can cleary see the fkery for θ > grids.θ.N
-#think we are making progress but not heaps lol.
-#have to say this is working now!
-#not bad. still got a couple things to smooth out.
-contourf(θtest, rtest, real.(ϕ_int[:, :, 1]), color=:turbo, levels=100)
-
-
+#this should be inside basis
+#and should be used lol
+#not just arbitrary function definitions like we currently have.
 function h00(t)
 
     return (1+2*t)*(1-t)^2
@@ -286,11 +188,18 @@ function h11(t)
     return t^2*(t-1)
 end
 
-t = LinRange(0, 1, 100)
+#this should almost certainly be inside basis
+function hb(x, ind) #think this needs to be kept in 1d actually!
 
-#this does make sense, if each neighbouring grid points have the same value, the inbetween will also have the same value, unless the gradient is different.
-#plot(t, h00.(t) .+ 2 .* h01.(t))
-plot(t, h00.(t))
-plot!(t, h01.(t))
-plot!(t, h10.(t))
-plot!(t, h11.(t))
+    #big yucky.
+    if ind == 1
+        return h00(x)
+    elseif ind == 2
+        return h10(x)
+    elseif ind == 3
+        return h01(x)
+    else
+        return h11(x)
+    end
+
+end
