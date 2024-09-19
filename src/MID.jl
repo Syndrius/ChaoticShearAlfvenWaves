@@ -40,6 +40,7 @@ Base class that just imports everything. We will want a description of the packa
  - Maybe we should have a struct for the grid description, i.e. what we currently have, used for file IO, but then also a struct with the instantiated grid for actual use???
  - Mayhap post process should be outside spectrum???
  - Perhaps function for extracting the plotting part of phi??
+ - Axels method of just specifying the width rather than A q0 and qp seems much better. perhaps we can adopt? Although his width is defined in terms of iota prime and A. but seems better still.
 
 
  

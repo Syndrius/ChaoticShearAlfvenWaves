@@ -37,6 +37,8 @@ function post_process(evals::AbstractArray, efuncs::Array{ComplexF64}, grids::Gr
 
         
 
+        #this is crap.
+        #really shouldn't need an extra if condition here.
         if deriv 
             rm, mode_lab = label_mode(ϕft[:, :, :, 1], grids)
             ϕ_g[i, :, :, :, :] = ϕ

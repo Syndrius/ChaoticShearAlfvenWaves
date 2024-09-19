@@ -4,6 +4,7 @@
 using Elliptic
 using Plots; plotlyjs()
 using MID
+using Interpolations
 
 #this may have to be considered at at adequate standard...
 
@@ -23,8 +24,8 @@ function inside_island_mode(κ, ᾱ, φ)
     if κ > 1
         return 0
     end
-    return exp(-(κ-0.7)^2/0.01) * exp(1im * m * ᾱ)
-    #return (-4*(κ-0.5)^2+1)*exp(1im * m * ᾱ)
+    #return exp(-(κ-0.7)^2/0.01) * exp(1im * m * ᾱ)
+    return (-4*(κ-0.5)^2+1)*exp(1im * m * ᾱ)
     #return (-4*(κ-0.5)^2+1)*cos(m * ᾱ)
 end
 
@@ -72,9 +73,10 @@ function toroidal_to_isl(ψ, θ, ζ, isl)
     #so just pretending r is ψ removed the symmetry problemos.
     #may just have to work with ψ...
     α = θ - ζ/isl.q0
-    #χ = -isl.qp/(2*isl.q0^2) * (ψ - isl.r0^2/2)^2 + isl.A * cos(isl.m0*α)
-    χ = -isl.qp/(2*isl.q0^2) * (ψ - isl.r0)^2 + isl.A * cos(isl.m0*α)
-    κ = (-χ + isl.A) / (2*isl.A)
+    χ = -isl.qp/(2*isl.q0^2) * (ψ - isl.r0^2/2)^2 + isl.A * cos(isl.m0*α)
+    #χ = -isl.qp/(2*isl.q0^2) * (ψ - isl.r0)^2 + isl.A * cos(isl.m0*α)
+    #κ = sqrt((-χ + isl.A) / (2*isl.A))
+    κ = ((-χ + isl.A) / (2*isl.A))
 
     #outside the island!
     #don't seem to be having the numerical issues anymore,
@@ -97,6 +99,8 @@ function isl_to_toroidal(κ, ᾱ, φ, isl)
     #problemo may be that κ is defined in terms of r^2.
     #so plotting it vs r makes no sense.
     #this is going to cause us issues big time.
+    #κ = sqrt(κ)
+    #κ = κ^2
 
     if κ > 1
         α = 2/isl.m0 * Elliptic.Jacobi.am(isl.m0 * Elliptic.K(1/κ) * ᾱ / π, 1/κ)
@@ -122,15 +126,15 @@ isl = QIslandT(m0=3, n0=2, A=1e-3, q0=3/2, qp=1.6, r0=0.5)
 
 
 #define our island grids...
-Nκ = 200
+Nκ = 500
 Nᾱ = 100
-Nφ = 20
-κgrid = LinRange(0, 8, Nκ);
-#κgrid = LinRange(0, 1.5, Nκ);
-ᾱgrid = LinRange(0, 2π, Nᾱ+1)[1:end-1];
+Nφ = 10
+#κgrid = LinRange(0, 8, Nκ);
+κgrid = LinRange(0, 1.5, Nκ);
+ᾱgrid = LinRange(-π, π, Nᾱ+1)[1:end-1];
 φgrid = LinRange(0, 2π, Nφ+1)[1:end-1];
 
-ϕ_isl  = create_island_mode(κgrid, ᾱgrid, φgrid, false);
+ϕ_isl  = create_island_mode(κgrid, ᾱgrid, φgrid, true);
 
 surface(ᾱgrid, κgrid, real.(ϕ_isl[:, :, 1]))
 contourf(ᾱgrid, κgrid, real.(ϕ_isl[:, :, 1]), color=:turbo)
@@ -138,14 +142,19 @@ contourf(ᾱgrid, κgrid, real.(ϕ_isl[:, :, 1]), color=:turbo)
 hline!([0, 2π], [1, 1], color=:black, linewidth=5, legend=false)
 #now we convert this island mode into regular coordinates.
 
-Nr = 200
+
+isl_itp = interpolate((κgrid, ᾱgrid, φgrid), ϕ_isl, Gridded(Linear(Periodic())));
+
+isl_ext = extrapolate(isl_itp, Periodic());
+
+Nr = 500
 Nθ = 100
-Nζ = 20
+Nζ = 10
 
 ϕ_tor = zeros(ComplexF64, Nr, Nθ, Nζ);
 
 rgrid = LinRange(0, 1, Nr);
-θgrid = LinRange(0, 2π, Nθ+1)[1:end-1];
+θgrid = LinRange(-π, π, Nθ+1)[1:end-1];
 ζgrid = LinRange(0, 2π, Nζ+1)[1:end-1];
 
 κvals = zeros(Nr, Nθ, Nζ);
@@ -178,17 +187,18 @@ end
 #    return argmin(abs.(grid .- val))
 #end
 
-#ψgrid = 1/2 .* rgrid .^ 2
-ψgrid = rgrid
+ψgrid = 1/2 .* rgrid .^ 2
+#ψgrid = rgrid
 for (i, ψ) in enumerate(ψgrid), (j, θ) in enumerate(θgrid), (k, ζ) in enumerate(ζgrid)
 
     κ, ᾱ, φ = toroidal_to_isl(ψ, θ, ζ, isl)
 
-    κind = find_ind(κgrid, κ)
-    ᾱind = find_ind(ᾱgrid, mod(ᾱ, 2π))
-    φind = find_ind(φgrid, φ)
+    #κind = find_ind(κgrid, κ)
+    #ᾱind = find_ind(ᾱgrid, mod(ᾱ, 2π))
+    #φind = find_ind(φgrid, φ)
 
-    ϕ_tor[i, j, k] = ϕ_isl[κind, ᾱind, φind] 
+    #ϕ_tor[i, j, k] = ϕ_isl[κind, ᾱind, φind] 
+    ϕ_tor[i, j, k] = isl_ext(sqrt(κ), ᾱ, φ)
 
     κvals[i, j, k] = κ
     #ᾱvals[i, j, k] = mod(ᾱ, 2π)
@@ -216,6 +226,7 @@ surface(θgrid, rgrid, real.(ϕ_tor[:, :, 1]), levels=20, color=:turbo)
 #this seems to only work if I have a uniform ψ grid...
 
 #not rotating? Should it be???
+#these have got to be wrong. unsure what is going on though!
 contourf(θgrid, rgrid, ᾱvals[:, :, 1], levels=50, color=:turbo)
 contourf(θgrid, rgrid, κvals[:, :, 1], levels=50, color=:turbo)
 contourf(θgrid, rgrid, φvals[:, :, 1], levels=50, color=:turbo)
@@ -225,15 +236,15 @@ contourf(θgrid, rgrid, φvals[:, :, 1], levels=50, color=:turbo)
 #now, can we convert this back???
 
 #define our island grids...
-Nκ2 = 200
+Nκ2 = 500
 Nᾱ2 = 100
-Nφ2 = 20
-κgrid2 = LinRange(0, 8, Nκ2);
-#κgrid2 = LinRange(0, 1.5, Nκ2);
+Nφ2 = 10
+#κgrid2 = LinRange(0, 8, Nκ2);
+κgrid2 = LinRange(0, 1.5, Nκ2);
 ᾱgrid2 = LinRange(0, 2π, Nᾱ2+1)[1:end-1];
 φgrid2 = LinRange(0, 2π, Nφ2+1)[1:end-1];
 
-ϕ_isl2 = zeros(ComplexF64, Nκ, Nᾱ, Nφ);
+ϕ_isl2 = zeros(ComplexF64, Nκ2, Nᾱ2, Nφ2);
 
 θvals = zeros(Nκ2, Nᾱ2, Nφ2);
 rvals = zeros(Nκ2, Nᾱ2, Nφ2);
