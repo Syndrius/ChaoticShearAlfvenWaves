@@ -35,7 +35,7 @@ function tor_to_isl(Nκ, Nβs, Nφ, ϕ, grids::FFFGridsT, isl::ContIslandT)
     rgrid, θgrid, ζgrid = instantiate_grids(grids)
 
 
-    tor_itp = interpolate((rgrid, θgrid, ζgrid), ϕ_tor, Gridded(Linear(Periodic())));
+    tor_itp = interpolate((rgrid, θgrid, ζgrid), ϕ, (Gridded(Linear()), Gridded(Linear(Periodic())), Gridded(Linear(Periodic()))));
 
     tor_ext = extrapolate(tor_itp, Periodic());
 
@@ -43,7 +43,10 @@ function tor_to_isl(Nκ, Nβs, Nφ, ϕ, grids::FFFGridsT, isl::ContIslandT)
     #2 is completly arbitrary lol.
     κgrid = LinRange(0, 2, Nκ);
     #κgrid2 = LinRange(0, 1.5, Nκ2);
-    βsgrid = LinRange(0, 2π, Nβs+1)[1:end-1];
+    βsgrid = LinRange(-π, π, Nβs+1)[1:end-1];
+
+    #changing this to -pi to pi didn't really change anything, just scaled some stuff.
+    #which means this domain does have an effect on ft... not ideal
     φgrid = LinRange(0, 2π, Nφ+1)[1:end-1];
 
     ϕ_isl = zeros(ComplexF64, Nκ, Nβs, Nφ);

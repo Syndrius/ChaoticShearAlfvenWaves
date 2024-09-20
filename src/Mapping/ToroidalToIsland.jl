@@ -13,6 +13,8 @@ function coords_isl_to_tor(κ, βs, φ, isl::ContIslandT)
     #Axel uses half width, so we will take half the width of Zhisong.
     w = 2 * sqrt(isl.A * isl.q0^2 / isl.qp)
 
+    #changing this just changes the distribution of the island, actually quite a minor effect tbh.
+    #not sure what it correct.
     #κ = κ^2
     #κ = sqrt(κ)
     #I guess this cannot handle outside the ol island yet.
