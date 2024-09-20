@@ -51,13 +51,14 @@ function bent_axel_kappa(r, θ, ζ)
     return sqrt(1/w^2 * (r^2-r0^2)^2 + sin(α)^2)
 end
 
+#absolutely no understanding of this.
 function bent_axel_beta(r, θ, ζ)
 
     α = 1/2 * (m0*θ + n0*ζ)
 
     #so this makes a huge difference!
-    #return atan(w*sin(α), (r^2-r0^2))
-    return atan(w*sin(α) / (r^2-r0^2))
+    return atan(w*sin(α), (r^2-r0^2))
+    #return atan(w*sin(α) / (r^2-r0^2))
 end
 
 function straight_axel_beta(κ, β)
@@ -81,15 +82,38 @@ function alpha_bar(r, θ, ζ)
 
     if κ < 1
 
+        #return 1/sqrt(κ) * sin(m0 * α / 2)
+        #return mod(m0 * α/2, 2π)
+
+        ab = π / (2 * Elliptic.K(κ)) * Elliptic.F(asin(1/sqrt(κ) * sin(m0 * α / 2)), κ)
+
+        #return ab
+        #return mod(ab, 2π)
+        if r > r0
+            ab = π / (2 * Elliptic.K(κ)) * Elliptic.F(-asin(1/sqrt(κ) * sin(m0 * α / 2)) + π, κ)
+            #return ab #- 3π/2
+            return mod(ab + 0*π, 2π)
+        else
+            #think this is it, note that we are just changin asin to -asin + π.
+            #we can swap them around, just dictates if ᾱ=0 is inner or outer part of torus.
+            #not sure if one way would be better than the other??
+            ab = π / (2 * Elliptic.K(κ)) * Elliptic.F(asin(1/sqrt(κ) * sin(m0 * α / 2)), κ)
+            #return ab #+ π
+            return mod(ab+0*3π/2, 2π)
+        end
+
         #return π / (2 * Elliptic.K(κ)) * Elliptic.F(asin(1/sqrt(κ) * sin(m0 * α / 2)), κ)
         return π / (2 * Elliptic.K(κ)) * Elliptic.F(asin(1/sqrt(κ) * sin(m0 * α / 2)), κ)
+        #return π / (2 * Elliptic.K(κ)) * 1/sqrt(κ) * sin(m0 * α / 2)
     else 
         return 0
     end
 end
 
-Nr = 200
-Nθ = 50
+
+
+Nr = 100
+Nθ = 80
 Nζ = 10
 
 rgrid = LinRange(0, 1, Nr)
@@ -108,17 +132,73 @@ for (i, r) in enumerate(rgrid), (j, θ) in enumerate(θgrid), (k, ζ) in enumera
     βbent[i, j, k] = β
     βstraight[i, j, k] = straight_axel_beta(κ, β)
     ᾱ[i, j, k] = alpha_bar(r, θ, ζ)
-    #α[i, j, k] = mod(3*θ + 2*ζ, 2π)
-    α[i, j, k] = mod(θ + 2*ζ/3, 2π)
+    α[i, j, k] = mod(3*θ - 2*ζ, 2π)
+    #α[i, j, k] = mod(θ + 2*ζ/3, 2π)
 
 end
 
+contourf(θgrid, rgrid, ᾱ[:, :, 1], levels=100)
+
 #island is non-symmetrical.... interesti
 
+#we may need to start mapping these to a torus to undertsand, there is probably some significance for inner vs outer...
+
 contourf(θgrid, rgrid, κbent[:, :, 1], levels=100)
-contourf(θgrid, rgrid, βbent[:, :, 1], levels=100)
+contourf(θgrid, rgrid, βbent[:, :, 1], levels=200)
 
 #this makes much more sense as far as an island is concerned
 contourf(θgrid, rgrid, βstraight[:, :, 1], levels=100)
-contourf(θgrid, rgrid, ᾱ[:, :, 1], levels=100)
+
 contourf(θgrid, rgrid, α[:, :, 1], levels=100)
+
+
+scatter(Zgrid, Rgrid, tor_func, levels=200)
+
+function convert_to_torus(rgrid, θgrid, ζgrid, func)
+    #this could be done with interpolation, but seems like it shouldn't be needed???
+    #defo is big rip.
+    #don't have inverse transformation??? going to be super cooked!
+
+    #surely interpolation with root finding is not the best way to do this???
+    #func is assumed 3d
+
+    #going to try a real sloppy method...
+    #Rgrid = zeros(length(rgrid), length(θgrid))
+    #Zgrid = zeros(length(rgrid), length(θgrid))
+
+    Rgrid = []
+    Zgrid = []
+
+    tor_func = []
+
+    #may ignore zeta for now.
+    for (i, r) in enumerate(rgrid), (j, θ) in enumerate(θgrid)
+
+        Rval, _, Zval = radial_to_plot(r, θ, 1, 1000)
+        push!(Rgrid, Rval)
+        push!(Zgrid, Zval)
+        push!(tor_func, func[i, j, 1])
+
+
+    end
+
+    return Rgrid, Zgrid, tor_func
+
+
+end
+
+
+Rgrid, Zgrid, tor_func = convert_to_torus(rgrid, θgrid, ζgrid, βbent)
+
+function radial_to_plot(r, θ, ζ, R0)
+    #now we are actually using flux.
+    #display(ψ)
+
+    Δ = @. r^2/(R0 * 8) - 1/(R0*8)
+    Δp = @. r / (R0 * 4)
+    η = @. (r/R0 +Δp)/2
+
+    R = @. R0 + r*cos(θ) - Δ + r * η * (cos(2*θ) - 1)
+    Z = @. r * sin(θ) + r * η * sin(2*θ)
+    return [R, -ζ, Z]
+end
