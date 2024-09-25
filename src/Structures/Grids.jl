@@ -150,7 +150,7 @@ function instantiate_grids(grids::FFFGridsT)
 
     if grids.r.frac == 0.0
         #rgrid needs to be collected to be consistent with the clustered grid.
-        rgrid = collect(range(0, 1, grids.r.N))
+        rgrid = collect(range(0.1, 1, grids.r.N))
     else
         rgrid = clustered_grid(grids.r)
     end
@@ -258,7 +258,7 @@ function clustered_grid(grid::FEMGridDataT)
 
     nleft = nrest-nright
 
-    rleft = LinRange(0, sep1, nleft+1)[1:end-1]
+    rleft = LinRange(0.1, sep1, nleft+1)[1:end-1]
 
     rright = LinRange(sep2, 1, nright+1)[2:end]
 

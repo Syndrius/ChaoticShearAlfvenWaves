@@ -41,6 +41,13 @@ Base class that just imports everything. We will want a description of the packa
  - Mayhap post process should be outside spectrum???
  - Perhaps function for extracting the plotting part of phi??
  - Axels method of just specifying the width rather than A q0 and qp seems much better. perhaps we can adopt? Although his width is defined in terms of iota prime and A. but seems better still.
+ - Modify fff grids to have a min and max, useful to cut of axis and for running cases with κ (eventually) that stop before the spratrix.
+ - Perhaps we shouls always return the periodified version of the potential as this is better for plotting and perhaps interpolation, could just be part of postprocessing
+ - Change to psi, looks like the sepratrix is a bit wrong!
+ - May need to look and see if there is any corelation for the imaginary modes coming from the islands.
+ - Need to swap to κ^2 for island plotting, to match Axel (or sqrt(κ)), should stretch the sepratrix behaviour out. -> may help us replicated the κ waves that Axel is getting.
+ - It could be worth trying ffs, as we only ever seem to need 0, 2, 4, and the negs for ζ. Maybe more efficient???
+ - We should defs make a continuum replication on our island modes for island coordiantes, i.e. map them all and pick largest radial location etc. May have to ignore the (0, 0) mode though lol. -> will probably also need some kind of condition on what counts as an island mode.
 
 
  

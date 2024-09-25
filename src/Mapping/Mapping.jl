@@ -17,12 +17,86 @@ using MID.Geometry
 
 include("Interpolation.jl")
 include("ToroidalToIsland.jl")
+include("IslToToroidal.jl")
 
 
 export tor_to_isl
 
 
-function tor_to_isl(Nκ, Nβs, Nφ, ϕ, grids::FFFGridsT, isl::ContIslandT)
+
+function tor_to_isl(Nκ, Nᾱ, Nφ, ϕ, grids::FFFGridsT, isl::ContIslandT)
+
+    #this uses inbuilt interpolation, which I think helps with domain issues
+    #also we use Axel's formulation.
+
+    #note that the ϕ to be mapped must be fff and contain the deriv parts.
+    #may implement others some day.
+
+    #first we define the equivalent island grids
+
+    rgrid, θgrid, ζgrid = instantiate_grids(grids)
+
+    ϕ_p = periodify(ϕ, grids.r.N, grids.θ.N, grids.ζ.N)
+
+    θgrid_p = LinRange(0, 2π, grids.θ.N + 1)
+    ζgrid_p = LinRange(0, 2π, grids.ζ.N + 1)
+
+
+    tor_itp = interpolate((rgrid, θgrid_p, ζgrid_p), ϕ_p, (Gridded(Linear()), Gridded(Linear(Periodic())), Gridded(Linear(Periodic()))));
+
+    tor_ext = extrapolate(tor_itp, Periodic());
+
+    #not sure how we are going to deal with κ max. may just need to be a parameter.
+    #2 is completly arbitrary lol.
+    κgrid = LinRange(0, 2, Nκ);
+    #κgrid2 = LinRange(0, 1.5, Nκ2);
+    ᾱgrid = LinRange(0, 2π, Nᾱ)#+1)[1:end-1];
+
+    #changing this to -pi to pi didn't really change anything, just scaled some stuff.
+    #which means this domain does have an effect on ft... not ideal
+    φgrid = LinRange(0, 2π, Nφ)#+1)[1:end-1];
+
+    ϕ_isl = zeros(ComplexF64, Nκ, Nᾱ, Nφ);
+
+    #iterate through each point on our island grid
+    for (i, κ) in enumerate(κgrid), (j, ᾱ) in enumerate(ᾱgrid), (k, φ) in enumerate(φgrid)
+
+        #find the equivalent coordinate in toroidal coordinates.
+        #fkn worst name so far.
+        r, θ, ζ = coords_isl_to_tor(κ, ᾱ, φ, isl)
+
+        #now we interpolate this coordinate using our functions.
+
+        ϕ_isl[i, j, k] = tor_ext(r, θ, ζ)
+        
+        
+
+    end
+
+    #perhaps we should fft this???
+    
+    return ϕ_isl, fft(ϕ_isl, [2, 3])
+    
+
+end
+
+
+#should use grids.
+#will be annoying af if we end up doing the Hermite version of this...
+function periodify(ϕ, Nr, Nθ, Nζ)
+
+    ϕ_p = zeros(ComplexF64, Nr, Nθ+1, Nζ+1)
+
+    ϕ_p[:, 1:end-1, 1:end-1] = ϕ
+    ϕ_p[:, end, end] = ϕ[:, 1, 1]
+
+    return ϕ_p
+
+end
+
+
+
+function tor_to_isl_Axel(Nκ, Nβs, Nφ, ϕ, grids::FFFGridsT, isl::ContIslandT)
 
     #this uses inbuilt interpolation, which I think helps with domain issues
     #also we use Axel's formulation.
