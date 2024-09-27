@@ -9,26 +9,28 @@ using MID.Structures
 
 
 """
-Arrays that distinguish the different Hermite basis functions, used for converting between the grid and the appropriate points indices in the matrices.
+Arrays that distinguish the different Hermite basis functions, used for converting between the grid and the appropriate indices in the matrices.
 """
 const grid_id = [0, 0, 1, 1]
 const basis_id = [0, 1, 0, 1]
 
 
-include("FSSIndexing.jl")
-include("FFSIndexing.jl")
-include("FFFIndexing.jl")
-include("ContIndexing.jl")
 
+include("Boundaries.jl")
 
 export compute_boundary_inds
-export matrix_dim
+
+
+
+include("GridToIndex.jl")
+
 export grid_to_index
 export index_to_grid
-export reconstruct_phi 
-export reconstruct_phi_deriv
-export cont_grid_to_index
-export local_to_global
+
+
+#needs serious work, should conform to everything else.
+#include("ContIndexing.jl")
+#export cont_grid_to_index
 
 
 end

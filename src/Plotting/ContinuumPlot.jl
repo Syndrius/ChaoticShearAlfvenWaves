@@ -1,9 +1,9 @@
 """
-    plot_continuum(evals::EvalsT; savefile=nothing, n=nothing, ymin=-0.05, ymax=1.05)
+    continuum_plot(evals::EvalsT; savefile=nothing, n=nothing, ymin=-0.05, ymax=1.05)
 
 Plots the conntinuum based on an EvalsT struct, produced from compute_spectrum.
 """
-function plot_continuum(evals::EvalsT; savefile=nothing, n=nothing, ymin=-0.05, ymax=1.05)
+function continuum_plot(evals::EvalsT; savefile=nothing, n=nothing, ymin=-0.05, ymax=1.05)
 
     if isnothing(n)
         p = scatter(evals.r, real.(evals.ω), group=evals.modelabs, xlabel=L"r", ylabel=L"\frac{\omega  R_0}{v_A}", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10, ylimits=(ymin, ymax))
@@ -32,11 +32,13 @@ end
 
 
 """
-    plot_continuum(ω, grids::ContGridsT; savefile=nothing, ymin=-0.05, ymax=1.05)
+    continuum_plot(ω, grids::ContGridsT; savefile=nothing, ymin=-0.05, ymax=1.05)
 
 Plots the continuum produces by compute_continuum().
 """
-function plot_continuum(ω, grids::ContGridsT; savefile=nothing, ymin=-0.05, ymax=1.05)
+
+"""
+function continuum_plot(ω, grids::ContGridsT; savefile=nothing, ymin=-0.05, ymax=1.05)
 
     #note that this does not label m's, not sure if it is possible
     #could pair this with an analytical version for cylinder??
@@ -59,3 +61,4 @@ function plot_continuum(ω, grids::ContGridsT; savefile=nothing, ymin=-0.05, yma
     end
 
 end
+"""

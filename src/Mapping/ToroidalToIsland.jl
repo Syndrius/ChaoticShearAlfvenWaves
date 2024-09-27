@@ -2,7 +2,7 @@
 #handles the requirement to map between from toriodal coordinates
 #into island coordinates
 
-function coords_isl_to_tor_Axel(κ, βs, φ, isl::ContIslandT)
+function coords_isl_to_tor_Axel(κ, βs, φ, isl::IslandT)
 
     #w = 0.1 #fk me what the hel is width....
 
@@ -39,7 +39,7 @@ end
 
 #needs a different name by golly.
 #we have had less success with this than others, may be worth ignoring for now.
-function coords_isl_to_tor(κ, ᾱ, φ, isl::ContIslandT)
+function coords_isl_to_tor(κ, ᾱ, φ, isl::IslandT)
     #name of this is a bit confusing
     #but idea is that we pass in island coordinates
     #and we find equivalent toroidal coordinates.

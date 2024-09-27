@@ -1,8 +1,9 @@
 
+#TODO change to flux!
 
 
 """
-    axel_dens(r::Float64)
+    axel_dens(r::Float64)xs
 
 Density function from Axel's paper, should be renamed.
 """

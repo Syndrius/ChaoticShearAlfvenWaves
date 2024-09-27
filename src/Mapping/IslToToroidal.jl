@@ -10,6 +10,8 @@ function κ(r, θ, ζ, isl)
     #α = mod(θ - ζ/isl.q0, 2π) #sign of this is questionable.
     α = θ - ζ/isl.q0 #sign of this is questionable.
     #χ = -isl.qp/(2*isl.q0^2) * (r^2/2 - r0^2/2)^2 + isl.A * cos(isl.m0*α)
+    #this genuanly makes zero sense why this works, 
+    #somewhere in this transformation or in our code we must be using r as psi...
     χ = -isl.qp/(2*isl.q0^2) * (r - r0)^2 + isl.A * cos(isl.m0*α)
     #χ = -isl.qp/(2*isl.q0^2) * (ψ - isl.r0)^2 + isl.A * cos(isl.m0*α)
     #κ = sqrt((-χ + isl.A) / (2*isl.A))

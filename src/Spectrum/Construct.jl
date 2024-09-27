@@ -15,12 +15,19 @@ function construct(prob::ProblemT, grids::FSSGridsT)
     #nθ, mlist, θgrid = spectral_grid(grids.pmd)
     #nζ, nlist, ζgrid = spectral_grid(grids.tmd)
 
-    rgrid, Nθ, mlist, θgrid, Nζ, nlist, ζgrid = instantiate_grids(grids)
+    rgrid, θgrid, ζgrid = inst_grids(grids)
+
+    Nθ = length(θgrid)
+    Nζ = length(ζgrid)
+
+    mlist = mode_list(grids.θ)
+    nlist = mode_list(grids.ζ)
+
 
 
     #initialise the two structs.
-    met = MetT(zeros(3, 3), zeros(3, 3), zeros(3, 3, 3), zeros(3, 3, 3), 0.0, zeros(3))
-    B = BFieldT(zeros(3), zeros(3), zeros(3, 3), zeros(3, 3), 0.0, zeros(3))
+    met = init_empty_met()
+    B = init_empty_B()
 
     ξ, wg = gausslegendre(grids.r.gp) #same as python!
 
@@ -32,9 +39,12 @@ function construct(prob::ProblemT, grids::FSSGridsT)
     #10 is Φ and all its relevant derivatives.
     #under new method we don't use the zeroth derivative, so these could be replaced with 9 
     #TODO shape of this needs a proper description!
-    Φ = zeros(ComplexF64, 4, 9, grids.r.gp)
+
+    #probably want a function for this!
+    Φ = init_bases_function(grids)
     #the test function.
-    Ψ = zeros(ComplexF64, 4, 9, grids.r.gp)   
+    Ψ = init_bases_function(grids)
+    
 
 
     #generalised eval problem WΦ = ω^2 I Φ
@@ -66,8 +76,10 @@ function construct(prob::ProblemT, grids::FSSGridsT)
     #display(size(boundary_inds))
     #display(boundary_inds)
 
-    I = zeros(ComplexF64, 9, 9, grids.r.gp, Nθ, Nζ)
-    W = zeros(ComplexF64, 9, 9, grids.r.gp, Nθ, Nζ)
+    #feking awful name
+    #not sure how to desribe what I and W here actually are.
+    I = local_matrix_size(grids)
+    W = local_matrix_size(grids)
 
 
     #this gives a warning but seems to work perfectly
@@ -247,12 +259,17 @@ function construct(prob::ProblemT, grids::FFSGridsT)
 
     
 
-    rgrid, θgrid, Nζ, nlist, ζgrid = instantiate_grids(grids)
+    rgrid, θgrid, ζgrid = inst_grids(grids)
+
+    Nζ = length(ζgrid)
+    nlist = mode_list(grids.ζ)
 
 
     #initialise the two structs.
-    met = MetT(zeros(3, 3), zeros(3, 3), zeros(3, 3, 3), zeros(3, 3, 3), 0.0, zeros(3))
-    B = BFieldT(zeros(3), zeros(3), zeros(3, 3), zeros(3, 3), 0.0, zeros(3))
+    met = init_empty_met()
+    #MetT(zeros(3, 3), zeros(3, 3), zeros(3, 3, 3), zeros(3, 3, 3), 0.0, zeros(3))
+    B = init_empty_B()
+    #FieldT(zeros(3), zeros(3), zeros(3, 3), zeros(3, 3), 0.0, zeros(3))
 
     #not sure if this should be combined into 1 or something, focus on getting to work first.
     ξr, wgr = gausslegendre(grids.r.gp) #same as python!
@@ -268,9 +285,10 @@ function construct(prob::ProblemT, grids::FFSGridsT)
     #under new method we don't use the zeroth derivative, so these could be replaced with 9 
 
     #shape of this will be cooked, expect 4-> 16, unsure if we combined rd and θd yet, leave separate for now.
-    Φ = zeros(ComplexF64, 4, 4, 9, grids.r.gp, grids.θ.gp)
+    Φ = init_bases_function(grids)
     #the test function.
-    Ψ = zeros(ComplexF64, 4, 4, 9, grids.r.gp, grids.θ.gp)   
+    Ψ = init_bases_function(grids)
+    
 
 
     #generalised eval problem WΦ = ω^2 I Φ
@@ -303,8 +321,8 @@ function construct(prob::ProblemT, grids::FFSGridsT)
     #display(boundary_inds)
 
     #these will hopefully be smaller I think!
-    I = zeros(ComplexF64, 9, 9, grids.r.gp, grids.θ.gp, Nζ)
-    W = zeros(ComplexF64, 9, 9, grids.r.gp, grids.θ.gp, Nζ)
+    I = local_matrix_size(grids)
+    W = local_matrix_size(grids)
 
 
     #this gives a warning but seems to work perfectly
@@ -477,12 +495,12 @@ function construct(prob::ProblemT, grids::FFFGridsT)
     #island being nothing is stupid, either need to separate cases with and without island, or construct an empty (A=0) island if it is nothing.
 
     
-    rgrid, θgrid, ζgrid = instantiate_grids(grids)
+    rgrid, θgrid, ζgrid = inst_grids(grids)
 
 
     #initialise the two structs.
-    met = MetT(zeros(3, 3), zeros(3, 3), zeros(3, 3, 3), zeros(3, 3, 3), 0.0, zeros(3))
-    B = BFieldT(zeros(3), zeros(3), zeros(3, 3), zeros(3, 3), 0.0, zeros(3))
+    met = init_empty_met()
+    B = init_empty_B()
 
     #not sure if this should be combined into 1 or something, focus on getting to work first.
     ξr, wgr = gausslegendre(grids.r.gp) #same as python!
@@ -503,9 +521,9 @@ function construct(prob::ProblemT, grids::FFFGridsT)
     #because we integrate over each basis individually, the basis indicies (the 4's), should go first,
     #then when we use @views, the entire block of memory is combined for more efficient summation.
     #probably need a proper comment description for this structure as it is cooked beyond belief.
-    Φ = zeros(ComplexF64, 4, 4, 4, 9, grids.r.gp, grids.θ.gp, grids.ζ.gp)
+    Φ = init_bases_function(grids)
     #the test function.
-    Ψ = zeros(ComplexF64, 4, 4, 4, 9, grids.r.gp, grids.θ.gp, grids.ζ.gp)   
+    Ψ = init_bases_function(grids)
 
 
     #generalised eval problem WΦ = ω^2 I Φ
@@ -538,8 +556,8 @@ function construct(prob::ProblemT, grids::FFFGridsT)
     #display(boundary_inds)
 
     #these will hopefully be smaller I think!
-    I = zeros(ComplexF64, 9, 9, grids.r.gp, grids.θ.gp, grids.ζ.gp)
-    W = zeros(ComplexF64, 9, 9, grids.r.gp, grids.θ.gp, grids.ζ.gp)
+    I = local_matrix_size(grids)
+    W = local_matrix_size(grids)
 
 
     #this gives a warning but seems to work perfectly

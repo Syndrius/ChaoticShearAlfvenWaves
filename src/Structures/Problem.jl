@@ -47,7 +47,7 @@ One of the main inputs for matrix construction functions.
     dens :: Function = uniform_dens
     isl :: IslandT = no_isl
     geo :: GeoParamsT
-    flr :: FLRT
+    flr :: FLRT = no_flr
 end
 
 
@@ -71,6 +71,20 @@ Main input for matrix construction functions.
 """
 function init_problem(; q::Function, met::Function=toroidal_metric!, dens::Function=uniform_dens, isl::IslandT=no_isl, geo::GeoParamsT, flr::FLRT=no_flr)
 
+    #may want to indroduce symbold into here
+    #for the metric :toroidal etc may be clearer.
+    if length(methods(q)[1].sig.parameters) == 3
+        #this q -profile uses island parameters as input, this creates an appropriate q-profile
+        #we should probably be asserting some stuff about the ol island first
+        q_prof(r) = q(r, isl)
+        #not sure if this actually works
+        return ProblemT(q=q_prof, compute_met=met, dens=dens, isl=isl, flr=flr, geo=geo)
+    else
+        if isl != no_isl
+            isl = inst_island(isl, q)
+        end
+        return ProblemT(q=q, compute_met=met, dens=dens, isl=isl, flr=flr, geo=geo)
+    end 
 
-    return ProblemT(q=q, compute_met=met, dens=dens, isl=isl, flr=flr, geo=geo)
+    
 end

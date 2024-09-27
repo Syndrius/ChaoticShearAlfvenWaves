@@ -19,7 +19,7 @@ function contour_plot(ϕ, grids::FFSGridsT, ζ=1; ind=1, savefile=nothing)
     else
         ϕ_plot = ϕ
     end
-    rgrid, θgrid, _, _, _ = instantiate_grids(grids)
+    rgrid, θgrid, _ = inst_grids(grids)
 
     #adds back the periodicity.
     z = zeros(ComplexF64, grids.r.N, grids.θ.N+1)
@@ -60,7 +60,7 @@ function contour_plot(ϕ, grids::FFFGridsT, ζ=1; ind=1, savefile=nothing)
     else
         ϕ_plot = ϕ
     end
-    rgrid, θgrid, _ = instantiate_grids(grids)
+    rgrid, θgrid, _ = inst_grids(grids)
 
     #adds back the periodicity.
     z = zeros(ComplexF64, grids.r.N, grids.θ.N+1)
@@ -102,9 +102,9 @@ function contour_plot(ϕ, grids::FSSGridsT, ζ=1; ind=1, savefile=nothing)
     else
         ϕ_plot = ϕ
     end
-    rgrid, _, _, _, _, _, _ = instantiate_grids(grids)
+    rgrid = inst_grid(grids.r)
 
-    θgrid_size = compute_ifft_grid(grids.θ)
+    θgrid_size = ifft_size(grids.θ)
     #adds back the periodicity.
     z = zeros(ComplexF64, grids.r.N, θgrid_size+1)
 

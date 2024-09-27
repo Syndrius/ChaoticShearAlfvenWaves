@@ -13,22 +13,43 @@ using MID.Geometry
 using MID.MagneticField
 
 
+"""
+Abstract type for each grid.
+"""
+abstract type GridDataT end
 
-include("Grids.jl")
+
+"""
+Abstract type for the global grids.
+"""
+abstract type GridsT end
+
+
+
+include("FEMGrid.jl")
+include("SMGrid.jl")
+
+export rfem_grid
+export afem_grid
+export asm_grid
+export periodic_grid
+export mode_list
+export ifft_size
+export mode_label
+export inst_grid
+
+
+
+include("GlobalGrids.jl")
+
 
 export GridsT
 export FSSGridsT
 export FFSGridsT
 export FFFGridsT
-export ContGridsT
-export FEMGridDataT
-export SMGridDataT
-export mode_label
-export init_fem_grid
-export init_sm_grid
 export init_grids
-export instantiate_grids
-export compute_ifft_grid
+export inst_grids
+
 
 
 include("Problem.jl")
@@ -43,6 +64,7 @@ include("Output.jl")
 
 export EvalsT
 export find_ind
+
 
 
 end

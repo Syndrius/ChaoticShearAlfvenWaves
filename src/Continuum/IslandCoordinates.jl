@@ -1,10 +1,10 @@
 
 """
-    compute_ψ̄(isl::ContIslandT, χ::Array{Float64}, sign::Int64)
+    compute_ψ̄(isl::IslandT, χ::Array{Float64}, sign::Int64)
 
 Function to compute ψ̄, used for plotting. Sign is ±1 for passing on either side, or 0 for trapped particles.
 """
-function compute_ψ̄(isl::ContIslandT, χ::Array{Float64}, sign::Int64)
+function compute_ψ̄(isl::IslandT, χ::Array{Float64}, sign::Int64)
     κ = @. (isl.A - χ) / (2*isl.A)
     w = 4 * sqrt(isl.A  * isl.q0^2 /isl.qp)
 
@@ -20,11 +20,11 @@ end
 
 
 """
-    compute_α(χ::Float64, ᾱ::Float64, isl::ContIslandT, sign::Int64)
+    compute_α(χ::Float64, ᾱ::Float64, isl::IslandT, sign::Int64)
 
 Compute α in the original toroidal coordinates. Sign is ±1 for passing on either side, or 0 for trapped particles.
 """
-function compute_α(χ::Float64, ᾱ::Float64, isl::ContIslandT, sign::Int64)
+function compute_α(χ::Float64, ᾱ::Float64, isl::IslandT, sign::Int64)
 
     κ = (-χ + isl.A) / (2*isl.A)
 
@@ -43,11 +43,11 @@ function compute_α(χ::Float64, ᾱ::Float64, isl::ContIslandT, sign::Int64)
 end
 
 """
-    compute_ψ(χ::Float64, α::Float64, ᾱ::Float64, isl::ContIslandT, sign::Int64)
+    compute_ψ(χ::Float64, α::Float64, ᾱ::Float64, isl::IslandT, sign::Int64)
 
 Compute ψ in the original toroidal coordinates. Sign is ±1 for passing on either side, or 0 for trapped particles.
 """
-function compute_ψ(χ::Float64, α::Float64, ᾱ::Float64, isl::ContIslandT, sign::Int64)
+function compute_ψ(χ::Float64, α::Float64, ᾱ::Float64, isl::IslandT, sign::Int64)
 
     if sign == 0
         #would be good to know what the fuck this is doing.
@@ -62,11 +62,11 @@ end
 
         
 """
-    compute_∇χ2(ψ::Float64, α::Float64, met::MetT, isl::ContIslandT)
+    compute_∇χ2(ψ::Float64, α::Float64, met::MetT, isl::IslandT)
 
 Compute ∇χ^2, the main term in the weakform.
 """
-function compute_∇χ2(ψ::Float64, α::Float64, met::MetT, isl::ContIslandT)
+function compute_∇χ2(ψ::Float64, α::Float64, met::MetT, isl::IslandT)
 
     return (isl.qp ^2 /isl.q0^4 * (ψ - isl.ψ0)^2 * met.gu[1, 1] 
             + isl.A^2 * isl.m0^2 *sin(α *isl.m0)^2 * (met.gu[2, 2] 
@@ -76,11 +76,11 @@ end
 
 
 """
-    compute_Ω(χ::Float64, isl::ContIslandT, sign::Int64)
+    compute_Ω(χ::Float64, isl::IslandT, sign::Int64)
 
 Computes Ω, the local rotational transform. Sign is ±1 for passing on either side, or 0 for trapped particles.
 """
-function compute_Ω(χ::Float64, isl::ContIslandT, sign::Int64)
+function compute_Ω(χ::Float64, isl::IslandT, sign::Int64)
     Ω0 = sqrt(isl.A * isl.qp / isl.q0^2)
 
     κ = (-χ + isl.A)/(2*isl.A)

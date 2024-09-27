@@ -1,13 +1,16 @@
 """
-    plot_potential(ϕ::Array{ComplexF64}, grids::FSSGridsT, ind=1::Int64; n=nothing, savefile=nothing)
+    potential_plot(ϕ::Array{ComplexF64}, grids::FSSGridsT, ind=1::Int64; n=nothing, savefile=nothing)
 
 
 Plots the potential as a function of radius showing the mode structure. Expects the fourier transformed potential.
 Can set n to only view poloidal modes of a specific toroidal mode. ind is the index of the eigenfunction, used when an array of eigenfunctions is passed in, and is ignored if only a single eigenfunction is passed in.
 """
-function plot_potential(ϕ::Array{ComplexF64}, grids::FSSGridsT, ind=1::Int64; n=nothing, savefile=nothing)
+function potential_plot(ϕ::Array{ComplexF64}, grids::FSSGridsT, ind=1::Int64; n=nothing, savefile=nothing)
 
-    rgrid, _, mlist, _, _, nlist, _= instantiate_grids(grids)
+    rgrid, _, _ = inst_grids(grids)
+
+    mlist = mode_list(grids.θ)
+    nlist = mode_list(grids.ζ)
 
     #p = plot(r, real.(ϕ[ind, :, 1, n]), label=mlist[1], dpi=600)
     #may want the eigenvalue inside the title?
@@ -31,13 +34,13 @@ function plot_potential(ϕ::Array{ComplexF64}, grids::FSSGridsT, ind=1::Int64; n
     end
 
     if isnothing(n)
-        for i in 1:grids.θ.count
-            for j in 1:grids.ζ.count
+        for i in 1:grids.θ.N
+            for j in 1:grids.ζ.N
                 plot!(rgrid, real.(ϕ_plot[ :, i, j]), label=@sprintf("(%s, %s)", mlist[i], nlist[j]))
             end
         end
     else
-        for i in 1:grids.θ.count
+        for i in 1:grids.θ.N
             
             plot!(rgrid, real.(ϕ_plot[:, i, n]), label=@sprintf("(%s, %s)", mlist[i], n))
         end
@@ -54,16 +57,17 @@ end
 
 
 """
-    plot_potential(ϕ::Array{ComplexF64}, grids::FFSGridsT, ind=1::Int64; n=nothing, savefile=nothing)
+    potential_plot(ϕ::Array{ComplexF64}, grids::FFSGridsT, ind=1::Int64; n=nothing, savefile=nothing)
 
 
 Plots the potential as a function of radius showing the mode structure. Expects the fourier transformed potential.
 Can set n to only view poloidal modes of a specific toroidal mode. ind is the index of the eigenfunction, used when an array of eigenfunctions is passed in, and is ignored if only a single eigenfunction is passed in.
 """
-function plot_potential(ϕ::Array{ComplexF64}, grids::FFSGridsT, ind=1::Int64; n=nothing, savefile=nothing)
+function potential_plot(ϕ::Array{ComplexF64}, grids::FFSGridsT, ind=1::Int64; n=nothing, savefile=nothing)
 
 
-    rgrid, _, _, nlist, _= instantiate_grids(grids)
+    rgrid, _, _ = inst_grids(grids)
+    nlist = mode_list(grids.ζ)
 
 
     p = plot(xlabel=L"r", ylabel=L"\phi", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10)
@@ -87,7 +91,7 @@ function plot_potential(ϕ::Array{ComplexF64}, grids::FFSGridsT, ind=1::Int64; n
         for i in 1:grids.θ.N
 
             mlab = mode_label(i, grids.θ)
-            for n in 1:grids.ζ.count
+            for n in 1:grids.ζ.N
 
                 plot!(rgrid, real.(ϕ_plot[:, i, n]), label=@sprintf("%s, %s", mlab, nlist[n]))
             end
@@ -113,16 +117,16 @@ end
 
 
 """
-    plot_potential(ϕ::Array{ComplexF64}, grids::FFFGridsT, ind=1::Int64; n=nothing, savefile=nothing)
+    potential_plot(ϕ::Array{ComplexF64}, grids::FFFGridsT, ind=1::Int64; n=nothing, savefile=nothing)
 
 
 Plots the potential as a function of radius showing the mode structure. Expects the fourier transformed potential.
 Can set n to only view poloidal modes of a specific toroidal mode. ind is the index of the eigenfunction, used when an array of eigenfunctions is passed in, and is ignored if only a single eigenfunction is passed in.
 """
-function plot_potential(ϕ::Array{ComplexF64}, grids::FFFGridsT, ind=1::Int64; n=nothing, savefile=nothing)
+function potential_plot(ϕ::Array{ComplexF64}, grids::FFFGridsT, ind=1::Int64; n=nothing, savefile=nothing)
    
 
-    rgrid, _, _ = instantiate_grids(grids)
+    rgrid, _, _ = inst_grids(grids)
 
     #there are more cases now big rip
     if length(size(ϕ)) == 5 #all solutions and derivs case

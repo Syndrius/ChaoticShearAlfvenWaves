@@ -10,7 +10,7 @@ function surface_plot(ϕ, grids::FFSGridsT, ζ=1; ind=1, savefile=nothing, rmin=
     else
         ϕ_plot = ϕ
     end
-    rgrid, θgrid, _, _, _ = instantiate_grids(grids)
+    rgrid, θgrid, _ = inst_grids(grids)
 
     #adds back the periodicity.
     z = zeros(ComplexF64, grids.r.N, grids.θ.N+1)
@@ -41,7 +41,7 @@ function surface_plot(ϕ, grids::FSSGridsT, ζ=1; ind=1, savefile=nothing)
     else
         ϕ_plot = ϕ
     end
-    rgrid, _, _, _, _, _, _ = instantiate_grids(grids)
+    rgrid, _, _ = inst_grids(grids)
 
     θgrid_size = compute_ifft_grid(grids.θ)
     #adds back the periodicity.
@@ -72,7 +72,7 @@ function surface_plot(ϕ, grids::FFFGridsT, ζ=1; ind=1, savefile=nothing, rmin=
     else
         ϕ_plot = ϕ
     end
-    rgrid, θgrid, _ = instantiate_grids(grids)
+    rgrid, θgrid, _ = inst_grids(grids)
 
     #adds back the periodicity.
     z = zeros(ComplexF64, grids.r.N, grids.θ.N+1)

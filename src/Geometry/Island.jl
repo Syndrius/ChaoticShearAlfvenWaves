@@ -1,35 +1,97 @@
 
+
 """
-Struct storing the island parameters.
+Struct storing the island parameters. Only m0, n0 and one of A or w are required.
+Island takes form A*sin(m0*θ + n0*ζ) so m0 and n0 should have different sign.
 
 ### Fields
 - m0::Int64 - The poloidal mode number of the island chain.
 - n0::Int64 - The toroidal mode number of the island chain.
-- A::Float64 - The amplitude of the island. Requires more explaination...
+- A::Float64=NaN - The anplitude of the island. 
+- q0::Float64=NaN - value of q-profile at location of island.
+- qp::Float64=NaN - Derivative of q-profile at location of island.
+- r0::Float64=NaN - Radial location of island.
+- w::Float64=NaN - Island width in units of r^2/2.
 """
 @kwdef struct IslandT
     m0 :: Int64 
     n0 :: Int64
-    A :: Float64
+    A :: Float64 = NaN
+    q0 :: Float64 = NaN
+    qp :: Float64 = NaN
+    r0 :: Float64 = NaN
+    w :: Float64 = NaN
 end
 
 
 """
-Struct storing the island parameters needed for computing the island continuum.
+    init_island(; w::Float64=NaN, m0::Int64, n0::Int64, qp::Float64=NaN, r0::Float64=NaN, A::Float64=NaN)
 
-### Fields
-- m0::Int64 - The poloidal mode number of the island chain.
-- n0::Int64 - The toroidal mode number of the island chain.
-- A::Float64 - The anplitude of the island #may need to relate this to width or explain it more
-- q0::Float64 - value of q-profile at location of island.
-- qp::Float64 - Derivative of q-profile at location of island.
-- ψ0::Float64 - Radial location of island as a poloidal flux.
+Initialises the island structure. Many of the extra parameters are filled in once the problem is fully defined.
 """
-@kwdef struct ContIslandT
-    m0 :: Int64 
-    n0 :: Int64
-    A :: Float64
-    q0 :: Float64
-    qp :: Float64
-    ψ0 :: Float64 #ideally change this to r if possible
+function init_island(; w::Float64=NaN, m0::Int64, n0::Int64, qp::Float64=NaN, r0::Float64=NaN, A::Float64=NaN)  
+
+    if isnan(w) && isnan(A)
+        display("Please define the island width or amplitude")
+        return 0
+    end
+    
+    isl = IslandT(m0=m0, n0=n0, A=A, q0 = -m0/n0, qp=qp, r0 = r0, w=w)
+
+    return isl
+
 end
+
+
+
+"""
+    instantiate_island(isl::IslandT, q)
+
+Fills in the remaining values of the island struct based on the q-profile.
+"""
+function inst_island(isl::IslandT, q)
+
+    
+    #creates a temport q-profile for finding the root.
+    tmpq(r) = zero_q(r, isl, q)
+    
+    r0 = find_zero(tmpq, (0, 1), Bisection() )
+
+    _,  qp = q(r0)
+
+    #compute either the width or the amplitude, depending on which has been specified.
+    if isnan(isl.w)
+
+        #w = 4*sqrt(isl.A * isl.q0^2/qp)
+        #note that this width is defined in units of r^2.
+        #so width in terms of r^2, what will this even mean??
+        #we may want a function that can actually compute the width in r^2/2 terms
+        #actually define in terms of r^2/2 i.e. flux, so that this matches other cases.
+        #so this width is in terms of the flux surfaces not the radius.
+        #not actually a very useful parameter then
+        #I guess it is kind of the width in from (0, 0.5)??
+        w = 4 * sqrt(isl.q0^2*r0*isl.A / qp)
+        A = isl.A
+    else
+        #A = (isl.w / 4)^2 * qp / isl.q0^2
+        A = isl.w^2 / 16 * qp / (isl.q0^2 * r0)
+        w = isl.w
+    end
+    
+    return IslandT(m0=isl.m0, n0=isl.n0, A=A, q0=isl.q0, qp=qp, r0=r0, w=w)
+
+end
+
+
+"""
+    zero_q(r, isl, q_prof)
+
+Placeholder q-profile for root finding.
+"""
+function zero_q(r, isl, q_prof)
+
+    q, _ = q_prof(r)
+
+    return q - isl.q0
+end
+    

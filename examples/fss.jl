@@ -4,14 +4,14 @@ using Plots; plotlyjs()
 
 
 #start very small, matrix scales much more extremly
-Nr = 40;
+Nr = 100;
 
 geo = GeoParamsT(R0=10.0)
 
 prob = init_problem(q=Axel_q, geo=geo)#, met=no_delta_metric!); 
 
 rgrid = init_fem_grid(N=Nr)
-θgrid = init_sm_grid(start=0, count=6)
+θgrid = init_sm_grid(start=2, count=2)
 ζgrid = init_sm_grid(start=-2, count=1)
 #grids = init_grids(N=N, mstart=1, mcount=2, nstart=-1, ncount=1);
 grids = init_grids(rgrid, θgrid, ζgrid)

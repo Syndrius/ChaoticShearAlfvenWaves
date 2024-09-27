@@ -8,12 +8,27 @@ module Basis
 using MID.Structures
 
 
-include("FSSBasis.jl")
-include("FFSBasis.jl")
-include("FFFBasis.jl")
 
-export hermite_basis 
+include("MatrixSize.jl")
+
+export local_matrix_size 
+export matrix_size 
+export init_bases_function
+
+
+
+include("Hermite.jl")
+
+export hermite_basis
+
+
+
+include("LocalBasis.jl")
+
 export create_local_basis!
+export local_to_global #arguably belongs in indexing...
+
+
 
 
 end

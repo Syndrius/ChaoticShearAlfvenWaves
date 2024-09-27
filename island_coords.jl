@@ -6,12 +6,12 @@ function tor_from_isl(κ, ab, φ, isl)
 
     if κ > 1
         #may change later!
-        return 0, 0, 0, 0
+        return 0.5, 0, 0, 0
     end
 
     α = 2/isl.m0 * asin(sqrt(κ)*Elliptic.Jacobi.sn(2*Elliptic.K(κ)/π * ab, κ))
 
-    χ = (2*isl.A*κ - isl.A)
+    χ = -(2*isl.A*κ - isl.A)
 
     θ = α + φ/isl.q0
 
@@ -60,6 +60,6 @@ for (i, κ) in enumerate(κgrid), (j, ab) in enumerate(abgrid), (k, φ) in enume
     rvals[i, j, k], θvals[i, j, k], ζvals[i, j, k], αvals[i, j, k] = tor_from_isl(κ, ab, φ, isl)
 end
 
-contourf(abgrid, κgrid, rvals[:, :, 1], levels=100, color=:turbo)
+contourf(abgrid, κgrid, rvals[:, :, 1] .- 0.5, levels=100, color=:turbo)
 contourf(abgrid, κgrid, θvals[:, :, 1], levels=100, color=:turbo)
 contourf(abgrid, κgrid, αvals[:, :, 10], levels=100, color=:turbo)

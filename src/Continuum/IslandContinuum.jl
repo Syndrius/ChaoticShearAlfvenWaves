@@ -1,7 +1,7 @@
 
 
 """
-    island_continuum(χlist::Array{Float64}, pmd::Inputs.SMGridDataT, tmd::Inputs.SMGridDataT, geo::GeoParamsT, isl::ContIslandT, sign::Int64)
+    island_continuum(χlist::Array{Float64}, pmd::Inputs.SMGridDataT, tmd::Inputs.SMGridDataT, geo::GeoParamsT, isl::IslandT, sign::Int64)
 
 Computes the continuum with a magnetic island chain. Exact for case with linear rotational transform as outlined by Qu and Hole. Can also approximated the local continuum around the island via a linear taylor expansion of the rotational transform.
 
@@ -22,10 +22,10 @@ ANGLE1 is ᾱ. It is not clear why this is done. It could be because ooutside �
 pmd::ModeDataT - poloidal mode data ie modes for ANGLE1.
 tmd::ModeDataT - toroidal mode data ie modes for ANGLE2.
 geo::GeoParamsT - struct storing the geometrical parameters, i.e major radius.
-isl::ContIslandT - expanded struct storing the island paramaters needed for the continuum calculation.
+isl::IslandT - expanded struct storing the island paramaters needed for the continuum calculation.
 sign::Int64 - Sign of the particles, ±1 for passing on either side, or 0 for trapped particles.
 """
-function island_continuum(χlist::Array{Float64}, pmd::SMGridDataT, tmd::SMGridDataT, geo::GeoParamsT, isl::ContIslandT, sign::Int64)
+function island_continuum(χlist::Array{Float64}, pmd::SMGridDataT, tmd::SMGridDataT, geo::GeoParamsT, isl::IslandT, sign::Int64)
 
     #in all cases inouts are taken to be θ̄ and ζ, in trapped case, θ̄ is equivalent to ᾱ.
     nθ, mlist, θ̄grid = Structures.sm_grid(pmd) 

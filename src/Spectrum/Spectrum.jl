@@ -26,6 +26,7 @@ using MID.MagneticField
 using MID.WeakForm
 using MID.Structures
 using MID.Io
+using MID.PostProcessing
 
 
 export compute_spectrum
@@ -42,10 +43,6 @@ include("Solve.jl")
 export arpack_solve
 export full_spectrum_solve
 
-
-include("PostProcess.jl")
-
-export post_process
 
 
 """
@@ -64,8 +61,8 @@ function compute_spectrum(; prob::ProblemT, grids::GridsT, target_freq=0.0::Floa
 
     display("Constructing...")
     W, I = construct(prob, grids)
-    mat_dim = matrix_dim(grids)
-    @printf("Construction of %dx%d matrices complete.\n", mat_dim, mat_dim)
+    mat_size = matrix_size(grids)
+    @printf("Construction of %dx%d matrices complete.\n", mat_size, mat_size)
     display("Solving...")
     if full_spectrum 
         #with no non-ideal effects the matrices are Hermitian.

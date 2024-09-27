@@ -13,6 +13,7 @@ using MID.Geometry
 include("ComputeField.jl")
 
 export BFieldT
+export init_empty_B
 export compute_B!
 export compute_island_B!
 

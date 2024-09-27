@@ -16,6 +16,40 @@ function Axel_island_q(r::Float64)
     return q, dq
 end
 
+function flux_fu_dam_q(ψ::Float64)
+    q = @. 1 + ψ * 2
+    dq = @. 2
+    return q, dq
+end
+
+
+function flux_generic_island_q(ψ::Float64, isl::IslandT)
+
+    q0 = isl.q0
+    qp = isl.qp
+    ψ0 = isl.ψ0
+    #need to verify this!
+    q = 1 / (1 / q0 - qp / (q0)^2 * (ψ-ψ0))
+    dq = (q0)^2 * qp / (q0 - qp*(ψ - ψ0))^2
+    return q, dq
+
+
+end
+
+
+function generic_island_q(r::Float64, isl::IslandT)
+
+    q0 = isl.q0
+    qp = isl.qp
+    r0 = isl.r0
+    #need to verify this!
+    #maybe this will fix the flux surface problemo.
+    q = 1 / (1 / q0 - qp / (2*q0^2*r0) * (r^2-r0^2))
+    dq = 4*qp*q0^2*r*r0 / (2*q0*r0 - qp * (r^2-r0^2))^2
+    return q, dq
+
+
+end
 
 #based on Zhisongs q-profile, but modifed to have m0=3 rather than 5 
 #to increase the resolution of island modes.
@@ -23,8 +57,11 @@ function island_mode_q(r::Float64)
     q0 = 3/2
     qp = 1.6
     ψ0 = 0.125
-    q = 1 / (1 / q0 - qp / (q0)^2 * (r^2/2-ψ0))
-    dq = 4*(q0)^2* qp * r / (2*(q0)-qp*r^2 + 2*qp*ψ0)^2
+    r0 = sqrt(2*ψ0)
+    #q = 1 / (1 / q0 - qp / (q0)^2 * (r^2/2-ψ0))
+    #dq = 4*(q0)^2* qp * r / (2*(q0)-qp*r^2 + 2*qp*ψ0)^2
+    q = 1 / (1 / q0 - qp / (2*q0^2*r0) * (r^2-r0^2))
+    dq = 4*qp*q0^2*r*r0 / (2*q0*r0 - qp * (r^2-r0^2))^2
     return q, dq
 end
 
@@ -99,6 +136,20 @@ function Axel_q(r::Float64)
 
     q = @. 1.05 + 0.55 * r^2
     dq = @. 2*0.55 * r
+
+    return q, dq
+end
+
+
+"""
+    Axel_q(r::Float64) 
+
+Q profile from Axel's paper, should be renamed.
+"""
+function flux_Axel_q(ψ::Float64) 
+
+    q = @. 1.05 + 0.55 * 2 * ψ
+    dq = @. 2*0.55 
 
     return q, dq
 end

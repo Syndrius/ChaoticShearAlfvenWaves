@@ -23,6 +23,7 @@ function find_ind(evals::EvalsT, val)
     return argmin(abs.(abs.(evals.ω) .- val))
 end
 
+
 """
 Generic version of above, should be somewhere else.
 """

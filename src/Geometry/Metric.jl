@@ -21,6 +21,17 @@ end
 
 
 """
+    init_empty_met()
+  
+Creates and empty MetT object.
+"""
+function init_empty_met()
+
+    return MetT(zeros(3, 3), zeros(3, 3), zeros(3, 3, 3), zeros(3, 3, 3), 0.0, zeros(3))
+end
+
+
+"""
     toroidal_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
 
 Function that fills out the MetT struct for toroidal geometry. Metric elements taken from Energetic Particles in Tokamak Plasmas by Sergai Sharapov. Straight field line coordinates are radius (r), generalised poloidal angle (θ) and generalised toroidal angle (ζ), equal to negative of true toroidal angle. Additionally we assume low shear and approximate Δ' ≈ r/(4*R0).
@@ -267,10 +278,9 @@ end
 
 #probably only used for testing
 #Unused so far, and probably not needed, can probably just set R0=1000 in other casees.
+#note that this is like the toroidal cylindrical metric...
+#not just a cylinder.
 function cylindrical_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
-    #TODO!
-    #may be able to just use R0=1000 or whatever.
-    #doesn't equate to cylindrical limit or weird cylindrical coords
     #this is regular old cylindrical for comparing our weak form
 
     met.J = r * R0
@@ -304,13 +314,15 @@ end
 Function for toroidal metric with flux as the radial coordinate. Used by island continuum. 
 Currently only computes only what is required for island continuum.
 """
-function flux_toroidal_metric!(met::MetT, ψ::Float64, θ::Float64, ζ::Float64, R0::Float64)
+function flux_toroidal_metric_old!(met::MetT, ψ::Float64, θ::Float64, ζ::Float64, R0::Float64)
 
     #this may not actually fill in every part of the metric yet.
     #just the parts needed for island_cont.
 
     r = sqrt(2*ψ) #B0=1
     dψdr = r 
+
+    d2ψdr2 = 1 #simplest way to use previous results!
 
     Δp = r/(4*R0)
     Δpp = 1/(4*R0)
@@ -336,5 +348,74 @@ function flux_toroidal_metric!(met::MetT, ψ::Float64, θ::Float64, ζ::Float64,
     met.gu[2, 1] = -1/r*(ϵ + Δp + r*Δpp) * sin(θ) * dψdr
     met.gu[2, 2] = 1/r^2*(1-2*(ϵ+Δp)*cos(θ))
     met.gu[3, 3] = 1/R0^2*(1-2*ϵ*cos(θ))
+
+end
+
+
+
+
+"""
+    flux_toroidal_metric!(met::MetT, ψ::Float64, θ::Float64, ζ::Float64, R0::Float64)
+
+Function for toroidal metric with flux as the radial coordinate. Used by island continuum. 
+Currently only computes only what is required for island continuum.
+"""
+function flux_toroidal_metric!(met::MetT, ψ::Float64, θ::Float64, ζ::Float64, R0::Float64)
+
+    #this is actually the full one, which won't be using r.
+    #never mind, need r for Δ etc.
+
+    #TODO -> this is still unfinished. -> derivatives w.r.t ψ are v annoying.
+
+    #this will be assuming B0=1 everywhere. Not sure if it ever needs to be changed.
+xs
+    r = sqrt(2*ψ) #B0=1
+    dψdr = r 
+
+    drdψ = 1 / r
+
+    d2ψdr2 = 1 #simplest way to use previous results!
+
+    Δp = r/(4*R0)
+    Δpp = 1/(4*R0)
+
+    ϵ = r/R0
+
+    η = 1/2 * (ϵ+Δp)
+
+    ηp = 1/2* (1/R0 + Δpp)
+
+    #so we will be using the radial form and modifying for flux.
+
+    met.J = r * R0 * (1+2*ϵ*cos(θ)) / dψdr
+
+    #guessing that gl would be divided by dψdr, will have to compare the resulting metrics.
+    met.gl[1, 1] = (1-2*Δp * cos(θ)) / dψdr^2
+    met.gl[1, 2] = r*(ϵ + Δp + r*Δpp) * sin(θ) / dψdr
+    met.gl[2, 1] = r*(ϵ + Δp + r*Δpp) * sin(θ) / dψdr
+    met.gl[2, 2] = r^2*(1+4*η*cos(θ) + 4*η^2)
+    met.gl[3, 3] = R0^2*(1+2*ϵ*cos(θ))
+
+
+    met.gu[1, 1] = (1+2*Δp * cos(θ)) * dψdr^2
+    met.gu[1, 2] = -1/r*(ϵ + Δp + r*Δpp) * sin(θ) * dψdr
+    met.gu[2, 1] = -1/r*(ϵ + Δp + r*Δpp) * sin(θ) * dψdr
+    met.gu[2, 2] = 1/r^2*(1-2*(ϵ+Δp)*cos(θ))
+    met.gu[3, 3] = 1/R0^2*(1-2*ϵ*cos(θ))
+
+
+    met.dJ[1] = ((R0 + 4*r * cos(θ)) / dψdr - r * R0 * (1+2*ϵ*cos(θ)) / dψdr^2) * drdψ
+    met.dJ[2] = -2 * r * R0*ϵ * sin(θ) / dψdr
+
+
+    met.dgl[1, 1, 1] = ((-2*Δpp * cos(θ)) / dψdr^2 - 2 * (1-2*Δp * cos(θ)) / dψdr^3 * d2ψdr2) * drdψ
+    met.dgl[1, 1, 2] = 2*Δp * sin(θ) / dψdr^2
+
+    met.dgl[1, 2, 1] = (((ϵ + Δp + r*Δpp) + r*(1/R0 + 2*Δpp)) * sin(θ) / dψdr 
+                        - r*(ϵ + Δp + r*Δpp) * sin(θ) / dψdr^2 * d2ψdr2) * drdψ
+    met.dgl[1, 2, 2] = r*(ϵ + Δp + r*Δpp) * cos(θ)
+
+    met.dgl[2, 1, 1] = ((ϵ + Δp + r*Δpp) + r*(1/R0 + 2*Δpp)) * sin(θ)
+    met.dgl[2, 1, 2] = r*(ϵ + Δp + r*Δpp) * cos(θ)
 
 end

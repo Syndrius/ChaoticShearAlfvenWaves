@@ -7,13 +7,15 @@
 #and redo of how island stuff is integrated into this code.
 module Mapping
 
+
 using Elliptic
 using FFTW
-using Interpolations
+using Interpolations #one day we will just Hermite I think.
+
 
 using MID.Structures
-#this is needed for contislandT, need to fix island stuff!
 using MID.Geometry
+
 
 include("Interpolation.jl")
 include("ToroidalToIsland.jl")
@@ -24,7 +26,7 @@ export tor_to_isl
 
 
 
-function tor_to_isl(Nκ, Nᾱ, Nφ, ϕ, grids::FFFGridsT, isl::ContIslandT)
+function tor_to_isl(Nκ, Nᾱ, Nφ, ϕ, grids::FFFGridsT, isl::IslandT)
 
     #this uses inbuilt interpolation, which I think helps with domain issues
     #also we use Axel's formulation.
@@ -96,7 +98,7 @@ end
 
 
 
-function tor_to_isl_Axel(Nκ, Nβs, Nφ, ϕ, grids::FFFGridsT, isl::ContIslandT)
+function tor_to_isl_Axel(Nκ, Nβs, Nφ, ϕ, grids::FFFGridsT, isl::IslandT)
 
     #this uses inbuilt interpolation, which I think helps with domain issues
     #also we use Axel's formulation.
@@ -150,7 +152,7 @@ end
 
 #this maps a toroidal function into an island function.
 #going to avoid the hermite stuff now to try and reduce error areas.
-function tor_to_isl_hermite(Nκ, Nᾱ, Nφ, ϕ, grids::FFFGridsT, isl::ContIslandT)
+function tor_to_isl_hermite(Nκ, Nᾱ, Nφ, ϕ, grids::FFFGridsT, isl::IslandT)
 
     #note that the ϕ to be mapped must be fff and contain the deriv parts.
     #may implement others some day.

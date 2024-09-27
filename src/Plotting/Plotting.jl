@@ -22,7 +22,7 @@ using FFTW
 
 include("PotentialPlot.jl")
 
-export plot_potential
+export potential_plot
 
 
 include("ContourPlot.jl")
@@ -37,7 +37,7 @@ export surface_plot
 
 include("ContinuumPlot.jl")
 
-export plot_continuum
+export continuum_plot
 
 
 end
