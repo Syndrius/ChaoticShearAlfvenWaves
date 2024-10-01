@@ -1,5 +1,7 @@
 
 
+#currently using in build interpolation instead.
+#this should be more accurate though!
 function hermite_interpolation(r::Float64, θ::Float64, ζ::Float64, ϕ::Array{ComplexF64}, grids::FFFGridsT)
 
     #currently restricted to FFF

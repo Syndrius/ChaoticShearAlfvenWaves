@@ -123,3 +123,35 @@ function contour_plot(ϕ, grids::FSSGridsT, ζ=1; ind=1, savefile=nothing)
     end
 
 end
+
+
+
+function contour_plot(ϕ, grids::MapGridsT, ζ=1; savefile=nothing)
+
+
+    κgrid, ᾱgrid, _ = inst_grids(grids)
+
+    #this makes them more like Axel's, and also shows a less squished region around sepratrix.
+    κgrid = sqrt.(κgrid)
+
+    #an option...
+    #args = 1 .< κgrid
+    #I think these solutions are already periodic. This will perhaps change once we get Hermite to work.
+    z = zeros(ComplexF64, grids.Nκ, grids.Nᾱ)
+
+    #z[args, :] = ϕ[args, :, ζ]
+    z[:, :] = ϕ[:, :, ζ]
+    #z[:, end] = ϕ_plot[ :, 1, ζ]
+
+    #θgrid = range(0, 2π, grids.θ.count+1)
+    #θgrid = range(0, 2π, θgrid_size+1)
+
+    p = contourf(ᾱgrid, κgrid, real.(z), levels=100, color=:turbo)
+
+    display(p)
+
+    if !isnothing(savefile)
+        savefig(p, savefile)
+    end
+
+end

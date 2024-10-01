@@ -1,10 +1,12 @@
 
 
 using MID
-using Plots
+using Plots; plotlyjs()
 
+display(prob.isl)
 
-
+#copied directly from earlier problemo.
+isl = IslandT(2, -1, 0.00015625000000000003, 2.0, 2.0, 0.5, 0.05)
 #I guess we should now consider our island...
 #will need to understand wot the hek is going on with χ lol
 #may also want R0 to be smaller so gap is larger
@@ -13,38 +15,54 @@ using Plots
 #so with 1e-6 we actually expect the tae to not experience damping
 #but 1e-5 perhaps not? there is like 1 `strand` that it could interact with. But majority is below.
 #similar with 5e-5, perhaps we just don't have enough modes?
-A = 4e-4 / 4 #4 to reflect r(1-r) factor
+#A = 4e-4 / 4 #4 to reflect r(1-r) factor
 
 #so with small islands the structures are almost independent?
 
 #educated guess lol.
-isl = ContIslandT(5, 4, A, 5/4, 0.8, 0.125)
+#isl = ContIslandT(5, 4, A, 5/4, 0.8, 0.125)
 
 geo = GeoParamsT(R0=10.0)
 
 #start with this???
-pmd = init_sm_grid(start=-12, count=26, incr=1)
-tmd = init_sm_grid(start=-10, count=5, incr=4)
+pmd = asm_grid(start=-12, N=26, incr=1)
+tmd = asm_grid(start=-2, N=5, incr=1)
 #tmd = MID.ModeDataT(start=-8, count=10, incr=2)
+
+
+#this makes far more sense lol.
+κlist = LinRange(0.000001, 0.999, 100)
+
+χlist = @. -(2*isl.A*κlist - isl.A)
 
 #χlist = LinRange(-A+A*0.05, A-A*0.05, 50) #this is fked, think we need to cluster near the spratrix.
 
-#just try what Zhisong did?
-χlist1 =  1 .- 0.01 * exp.( -1 .* collect(LinRange(0, 12, 11)))
-χlist2 = LinRange(0, sqrt(χlist1[1]), 191)[1:end-1] .^2 .+ 1e-5
+#not sure how we will get this to conform to our other work....
+#χlist1 =  1 .- 0.01 * exp.( -1 .* collect(LinRange(0, 12, 11)))
+#χlist2 = LinRange(0, sqrt(χlist1[1]), 191)[1:end-1] .^2 .+ 1e-5
 #ok this matches Zhisong, again no fkn idea what the hell this list is.
-χlist = A .- vcat(χlist2, χlist1) .* 2 .* A
+#χlist = isl.A .- vcat(χlist2, χlist1) .* 2 .* isl.A
 
 ω2list = island_continuum(χlist, pmd, tmd, geo, isl, 0);
 
 #width = 4 * sqrt(isl.A * isl.q0^2/isl.qp)
 #ψ_isl = 2 * width / (π * isl.m0)
 #ψ̄m = ψ_isl
-ψ̄list = MID.Continuum.compute_ψ̄(isl, χlist, 0)
-r = repeat(sqrt.(2 .* ψ̄list), 1,  pmd.count * tmd.count)
+#ψ̄list = MID.Continuum.compute_ψ̄(isl, χlist, 0)
+
+#κlist = @. (-χlist + isl.A) / (2 * isl.A)
+
+#this is such a fkn awful x axis. by gollly this will be annoying to change.
+#ideally our x-axis will be κ, ideally χ would die lol.
+#r = repeat(sqrt.(2 .* ψ̄list), 1,  pmd.count * tmd.count)
 
 #we should normalise the x-axis, it is going from centre of island to edge I think.
-scatter(r, sqrt.(abs.(ω2list .* geo.R0^2)), legend=false, markersize=0.1, ylimits=(0.3, 0.5))#.2, 0.6))
+
+#ok so this kind of matches our case a bit.
+#we probably need to match our island cases to island coords to see what is happening.
+#probably requires that we fix up the other stuff.
+#we will probably need to do it for inside and outside separatly.
+scatter(κlist, sqrt.(abs.(ω2list .* geo.R0^2)), legend=false, markersize=0.1)#, ylimits=(0.3, 0.5))#.2, 0.6))
 
 hline!([0.425, 0.425]) #top, 
 hline!([0.3764, 0.3764]) #bottom

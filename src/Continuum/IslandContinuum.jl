@@ -1,5 +1,6 @@
 
 
+
 """
     island_continuum(χlist::Array{Float64}, pmd::Inputs.SMGridDataT, tmd::Inputs.SMGridDataT, geo::GeoParamsT, isl::IslandT, sign::Int64)
 
@@ -25,28 +26,38 @@ geo::GeoParamsT - struct storing the geometrical parameters, i.e major radius.
 isl::IslandT - expanded struct storing the island paramaters needed for the continuum calculation.
 sign::Int64 - Sign of the particles, ±1 for passing on either side, or 0 for trapped particles.
 """
-function island_continuum(χlist::Array{Float64}, pmd::SMGridDataT, tmd::SMGridDataT, geo::GeoParamsT, isl::IslandT, sign::Int64)
+function island_continuum(χlist::Array{Float64}, pmd::SMGridDataT, tmd::SMGridDataT, geo::GeoParamsT, islr::IslandT, sign::Int64)
+
+    #hak solution to deal with different island coordinate usage...
+    isl = psiIslandT(islr.m0, -islr.n0, islr.A, -islr.q0, islr.qp / islr.r0, islr.r0^2/2, islr.w)
 
     #in all cases inouts are taken to be θ̄ and ζ, in trapped case, θ̄ is equivalent to ᾱ.
-    nθ, mlist, θ̄grid = Structures.sm_grid(pmd) 
-    nζ, nlist, ζgrid = Structures.sm_grid(tmd)
+    θ̄grid = inst_grid(pmd) 
+    ζgrid = inst_grid(tmd)
+
+    Nθ̄ = length(θ̄grid)
+    Nζ = length(ζgrid)
+
+    mlist = mode_list(pmd)
+    nlist = mode_list(tmd)
+
 
     if sign == 0
-        ζgrid = range(0, 2*π / tmd.incr * isl.m0, nζ+1)[1:end-1]
+        ζgrid = range(0, 2*π / tmd.incr * isl.m0, Nζ+1)[1:end-1]
     end
 
     
-    ω2list = zeros(length(χlist), pmd.count * tmd.count)
+    ω2list = zeros(length(χlist), pmd.N * tmd.N)
 
     #these are the matrices to be solved.
     #not sure if we need to reset them to zero each time, 
     #think not.
-    Wmat = zeros(ComplexF64, pmd.count * tmd.count, pmd.count * tmd.count)
-    Imat = zeros(ComplexF64, pmd.count * tmd.count, pmd.count * tmd.count)
+    Wmat = zeros(ComplexF64, pmd.N * tmd.N, pmd.N * tmd.N)
+    Imat = zeros(ComplexF64, pmd.N * tmd.N, pmd.N * tmd.N)
 
     #should change to nθ and nζ tbh! would match other code.
-    W = zeros(ComplexF64, nθ, nζ)
-    I = zeros(ComplexF64, nθ, nζ)
+    W = zeros(ComplexF64, Nθ̄, Nζ)
+    I = zeros(ComplexF64, Nθ̄, Nζ)
 
     #needs to change
 
@@ -79,12 +90,12 @@ function island_continuum(χlist::Array{Float64}, pmd::SMGridDataT, tmd::SMGridD
 
 
         for (k1, m1) in enumerate(mlist), (l1, n1) in enumerate(nlist)
-            left_ind = l1 + (k1-1) * tmd.count
+            left_ind = l1 + (k1-1) * tmd.N
             for (k2, m2) in enumerate(mlist), (l2, n2) in enumerate(nlist)
 
-                right_ind = l2 + (k2-1) * tmd.count
-                mind = mod(k1-k2 + nθ, nθ) + 1
-                nind = mod(l1-l2 + nζ, nζ) + 1
+                right_ind = l2 + (k2-1) * tmd.N
+                mind = mod(k1-k2 + Nθ̄, Nθ̄) + 1
+                nind = mod(l1-l2 + Nζ, Nζ) + 1
 
                 #probably a wildly inefficient way to do this!
                 #scaling factor from the parallal gradient

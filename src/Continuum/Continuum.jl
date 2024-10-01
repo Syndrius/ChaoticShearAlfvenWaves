@@ -16,6 +16,19 @@ using FFTW
 using LinearAlgebra
 
 
+
+struct psiIslandT
+    m0 :: Int64 
+    n0 :: Int64
+    A :: Float64 
+    q0 :: Float64 
+    qp :: Float64 
+    ψ0 :: Float64 
+    w :: Float64 
+end
+
+
+
 include("ComputeContinuum.jl")
 
 export continuum

@@ -28,7 +28,8 @@ include("Island.jl")
 
 export IslandT
 export ContIslandT
-export instantiate_island
+export inst_island
+export init_island
 
 
 include("Flux.jl")

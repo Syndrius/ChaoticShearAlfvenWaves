@@ -314,7 +314,7 @@ end
 Function for toroidal metric with flux as the radial coordinate. Used by island continuum. 
 Currently only computes only what is required for island continuum.
 """
-function flux_toroidal_metric_old!(met::MetT, ψ::Float64, θ::Float64, ζ::Float64, R0::Float64)
+function flux_toroidal_metric!(met::MetT, ψ::Float64, θ::Float64, ζ::Float64, R0::Float64)
 
     #this may not actually fill in every part of the metric yet.
     #just the parts needed for island_cont.
@@ -360,7 +360,7 @@ end
 Function for toroidal metric with flux as the radial coordinate. Used by island continuum. 
 Currently only computes only what is required for island continuum.
 """
-function flux_toroidal_metric!(met::MetT, ψ::Float64, θ::Float64, ζ::Float64, R0::Float64)
+function new_flux_toroidal_metric!(met::MetT, ψ::Float64, θ::Float64, ζ::Float64, R0::Float64)
 
     #this is actually the full one, which won't be using r.
     #never mind, need r for Δ etc.
@@ -368,7 +368,6 @@ function flux_toroidal_metric!(met::MetT, ψ::Float64, θ::Float64, ζ::Float64,
     #TODO -> this is still unfinished. -> derivatives w.r.t ψ are v annoying.
 
     #this will be assuming B0=1 everywhere. Not sure if it ever needs to be changed.
-xs
     r = sqrt(2*ψ) #B0=1
     dψdr = r 
 

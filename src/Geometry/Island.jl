@@ -51,9 +51,17 @@ Fills in the remaining values of the island struct based on the q-profile.
 """
 function inst_island(isl::IslandT, q)
 
-    
+    #accounts for cases where q0 is not set.
+    q0 = -isl.m0/isl.n0
+
+    #display(isl.q0)
+    #display(zero_q(0.0, isl, q))
+
     #creates a temport q-profile for finding the root.
-    tmpq(r) = zero_q(r, isl, q)
+    tmpq(r) = zero_q(r, q0, q)
+
+    #display(tmpq(0.0))
+    #display(tmpq(1.0))
     
     r0 = find_zero(tmpq, (0, 1), Bisection() )
 
@@ -70,15 +78,16 @@ function inst_island(isl::IslandT, q)
         #so this width is in terms of the flux surfaces not the radius.
         #not actually a very useful parameter then
         #I guess it is kind of the width in from (0, 0.5)??
-        w = 4 * sqrt(isl.q0^2*r0*isl.A / qp)
+        w = 4 * sqrt(q0^2*r0*isl.A / qp)
         A = isl.A
     else
         #A = (isl.w / 4)^2 * qp / isl.q0^2
-        A = isl.w^2 / 16 * qp / (isl.q0^2 * r0)
+        A = isl.w^2 / 16 * qp / (q0^2 * r0)
         w = isl.w
     end
     
-    return IslandT(m0=isl.m0, n0=isl.n0, A=A, q0=isl.q0, qp=qp, r0=r0, w=w)
+    #not ideal to be creating a new island struct. Accessors.jl did not work for this.
+    return IslandT(m0=isl.m0, n0=isl.n0, A=A, q0=q0, qp=qp, r0=r0, w=w)
 
 end
 
@@ -88,10 +97,12 @@ end
 
 Placeholder q-profile for root finding.
 """
-function zero_q(r, isl, q_prof)
+function zero_q(r, q0, q_prof)
 
     q, _ = q_prof(r)
 
-    return q - isl.q0
+    display(q)
+
+    return q - q0
 end
     

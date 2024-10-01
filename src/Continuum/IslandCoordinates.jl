@@ -4,7 +4,7 @@
 
 Function to compute ψ̄, used for plotting. Sign is ±1 for passing on either side, or 0 for trapped particles.
 """
-function compute_ψ̄(isl::IslandT, χ::Array{Float64}, sign::Int64)
+function compute_ψ̄(isl::psiIslandT, χ::Array{Float64}, sign::Int64)
     κ = @. (isl.A - χ) / (2*isl.A)
     w = 4 * sqrt(isl.A  * isl.q0^2 /isl.qp)
 
@@ -24,7 +24,7 @@ end
 
 Compute α in the original toroidal coordinates. Sign is ±1 for passing on either side, or 0 for trapped particles.
 """
-function compute_α(χ::Float64, ᾱ::Float64, isl::IslandT, sign::Int64)
+function compute_α(χ::Float64, ᾱ::Float64, isl::psiIslandT, sign::Int64)
 
     κ = (-χ + isl.A) / (2*isl.A)
 
@@ -47,7 +47,7 @@ end
 
 Compute ψ in the original toroidal coordinates. Sign is ±1 for passing on either side, or 0 for trapped particles.
 """
-function compute_ψ(χ::Float64, α::Float64, ᾱ::Float64, isl::IslandT, sign::Int64)
+function compute_ψ(χ::Float64, α::Float64, ᾱ::Float64, isl::psiIslandT, sign::Int64)
 
     if sign == 0
         #would be good to know what the fuck this is doing.
@@ -66,7 +66,7 @@ end
 
 Compute ∇χ^2, the main term in the weakform.
 """
-function compute_∇χ2(ψ::Float64, α::Float64, met::MetT, isl::IslandT)
+function compute_∇χ2(ψ::Float64, α::Float64, met::MetT, isl::psiIslandT)
 
     return (isl.qp ^2 /isl.q0^4 * (ψ - isl.ψ0)^2 * met.gu[1, 1] 
             + isl.A^2 * isl.m0^2 *sin(α *isl.m0)^2 * (met.gu[2, 2] 
@@ -80,7 +80,7 @@ end
 
 Computes Ω, the local rotational transform. Sign is ±1 for passing on either side, or 0 for trapped particles.
 """
-function compute_Ω(χ::Float64, isl::IslandT, sign::Int64)
+function compute_Ω(χ::Float64, isl::psiIslandT, sign::Int64)
     Ω0 = sqrt(isl.A * isl.qp / isl.q0^2)
 
     κ = (-χ + isl.A)/(2*isl.A)
@@ -98,8 +98,8 @@ end
 #probably possible to automate this with probs passed in, as then we could compute qp from dq
 #and we can get q0 from m0/n0 or whatever.
 #this is still cooked I think! -> will need to come back to this
-#TODO
-function island_width(isl::IslandT, q0, qp)
+#TODO This is now wrong as hek...
+function island_width(isl::psiIslandT, q0, qp)
     #with our form of island, the width is cooked, need some kind of solver for this!
 
     #for v small island, we can fix r(1-r) ≈ 0.25, and use normal width calculation,

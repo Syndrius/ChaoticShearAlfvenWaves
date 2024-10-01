@@ -181,3 +181,52 @@ function potential_plot(ϕ::Array{ComplexF64}, grids::FFFGridsT, ind=1::Int64; n
 
     
 end
+
+
+
+function potential_plot(ϕ::Array{ComplexF64}, grids::MapGridsT; n=nothing, savefile=nothing)
+
+    κgrid, _, _ = inst_grids(grids)
+
+    #this makes them more like Axel's, and also shows a less squished region around sepratrix.
+
+    κgrid = sqrt.(κgrid)
+
+    p = plot(xlabel=L"r", ylabel=L"\phi", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10)
+
+    #will plot the 1,1 mode twice!
+    #this will be way to many modes!
+    if isnothing(n)
+        for i in 1:grids.Nᾱ
+
+            for j in 1:grids.Nφ
+            
+                mlab, nlab = mode_label(i, j, grids)
+
+
+                plot!(κgrid, real.(ϕ[:, i, j]), label=@sprintf("%s, %s", mlab, nlab))
+            end
+        end
+    else
+        for i in 1:grids.θ.Nᾱ
+            
+            for j in 1:grids.Nφ
+            
+                mlab, nlab = mode_label(i, j, grids)
+
+                if nlab==n
+
+                    plot!(κgrid, real.(ϕ[:, i, j]), label=@sprintf("%s, %s", mlab, nlab))
+                end
+            end
+        end
+    end
+
+    display(p)
+    if !isnothing(savefile)
+        savefig(p, savefile)
+    end
+
+
+
+end

@@ -239,7 +239,7 @@ Function the fills the BFieldT struct specifically for the case of the island co
 This employs special island flux coordinates, uses a specific q-profile
 and only requires the magnitude of B.
 """
-function compute_island_B!(B::BFieldT, met::MetT, isl::IslandT, ψ::Float64, α::Float64)
+function compute_island_B!(B::BFieldT, met::MetT, isl, ψ::Float64, α::Float64)
 
     #specifc q-profile required for the coordinate transformation.
     q = 1 / (1 / isl.q0 - isl.qp /isl.q0^2 * (ψ - isl.ψ0))

@@ -47,6 +47,11 @@ This grid has the additional option of a phase factor (pf), to focus on a specif
     pf :: Int64 = 0
 end
 
+@kwdef struct ContGridDataT <: GridDataT
+    N :: Int64
+    start :: Real = 0 #maybe this will be useful??
+    stop :: Real = 1 #maybe this will be useful??
+end
 
 
 """
@@ -185,4 +190,14 @@ end
 function mode_list(gd::AFEMGridDataT)
     #TODO
     return NaN
+end
+
+
+#may not want this. Instead we might want a custom continuum grid, at least for island case
+#we will want clustering near the sepratrix.
+#I guess we can add clustering as an option, and allow more sophisticated clustering
+#eg the exponential clustering used.
+function inst_grid(grid::ContGridDataT)
+    #to rpevent r=0 in the continuum case
+    return LinRange(0, 1, grid.N+1)[2:end-1]
 end

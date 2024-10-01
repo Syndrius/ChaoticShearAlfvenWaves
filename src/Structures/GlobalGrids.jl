@@ -45,6 +45,21 @@ Struct storing the grids in the FFS case.
 end
 
 
+"""
+Struct storing the grids in the FFS case.
+
+### Fields
+- r::RFEMGridDataT - Struct storing the finite elements radial grid information.
+- θ::AEMGridDataT - Struct storing the finite element grid.
+- ζ::AFEMGridDataT - Struct storing the finite element grid information.
+"""
+@kwdef struct ContGridsT <: GridsT
+    Nr :: ContGridDataT
+    θ :: AFEMGridDataT
+    ζ :: AFEMGridDataT
+end
+
+
 
 """
     init_grids(rgrid::GridDataT, θgrid::GridDataT, ζgrid::GridDataT)
@@ -85,6 +100,10 @@ function inst_grids(grids::GridsT)
 
 end
 
+function inst_grids(grids::ContGridsT)
+
+    return LinRange(0, 1, grids.Nr+1)[2:end], inst_grid(grids.θ), inst_grid(grids.ζ)
+end
 
 #have this and alternatives to cut the shit.
 #I guess this can be like the user interface that we will probably never use.

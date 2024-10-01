@@ -9,8 +9,8 @@ Base class that just imports everything. We will want a description of the packa
 
  #TODO
  - Fix mapping
- - Fix parallel case
  - Try (2, 1) island -> see if we can reconstruct island structure.
+ - rstart=0.1 is still hardcoded somewhere lol
 
 
  - maybe we should change problem to accept strings - or symbols like plot :green etc so we can explain the possible options when something doesn't work!
@@ -65,6 +65,7 @@ using MID.Geometry; export slab_metric!
 using MID.Geometry; export diagonal_toroidal_metric!
 using MID.Geometry; export flux_toroidal_metric!
 using MID.Geometry; export IslandT
+using MID.Geometry; export init_island
 #using MID.Geometry; export ContIslandT
 
 
@@ -88,6 +89,7 @@ using MID.MagneticField; export flr_q
 using MID.MagneticField; export test_q
 using MID.MagneticField; export Axel_island_q
 using MID.MagneticField; export island_mode_q
+using MID.MagneticField; export island_mode_21
 
 
 
@@ -157,18 +159,19 @@ using MID.Spectrum; export spectrum_from_file
 
 
 #this is now cooked!
-"""
+
 include("Continuum/Continuum.jl")
 
 using MID.Continuum; export island_continuum
 using MID.Continuum; export island_width
 using MID.Continuum; export continuum
-"""
+
 
 
 include("Mapping/Mapping.jl")
 
 using MID.Mapping; export tor_to_isl
+using MID.Mapping; export mapped_continuum 
 
 
 #include("ExtraSpectra/ExtraSpectra.jl")

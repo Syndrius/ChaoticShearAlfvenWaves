@@ -18,7 +18,7 @@ geo::GeoParamsT - struct storing the geometrical parameters, i.e major radius.
 sign::Int64 - Sign of the particles, ±1 for passing on either side, or 0 for trapped particles.
 """
 
-function island_W_and_I!(W::Array{ComplexF64, 2}, I::Array{ComplexF64, 2}, χ::Float64, θ̄grid::AbstractRange, ζgrid::AbstractRange, met::MetT, B::BFieldT, isl::IslandT, geo::GeoParamsT, sign::Int64)
+function island_W_and_I!(W::Array{ComplexF64, 2}, I::Array{ComplexF64, 2}, χ::Float64, θ̄grid::AbstractRange, ζgrid::AbstractRange, met::MetT, B::BFieldT, isl::psiIslandT, geo::GeoParamsT, sign::Int64)
 
     for (i, θ̄) in enumerate(θ̄grid), (j, ζ) in enumerate(ζgrid)
 

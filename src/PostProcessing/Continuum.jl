@@ -47,3 +47,27 @@ function label_mode(ϕft::Array{ComplexF64, 4}, grids::GridsT, rm::Array{Int64, 
     return rm[max_mode], (mlab, nlab)
 
 end
+
+
+
+
+#island case, subject to chaneg!!!!
+function label_mode(ϕft::Array{ComplexF64, 3}, grids::MapGridsT, κm::Array{Int64, 2}, ϕm::Array{Float64, 2})
+
+    #start from 2 to hopefully avoid the (0, 0) mode as a possibility??
+    for j in 2:grids.Nᾱ, k in 1:grids.Nφ
+
+        κm[j-1, k] = argmax(abs.(real.(ϕft[:, j, k])))
+        ϕm[j-1, k] = abs.(real.(ϕft[κm[j-1, k], j, k]))
+    end
+
+    max_mode = argmax(ϕm)
+
+    #uses different syntax for MapGridsT
+    mlab, nlab = mode_label(max_mode[1], max_mode[2], grids)
+    #mlab = mode_label(max_mode[1], grids.θ)
+    #nlab = mode_label(max_mode[2], grids.ζ)
+
+    return κm[max_mode], (mlab, nlab)
+
+end

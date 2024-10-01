@@ -59,12 +59,11 @@ function post_process(evals::AbstractArray, efuncs::Array{ComplexF64}, grids::Gr
 
         #finds the dominant mode and its radial location for continuum reconstruction.
         rind, mode_lab = label_mode(ϕpft, grids, rmarray, ϕmarray)
-        rm = rgrid[rind]
 
         ϕ_g[i, ..] = ϕp
         ϕft_g[i, ..] = ϕpft
 
-        rms[i] = rm
+        rms[i] = rgrid[rind]
         push!(mode_labs, mode_lab)
     end
 

@@ -2,7 +2,7 @@
 
 function κ(r, θ, ζ, isl)
 
-    r0 = sqrt(isl.ψ0*2)
+    
 
     #taking mod here cooks this apparently...
     #maybe a hint of what is going on??? Perhaps the elliptic stuff needs (-pi, pi)?
@@ -12,10 +12,13 @@ function κ(r, θ, ζ, isl)
     #χ = -isl.qp/(2*isl.q0^2) * (r^2/2 - r0^2/2)^2 + isl.A * cos(isl.m0*α)
     #this genuanly makes zero sense why this works, 
     #somewhere in this transformation or in our code we must be using r as psi...
-    χ = -isl.qp/(2*isl.q0^2) * (r - r0)^2 + isl.A * cos(isl.m0*α)
+    #χ = -isl.qp/(2*isl.q0^2) * (r - isl.r0)^2 + isl.A * cos(isl.m0*α)
     #χ = -isl.qp/(2*isl.q0^2) * (ψ - isl.r0)^2 + isl.A * cos(isl.m0*α)
     #κ = sqrt((-χ + isl.A) / (2*isl.A))
-    κ = ((-χ + isl.A) / (2*isl.A))
+    #κ = ((-χ + isl.A) / (2*isl.A))
+    κ = 1/isl.w^2 * (r^2 - isl.r0^2)^2 + sin(isl.m0 * α / 2)^2
+
+    #display(κ)
 
     return κ
 end

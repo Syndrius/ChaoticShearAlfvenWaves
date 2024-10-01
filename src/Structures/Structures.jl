@@ -31,6 +31,7 @@ include("SMGrid.jl")
 
 export rfem_grid
 export afem_grid
+export SMGridDataT
 export asm_grid
 export periodic_grid
 export mode_list
@@ -44,6 +45,7 @@ include("GlobalGrids.jl")
 
 
 export GridsT
+export ContGridsT
 export FSSGridsT
 export FFSGridsT
 export FFFGridsT
@@ -66,5 +68,8 @@ export EvalsT
 export find_ind
 
 
+include("Mapping.jl")
+
+export MapGridsT
 
 end
