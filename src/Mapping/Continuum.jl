@@ -24,6 +24,8 @@ function mapped_continuum(dir_base::String, islgrids::MapGridsT)
 
     κgrid, ᾱgrid, φgrid = inst_grids(islgrids)
 
+    κmarray = Array{Int64}(undef, islgrids.Nᾱ, islgrids.Nφ)
+    ϕmarray = Array{Float64}(undef, islgrids.Nᾱ, islgrids.Nφ)
     κmarray = Array{Int64}(undef, islgrids.Nᾱ-1, islgrids.Nφ)
     ϕmarray = Array{Float64}(undef, islgrids.Nᾱ-1, islgrids.Nφ)
 

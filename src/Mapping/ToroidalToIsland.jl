@@ -45,7 +45,7 @@ function coords_isl_to_tor(κ, ᾱ, φ, isl::IslandT, sign)
     #and we find equivalent toroidal coordinates.
 
     if κ > 1
-        α = 2/isl.m0 * Elliptic.Jacobi.am(isl.m0 * Elliptic.K(1/κ) * mod(ᾱ, 2π / 2 ) / π, 1/κ)
+        α = 2/isl.m0 * Elliptic.Jacobi.am(isl.m0 * Elliptic.K(1/κ) * ᾱ / π, 1/κ)
         #return 0, 0, 0
     else
         α = 2/isl.m0 * asin(sqrt(κ)*Elliptic.Jacobi.sn(2*Elliptic.K(κ) * ᾱ / π, κ))
@@ -79,7 +79,8 @@ function coords_isl_to_tor(κ, ᾱ, φ, isl::IslandT, sign)
         end
 
         #this doesn't seem to do anything??????
-        θ = mod(θ, 2π/isl.m0)
+        #θ = mod(isl.m0 * θ, 2π)
+        θ = mod(θ, 2π)
     else
         #inside the island both signs of ψ are needed.
         #r0 = sqrt(2*isl.ψ0)

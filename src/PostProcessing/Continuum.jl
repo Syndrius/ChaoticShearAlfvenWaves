@@ -55,16 +55,19 @@ end
 function label_mode(ϕft::Array{ComplexF64, 3}, grids::MapGridsT, κm::Array{Int64, 2}, ϕm::Array{Float64, 2})
 
     #start from 2 to hopefully avoid the (0, 0) mode as a possibility??
-    for j in 2:grids.Nᾱ, k in 1:grids.Nφ
+    shift = 1 #to avoid (0, 0) modes.
 
-        κm[j-1, k] = argmax(abs.(real.(ϕft[:, j, k])))
-        ϕm[j-1, k] = abs.(real.(ϕft[κm[j-1, k], j, k]))
+    for j in 1+shift:grids.Nᾱ, k in 1:grids.Nφ
+
+        κm[j-shift, k] = argmax(abs.(real.(ϕft[:, j, k])))
+        ϕm[j-shift, k] = abs.(real.(ϕft[κm[j-shift, k], j, k]))
     end
+
 
     max_mode = argmax(ϕm)
 
     #uses different syntax for MapGridsT
-    mlab, nlab = mode_label(max_mode[1], max_mode[2], grids)
+    mlab, nlab = mode_label(max_mode[1] + shift, max_mode[2], grids)
     #mlab = mode_label(max_mode[1], grids.θ)
     #nlab = mode_label(max_mode[2], grids.ζ)
 

@@ -33,7 +33,101 @@ export mapped_continuum
 export tor_to_isl
 
 
+#lets muck around with the inside vs outside domain etc.
+#best method may be to restrict ϕ to only focus on a single island??? 
+#that will be quite difficult though.
+function new_tor_to_isl(mapgrids::MapGridsT, ϕ, grids::FFFGridsT, isl::IslandT, sign=1)
 
+    #this uses inbuilt interpolation, which I think helps with domain issues
+    #also we use Axel's formulation.
+
+    #note that the ϕ to be mapped must be fff and contain the deriv parts.
+    #may implement others some day.
+
+    #first we define the equivalent island grids
+
+    rgrid, θgrid, ζgrid = inst_grids(grids)
+
+    #I think this is bad, but hopefully we won't need to do this once we get Hermite working.
+    ϕ_p = periodify(ϕ, grids.r.N, grids.θ.N, grids.ζ.N)
+
+    θgrid_p = LinRange(0, 2π, grids.θ.N + 1)
+    ζgrid_p = LinRange(0, 2π, grids.ζ.N + 1)
+
+    #ideally swap to hermite interpolation at some stage.
+    tor_itp = interpolate((rgrid, θgrid_p, ζgrid_p), ϕ_p, (Gridded(Linear()), Gridded(Linear(Periodic())), Gridded(Linear(Periodic()))));
+
+    tor_ext = extrapolate(tor_itp, Periodic());
+
+    #not sure how we are going to deal with κ max. may just need to be a parameter.
+    #2 is completly arbitrary lol.
+    κgrid, ᾱgrid, φgrid = inst_grids(mapgrids)
+
+    #ᾱgrid = LinRange(0, π, mapgrids.Nᾱ) #test
+
+    κgrid_in = sqrt.(κgrid[κgrid .< 1])
+    κgrid_out = sqrt.(κgrid[κgrid .>= 1])
+
+    ϕ_islp = Array{ComplexF64}(undef, mapgrids.Nκ, mapgrids.Nᾱ, mapgrids.Nφ);
+
+    ϕ_islm = Array{ComplexF64}(undef, mapgrids.Nκ, mapgrids.Nᾱ, mapgrids.Nφ);
+
+    ϕ_isl_in = Array{ComplexF64}(undef, length(κgrid_in), mapgrids.Nᾱ, mapgrids.Nφ);
+    ϕ_isl_outp = Array{ComplexF64}(undef, length(κgrid_out), mapgrids.Nᾱ, mapgrids.Nφ);
+    ϕ_isl_outm = Array{ComplexF64}(undef, length(κgrid_out), mapgrids.Nᾱ, mapgrids.Nφ);
+
+
+    #do we need to map inside and outside separatly??? Sounds like a terrible solution.
+
+    #we probbaly need to redefine α to match the definition of our islands.
+
+    #iterate through each point on our island grid
+    for (i, κ) in enumerate(κgrid_in), (j, ᾱ) in enumerate(ᾱgrid), (k, φ) in enumerate(φgrid)
+
+        #find the equivalent coordinate in toroidal coordinates.
+        #fkn worst name so far.
+        r, θ, ζ = coords_isl_to_tor(κ, ᾱ, φ, isl, sign)
+
+        #now we interpolate this coordinate using our functions.
+
+        ϕ_isl_in[i, j, k] = tor_ext(r, θ, ζ)
+        ϕ_islp[i, j, k] = tor_ext(r, θ, ζ)
+        ϕ_islm[i, j, k] = tor_ext(r, θ, ζ)
+        
+
+    end
+
+    ᾱgrid = LinRange(0, π, mapgrids.Nᾱ) #test
+
+    for (i, κ) in enumerate(κgrid_out), (j, ᾱ) in enumerate(ᾱgrid), (k, φ) in enumerate(φgrid)
+
+        #find the equivalent coordinate in toroidal coordinates.
+        #fkn worst name so far.
+        r, θ, ζ = coords_isl_to_tor(κ, ᾱ, φ, isl, +1)
+
+        #now we interpolate this coordinate using our functions.
+
+        ϕ_isl_outp[i, j, k] = tor_ext(r, θ, ζ)
+        ϕ_islp[i+length(κgrid_in), j, k] = tor_ext(r, θ, ζ)
+        
+
+        r, θ, ζ = coords_isl_to_tor(κ, ᾱ, φ, isl, -1)
+
+        #now we interpolate this coordinate using our functions.
+        ϕ_isl_outm[i, j, k] = tor_ext(r, θ, ζ)
+        ϕ_islm[i+length(κgrid_in), j, k] = tor_ext(r, θ, ζ)
+        
+        
+
+    end
+    #fft(ϕ_isl, [2, 3])
+    return ϕ_isl_in, ϕ_isl_outp, ϕ_isl_outm, ϕ_islp, ϕ_islm
+    
+
+end
+
+
+#unmodified version...
 function tor_to_isl(mapgrids::MapGridsT, ϕ, grids::FFFGridsT, isl::IslandT, sign=1)
 
     #this uses inbuilt interpolation, which I think helps with domain issues

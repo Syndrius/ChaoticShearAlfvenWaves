@@ -114,7 +114,7 @@ function contour_plot(ϕ, grids::FSSGridsT, ζ=1; ind=1, savefile=nothing)
     #θgrid = range(0, 2π, grids.θ.count+1)
     θgrid = range(0, 2π, θgrid_size+1)
 
-    p = contourf(θgrid, rgrid, real.(z), levels=100, color=:turbo)
+    p = contourf(θgrid, rgrid, real.(z), levels=100, color=:turbo, dpi=600)
 
     display(p)
 
