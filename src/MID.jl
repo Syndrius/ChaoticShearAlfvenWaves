@@ -64,6 +64,7 @@ using MID.Geometry; export no_delta_metric!
 using MID.Geometry; export slab_metric!
 using MID.Geometry; export diagonal_toroidal_metric!
 using MID.Geometry; export flux_toroidal_metric!
+using MID.Geometry; export cylindrical_metric!
 using MID.Geometry; export IslandT
 using MID.Geometry; export init_island
 #using MID.Geometry; export ContIslandT
@@ -165,6 +166,7 @@ include("Continuum/Continuum.jl")
 using MID.Continuum; export island_continuum
 using MID.Continuum; export island_width
 using MID.Continuum; export continuum
+using MID.Continuum; export cyl_cont
 
 
 

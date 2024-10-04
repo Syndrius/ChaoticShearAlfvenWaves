@@ -29,7 +29,7 @@ export index_to_grid
 
 
 #needs serious work, should conform to everything else.
-#include("ContIndexing.jl")
+include("ContIndexing.jl")
 #export cont_grid_to_index
 
 

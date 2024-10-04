@@ -54,9 +54,9 @@ Struct storing the grids in the FFS case.
 - ζ::AFEMGridDataT - Struct storing the finite element grid information.
 """
 @kwdef struct ContGridsT <: GridsT
-    Nr :: ContGridDataT
-    θ :: AFEMGridDataT
-    ζ :: AFEMGridDataT
+    r :: ContGridDataT
+    θ :: SMGridDataT
+    ζ :: SMGridDataT
 end
 
 
@@ -69,6 +69,9 @@ Initialises the grid structure from the three individual grids.
 function init_grids(rgrid::GridDataT, θgrid::GridDataT, ζgrid::GridDataT)
 
     
+    if rgrid isa ContGridDataT
+        return ContGridsT(rgrid, θgrid, ζgrid)
+    end
 
     if ζgrid isa SMGridDataT
 
@@ -102,7 +105,7 @@ end
 
 function inst_grids(grids::ContGridsT)
 
-    return LinRange(0, 1, grids.Nr+1)[2:end], inst_grid(grids.θ), inst_grid(grids.ζ)
+    return inst_grid(grids.r), inst_grid(grids.θ), inst_grid(grids.ζ)
 end
 
 #have this and alternatives to cut the shit.

@@ -199,5 +199,5 @@ end
 #eg the exponential clustering used.
 function inst_grid(grid::ContGridDataT)
     #to rpevent r=0 in the continuum case
-    return LinRange(0, 1, grid.N+1)[2:end-1]
+    return LinRange(0, 1, grid.N+1)[2:end]
 end

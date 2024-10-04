@@ -37,14 +37,19 @@ end
 Plots the continuum produces by compute_continuum().
 """
 
-"""
+#this is a shit function.
 function continuum_plot(ω, grids::ContGridsT; savefile=nothing, ymin=-0.05, ymax=1.05)
 
     #note that this does not label m's, not sure if it is possible
     #could pair this with an analytical version for cylinder??
 
     p = scatter(ylimits=(ymin, ymax))
-    rgrid, _, mlist, _, _, nlist, _ = instantiate_grids(grids)
+    
+
+    rgrid = inst_grids(grids)[1]
+
+    mlist = mode_list(grids.θ)
+    nlist = mode_list(grids.ζ)
     if rgrid[1]==0
         #same condition used when recontsructing
         rgrid = rgrid[2:end]
@@ -61,4 +66,3 @@ function continuum_plot(ω, grids::ContGridsT; savefile=nothing, ymin=-0.05, yma
     end
 
 end
-"""
