@@ -70,7 +70,9 @@ function contour_plot(ϕ, grids::FFFGridsT, ζ=1; ind=1, savefile=nothing)
 
     θgrid = range(0, 2π, grids.θ.N+1)
 
-    p = contourf(θgrid, rgrid, real.(z), levels=100, color=:turbo)
+    #so this shit is cooked for non plotly. will case issues in generl!
+
+    p = contourf(θgrid, rgrid, real.(z), levels=100, color=:turbo, dpi=600)
 
     display(p)
 

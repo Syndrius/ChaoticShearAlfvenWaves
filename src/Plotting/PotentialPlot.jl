@@ -5,7 +5,7 @@
 Plots the potential as a function of radius showing the mode structure. Expects the fourier transformed potential.
 Can set n to only view poloidal modes of a specific toroidal mode. ind is the index of the eigenfunction, used when an array of eigenfunctions is passed in, and is ignored if only a single eigenfunction is passed in.
 """
-function potential_plot(ϕ::Array{ComplexF64}, grids::FSSGridsT, ind=1::Int64; n=nothing, savefile=nothing)
+function potential_plot(ϕ::Array{ComplexF64}, grids::FSSGridsT, ind=1::Int64; n=nothing, modelist=nothing, savefile=nothing)
 
     rgrid, _, _ = inst_grids(grids)
 
@@ -123,7 +123,7 @@ end
 Plots the potential as a function of radius showing the mode structure. Expects the fourier transformed potential.
 Can set n to only view poloidal modes of a specific toroidal mode. ind is the index of the eigenfunction, used when an array of eigenfunctions is passed in, and is ignored if only a single eigenfunction is passed in.
 """
-function potential_plot(ϕ::Array{ComplexF64}, grids::FFFGridsT, ind=1::Int64; n=nothing, savefile=nothing)
+function potential_plot(ϕ::Array{ComplexF64}, grids::FFFGridsT, ind=1::Int64; mode_list=nothing, savefile=nothing)#mlist=nothing, nlist=nothing, savefile=nothing)
    
 
     rgrid, _, _ = inst_grids(grids)
@@ -143,12 +143,25 @@ function potential_plot(ϕ::Array{ComplexF64}, grids::FFFGridsT, ind=1::Int64; n
         ϕ_plot = ϕ
     end
 
+    """
+    if isnothing(mlist)
+        #few extra just in case.
+        mlist = -Int64(grids.θ.N / 2)- 1:1:Int64(grids.θ.N / 2) + 1
+    end
+
+    if isnothing(nlist)
+        nlist = -Int64(grids.ζ.N / 2) - 1 : 1 : Int64(grids.ζ.N / 2) + 1
+    end
+    """
+
 
     p = plot(xlabel=L"r", ylabel=L"\phi", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10)
 
     #will plot the 1,1 mode twice!
     #this will be way to many modes!
-    if isnothing(n)
+
+    if !isnothing(mode_list)
+    
         for i in 1:grids.θ.N
 
             for j in 1:grids.ζ.N
@@ -156,9 +169,33 @@ function potential_plot(ϕ::Array{ComplexF64}, grids::FFFGridsT, ind=1::Int64; n
                 mlab = mode_label(i, grids.θ)
                 nlab = mode_label(j, grids.ζ)
 
-                plot!(rgrid, real.(ϕ_plot[:, i, j]), label=@sprintf("%s, %s", mlab, nlab))
+
+                if (mlab, nlab) in mode_list
+
+                    plot!(rgrid, real.(ϕ_plot[:, i, j]), label=@sprintf("%s, %s", mlab, nlab))
+                end
             end
+        
         end
+    else
+        for i in 1:grids.θ.N
+
+            for j in 1:grids.ζ.N
+            
+                mlab = mode_label(i, grids.θ)
+                nlab = mode_label(j, grids.ζ)
+
+
+                
+
+                plot!(rgrid, real.(ϕ_plot[:, i, j]), label=@sprintf("%s, %s", mlab, nlab))
+
+            end
+        
+        end
+    end
+
+    """
     else
         for i in 1:grids.θ.N
             
@@ -173,6 +210,7 @@ function potential_plot(ϕ::Array{ComplexF64}, grids::FFFGridsT, ind=1::Int64; n
             end
         end
     end
+    """
 
     display(p)
     if !isnothing(savefile)
@@ -184,24 +222,55 @@ end
 
 
 
-function potential_plot(ϕ::Array{ComplexF64}, grids::MapGridsT; n=nothing, savefile=nothing)
+function potential_plot(ϕ::Array{ComplexF64}, grids::MapGridsT; mlist=nothing, nlist=nothing, savefile=nothing)
 
     κgrid, _, _ = inst_grids(grids)
 
     #this makes them more like Axel's, and also shows a less squished region around sepratrix.
 
+    #perhaps mlist and nlist should defualt to [], [] then
+    if isnothing(mlist)
+        #few extra just in case.
+        mlist = -Int64(grids.Nᾱ / 2)- 1:1:Int64(grids.Nᾱ / 2) + 1
+    end
+
+    if isnothing(nlist)
+        nlist = -Int64(grids.Nφ / 2) - 1 : 1 : Int64(grids.Nφ / 2) + 1
+    end
+
     κgrid = sqrt.(κgrid)
 
-    p = plot(xlabel=L"r", ylabel=L"\phi", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10)
+    p = plot(xlabel=L"\sqrt{\kappa}", ylabel=L"\phi", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10)
+
+    #only plot the specific modes
+    #think modelist will be assumes to have v specific pairs of modes
+    #may be better to have an mlist and an nlist
+    
+    for i in 1:grids.Nᾱ
+
+        for j in 1:grids.Nφ
+        
+            mlab, nlab = mode_label(i, j, grids)
+
+            
+            #this will require that modelist is very perfectly curated lol.
+            if mlab in mlist && nlab in nlist
+                plot!(κgrid, real.(ϕ[:, i, j]), label=@sprintf("%s, %s", mlab, nlab))
+            end
+        end
+    end 
 
     #will plot the 1,1 mode twice!
     #this will be way to many modes!
-    if isnothing(n)
+    """
+    elseif isnothing(n)
         for i in 1:grids.Nᾱ
 
             for j in 1:grids.Nφ
             
                 mlab, nlab = mode_label(i, j, grids)
+
+                
 
 
                 plot!(κgrid, real.(ϕ[:, i, j]), label=@sprintf("%s, %s", mlab, nlab))
@@ -221,6 +290,7 @@ function potential_plot(ϕ::Array{ComplexF64}, grids::MapGridsT; n=nothing, save
             end
         end
     end
+    """
 
     display(p)
     if !isnothing(savefile)

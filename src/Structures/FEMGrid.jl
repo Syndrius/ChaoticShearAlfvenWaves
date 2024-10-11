@@ -126,9 +126,10 @@ function clustered_grid(grid::RFEMGridDataT)
 
     nleft = nrest-nright
 
-    rleft = LinRange(0.1, sep1, nleft+1)[1:end-1]
+    #FKN CHANGE THIS JESUS. #TODO
+    rleft = LinRange(grid.start, sep1, nleft+1)[1:end-1]
 
-    rright = LinRange(sep2, 1, nright+1)[2:end]
+    rright = LinRange(sep2, grid.stop, nright+1)[2:end]
 
     return vcat(rleft, rclust, rright)
 end
