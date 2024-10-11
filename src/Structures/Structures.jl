@@ -30,6 +30,7 @@ include("FEMGrid.jl")
 include("SMGrid.jl")
 
 export rfem_grid
+export ContGridDataT
 export afem_grid
 export SMGridDataT
 export asm_grid

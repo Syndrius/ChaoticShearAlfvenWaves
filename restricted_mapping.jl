@@ -13,7 +13,7 @@ using Printf
 
 
 
-isl = ContIslandT(m0=3, n0=2, qp=1.6, q0=3/2, A = 1e-3, ψ0 = 0.125)
+isl = IslandT(m0=2, n0=1, qp=1.6, q0=3/2, A = 1e-3, r0 = 0.125)
 
 
 function isl_to_tor(κ, ᾱ, φ, isl)
@@ -69,7 +69,7 @@ function isl_to_tor(κ, ᾱ, φ, isl)
 end
 
 function tor_to_isl(r, θ, ζ, isl)
-    r0 = sqrt(isl.ψ0*2)
+    r0 = sqrt(isl.r0*2)
 
     #taking mod here cooks this apparently...
     #maybe a hint of what is going on??? Perhaps the elliptic stuff needs (-pi, pi)?
@@ -88,7 +88,7 @@ function tor_to_isl(r, θ, ζ, isl)
         #ᾱ = π/(2 * Elliptic.K(1/κ)) * Elliptic.F(isl.m0*α/2, 1/κ)
         #I guess this does have to be m0 not 2. not ideal...
         ᾱ = π/(isl.m0 * Elliptic.K(1/κ)) * Elliptic.F(isl.m0*α/2, 1/κ)
-        ᾱ=0
+        #ᾱ=0
     else
 
         #if α > π
@@ -121,7 +121,7 @@ function tor_to_isl(r, θ, ζ, isl)
 
     #return κ, ᾱ, ζ
 
-    #ᾱ = mod(ᾱ, 2π)
+    ᾱ = mod(ᾱ, 2π)
 
     return κ, ᾱ, ζ
 end
@@ -199,8 +199,8 @@ Nθ = 80
 Nζ = 30
 
 rgrid = LinRange(0, 1, Nr)
-θgrid = LinRange(-π, π, Nθ)#+1)[1:end-1]
-ζgrid = LinRange(-π, π, Nζ)#+1)[1:end-1]
+θgrid = LinRange(0, 2π, Nθ)#+1)[1:end-1]
+ζgrid = LinRange(0, 2π, Nζ)#+1)[1:end-1]
 
 ϕ_tor = zeros(ComplexF64, Nr, Nθ, Nζ);
 
@@ -215,7 +215,8 @@ for (i, r) in enumerate(rgrid), (j, θ) in enumerate(θgrid), (k, ζ) in enumera
 end
 
 
-contourf(θgrid, rgrid, ᾱvals[:, :, 12], levels=100, color=:turbo)
+contourf(θgrid, rgrid, ᾱvals[:, :, 10], levels=100, color=:turbo)
+contourf(θgrid, rgrid, mod.(2 .* ᾱvals[:, :, 1], 2π), levels=100, color=:turbo)
 
 contourf(θgrid, rgrid, mod.(5 .* αvals_tor[:, :, 1], 2π), levels=100, color=:turbo)
 contourf(θgrid, rgrid,  αvals_tor[:, :, 28], levels=100, color=:turbo)

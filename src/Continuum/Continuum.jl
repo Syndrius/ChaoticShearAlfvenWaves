@@ -4,9 +4,10 @@ Computes the continuum in the normal case with Br=0 and the specific island case
 """
 module Continuum
 
+using MID.Structures
 using MID.Geometry
 using MID.MagneticField
-using MID.Structures
+using MID.Basis #needed for matrix size. not ideal
 using MID.Indexing
 using MID.WeakForm
 
@@ -32,6 +33,7 @@ end
 include("ComputeContinuum.jl")
 
 export continuum
+export cyl_cont
 
 
 include("IslandCoordinates.jl")

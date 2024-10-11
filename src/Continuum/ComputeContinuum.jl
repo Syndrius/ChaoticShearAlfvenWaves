@@ -9,13 +9,14 @@ function continuum(prob::ProblemT, grids::ContGridsT, perN=true::Bool)
     #we can do this because usual cases (i.e. no island) have no toroidal coupling
     #so we can compute the continuum for each n individually
     if perN
-        _, _, _, _, _, nlist, _ = instantiate_grids(grids)
+        #_, _, _, _, _, nlist, _ = instantiate_grids(grids)
+        nlist = mode_list(grids.ζ)
 
-        ωlist = zeros(grids.rN, grids.θ.count, grids.ζ.count)
+        ωlist = zeros(grids.r.N, grids.θ.N, grids.ζ.N)
 
         for (i, n) in enumerate(nlist)
-            temp_ζgrid = init_sm_grid(start=n, count=1)
-            temp_grids = init_grids(grids.rN, grids.θ, temp_ζgrid)
+            temp_ζgrid = asm_grid(start=n, N=1)
+            temp_grids = init_grids(grids.r, grids.θ, temp_ζgrid)
 
             ωlist[:, :, i] = compute_continuum(prob, temp_grids)
         end
@@ -41,11 +42,14 @@ function compute_continuum(prob::ProblemT, grids::ContGridsT)
     #maybe should assert that the rgrid doesn't start from zero, as fem case avoids the zero,
     #cont case does not.
 
-    #maybe easier to just assume that it will start from 0???
-    #for contiinuum case we ignore the clustered region.
-    #rlist = collect(LinRange(0, 1, grids.r.N))[2:end]
 
-    rgrid, Nθ, mlist, θgrid, Nζ, nlist, ζgrid = instantiate_grids(grids)
+    rgrid, θgrid, ζgrid = inst_grids(grids)
+
+    Nθ = length(θgrid)
+    Nζ = length(ζgrid)
+
+    mlist = mode_list(grids.θ)
+    nlist = mode_list(grids.ζ)
 
     
 
@@ -62,20 +66,20 @@ function compute_continuum(prob::ProblemT, grids::ContGridsT)
     #nθ, mlist, θgrid = spectral_grid(grids.pmd)
     #nζ, nlist, ζgrid = spectral_grid(grids.tmd)
 
-    met = MetT(zeros(3, 3), zeros(3, 3), zeros(3, 3, 3), zeros(3, 3, 3), 0.0, zeros(3))
-    B = BFieldT(zeros(3), zeros(3), zeros(3, 3), zeros(3, 3), 0.0, zeros(3))
+    met = init_empty_met()
+    B = init_empty_B()
 
 
-
-    mat_size = matrix_dim(grids)
+    mat_size = matrix_size(grids)
 
     #efuncs are useless in this case I think.
     #ϕlist = zeros(matrix_dim, length(rlist), pmd.count, tmd.count)
     #don't think we actually want to do this anymore!
     #probably would be better to convert this straight to the modes asap. 
     #are we ever going to not want that?
-    ωlist = zeros(grids.rN, mat_size)
+    ωlist = zeros(grids.r.N, mat_size)
 
+    #guess we should make a function for this like the other cases.
     I = zeros(ComplexF64, 9, 9, 1, Nθ, Nζ)
     W = zeros(ComplexF64, 9, 9, 1, Nθ, Nζ)
 
@@ -172,6 +176,47 @@ function compute_continuum(prob::ProblemT, grids::ContGridsT)
 
     end
 
+    #ideally this would return an evals like structure instead of this
     
     return ωlist
+end
+
+
+
+#can do this in the analytical limit, useful for actually having the mode labels.
+#change name!
+function cyl_cont(prob::ProblemT, grids::ContGridsT)
+
+
+    rgrid = inst_grid(grids.r)
+    mlist = mode_list(grids.θ)
+    nlist = mode_list(grids.ζ)
+
+    #can make this the same as evalsT for plotting.
+    ω = []
+    mode_labs = Tuple{Int, Int}[] 
+    rms = []
+
+    for r in rgrid
+
+
+        q, _ = prob.q(r)
+
+        for m in mlist
+
+            for n in nlist
+
+                push!(mode_labs, (m, n))
+
+                push!(ω, abs(m/q + n)) #already normalised!
+
+                push!(rms, r)
+
+            end
+        end
+
+    end
+
+    return EvalsT(ω, rms, mode_labs)
+
 end

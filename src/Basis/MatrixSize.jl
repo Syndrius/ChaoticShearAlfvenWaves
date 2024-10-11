@@ -1,5 +1,14 @@
 
 
+#this probably highlights that matrix size doesn't belong in basis
+#this is only called by continuum, which doesn't use basis,
+#until now.
+function matrix_size(grids::ContGridsT)
+
+    return grids.θ.N * grids.ζ.N
+end
+
+
 """
     matrix_size(grids::FSSGridsT)
 

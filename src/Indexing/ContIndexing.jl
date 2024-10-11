@@ -2,7 +2,7 @@
 
 function grid_to_index(θind::Int64, ζind::Int64, grids::ContGridsT)
 
-    Nn = grids.ζ.count
+    Nn = grids.ζ.N
 
     return 1 + (ζind - 1) + (θind-1) * Nn
 
