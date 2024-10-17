@@ -55,10 +55,24 @@ function mapped_continuum(dir_base::String, islgrids::MapGridsT)
     #a clear CAP. This is fkn annoying, for now we will have to restrict those with r < 0.3 probably...
     #perhaps this is also causing issues with the (0, 0) mode...
     #testing this with the much smaller case does show that the A when r->0 is at least a big part of the problem...
+
+    sep_min, sep_max = sepratrix(0, prob.isl)
+
     for i in 1:1:length(evals.ω)
 
         #avoid bad behaviour at the axis. (hopefully...)
-        if evals.r[i] < 0.3
+        #if evals.r[i] < 0.3
+        #    continue
+        #end
+
+        #this `fixes` the problem of the many gap modes.
+        #this is obvs total garbage. but now we do see a trend of modes behaving a bit like we expect
+        #maybe it is somewhat justified by saying that the true island modes should peak inside the island and their fourier spectrum should also peak here???
+        #perhaps we should change these limits to the min and max of the island width??
+        #that is at least a bit less fkn arbitrary.
+        if evals.r[i] < sep_min || evals.r[i] > sep_max
+            #i.e. only take those that peak in range of island
+            #assume that these are the `true` island modes. total garbage tbh!
             continue
         end
                
@@ -66,13 +80,13 @@ function mapped_continuum(dir_base::String, islgrids::MapGridsT)
         ϕ = efunc_from_file(dir = dir_base, ind=i, ft=false);
 
     
-        amax = argmax(abs.(ϕ[:, :, 1]))
+        amax = argmax(abs.(real.(ϕ[:, :, 1])))
 
         rmin, rmax = sepratrix(θgrid[amax[2]], prob.isl)
 
 
         #only include modes that peak inside the sepratrix
-        if rmin >= rgrid[amax[1]] || rgrid[amax[1]] >= rmax
+        if rmin >= rgrid[amax[1]] || rgrid[amax[1]] >= rmax 
             continue
         end
 

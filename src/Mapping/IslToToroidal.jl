@@ -1,5 +1,56 @@
 
 
+function coords_tor_to_isl(r, θ, ζ, isl::IslandT)
+
+    α = θ - ζ / isl.q0
+
+    κ = 1/isl.w^2 * (r^2 - isl.r0^2)^2 + sin(isl.m0 * α / 2)^2
+
+    if κ < 1
+        #so this is at least partially wrong...
+        τ = asin(1/sqrt(κ) * abs(sin(isl.m0 * α / 2)))
+
+        if r > isl.r0
+            #i.e. top right qudrant.
+            #exact expressions need more explaining.
+            #taken from restricted_mapping.jl, which uses abs to certify the correct quadrant,
+            #may need to do that here as the 1/2 in the sin will probbaly cook things...
+            if mod(α * isl.m0, 2π) < π
+
+                ᾱ = π/ (2 * Elliptic.K(κ)) * Elliptic.F(τ, κ)
+
+            else
+                #top left quadrant, 4th by our clockwise notation.
+                ᾱ = π/ (2 * Elliptic.K(κ)) * Elliptic.F(-τ + 2π, κ)
+            end
+        else
+
+            if mod(α * isl.m0, 2π) < π
+                #bottom right quadrant.
+                ᾱ = π/ (2 * Elliptic.K(κ)) * Elliptic.F(-τ + π, κ)
+
+            else
+                #bottom left quadrant, 
+                ᾱ = π/ (2 * Elliptic.K(κ)) * Elliptic.F(τ + π, κ)
+            end
+        end
+
+
+        #ᾱ = π/ (2 * Elliptic.K(κ)) * Elliptic.F(τ, κ)
+    else
+        #this is still a work in progress.
+        ᾱ = 0
+        #without this we get some very surprising results, in that they match our real results pretty fkn well.
+        return 0, 0, 0
+    end
+
+    return κ, ᾱ, ζ
+
+end
+
+
+
+
 function κ(r, θ, ζ, isl)
 
     

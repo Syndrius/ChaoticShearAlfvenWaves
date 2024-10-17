@@ -173,6 +173,7 @@ using MID.Continuum; export cyl_cont
 include("Mapping/Mapping.jl")
 
 using MID.Mapping; export tor_to_isl
+using MID.Mapping; export isl_to_tor
 using MID.Mapping; export mapped_continuum 
 
 

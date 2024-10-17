@@ -7,6 +7,9 @@ display(prob.isl)
 
 #copied directly from earlier problemo.
 isl = IslandT(2, -1, 0.00015625000000000003, 2.0, 2.0, 0.5, 0.05)
+
+#w = 0.03 case, seems to be best resolved example.
+isl = IslandT(2, -1, 5.625e-5, 2.0, 2.0, 0.5, 0.03)
 #I guess we should now consider our island...
 #will need to understand wot the hek is going on with χ lol
 #may also want R0 to be smaller so gap is larger

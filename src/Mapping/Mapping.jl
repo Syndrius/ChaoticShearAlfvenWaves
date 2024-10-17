@@ -31,7 +31,52 @@ export mapped_continuum
 
 
 export tor_to_isl
+export isl_to_tor
 
+
+#will need to make this more proper one day.
+function isl_to_tor(tor_grids, ϕ, isl_grids, isl)
+
+    #rgrid, θgrid, ζgrid = inst_grids(tor_grids)
+
+    #κgrid, ᾱgrid, φgrid = inst_grids(isl_grids)
+    rgrid = LinRange(0, tor_grids.κmax, tor_grids.Nκ)
+    θgrid = LinRange(0, 2π, tor_grids.Nᾱ)
+    ζgrid = LinRange(0, 2π, tor_grids.Nφ)
+
+    #so we actually have periodic grids.
+    κgrid = LinRange(0, isl_grids.κmax, isl_grids.Nκ)
+    ᾱgrid = LinRange(0, 2π, isl_grids.Nᾱ)
+    φgrid = LinRange(0, 2π, isl_grids.Nφ)
+
+    #will ignore periodicty for now!
+
+    isl_itp = interpolate((κgrid, ᾱgrid, φgrid), ϕ, (Gridded(Linear()), Gridded(Linear(Periodic())), Gridded(Linear(Periodic()))));
+
+    isl_ext = extrapolate(isl_itp, Periodic());
+
+
+    ϕ_tor = Array{ComplexF64}(undef, length(rgrid), length(θgrid), length(ζgrid));
+
+
+    for (i, r) in enumerate(rgrid), (j, θ) in enumerate(θgrid), (k, ζ) in enumerate(ζgrid)
+
+        κ, ᾱ, φ = coords_tor_to_isl(r, θ, ζ, isl)
+
+        if κ==0 && ᾱ==0 && φ==0
+            #for some reason this case is being mapped to 2?
+            ϕ_tor[i, j, k] = 0
+        else
+
+            ϕ_tor[i, j, k] = isl_ext(κ, ᾱ, φ)
+        end
+    end
+
+    return ϕ_tor, fft(ϕ_tor, [2, 3])
+
+
+
+end
 
 #lets muck around with the inside vs outside domain etc.
 #best method may be to restrict ϕ to only focus on a single island??? 
