@@ -51,5 +51,6 @@ function compute_I!(I::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT,
         I[i, j] += n*(met.gu[i, j] - B.b[i]*B.b[j]) * met.J / B.mag_B^2
     end
 
-    return H
+    #was using this for testing!!!
+    #return H
 end

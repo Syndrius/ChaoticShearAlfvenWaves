@@ -6,7 +6,7 @@
 
 Computes the W matrix for the weak form at a single coordinate. Awful function that is built from awful functions! This file needs work!
 """
-function compute_W!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT, B::BFieldT)
+function compute_W!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT, B::BFieldT, n::Float64, ωcap2::Float64)
 
     #now we want to combine both Tj and Tl into one, this will be cooked!
     #Tl = zeros(9, 9)
@@ -17,6 +17,15 @@ function compute_W!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT,
     W[:, :] = compute_Tl(met, B) .* met.J #Tl is fine I think.
 
     W[:, :] -= compute_Tj(met, B) .* met.J .* jparonB(met, B) ./ 2
+
+
+    #W[:, :] -= compute_cap(met, B)
+
+    
+
+    for j=1:3, i=1:3
+        W[i, j] += ωcap2 * n*(met.gu[i, j] - B.b[i]*B.b[j]) * met.J / B.mag_B^2
+    end
     #Tj = compute_Tj(met, B)
 
     #display(W[:, :, co...])
@@ -34,6 +43,12 @@ function compute_W!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT,
     #println(W)
 
     
+end
+
+function compute_cap(met::MetT, B::BFieldT)
+
+
+
 end
 
 #appears to be giving the same results as other cases.

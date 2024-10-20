@@ -7,11 +7,6 @@ Base class that just imports everything. We will want a description of the packa
  - Spectrum -> Mainly just construct, bit of a nightmare!
 
 
- #TODO
- - Fix mapping
- - Try (2, 1) island -> see if we can reconstruct island structure.
- - rstart=0.1 is still hardcoded somewhere lol
-
 
  - maybe we should change problem to accept strings - or symbols like plot :green etc so we can explain the possible options when something doesn't work!
  - Add try catch to sqrt in solve, most of the time it is just because of ~0 numbers, but it owuld be good to have a warning rather than just always take abs. -> Maybe in this case we dont return the normalised ones? Or should we always have a normalise flag???
@@ -37,6 +32,8 @@ Base class that just imports everything. We will want a description of the packa
  - FFF grids giving domain errors, I think that is just the sqrt(0) problem with small grids we have always had tbh.
  - Integrate mapping properly.
  - Derivative stuff is no longer working.
+ - WeakForm is seriously cooked, needs to be actually fixed not just cleaned, i.e. stop declaring matrices at every step...
+ - They way we do normalisation is inconsistent and kind of weird...
 
 
 

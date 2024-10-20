@@ -37,6 +37,7 @@ function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, met::MetT, B
     
     #compute the density.
     n = prob.dens.(r) :: Array{Float64}
+    ωcap2 = ω_cap2.(r) :: Array{Float64}
     #hard coded just for a test atm
     #dont actually need this!
     #dn = @. -5 * sech(8-10*r)^2
@@ -54,7 +55,7 @@ function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, met::MetT, B
         #comething about views here doesn't work, I assume it is do to with passing non-indexed things in ala met etc but who knows.
         #compute the W matrix
         #@views new_compute_W!(W[:, :, i, j, k], met, B)
-        @views compute_W!(W[:, :, i, j, k], met, B)
+        @views compute_W!(W[:, :, i, j, k], met, B, n[i], ωcap2[i])
 
         #views are giving us some warnings, may be better to just define the view of I/W not the entire @views thing.
         #compute the I matrix
@@ -65,5 +66,16 @@ function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, met::MetT, B
     end
 
 end
+
+
+function ω_cap2(r::Float64)
+
+    β = 0.000001
+    #stab in the dark lol.
+    return β * (1-r)
+
+end
+
+
 
 end
