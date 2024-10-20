@@ -67,7 +67,7 @@ function post_process(evals::AbstractArray, efuncs::Array{ComplexF64}, grids::Gr
         push!(mode_labs, mode_lab)
     end
 
-    ω = geo.R0 .* sqrt.(evals)
+    ω = geo.R0 .* sqrt.(abs.(evals))
 
     evals = EvalsT(ω, rms, mode_labs)
 

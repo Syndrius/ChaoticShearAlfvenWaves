@@ -143,7 +143,7 @@ hline!([0, 2π], [1, 1], color=:black, linewidth=5, legend=false)
 #now we convert this island mode into regular coordinates.
 
 
-isl_itp = interpolate((κgrid, ᾱgrid, φgrid), ϕ_isl, Gridded(Linear(Periodic())));
+isl_itp = interpolate((κgrid, ᾱgrid, φgrid), ϕ_isl, (Gridded(Linear()), Gridded(Linear(Periodic())), Gridded(Linear(Periodic()))));
 
 isl_ext = extrapolate(isl_itp, Periodic());
 
@@ -196,9 +196,14 @@ for (i, ψ) in enumerate(ψgrid), (j, θ) in enumerate(θgrid), (k, ζ) in enume
     #κind = find_ind(κgrid, κ)
     #ᾱind = find_ind(ᾱgrid, mod(ᾱ, 2π))
     #φind = find_ind(φgrid, φ)
+    if κ > 2
+        ϕ_tor[i, j, k] = 0
+    else
 
     #ϕ_tor[i, j, k] = ϕ_isl[κind, ᾱind, φind] 
-    ϕ_tor[i, j, k] = isl_ext(sqrt(κ), ᾱ, φ)
+        ϕ_tor[i, j, k] = isl_ext(sqrt(κ), ᾱ, φ)
+    end
+    #ϕ_tor[i, j, k] = isl_itp(sqrt(κ), ᾱ, φ)
 
     κvals[i, j, k] = κ
     #ᾱvals[i, j, k] = mod(ᾱ, 2π)

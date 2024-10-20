@@ -13,7 +13,8 @@ using Printf
 
 
 
-isl = IslandT(m0=2, n0=1, qp=1.6, q0=3/2, A = 1e-3, r0 = 0.125)
+#isl = IslandT(m0=2, n0=1, qp=1.6, q0=3/2, A = 1e-3, r0 = 0.125)
+isl = IslandT(2, -1, 5.625e-5, 2.0, 2.0, 0.5, 0.03)
 
 
 function isl_to_tor(κ, ᾱ, φ, isl)
@@ -139,8 +140,8 @@ function inside_island_mode(κ, ᾱ, φ)
         return 0
     end
 
-    #return exp(-(κ-0.7)^2/0.01) * exp(1im * m * ᾱ)
-    return (-4*(κ-0.5)^2+1)*exp(1im * m * ᾱ + 1im * n * φ/3)
+    return exp(-(κ-0.7)^2/0.005) * exp(1im * m * ᾱ)
+    #return (-4*(κ-0.5)^2+1)*exp(1im * m * ᾱ + 1im * n * φ/3)
     #return (-4*(κ-0.5)^2+1)*cos(m * ᾱ)
 end
 
@@ -210,7 +211,7 @@ rgrid = LinRange(0, 1, Nr)
 
 for (i, r) in enumerate(rgrid), (j, θ) in enumerate(θgrid), (k, ζ) in enumerate(ζgrid)
     αvals_tor[i, j, k] = θ - ζ/isl.q0
-    κvals[i, j, k], ᾱvals[i, j, k], _ = tor_to_isl(r, θ, ζ, isl)
+    #κvals[i, j, k], ᾱvals[i, j, k], _ = tor_to_isl(r, θ, ζ, isl)
     ϕ_tor[i, j, k] = island_mode(r, θ, ζ, isl)
 end
 
@@ -219,7 +220,7 @@ contourf(θgrid, rgrid, ᾱvals[:, :, 10], levels=100, color=:turbo)
 contourf(θgrid, rgrid, mod.(2 .* ᾱvals[:, :, 1], 2π), levels=100, color=:turbo)
 
 contourf(θgrid, rgrid, mod.(5 .* αvals_tor[:, :, 1], 2π), levels=100, color=:turbo)
-contourf(θgrid, rgrid,  αvals_tor[:, :, 28], levels=100, color=:turbo)
+contourf(θgrid, rgrid,  mod.(αvals_tor[:, :, 10], 2π), levels=100, color=:turbo)
 
 #ϕ_tor = periodify(ϕ_tor_a, Nr, Nθ, Nζ);
 

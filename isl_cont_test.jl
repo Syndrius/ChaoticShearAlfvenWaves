@@ -5,7 +5,8 @@
 
 
 using MID
-using Plots; plotlyjs()
+using Plots#; plotlyjs()
+using LaTeXStrings
 
 
 
@@ -15,6 +16,9 @@ isl = IslandT(2, -1, 0.00015625000000000003, 2.0, 2.0, 0.5, 0.05)
 #I guess we should now consider our island...
 #will need to understand wot the hek is going on with χ lol
 #may also want R0 to be smaller so gap is larger
+
+#w = 0.03 case, seems to be best resolved example.
+isl = IslandT(2, -1, 5.625e-5, 2.0, 2.0, 0.5, 0.03)
 
 #ie 1e-5 is the part we pass into our other code.
 #so with 1e-6 we actually expect the tae to not experience damping
@@ -30,13 +34,13 @@ isl = IslandT(2, -1, 0.00015625000000000003, 2.0, 2.0, 0.5, 0.05)
 geo = GeoParamsT(R0=1000.0)
 
 #start with this???
-pmd = asm_grid(start=2, N=2, incr=1)
-tmd = asm_grid(start=-2, N=1, incr=1)
+pmd = asm_grid(start=-15, N=31, incr=1)
+tmd = asm_grid(start=-5, N=11, incr=1)
 #tmd = MID.ModeDataT(start=-8, count=10, incr=2)
 
 
 #this makes far more sense lol.
-κlist = LinRange(0.000001, 0.999, 100)
+κlist = LinRange(0.000001, 0.999, 300)
 
 χlist = @. -(2*isl.A*κlist - isl.A)
 
@@ -44,8 +48,14 @@ tmd = asm_grid(start=-2, N=1, incr=1)
 ω2list = island_continuum(χlist, pmd, tmd, geo, isl, 0);
 
 
-scatter(κlist, sqrt.(abs.(ω2list .* geo.R0^2)), legend=false, markersize=0.1)#, ylimits=(-0.01, 0.08))
+scatter(sqrt.(κlist), sqrt.(abs.(ω2list .* geo.R0^2)), legend=false, markersize=0.9, ylimits=(-0.005, 0.08),xlabel=L"\sqrt{\kappa}", ylabel=L"\omega/\omega_A", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600)
 
+
+
+
+scatter!(ones(size(reduce(vcat, ω2list))) .+ 0.05, sqrt.(abs.(reduce(vcat, ω2list) .* geo.R0^2)), label="Isl")
+
+savefig("aapps_pics/isl_cont.png")
 
 
 prob = init_problem(q=island_mode_21, geo=geo)
@@ -82,7 +92,7 @@ plot(xvals, Elliptic.K.(xvals))
 
 function inside_island_q(r)
     om0 = sqrt(isl.A*isl.qp/(isl.q0^2*isl.r0))
-    return -2*Elliptic.K(r) / (isl.m0*π * om0), 0 #assume we don't need dq for cont??
+    return -2*Elliptic.K(r) / (isl.m0*π * om0) #assume we don't need dq for cont??
 end
 
 
@@ -95,10 +105,10 @@ end
 #I think one difference is that the ellipticity would be a function of κ so this would probably be v difficult to do. 
 #also, the contours are not actually ellipses, probbaly pretty close for κ ≈ 0, but would be a better approx than circles. Probably not much easier than just using the island coords tbh.
 
-Nstart = -1
-Ncount = 3
+Nstart = 0
+Ncount = 1
 rgrid = MID.ContGridDataT(N=100)
-θgrid = asm_grid(start=40, N=3)
+θgrid = asm_grid(start=0, N=10)
 ζgrid = asm_grid(start=Nstart, N=Ncount)
 #sweeet!
 φgrid = asm_grid(start=Nstart*isl.m0, N=Ncount, incr=isl.m0)#*isl.m0)
@@ -111,10 +121,20 @@ prob = init_problem(q = inside_island_q, geo = geo)
 
 evals_cont = cyl_cont(prob, grids);
 
-continuum_plot(evals_cont, ymax=0.1, ymin=-0.01)
+continuum_plot(evals_cont, ymax=0.08, ymin=-0.01)
 
 
 ω2list = island_continuum(χlist, θgrid, φgrid, geo, isl, 0);
 
 
 scatter!(κlist, sqrt.(abs.(ω2list .* geo.R0^2)), legend=false, markersize=0.1)#, ylimits=(-0.01, 0.08))
+
+
+
+κplot = LinRange(0, 1, 300)
+
+
+
+plot(sqrt.(κplot), inside_island_q.(κplot) ./ inside_island_q(0), ylimits=(0.99, 2.51),xlabel=L"\sqrt{\kappa}", ylabel=L"q(\kappa)", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=24, xguidefontsize=25, xtickfontsize=10, ytickfontsize=10, dpi=600, legend=false)
+
+savefig("aapps_pics/isl_q.png")

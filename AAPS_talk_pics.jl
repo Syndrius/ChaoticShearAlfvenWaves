@@ -244,3 +244,31 @@ tmd = asm_grid(start=-2, N=5, incr=1)
 
 
 scatter(κlist, sqrt.(abs.(ω2list .* geo.R0^2)), legend=false, markersize=0.1)#, ylimits=(0.3, 0.5))#.2, 0.6))
+
+
+###################################################
+#unperturbed continuum.
+
+Nr = 1000;
+
+geo = GeoParamsT(R0=10.0)
+
+prob = init_problem(q=island_mode_21, geo=geo, met=cylindrical_metric!)
+
+rgrid = MID.ContGridDataT(N=Nr)
+θgrid = asm_grid(start=-1, N=9)
+ζgrid = asm_grid(start=-4, N=5)
+
+grids = init_grids(rgrid, θgrid, ζgrid)
+
+evals_cont = cyl_cont(prob, grids);
+
+
+
+p = scatter(evals_cont.r, real.(evals_cont.ω), group=evals_cont.modelabs, xlabel=L"r", ylabel=L"\frac{\omega  R_0}{v_A}", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10, ylimits=(-0.005, 0.08), legend=false, xlimits=(0.45, 0.55))
+
+display(p)
+
+savefig("aapps_pics/unperturbed_cont.png")
+
+#continuum_plot(evals_cont, ymax=0.08, ymin=-0.005)#, savefile="aapps_pics/cyl_cont.png")
