@@ -48,7 +48,8 @@ function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, met::MetT, B
         prob.compute_met(met, r[i], θ[j], ζ[k], prob.geo.R0)
 
         #compute the magnetic field.
-        compute_B!(B, met, prob.q, prob.isl, r[i], θ[j], ζ[k])
+        #compute_B!(B, met, prob.q, prob.isl, r[i], θ[j], ζ[k])
+        MagneticField.compute_B_isl!(B, met, prob.q, prob.isl, r[i], θ[j], ζ[k])
         #note that this is actually wrong, B[2, 2] was being overwritten with zero.
         #MagneticField.old_compute_B!(B, met, prob.q, prob.isl, r[i], θ[j], ζ[k])
         
@@ -70,7 +71,7 @@ end
 
 function ω_cap2(r::Float64)
 
-    β = 0.000001
+    β = 0.00000
     #stab in the dark lol.
     return β * (1-r)
 

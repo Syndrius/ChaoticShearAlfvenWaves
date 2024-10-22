@@ -16,7 +16,8 @@ function compute_W!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT,
     #contributions to W are split into two.
     W[:, :] = compute_Tl(met, B) .* met.J #Tl is fine I think.
 
-    W[:, :] -= compute_Tj(met, B) .* met.J .* jparonB(met, B) ./ 2
+    #for islands we assume current is negligible.
+    #W[:, :] -= compute_Tj(met, B) .* met.J .* jparonB(met, B) ./ 2
 
 
     #W[:, :] -= compute_cap(met, B)

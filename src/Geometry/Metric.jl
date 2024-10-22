@@ -103,10 +103,145 @@ function toroidal_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::F
 end
 
 
+function island_metric!(met::MetT, κ::Float64, ᾱ::Float64, φ::Float64, R0::Float64)
 
-function island_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
 
-    #TODO
+    K, E = Elliptic.ellipke(κ)
+
+    sn, cn, dn = Elliptic.ellipj(4.0*K / (2*π) * ᾱ, κ)
+
+    #F = Elliptic.F(4.0*K / (2*π) * ᾱ, κ)
+
+    #Z = Elliptic.E( 4.0*K / (2*π) * ᾱ, κ) - E/K * F
+
+    #this seems to have very little effect...
+    #but I think it is slightly better.
+    β = Elliptic.Jacobi.am(2*K/π * ᾱ, κ)
+
+    Z = Elliptic.E(β, κ) - E / K * Elliptic.F(β, κ)
+
+
+
+    #hopefully we don't actually need the island for this...
+    #think we will, probably need an island submodule... big RIP for combining everything.
+    #maybe we need an island coords flag or something to separate them all, or just an island grid, which is the same functionally,
+    #but uses κ etc and has a metric function that accepts an island.
+    r02 = (0.5)^2
+    w = 0.05
+    m0 = 2
+    n0 = -1
+    r2 = r02 + w * sqrt(κ) * cn
+
+
+    bhat = (m0^2/r2 + n0^2/R0^2) * dn^2
+
+    #β is used the same as Axel, but we have replaced βs with ᾱ to match our eventual method.
+
+    #this assumes cylindrical metric elements. Hence the r^2 and R0^2, for torus they are more complicated.
+    ∇κ2 = 16*r2*κ*cn^2/w^2 + bhat*κ*sn^2
+
+    #last bit comes from comparison with Axel
+    ∇κ∇β = -8*r2/w^2 * cn*sn + bhat/2 * sn*cn 
+
+    ∇β2 = 4*r2/(κ*w^2) * sn^2 + bhat/(4*κ) * cn^2
+
+    #this is defs where the problemo is!!!
+    #and or the definitions of elliptic arg.
+    dᾱdκ =  π / (4*K * κ * (1-κ)) * (Z - κ*cn*sn / dn)
+    
+    dᾱdβ = π / (2*K * dn)
+
+    
+
+    #met.J = 4*R0 * κ * K * w / (2*π*m0^2)
+    
+    
+    met.gu[1, 1] = ∇κ2
+    met.gu[1, 2] = dᾱdκ * ∇κ2 + dᾱdβ * ∇κ∇β
+    met.gu[1, 3] = n0/R0^2 * sqrt(κ) * sn*dn
+
+    met.gu[2, 1] = dᾱdκ * ∇κ2 + dᾱdβ * ∇κ∇β
+    met.gu[2, 2] = dᾱdκ^2 * ∇κ2 + 2 * dᾱdβ * dᾱdκ * ∇κ∇β + dᾱdβ^2 * ∇β2
+    met.gu[2, 3] = dᾱdκ * n0/R0^2 * sqrt(κ) * sn*dn + dᾱdβ * n0 /(2*R0^2*sqrt(κ)) * dn * cn
+
+    met.gu[3, 1] = n0/R0^2 * sqrt(κ) * sn*dn
+    met.gu[3, 2] = dᾱdκ * n0/R0^2 * sqrt(κ) * sn*dn + dᾱdβ * n0 /(2*R0^2*sqrt(κ)) * dn * cn
+    met.gu[3, 3] = 1/R0^2
+
+
+    met.gl = inv(met.gu) 
+
+    #two ways of computing J are the same now!!! v nice.
+    #met.J = sqrt(det(met.gl))# * R0 * sqrt(r2) #not certain about this!
+    #same shape but different scale!!
+    #this still does not match Axel's, off by factor of 2/m0, this could be explained by difference in α definition or κ??
+    met.J = K * w / (m0*π) * R0# *sqrt(r2))
+
+    #questionable at best.
+    #makes only minor differences, could be wrong or could be correct...
+    #met.dJ[1] = -w^2*cn*K/(4*m0*π*sqrt(κ)*sqrt(r2)^3/2) + w*(E-(1-κ)*K) / (2*m0*π*(1-κ)*κ*sqrt(r2))
+    #met.dJ[2] = dᾱdβ * w^2 * sqrt(κ) * K * sn / (2*m0*π * sqrt(r2)^(3/2))
+
+
+end
+
+
+
+function Axel_island_metric!(met::MetT, κ::Float64, ᾱ::Float64, φ::Float64, R0::Float64)
+
+    #may need to change κ to be sqrt. Follow Axel's first.
+
+    K, E = Elliptic.ellipke(κ)
+
+    sn, cn, dn = Elliptic.ellipj(4.0*K / (2*π) * ᾱ, κ)
+
+    F = Elliptic.F(4.0*K / (2*π) * ᾱ, κ)
+
+    Z = Elliptic.E( 4.0*K / (2*π) * ᾱ, κ) - E/K * F
+
+
+    #hopefully we don't actually need the island for this...
+    #think we will, probably need an island submodule... big RIP for combining everything.
+    #maybe we need an island coords flag or something to separate them all, or just an island grid, which is the same functionally,
+    #but uses κ etc and has a metric function that accepts an island.
+    r02 = (0.5)^2
+    w = 0.05
+    m0 = 2
+    n0 = -1
+    r2 = r02 + w * κ * cn
+
+    #β is used the same as Axel, but we have replaced βs with ᾱ to match our eventual method.
+
+    #this assumes cylindrical metric elements. Hence the r^2 and R0^2, for torus they are more complicated.
+    ∇κ2 = r02/w^2 * (4.0*cn^2 * r2/r02 + w^2/r02 * 0.25 * sn^2 * dn^2 * m0^2/r2 + n0^2/R0^2)
+
+    ∇β2 = r02 / (w^2*κ^2) * (4.0 * sn^2 * r2/r02 + w^2/r02 * 0.25 * cn^2*dn^2 * m0^2/r2 + n0^2/R0^2)
+
+    ∇κ∇β = r02 / (w^2 * κ) * (-4.0 * sn*cn * r2/r02 + w^2/r02 * 0.25 * cn^2*dn^2 * m0^2/r2 + n0^2/R0^2)
+    
+    dᾱdβ = 2 * π / (4*K) / dn
+
+    #this term does not match paper, lone κ should be on top.
+    dᾱdκ = 2 * π / (4*K * κ * (1-κ^2)) * (Z - κ^2*cn*sn / dn)
+
+    met.J = 4*R0 * κ * K * w / (2*π*m0^2)
+    
+    
+    met.gu[1, 1] = ∇κ2
+    met.gu[1, 2] = dᾱdβ * ∇κ∇β +  dᾱdκ * ∇κ2
+    met.gu[1, 3] = 0.5 * n0/R0^2 * sn*dn
+
+    met.gu[2, 1] = dᾱdβ * ∇κ∇β +  dᾱdκ * ∇κ2
+    met.gu[2, 2] = dᾱdβ^2 * ∇β2 + 2 * dᾱdβ * dᾱdκ * ∇κ∇β + dᾱdκ^2 * ∇κ2
+    met.gu[2, 3] = dᾱdβ * 0.5*n0/R0^2*cn*dn/κ + dᾱdκ*0.5*n0/R0^2*sn*dn
+
+    met.gu[3, 1] = 0.5 * n0/R0^2 * sn*dn
+    met.gu[3, 2] = dᾱdβ * 0.5*n0/R0^2*cn*dn/κ + dᾱdκ*0.5*n0/R0^2*sn*dn
+    met.gu[3, 3] = 1/R0^2
+
+
+    met.gl = inv(met.gu) 
+
 
 end
 

@@ -114,6 +114,53 @@ function island_amplitude(r::Float64, isl::IslandT)
 
 end
 
+using Elliptic
+
+#computes B when in island coordinates. very different who knew.
+function compute_B_isl!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, κ::Float64, ᾱ::Float64, φ::Float64)
+
+    #q, dq = q_prof(r)
+
+
+    #this is from our case, this will not match Axel, but jopefully close enough...
+    A = 0.00015625000000000003
+    w = 0.05
+    m0 = 2
+    n0 = -1
+    q = -w/(2*A*π*m0) * Elliptic.K(κ)
+
+    #this was a key peice!!!
+    dψ̄dκ = w * Elliptic.K(κ) / (m0*π)
+
+    #dq = -w/(2*A*π*m0) * (Elliptic.E(κ) - (1-κ)*Elliptic.K(κ)) / (2*(1-κ)*κ)
+    dq = 0
+    
+    B.B[1] = 0
+    #Axel just has R0 here, which doesn't make anysense!
+    B.B[2] = 1/(q * met.J) * dψ̄dκ
+
+    B.B[3] = 1 / met.J * dψ̄dκ
+
+
+    B.dB[2, 1] = -dq / (q^2*met.J) - met.dJ[1] / (q*met.J^2)
+    B.db[2, 2] = - met.dJ[2] / (q*met.J^2)
+
+
+    B.dB[3, 1] = - met.dJ[1] / (met.J^2)
+    B.dB[3, 2] = - met.dJ[2] / (met.J^2)
+
+
+    magnitude_B!(B, met)
+    
+    B.b[1] = B.B[1]/B.mag_B
+    B.b[2] = B.B[2]/B.mag_B
+    B.b[3] = B.B[3]/B.mag_B
+
+
+
+
+end
+
 
 
 

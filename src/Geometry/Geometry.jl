@@ -9,6 +9,8 @@ Module for the geometry. This includes
 module Geometry
 
 using Roots
+using Elliptic
+using LinearAlgebra
 
 
 include("Metric.jl")
@@ -21,6 +23,7 @@ export diagonal_toroidal_metric!
 export flux_toroidal_metric!
 export cylindrical_metric!
 export slab_metric!
+export island_metric!
 
 
 

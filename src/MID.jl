@@ -34,6 +34,7 @@ Base class that just imports everything. We will want a description of the packa
  - Derivative stuff is no longer working.
  - WeakForm is seriously cooked, needs to be actually fixed not just cleaned, i.e. stop declaring matrices at every step...
  - They way we do normalisation is inconsistent and kind of weird...
+ - Island stuff might need to be an entirely different package tbh!
 
 
 
@@ -59,11 +60,13 @@ include("Geometry/Geometry.jl")
 using MID.Geometry; export toroidal_metric!
 using MID.Geometry; export no_delta_metric!
 using MID.Geometry; export slab_metric!
+using MID.Geometry; export island_metric!
 using MID.Geometry; export diagonal_toroidal_metric!
 using MID.Geometry; export flux_toroidal_metric!
 using MID.Geometry; export cylindrical_metric!
 using MID.Geometry; export IslandT
 using MID.Geometry; export init_island
+
 #using MID.Geometry; export ContIslandT
 
 

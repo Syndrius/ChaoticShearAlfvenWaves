@@ -1,0 +1,71 @@
+
+
+#this works now (well enough! will need some serious cleaning, also unsure how this will be put into MID. Should be possible,
+#but we may need to consider a separate package.
+
+
+using MID
+using Elliptic
+using Plots; plotlyjs()
+
+
+function inside_island_q(r)
+    A = 0.00015625000000000003
+    w = 0.05
+    m0 = 2
+    return -w/(2*A*π*m0) * Elliptic.K(r), 0
+end
+
+
+geo = GeoParamsT(R0 = 1000)
+rgrid = rfem_grid(N=80, start=0.0, stop=0.999)
+θgrid = asm_grid(start=-2, N=5)
+ζgrid = asm_grid(start=0, N=1)
+
+grids = init_grids(rgrid, θgrid, ζgrid)
+
+#prob = init_problem(q = inside_island_q, geo=geo, met=MID.Geometry.Axel_island_metric!)
+prob = init_problem(q = inside_island_q, geo=geo, met=island_metric!)
+
+evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, full_spectrum=true);#, target_freq=10);
+
+continuum_plot(evals, ymax=0.08)#, ymax=10)#, n=-2)
+
+#obvs not working, check equivalence between ours and Axel, by considering coord transformation from κ to κ^2
+#also may need to check elliptic functions are doing what we want...
+
+#(-1, 1) modes seem to be perfectly coupled, bit of a problemo..
+#perhaps this is the expected behaviour????
+#maybe this will change with fff???
+#based on gae testing, this may just be a problem with fss.
+
+ind = find_ind(evals, 0.048)
+
+#ind = 36
+
+potential_plot(ϕft, grids, ind)
+
+
+#current hard codes island for this case.
+isl = IslandT(2, -1, 0.00015625000000000003, 2.0, 2.0, 0.5, 0.05)
+
+#pmd = asm_grid(start=-12, N=26, incr=1)
+#tmd = asm_grid(start=-2, N=5, incr=1)
+#tmd = MID.ModeDataT(start=-8, count=10, incr=2)
+
+
+#this makes far more sense lol.
+κlist = LinRange(0.000001, 0.999, 100)
+
+χlist = @. -(2*isl.A*κlist - isl.A)
+
+
+
+ω2list = island_continuum(χlist, θgrid, ζgrid, geo, isl, 0);
+
+
+scatter!(κlist, sqrt.(abs.(ω2list .* geo.R0^2)), legend=false, markersize=0.1)#, ylimits=(0.3, 0.5))#.2, 0.6))
+#3.997713 = 4
+#0.0049998 = 0.005
+
+4/0.005
