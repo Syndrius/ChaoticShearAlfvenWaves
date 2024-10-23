@@ -123,8 +123,10 @@ function compute_B_isl!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, �
 
 
     #this is from our case, this will not match Axel, but jopefully close enough...
-    A = 0.00015625000000000003
-    w = 0.05
+    #A = 0.00015625000000000003
+    #w = 0.05
+    A = 5.625e-5
+    w = 0.03
     m0 = 2
     n0 = -1
     q = -w/(2*A*π*m0) * Elliptic.K(κ)
