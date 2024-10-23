@@ -88,6 +88,8 @@ using MID.MagneticField; export test_q
 using MID.MagneticField; export Axel_island_q
 using MID.MagneticField; export island_mode_q
 using MID.MagneticField; export island_mode_21
+using MID.MagneticField; export gae_isl_q
+using MID.MagneticField; export gae_isl_dens
 
 
 

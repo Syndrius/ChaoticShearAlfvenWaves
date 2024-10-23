@@ -1,6 +1,14 @@
 
 #TODO change to flux!
 
+function gae_isl_dens(r::Float64)
+    κ = -1 #paper just says less than 0?
+    p = 1
+    fact = 5 #this is completly arbitrary, but just dicates the height of the peak.
+
+    return fact*((1-p*r^2)^κ)
+end
+
 
 """
     axel_dens(r::Float64)xs

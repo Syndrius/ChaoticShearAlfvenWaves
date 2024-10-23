@@ -70,7 +70,8 @@ end
 
 function ω_cap2(r::Float64)
 
-    β = 0.000001
+    #this seems to be having a much larger effect for fff than ffs, interesting...
+    β = 0.00000000001
     #stab in the dark lol.
     return β * (1-r)
 

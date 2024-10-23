@@ -15,6 +15,20 @@ function island_mode_21(r::Float64)
 end
 
 
+#very similar to island_mode_21 but with modified qp for the gae.
+function gae_isl_q(r::Float64)
+    q0 = 2/1
+    qp = 2 #chosen pretty arbitrarily based on vibes of continuum.
+    qp = -8
+    r0 = 0.5
+    #ψ0 = 0.125
+    #q = 1 / (1 / q0 - qp / (q0)^2 * (r^2/2-ψ0))
+    #dq = 4*(q0)^2* qp * r / (2*(q0)-qp*r^2 + 2*qp*ψ0)^2
+    q = 1 / (1 / q0 - qp / (2*q0^2*r0) * (r^2-r0^2))
+    dq = 4*qp*q0^2*r*r0 / (2*q0*r0 - qp * (r^2-r0^2))^2
+    return q, dq
+end
+
 
 #q profile based of Axel's 2024 iota profile
 #similar to Zhisongs case, but we now have a 5/5 island.

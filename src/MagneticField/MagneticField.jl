@@ -33,6 +33,7 @@ export test_q
 export Axel_island_q
 export island_mode_q
 export island_mode_21
+export gae_isl_q
 
 
 include("DensityProfiles.jl") #weird spot!
@@ -41,5 +42,6 @@ export uniform_dens
 export axel_dens
 export bowden_singular_dens
 export comparison_bowden_dens
+export gae_isl_dens
 
 end

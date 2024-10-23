@@ -10,62 +10,91 @@ using Plots; plotlyjs()
 Nr = 100
 Nθ = 10
 
-rgrid = init_fem_grid(N=Nr)
-θgrid = init_sm_grid(start=0, count=3)
-θgrid = init_fem_grid(N=Nθ, pf=1)
-ζgrid = init_sm_grid(start=0, count=1)
+
+geo = GeoParamsT(R0 = 1000)
+rgrid = rfem_grid(N=60, start=0.0, stop=0.999)
+#θgrid = asm_grid(start=-2, N=5)
+θgrid = afem_grid(N=10, pf=1)
+ζgrid = asm_grid(start=0, N=2)
 
 grids = init_grids(rgrid, θgrid, ζgrid)
 
-
-geo = GeoParamsT(R0=1000) #cylinder??
+function isl_q(r::Float64)
+    q0 = 2/1
+    qp = 2 #chosen pretty arbitrarily based on vibes of continuum.
+    qp = -8
+    r0 = 0.5
+    #ψ0 = 0.125
+    #q = 1 / (1 / q0 - qp / (q0)^2 * (r^2/2-ψ0))
+    #dq = 4*(q0)^2* qp * r / (2*(q0)-qp*r^2 + 2*qp*ψ0)^2
+    q = 1 / (1 / q0 - qp / (2*q0^2*r0) * (r^2-r0^2))
+    dq = 4*qp*q0^2*r*r0 / (2*q0*r0 - qp * (r^2-r0^2))^2
+    return q, dq
+end
 
 function gae_q(r)
 
     #paper says constant, that may be after the Geometry contribution though!
 
-    q = 1/r
-    dq = -1.0/r^2
+    q = 1/(r^2)
+    dq = -2.0/r^3
     return q, dq
 end
 
 function gae_dens(r)
     κ = -1 #paper just says less than 0?
     p = 1
+    q0 = 2/1
+    qp = 2 #chosen pretty arbitrarily based on vibes of continuum.
+    r0 = 0.5
 
-    return (1-p*r^2)^κ
+    g0 = 0.8
+    #p = qp / (2 * g0^2*qp - 2*q0*r0 - qp*r0^2)
+
+    return 5*((1-p*r^2)^κ)
 end
 
-prob = init_problem(q = gae_q, dens=gae_dens, geo=geo)
+#prob = init_problem(q = gae_q, dens=gae_dens, geo=geo)
+isl = IslandT(m0=2, n0=-1, w=0.1)
+prob = init_problem(q = isl_q, geo=geo, met=cylindrical_metric!, dens=gae_dens, isl=isl)
+prob = init_problem(q = gae_q, geo=geo, met=cylindrical_metric!, dens=gae_dens)
 
-ω, ϕ = construct_and_solve(grids = grids, prob = prob, full_spectrum=true);
+
+evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, full_spectrum=false, target_freq = 0.35, nev=100);
+
+continuum_plot(evals)#, ymax=10)
 
 
-ϕms = mode_structure(ϕ, grids);
-#reconstruct_continuum(ω, ϕ, grids)
-reconstruct_continuum(ω, ϕms, grids)
+#so we are getting like 10 gae's... wild.
+#this might work, problem being the 10 gae's we are finding is a bit annoying!
 
-#looks like we have found a gae!
 #pretty similar results with both methods, fss is significanlty faster though!
-gae_ind = find_ind(ω, 0.517)
+gae_ind = find_ind(evals, 0.3565308)
 tae_ind = find_ind(ω, 0.49)
-display(ω[tae_ind])
+
+gae_ind = 8
 
 
-#looks like a very global mode. We need to understand why a turning point in the continuum allows 
-#a global mode to form. This will hopefully help us undertsand tae's.
-#still need to understand gaps though!
 
-plot_potential(ϕms, grids, gae_ind, 1)
-
-plot_phi_surface(ϕ, grids, gae_ind)
+potential_plot(ϕft, grids, gae_ind)
 
 
-maxm = Int64(grids.θ.N/2 + grids.θ.pf - 1)
+#what about the analytical continuum!
 
-if iseven(grids.θ.N)
-    mlist = -maxm+1:1:maxm
-else
-    mlist = -maxm:1:maxm
-end
-mlist = 0:1:grids.θ.N-1
+rplot = LinRange(0.0001, 1, 100)
+
+qplot = getfield.(gae_q.(rplot), 1)
+
+qplot_isl = getfield.(isl_q.(rplot), 1)
+
+nplot = gae_dens.(rplot)
+
+
+
+
+plot(rplot, @. 1/qplot / (nplot))
+plot(rplot, @. 1/qplot_isl / sqrt(nplot))
+
+plot(rplot, nplot)
+
+plot(rplot, qplot, ylimits=(0, 10))
