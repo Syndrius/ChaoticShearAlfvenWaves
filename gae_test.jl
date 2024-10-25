@@ -13,8 +13,8 @@ Nθ = 10
 
 geo = GeoParamsT(R0 = 1000)
 rgrid = rfem_grid(N=60, start=0.0, stop=0.999)
-#θgrid = asm_grid(start=-2, N=5)
-θgrid = afem_grid(N=10, pf=1)
+θgrid = asm_grid(start=-2, N=5)
+#θgrid = afem_grid(N=10, pf=1)
 ζgrid = asm_grid(start=0, N=2)
 
 grids = init_grids(rgrid, θgrid, ζgrid)
@@ -41,7 +41,7 @@ function gae_q(r)
     return q, dq
 end
 
-function gae_dens(r)
+function test_gae_dens(r)
     κ = -1 #paper just says less than 0?
     p = 1
     q0 = 2/1
@@ -51,16 +51,16 @@ function gae_dens(r)
     g0 = 0.8
     #p = qp / (2 * g0^2*qp - 2*q0*r0 - qp*r0^2)
 
-    return 5*((1-p*r^2)^κ)
+    return ((1-p*r^2)^κ)
 end
 
 #prob = init_problem(q = gae_q, dens=gae_dens, geo=geo)
-isl = IslandT(m0=2, n0=-1, w=0.1)
+#isl = IslandT(m0=2, n0=-1, w=0.1)
 prob = init_problem(q = isl_q, geo=geo, met=cylindrical_metric!, dens=gae_dens, isl=isl)
-prob = init_problem(q = gae_q, geo=geo, met=cylindrical_metric!, dens=gae_dens)
+prob = init_problem(q = gae_q, geo=geo, met=cylindrical_metric!, dens=test_gae_dens)
 
 
-evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, full_spectrum=false, target_freq = 0.35, nev=100);
+evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, full_spectrum=true, target_freq = 0.35, nev=100);
 
 continuum_plot(evals)#, ymax=10)
 
