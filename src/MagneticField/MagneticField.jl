@@ -34,7 +34,7 @@ export Axel_island_q
 export island_mode_q
 export island_mode_21
 export gae_isl_q
-
+export tae_isl_damping_q
 
 include("DensityProfiles.jl") #weird spot!
 

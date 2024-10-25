@@ -20,7 +20,8 @@ Finds the index of an eigenvalue, useful for plotting.
 """
 function find_ind(evals::EvalsT, val)
 
-    return argmin(abs.(abs.(evals.ω) .- val))
+    #return argmin(abs.(abs.(evals.ω) .- val))
+    return argmin(abs.(real.(evals.ω) .- val))
 end
 
 

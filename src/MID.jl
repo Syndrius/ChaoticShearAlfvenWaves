@@ -7,6 +7,12 @@ Base class that just imports everything. We will want a description of the packa
  - Spectrum -> Mainly just construct, bit of a nightmare!
 
 
+ ###### More Urgent
+ - Start using Gadi's version of Julia, currently ours is using fkn heaps of memory
+ - Fix up the island grids stuff, need to work out best way to do this
+ - Perhaps change the solver to do a range rather than a target, will need to get this to actually work.
+
+
 
  - maybe we should change problem to accept strings - or symbols like plot :green etc so we can explain the possible options when something doesn't work!
  - Add try catch to sqrt in solve, most of the time it is just because of ~0 numbers, but it owuld be good to have a warning rather than just always take abs. -> Maybe in this case we dont return the normalised ones? Or should we always have a normalise flag???
@@ -90,7 +96,7 @@ using MID.MagneticField; export island_mode_q
 using MID.MagneticField; export island_mode_21
 using MID.MagneticField; export gae_isl_q
 using MID.MagneticField; export gae_isl_dens
-
+using MID.MagneticField; export tae_isl_damping_q
 
 
 include("Structures/Structures.jl")

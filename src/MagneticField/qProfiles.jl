@@ -1,5 +1,13 @@
 #TODO -> should change these names and probably provide the function in the doc.
 
+function tae_isl_damping_q(r::Float64)
+    #should give tae (4/5, -2) tae at 0.75 @~0.2 with (2, -1) isl at 0.5.
+    a = 1.8
+    b = 0.8
+    q = a + b * r^2
+    dq = 2 * b * r
+    return q, dq
+end
 
 #island mode case for 21 island.
 function island_mode_21(r::Float64)
