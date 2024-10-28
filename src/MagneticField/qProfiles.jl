@@ -9,6 +9,16 @@ function tae_isl_damping_q(r::Float64)
     return q, dq
 end
 
+#IslandT(2, -1, 5.625e-5, 2.0, 2.0, 0.5, 0.03)
+function inside_island_q(r)
+    #A = 0.00015625000000000003
+    #w = 0.05
+    w = 0.03
+    A = 5.625e-5
+    m0 = 2
+    return -w/(2*A*π*m0) * Elliptic.K(r), 0
+end
+
 #island mode case for 21 island.
 function island_mode_21(r::Float64)
     q0 = 2/1

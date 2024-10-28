@@ -23,7 +23,9 @@ function compute_boundary_inds(grids::FFFGridsT)
     right_boundary3 = 3 + (Nr - 1) * 8 * Nθ * Nζ:8:8*Nr * Nθ * Nζ
     right_boundary4 = 4 + (Nr - 1) * 8 * Nθ * Nζ:8:8*Nr * Nθ * Nζ
 
-    return vcat(left_boundary1, left_boundary2, left_boundary3, left_boundary4, right_boundary1, right_boundary2, right_boundary3, right_boundary4)
+    #island case has no left boundaries.
+    return vcat(right_boundary1, right_boundary2, right_boundary3, right_boundary4)
+    #return vcat(left_boundary1, left_boundary2, left_boundary3, left_boundary4, right_boundary1, right_boundary2, right_boundary3, right_boundary4)
 
 end
 
@@ -96,5 +98,13 @@ function compute_boundary_inds(grids::FSSGridsT)
     #could probably use grid_to_index for this
     right_boundary = 1+(Nr-1)*2*Nm*Nn:2:Nr*2*Nm*Nn
 
-    return vcat(left_boundary, right_boundary)
+    if grids.r.left_bc == true
+        return vcat(left_boundary, right_boundary)
+    end
+
+
+    #island case doesn't have this boundary.
+    return collect(right_boundary)
+
+    
 end

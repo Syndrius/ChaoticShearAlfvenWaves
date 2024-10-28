@@ -41,13 +41,22 @@ One of the main inputs for matrix construction functions.
 - geo::GeoParamsT - Struct storing the geometrical parameters.
 - flr::FLRT - Struct storing finite larmor effects.
 """
-@kwdef struct ProblemT
+@kwdef struct TorProblemT <: ProblemT
     q :: Function 
     compute_met :: Function = toroidal_metric!
     dens :: Function = uniform_dens
     isl :: IslandT = no_isl
     geo :: GeoParamsT
     flr :: FLRT = no_flr
+end
+
+
+#problem with (κ, ᾱ, φ)
+@kwdef struct IslProblemT <: ProblemT
+    dens :: Function = uniform_dens
+    geo :: GeoParamsT
+    flr :: FLRT = no_flr
+    isl :: IslandT #need at least m,n, r0 and A/w.
 end
 
 
@@ -83,8 +92,18 @@ function init_problem(; q::Function, met::Function=toroidal_metric!, dens::Funct
         if isl != no_isl
             isl = inst_island(isl, q)
         end
-        return ProblemT(q=q, compute_met=met, dens=dens, isl=isl, flr=flr, geo=geo)
+        return TorProblemT(q=q, compute_met=met, dens=dens, isl=isl, flr=flr, geo=geo)
     end 
+
+    
+end
+
+
+function init_isl_problem(; dens::Function=uniform_dens, geo::GeoParamsT, flr::FLRT=no_flr, isl::IslandT)
+
+    isl = inst_island(isl)
+
+    return IslProblemT(dens=dens, geo=geo, flr=flr, isl=isl)
 
     
 end

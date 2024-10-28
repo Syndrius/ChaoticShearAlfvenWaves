@@ -16,6 +16,7 @@ function compute_W!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT,
     #contributions to W are split into two.
     W[:, :] = compute_Tl(met, B) .* met.J #Tl is fine I think.
 
+    #for islands we assume current is negligible.
     W[:, :] -= compute_Tj(met, B) .* met.J .* jparonB(met, B) ./ 2
 
 
@@ -45,11 +46,26 @@ function compute_W!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT,
     
 end
 
-function compute_cap(met::MetT, B::BFieldT)
 
+#think this is actually not needed
+#as island case does not compute dB or dg, so current term will always be zero regardless.
+#also, we may eventually want those additions,
+#however, this should be a bit faster.
+function compute_isl_W!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT, B::BFieldT, n::Float64)
 
+    #now we want to combine both Tj and Tl into one, this will be cooked!
+    #Tl = zeros(9, 9)
+    #Tj = zeros(3, 9)
+    #display("og")
 
+    #contributions to W are split into two.
+
+    W[:, :] = compute_Tl(met, B) .* met.J #Tl is fine I think.
+
+    
+    
 end
+
 
 #appears to be giving the same results as other cases.
 #identical results to earlier

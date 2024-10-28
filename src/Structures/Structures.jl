@@ -25,6 +25,8 @@ Abstract type for the global grids.
 abstract type GridsT end
 
 
+abstract type ProblemT end
+
 
 include("FEMGrid.jl")
 include("SMGrid.jl")
@@ -61,6 +63,8 @@ export ProblemT
 export GeoParamsT
 export FLRT
 export init_problem
+export IslProblemT
+export TorProblemT #this is a bad name for this, given this can work with any metric....
 
 
 include("Output.jl")
