@@ -98,9 +98,13 @@ function compute_boundary_inds(grids::FSSGridsT)
     #could probably use grid_to_index for this
     right_boundary = 1+(Nr-1)*2*Nm*Nn:2:Nr*2*Nm*Nn
 
+    if grids.r.left_bc == true
+        return vcat(left_boundary, right_boundary)
+    end
 
-    #for testing islands!
+
+    #island case doesn't have this boundary.
     return collect(right_boundary)
 
-    return vcat(left_boundary, right_boundary)
+    
 end

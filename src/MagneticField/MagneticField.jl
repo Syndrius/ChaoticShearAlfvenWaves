@@ -15,7 +15,7 @@ include("ComputeField.jl")
 export BFieldT
 export init_empty_B
 export compute_B!
-export compute_island_B!
+export compute_B_isl!
 
 
 include("qProfiles.jl")

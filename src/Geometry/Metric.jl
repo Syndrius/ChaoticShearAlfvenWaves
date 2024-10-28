@@ -126,10 +126,10 @@ function island_metric!(met::MetT, κ::Float64, ᾱ::Float64, φ::Float64, R0::
     #think we will, probably need an island submodule... big RIP for combining everything.
     #maybe we need an island coords flag or something to separate them all, or just an island grid, which is the same functionally,
     #but uses κ etc and has a metric function that accepts an island.
-    r02 = (0.5)^2
-    w = 0.03
-    m0 = 2
-    n0 = -1
+    r02 = (isl.r0)^2
+    w = isl.w
+    m0 = isl.m0
+    n0 = isl.n0
     r2 = r02 + w * sqrt(κ) * cn
 
 

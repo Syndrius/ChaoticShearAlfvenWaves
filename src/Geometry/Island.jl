@@ -105,4 +105,32 @@ function zero_q(r, q0, q_prof)
 
     return q - q0
 end
+
+
+"""
+    instantiate_island(isl::IslandT)
+
+Case for island coords where most information must be predefined.
+"""
+function inst_island(isl::IslandT)
+
+    q0 = -isl.m0/isl.n0
+
+    qp = isl.qp
+
+    r0 = isl.r0
+    
+    if isnan(isl.w)
+
+        w = 4 * sqrt(q0^2*r0*isl.A / qp)
+        A = isl.A
+    else
+        #A = (isl.w / 4)^2 * qp / isl.q0^2
+        A = isl.w^2 / 16 * qp / (q0^2 * r0)
+        w = isl.w
+    end
+
+    return IslandT(m0=isl.m0, n0=isl.n0, A=A, q0=q0, qp=qp, r0=r0, w=w)
+end
+    
     

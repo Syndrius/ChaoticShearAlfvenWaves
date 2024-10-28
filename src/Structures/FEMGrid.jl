@@ -23,6 +23,7 @@ This grid has the additional option of clustering.
     sep2 :: Float64 = 0.0
     frac :: Float64 = 0.0
     gp :: Int64 = 4
+    left_bc :: Bool = true #false for island case. Perhaps this is a bad name, perhaps we should also condier all boundary options, even derivs???
 end
 
 
@@ -59,9 +60,9 @@ end
 
 Creates the grid needed for finite elements.
 """
-function rfem_grid(; N::Int64, start::Real=0, stop::Real=1, sep1::Float64=0.0, sep2::Float64=1.0, frac::Float64=0.0, gp::Int64=4)
+function rfem_grid(; N::Int64, start::Real=0, stop::Real=1, sep1::Float64=0.0, sep2::Float64=1.0, frac::Float64=0.0, gp::Int64=4, left_bc=true)
 
-    return RFEMGridDataT(N, start, stop, sep1, sep2, frac, gp)
+    return RFEMGridDataT(N, start, stop, sep1, sep2, frac, gp, left_bc)
 end
 
 

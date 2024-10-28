@@ -9,23 +9,21 @@ using Elliptic
 using Plots; plotlyjs()
 
 
-function inside_island_q(r)
-    A = 0.00015625000000000003
-    w = 0.05
-    m0 = 2
-    return -w/(2*A*π*m0) * Elliptic.K(r), 0
-end
-
 
 geo = GeoParamsT(R0 = 1000)
-rgrid = rfem_grid(N=80, start=0.0, stop=0.999)
+rgrid = rfem_grid(N=80, start=0.0, stop=0.999, left_bc=false)
 θgrid = asm_grid(start=-2, N=5)
 ζgrid = asm_grid(start=0, N=1)
 
 grids = init_grids(rgrid, θgrid, ζgrid)
 
+isl = IslandT(m0=2, n0=-1, r0=0.5, w=0.03, qp=2.0)
 #prob = init_problem(q = inside_island_q, geo=geo, met=MID.Geometry.Axel_island_metric!)
-prob = init_problem(q = inside_island_q, geo=geo, met=island_metric!)
+#prob = init_problem(q = inside_island_q, geo=geo, met=island_metric!)
+
+prob = MID.Structures.init_isl_problem(geo=geo, isl=isl)
+
+
 
 evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, full_spectrum=true);#, target_freq=10);
 
