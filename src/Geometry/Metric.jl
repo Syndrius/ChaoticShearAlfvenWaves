@@ -103,7 +103,7 @@ function toroidal_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::F
 end
 
 
-function island_metric!(met::MetT, κ::Float64, ᾱ::Float64, φ::Float64, R0::Float64)
+function island_metric!(met::MetT, κ::Float64, ᾱ::Float64, φ::Float64, R0::Float64, isl::IslandT)
 
 
     K, E = Elliptic.ellipke(κ)

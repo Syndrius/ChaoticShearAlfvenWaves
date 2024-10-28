@@ -85,7 +85,7 @@ function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, met::MetT, B
     for k=1:1:length(ζ), j=1:1:length(θ), i=1:1:length(r)
 
         #compute the metric
-        island_metric!(met, r[i], θ[j], ζ[k], prob.geo.R0)
+        island_metric!(met, r[i], θ[j], ζ[k], prob.geo.R0, prob.isl)
 
         #compute the magnetic field.
         #compute_B!(B, met, prob.q, prob.isl, r[i], θ[j], ζ[k])

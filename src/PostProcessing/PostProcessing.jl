@@ -70,8 +70,8 @@ function post_process(evals::AbstractArray, efuncs::Array{ComplexF64}, grids::Gr
     #should only take abs for ideal cases, this is just to avoid
     #tiny negatives that should be zero
     #alterantively, as per cka, just set any tiny negatives to zero.
-    #ω = geo.R0 .* sqrt.(abs.(evals))
-    ω = geo.R0 .* sqrt.(evals)
+    ω = geo.R0 .* sqrt.(abs.(evals))
+    #ω = geo.R0 .* sqrt.(evals)
 
     evals = EvalsT(ω, rms, mode_labs)
 

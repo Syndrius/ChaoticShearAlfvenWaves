@@ -9,13 +9,15 @@ Base class that just imports everything. We will want a description of the packa
 
  ###### More Urgent
  - Start using Gadi's version of Julia, currently ours is using fkn heaps of memory
- - Fix up the island grids stuff, need to work out best way to do this
  - Perhaps change the solver to do a range rather than a target, will need to get this to actually work.
+ -  Investigate memory usage, Axel used 800x250x10...
+ - If we can solve with more evals and less memory usage, will need to paralise post processing.
+ - Try the weakform based on Zhisongs equation for the laplacian term.
 
 
 
  - maybe we should change problem to accept strings - or symbols like plot :green etc so we can explain the possible options when something doesn't work!
- - Add try catch to sqrt in solve, most of the time it is just because of ~0 numbers, but it owuld be good to have a warning rather than just always take abs. -> Maybe in this case we dont return the normalised ones? Or should we always have a normalise flag???
+ - Add try catch to sqrt in solve, most of the time it is just because of ~0 numbers, but it owuld be good to have a warning rather than just always take abs. -> Maybe in this case we dont return the normalised ones? Or should we always have a normalise flag??? -> cka does this better, below some tolerance they are just set to zero.
  - boundary conditions may need modification for flr, and perhaps the m=1 stuff is still not working properly.
  - fix all the examples and extra spectra garbage
  - Reconstruct phi can probbaly be made more efficient -> not sure if we still want to do it one at a time...
@@ -23,24 +25,17 @@ Base class that just imports everything. We will want a description of the packa
  - Use of kwargs is inconsistent and sometimes annoying.
  - Maybe we should start removing the modes far from the centre as they tend to be garbage.
  - should move to gadi's version of Julia I think. -> we are also running out of space in home directory...
- - Implement island coords metric. -> this will be annoying -> can check the metric is done properly (hopefully) by comparing the continuum.
  - Think ideally we would only instantiate grids once...
  - Combine our interpolation thing into MID. (or perhaps make a new package???)
  - Fix Hermite interpolation.
- - Construct.jl is cooked af.
- - upload pictures of coord transformation once island coords are understood -> do this for regular toroidal coordinates as well.
  - Perhaps we shouls always return the periodified version of the potential as this is better for plotting and perhaps interpolation, could just be part of postprocessing
  - May need to look and see if there is any corelation for the imaginary modes coming from the islands.
- - Need to swap to κ^2 for island plotting, to match Axel (or sqrt(κ)), should stretch the sepratrix behaviour out. -> may help us replicated the κ waves that Axel is getting.
  - It could be worth trying ffs, as we only ever seem to need 0, 2, 4, and the negs for ζ. Maybe more efficient???
- - We should defs make a continuum replication on our island modes for island coordiantes, i.e. map them all and pick largest radial location etc. May have to ignore the (0, 0) mode though lol. -> will probably also need some kind of condition on what counts as an island mode.
  - Eventually want to delete all these random af julia files inside the MID folder.
- - FFF grids giving domain errors, I think that is just the sqrt(0) problem with small grids we have always had tbh.
- - Integrate mapping properly.
  - Derivative stuff is no longer working.
  - WeakForm is seriously cooked, needs to be actually fixed not just cleaned, i.e. stop declaring matrices at every step...
  - They way we do normalisation is inconsistent and kind of weird...
- - Island stuff might need to be an entirely different package tbh!
+ - We probably need to embark on the great memory purge!
 
 
 
