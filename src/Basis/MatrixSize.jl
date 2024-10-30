@@ -81,7 +81,7 @@ end
 Initialises the empty structure that contains the trial and test functions.
 4's are for number of Hermite elements when using FEM, 9 is for total first and second derivatives.
 """
-function init_bases_function(grids::FSSGridsT)
+function init_basis_function(grids::FSSGridsT)
 
     return zeros(ComplexF64, 4, 9, grids.r.gp)   
 end
@@ -94,7 +94,7 @@ end
 Initialises the empty structure that contains the trial and test functions.
 4's are for number of Hermite elements when using FEM, 9 is for total first and second derivatives.
 """
-function init_bases_function(grids::FFFGridsT)
+function init_basis_function(grids::FFFGridsT)
 
     return zeros(ComplexF64, 4, 4, 4, 9, grids.r.gp, grids.θ.gp, grids.ζ.gp)
 end
@@ -106,7 +106,7 @@ end
 Initialises the empty structure that contains the trial and test functions.
 4's are for number of Hermite elements when using FEM, 9 is for total first and second derivatives.
 """
-function init_bases_function(grids::FFSGridsT)
+function init_basis_function(grids::FFSGridsT)
 
     return zeros(ComplexF64, 4, 4, 9, grids.r.gp, grids.θ.gp) 
 end

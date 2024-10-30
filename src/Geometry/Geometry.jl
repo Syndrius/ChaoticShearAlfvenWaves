@@ -13,6 +13,16 @@ using Elliptic
 using LinearAlgebra
 
 
+
+include("Island.jl")
+
+export IslandT
+export ContIslandT
+export inst_island
+export init_island
+
+
+
 include("Metric.jl")
 
 export MetT
@@ -25,14 +35,6 @@ export cylindrical_metric!
 export slab_metric!
 export island_metric!
 
-
-
-include("Island.jl")
-
-export IslandT
-export ContIslandT
-export inst_island
-export init_island
 
 
 include("Flux.jl")

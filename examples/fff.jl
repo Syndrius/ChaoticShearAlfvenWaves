@@ -7,9 +7,9 @@ using Plots; plotlyjs()
 Nr = 30
 Nθ = 6
 Nζ = 1
-rgrid = init_fem_grid(N=Nr);
-θgrid = init_fem_grid(N=Nθ, pf=2);
-ζgrid = init_fem_grid(N=Nζ, pf=-2);
+rgrid = rfem_grid(N=Nr, gp=3);
+θgrid = afem_grid(N=Nθ, pf=2, gp=3);
+ζgrid = afem_grid(N=Nζ, pf=-2, gp=3);
 
 grids = init_grids(rgrid, θgrid, ζgrid);
 
@@ -24,7 +24,7 @@ prob = init_problem(q=Axel_q, geo=geo);
 
 evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, full_spectrum=true); 
 
-plot_continuum(evals, ymax=2)
+continuum_plot(evals)
 
 
 ind = find_ind(evals, 0.383)

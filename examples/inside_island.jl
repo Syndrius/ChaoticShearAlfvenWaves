@@ -5,7 +5,6 @@
 
 
 using MID
-using Elliptic
 using Plots; plotlyjs()
 
 

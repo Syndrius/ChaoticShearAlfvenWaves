@@ -8,10 +8,7 @@ Nr = 100;
 
 geo = GeoParamsT(R0=10.0)
 
-prob = init_problem(q=Axel_q, geo=geo)#, met=no_delta_metric!); 
-Nr=100;
 #rgrid = collect(LinRange(0, 1, N));
-geo = GeoParamsT(R0=10.0);
 prob = init_problem(q=Axel_q, geo=geo); 
 rgrid = rfem_grid(N=Nr)
 θgrid = asm_grid(start=2, N = 2)
@@ -25,7 +22,9 @@ grids = init_grids(rgrid, θgrid, ζgrid);
 evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, full_spectrum=true);
 
 #scatter(cr.r, real.(cr.ω), ylimits=(-0.05, 1.05))
-continuum_plot(evals)
+continuum_plot(evals, ymax=1)
+
+println(evals.ω)
 
 ind = find_ind(evals, 0.3762)
 ind = 348

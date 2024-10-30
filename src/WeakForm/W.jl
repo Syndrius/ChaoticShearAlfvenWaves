@@ -1,70 +1,82 @@
 
-#this is the worst file in the whole package!!
+"""
+    function compute_W!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT, B::BFieldT, n::Float64, ωcap2::Float64, tm::TM)
+
+Computes the W matrix for the weak form at a single coordinate.
+"""
+function compute_W!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT, B::BFieldT, n::Float64, ωcap2::Float64, tm::TM)
+
+
+    #compute the laplacian like term
+    Tl!(W, met, B, tm.C, tm.D, tm.T)
+
+    #compute the current term.
+    Tj!(W, met, B, tm.Γ, tm.dΓ, tm.K)
+
+
+    #TODO
+    #work in progress.
+    W[1:3, 1:3] += tm.D .* (ωcap2 * n *  met.J / B.mag_B^2)
+
+end
+
 
 """
-    compute_W!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT, B::BFieldT)
+    function compute_isl_W!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT, B::BFieldT, tm::TM)
 
-Computes the W matrix for the weak form at a single coordinate. Awful function that is built from awful functions! This file needs work!
+Computes the W matrix in the case of island coordinates. In this case, the current term is excluded.
 """
-function compute_W!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT, B::BFieldT, n::Float64, ωcap2::Float64)
-
-    #now we want to combine both Tj and Tl into one, this will be cooked!
-    #Tl = zeros(9, 9)
-    #Tj = zeros(3, 9)
-    #display("og")
-
-    #contributions to W are split into two.
-    W[:, :] = compute_Tl(met, B) .* met.J #Tl is fine I think.
-
-    #for islands we assume current is negligible.
-    W[:, :] -= compute_Tj(met, B) .* met.J .* jparonB(met, B) ./ 2
+function compute_isl_W!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT, B::BFieldT, tm::TM)
 
 
-    #W[:, :] -= compute_cap(met, B)
-
-    
-
-    for j=1:3, i=1:3
-        W[i, j] += ωcap2 * n*(met.gu[i, j] - B.b[i]*B.b[j]) * met.J / B.mag_B^2
-    end
-    #Tj = compute_Tj(met, B)
-
-    #display(W[:, :, co...])
-    #need to set equal here, the fill function is not working as intended.
-    
-
-    #this could be total garbage.
-    
-    #for μ=1:9, i=1:3
-    #    W[i, μ] += Tj[i, μ] * met.J
-    #    W[μ, i] += Tj[i, μ] * met.J
-    #end 
-    
-    
-    #println(W)
-
+    Tl!(W, met, B, tm.C, tm.D, tm.T)
     
 end
 
+
+
+
+#######################################
+#old stuff.
+
+#for comparison...
+function compute_C_old!(B::BFieldT, C::Array{Float64, 2})
+
+    #if we change this, perhaps we won't need to store \bb anymore?
+    #although I think it is used in current term.
+
+    for i in 1:3
+        for j in 1:3
+
+            #could be very wrong
+            C[j, i] = B.db[i, j]
+
+        end
+    end
+
+    C[1, 4] = B.b[1]
+
+    C[1, 5] = B.b[2]
+    C[2, 5] = B.b[1]
+
+    C[1, 6] = B.b[3]
+    C[3, 6] = B.b[1]
+
+    C[2, 7] = B.b[2]
+
+    C[2, 8] = B.b[3]
+    C[3, 8] = B.b[2]
+
+    C[3, 9] = B.b[3]
+
+
+end
 
 #think this is actually not needed
 #as island case does not compute dB or dg, so current term will always be zero regardless.
 #also, we may eventually want those additions,
 #however, this should be a bit faster.
-function compute_isl_W!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT, B::BFieldT, n::Float64)
 
-    #now we want to combine both Tj and Tl into one, this will be cooked!
-    #Tl = zeros(9, 9)
-    #Tj = zeros(3, 9)
-    #display("og")
-
-    #contributions to W are split into two.
-
-    W[:, :] = compute_Tl(met, B) .* met.J #Tl is fine I think.
-
-    
-    
-end
 
 
 #appears to be giving the same results as other cases.
@@ -111,6 +123,7 @@ function compute_Tj(met::MetT, B::BFieldT)
     for n in 1:3
 
         #this still might be improvable, but is much more concise.
+        #why the fk is this called dds.
         dds = zeros(6)
 
         for i in 1:3, k in 1:3
@@ -137,56 +150,72 @@ function compute_Tj(met::MetT, B::BFieldT)
 
 end
 
-#const lct = cat(3, [0 0 0; 0 0 1; 0 -1 0], [0 0 -1; 0 0 0; 1 0 0], [0 1 0; -1 0 0; 0 0 0], dims=(3, 3, 3))
-"""
-Function for the levi-civita tensor.
-"""
-function get_lc_tensor()
-    #probably a more elegant way to do this.
-    lc = zeros(3, 3, 3)
-    lc[1, 2, 3] = 1
-    lc[2, 3, 1] = 1
-    lc[3, 1, 2] = 1
-    lc[3, 2, 1] = -1
-    lc[1, 3, 2] = -1
-    lc[2, 1, 3] = -1
-    return lc
-end
 
-
-const lct = get_lc_tensor()
-
-"""
-    jparonB(met::MetT, B::BFieldT)
-
-Computes the parrallel current divided by the magnitude of B, needed for the current term of W.
-"""
-function jparonB(met::MetT, B::BFieldT)
-
-    J = zeros(3)
-
-    #J^i = (∇×B)^i = 1/J * ϵ^{ijk}∂_j B_k = 1/J * ϵ^{ijk}∂_j (g_{kl} B^l)
-
-    for i in 1:3, j in 1:3, k in 1:3
-        J[i] += 1 / met.J * lct[i, j, k] * (dot(met.gl[k, :], B.dB[:, j]) + dot(met.dgl[k, :, j], B.B[:]))
-    end
-    jpar = 0
-    for i in 1:3, j in 1:3
-        jpar += met.gl[i, j] * B.b[i] * J[j]
-    end
-    return jpar/B.mag_B
-end
-
-function dδ(i::Int64, j::Int64)
-    if i==j
-        return 1.0
-    else
-        return 0.0
-    end
-end
-
-
+#no longer used.
 function compute_Tl(met::MetT, B::BFieldT)
+
+    #love that we are still doing this...
+    C = zeros(3, 9)
+    D = zeros(3, 3) #maybe shouldn't recompute this.
+    Tl = zeros(9, 9)
+
+    #if we change this, perhaps we won't need to store \bb anymore?
+    #although I think it is used in current term.
+
+    for i in 1:3
+        for j in 1:3
+
+            #could be very wrong
+            C[j, i] = B.dB[i, j] / B.mag_B^2 - 2 * B.B[i] * B.dmag_B[j] / B.mag_B^3 
+
+            D[i, j] = met.gu[i, j] - B.b[i]*B.b[j]
+
+
+        end
+    end
+
+    C[1, 4] = B.B[1] / B.mag_B^2
+
+    C[1, 5] = B.B[2] / B.mag_B^2
+    C[2, 5] = B.B[1] / B.mag_B^2
+
+    C[1, 6] = B.B[3] / B.mag_B^2
+    C[3, 6] = B.B[1] / B.mag_B^2
+
+    C[2, 7] = B.B[2] / B.mag_B^2
+
+    C[2, 8] = B.B[3] / B.mag_B^2
+    C[3, 8] = B.B[2] / B.mag_B^2
+
+    C[3, 9] = B.B[3] / B.mag_B^2
+
+
+
+    for μ in 1:9
+
+        for ν in 1:9
+
+            for i in 1:3
+                for j in 1:3
+
+                    #would this be faster as a matrix multiplication?
+                    #maybe more memory efficient?
+                    #then we don't need to set Tl to zeros??
+                    Tl[μ, ν] += C[i, μ] * D[i, j] * C[j, ν]
+                end
+            end
+        end
+    end
+
+    return Tl
+
+
+end
+
+
+
+#this uses the weak form version in CKA thesis, this assumes the derivative of |B| is small compared to other things, which is not really a valid assumption for our case.
+function compute_Tl_old(met::MetT, B::BFieldT)
 
     C = zeros(3, 9)
     D = zeros(3, 3) #maybe shouldn't recompute this.

@@ -17,6 +17,9 @@ mutable struct BFieldT
     db :: Array{Float64, 2} 
     mag_B :: Float64 
     dmag_B :: Array{Float64} 
+    function BFieldT()
+        new(zeros(3), zeros(3), zeros(3, 3), zeros(3, 3), 0.0, zeros(3))
+    end
 end
 
 
@@ -344,8 +347,8 @@ Function that computes the magnitude of B and its derivative once the other fiel
 """
 function magnitude_B!(B::BFieldT, met::MetT)
 
-    B2 = 0
-    dB2 = zeros(3)
+    B2 = 0.0
+    dB2 = zeros(Float64, 3)
     #
     for i in 1:3, j in 1:3
 
