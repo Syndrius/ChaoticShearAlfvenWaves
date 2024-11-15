@@ -33,6 +33,10 @@ end
 
 @report_call main()
 
+@allocated main()
+
+@allocations main()
+
 #call in repl directly!
 @report_opt target_modules=(MID.WeakForm,) main()
 evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, full_spectrum=true);

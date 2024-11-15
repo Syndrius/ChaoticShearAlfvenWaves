@@ -16,7 +16,7 @@ mutable struct MetT
     dgl :: Array{Float64, 3} 
     dgu :: Array{Float64, 3} 
     J :: Float64 
-    dJ :: Array{Float64} 
+    dJ :: Array{Float64, 1} 
     function MetT()
         new(zeros(3, 3), zeros(3, 3), zeros(3, 3, 3), zeros(3, 3, 3), 0.0, zeros(3))
     end

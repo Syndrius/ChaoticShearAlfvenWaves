@@ -6,6 +6,9 @@ Computes the I matrix for the weak form at a single coordinate.
 """
 function compute_I!(I::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT, B::BFieldT, n::Float64, flr::FLRT, D::Array{Float64, 2}, F::Array{Float64})
 
+
+    compute_F!(met, B, F)
+
     @inbounds for j=1:9, i=1:9
         #computes the non-ideal effects
         #assumes that Te ≈ Ti

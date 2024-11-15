@@ -11,12 +11,12 @@ Struct for storing the magnetic field and related variables at a given coordinat
 - dmag_B::Array{Float64} - Derivative of the magnitude of B, index refers to derivative coordinate.
 """
 mutable struct BFieldT
-    B :: Array{Float64} 
-    b :: Array{Float64} 
+    B :: Array{Float64, 1} 
+    b :: Array{Float64, 1} 
     dB :: Array{Float64, 2} 
     db :: Array{Float64, 2} 
     mag_B :: Float64 
-    dmag_B :: Array{Float64} 
+    dmag_B :: Array{Float64, 1} 
     function BFieldT()
         new(zeros(3), zeros(3), zeros(3, 3), zeros(3, 3), 0.0, zeros(3))
     end

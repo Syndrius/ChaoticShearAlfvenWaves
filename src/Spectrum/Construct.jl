@@ -21,8 +21,8 @@ function construct(prob::ProblemT, grids::FSSGridsT)
     nlist = mode_list(grids.ζ)
 
     #initialise the two structs to store the metric and the magnetic field.
-    met = init_empty_met()
-    B = init_empty_B()
+    met = MetT()
+    B = BFieldT()
 
     #compute the gaussian qudrature points for finite elements.
     ξ, wg = gausslegendre(grids.r.gp) 

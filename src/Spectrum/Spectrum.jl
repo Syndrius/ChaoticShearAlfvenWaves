@@ -60,14 +60,14 @@ Constructs the two matrices, solves for the eigenvalues and eigenfunctions then 
 function compute_spectrum(; prob::ProblemT, grids::GridsT, target_freq=0.0::Float64, full_spectrum=false::Bool, nev=100::Int64, deriv=false::Bool)
 
     display("Constructing...")
-    W, I = construct(prob, grids)
+    @allocated W, I = construct(prob, grids)
     mat_size = matrix_size(grids)
     @printf("Construction of %dx%d matrices complete.\n", mat_size, mat_size)
     display("Solving...")
     if full_spectrum 
         #with no non-ideal effects the matrices are Hermitian.
         if prob.flr.δ == 0.0 && prob.flr.ρ_i == 0 && prob.flr.δ_e == 0
-            evals, efuncs = full_spectrum_solve(Wmat=W, Imat=I, ideal=true)
+            @allocated evals, efuncs = full_spectrum_solve(Wmat=W, Imat=I, ideal=true)
         #other wise use a non-hermitian solver.
         else
             evals, efuncs = full_spectrum_solve(Wmat=W, Imat=I, ideal=false)
@@ -80,7 +80,7 @@ function compute_spectrum(; prob::ProblemT, grids::GridsT, target_freq=0.0::Floa
     @printf("Solving complete, %d eigenvalues found.\n", length(evals))
     display("Post Processing...")
 
-    evals, ϕ, ϕft = post_process(evals, efuncs, grids, prob.geo, deriv)
+    @allocated evals, ϕ, ϕft = post_process(evals, efuncs, grids, prob.geo, deriv)
 
     display("Finished.")
     return evals, ϕ, ϕft
