@@ -352,8 +352,8 @@ function construct(prob::ProblemT, grids::FFFGridsT)
 
 
     #initialise the two structs to store the metric and the magnetic field.
-    met = init_empty_met()
-    B = init_empty_B()
+    met = MetT()
+    B = BFieldT()
 
     #compute the gaussian qudrature points for finite elements.
     ξr, wgr = gausslegendre(grids.r.gp) #same as python!
@@ -362,6 +362,7 @@ function construct(prob::ProblemT, grids::FFFGridsT)
 
     #Gets the Hermite basis for the grids
     S = hermite_basis(ξr, ξθ, ξζ)
+
 
     #creates the trial and test function arrays.
     #these store the basis functions for each derivative
@@ -386,12 +387,13 @@ function construct(prob::ProblemT, grids::FFFGridsT)
     W = local_matrix_size(grids)
 
     #initialises a struct storing temporary matrices used in the weak form.
-    tm = init_tm()
+    tm = TM()
 
 
     #main loop, θ, ζ go to N for periodicity.
     for i in 1:grids.r.N-1, j in 1:grids.θ.N, k in 1:grids.ζ.N 
 
+        t3 = time()
 
         #takes the local ξ arrays to a global arrays around the grid point.
         r, θ, ζ, dr, dθ, dζ = local_to_global(i, j, k, ξr, ξθ, ξζ, rgrid, θgrid, ζgrid) 
@@ -400,7 +402,18 @@ function construct(prob::ProblemT, grids::FFFGridsT)
         jac = dr * dθ * dζ / 8 
 
         #computes the contribution to the W and I matrices.
+        t1 = time()
         W_and_I!(W, I, met, B, prob, r, θ, ζ, tm)
+        #@printf("W and I time = %f\n", time() - t1)
+
+        #if (i==1 && j==1 && k==1)
+        #    display(W[1:3, 1:3, 1, 1, 1])
+            #display(tm.T')
+            #display(B.mag_B)
+            #display(B.dB[1:3, 1])
+            #display(B.b)
+            #display(met.dgl)
+        #end
         
          #adjust the basis functions to the current coordinates/mode numbers considered.
         create_local_basis!(Φ, S, grids.θ.pf, grids.ζ.pf, dr, dθ, dζ)
@@ -409,6 +422,7 @@ function construct(prob::ProblemT, grids::FFFGridsT)
 
 
         #loop over the Hermite elements for the trial function
+        t1 = time()
         for trialr in 1:4, trialθ in 1:4, trialζ in 1:4
 
             #determines the matrix index for the trial function
@@ -444,6 +458,8 @@ function construct(prob::ProblemT, grids::FFFGridsT)
                     else
                         
                         #integrate the local contribution to our matrices.
+                        #think we actually have this around the wrong way
+                        #should have Φ[:, :, :, :, testr, testθ, testζ] etc.
                         Wsum = @views gauss_integrate(Ψ[testr, testθ, testζ, :, :, :, :], Φ[trialr, trialθ, trialζ, :, :, :, :], W, wgr, wgθ, wgζ, jac, grids.r.gp, grids.θ.gp, grids.ζ.gp)
 
                         Isum = @views gauss_integrate(Ψ[testr, testθ, testζ, :, :, :, :], Φ[trialr, trialθ, trialζ, :, :, :, :], I, wgr, wgθ, wgζ, jac, grids.r.gp, grids.θ.gp, grids.ζ.gp)
@@ -458,6 +474,7 @@ function construct(prob::ProblemT, grids::FFFGridsT)
                 else
                     
                     #integrate the local contribution to our matrices.
+                    t5 = time()
                     Wsum = @views gauss_integrate(Ψ[testr, testθ, testζ, :, :, :, :], Φ[trialr, trialθ, trialζ, :, :, :, :], W, wgr, wgθ, wgζ, jac, grids.r.gp, grids.θ.gp, grids.ζ.gp)
 
                     Isum = @views gauss_integrate(Ψ[testr, testθ, testζ, :, :, :, :], Φ[trialr, trialθ, trialζ, :, :, :, :], I, wgr, wgθ, wgζ, jac, grids.r.gp, grids.θ.gp, grids.ζ.gp)
@@ -467,16 +484,23 @@ function construct(prob::ProblemT, grids::FFFGridsT)
                     push!(Idata, Isum)
                     push!(rows, left_ind)
                     push!(cols, right_ind)
+                    #@printf("No bc case = %f\n", time() - t5)
+
                     
                 end
             end
         end
+        #@printf("Big loop time = %f\n", time() - t1)
+        #@printf("total loop time = %f\n", time() - t3)
 
     end
 
     #construct the sparse matrix.
     Wmat = sparse(rows, cols, Wdata)
     Imat = sparse(rows, cols, Idata)
+
+    #display(Matrix(Wmat)[5:9, 5:9])
+    #display(Matrix(Imat)[5:9, 5:9])
 
     return Wmat, Imat
 end

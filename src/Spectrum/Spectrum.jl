@@ -59,6 +59,8 @@ Constructs the two matrices, solves for the eigenvalues and eigenfunctions then 
 """
 function compute_spectrum(; prob::ProblemT, grids::GridsT, target_freq=0.0::Float64, full_spectrum=false::Bool, nev=100::Int64, deriv=false::Bool)
 
+    t1 = time()
+
     display("Constructing...")
     @allocated W, I = construct(prob, grids)
     mat_size = matrix_size(grids)
@@ -83,6 +85,7 @@ function compute_spectrum(; prob::ProblemT, grids::GridsT, target_freq=0.0::Floa
     @allocated evals, ϕ, ϕft = post_process(evals, efuncs, grids, prob.geo, deriv)
 
     display("Finished.")
+    @printf("total time = %f\n", time() - t1)
     return evals, ϕ, ϕft
 
 end

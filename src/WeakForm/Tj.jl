@@ -12,8 +12,13 @@ function Tj!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT, B::BFi
     #scale factor for this term.
     sf = - met.J * jparonB(met, B) / 2.0
 
+
     #computes the Γ matrix and its derivative dΓ
     compute_Γ!(met, B, Γ, dΓ)
+
+    #display("Gam is")
+    #display(Γ)
+    val = 0
 
     
     for n in 1:3
@@ -24,6 +29,8 @@ function Tj!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT, B::BFi
         fill!(K, 0.0)
         #computes K, contribution to W for ∂^2 terms without Γ derivatives.
         compute_K!(met, Γ, K, n)
+
+       
 
         #this loop computes the contributions for first derivatives,
         #so contains the derivatives of Γ.
@@ -45,7 +52,21 @@ function Tj!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT, B::BFi
         W[n, 4:9] .+= K .* sf
         W[4:9, n] .+= K .* sf
 
+        #display("Wloc part is")
+        #println(W[4:6, n])
+        #println(W[7:9, n])
+
     end
+    
+    
+
+    #display("W is")
+
+    #display(W[1:4, 1:4])
+    #display("Dgam is")
+    #display(dΓ[1, 1, 1:3])
+    #display(dΓ[1, 2, 1:3])
+    #display(dΓ[3, 3, 1:3])
 
 end
 

@@ -7,16 +7,27 @@ Computes the W matrix for the weak form at a single coordinate.
 function compute_W!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT, B::BFieldT, n::Float64, ωcap2::Float64, tm::TM)
 
 
+   
     #compute the laplacian like term
     Tl!(W, met, B, tm.C, tm.D, tm.T)
+    
+    #display("W is pre Tj")
+    #display(W[1:3, 1:3])
+    #display(W[1:3, 4:6])
+    #display(W[1:3, 7:9])
 
     #compute the current term.
     Tj!(W, met, B, tm.Γ, tm.dΓ, tm.K)
+    
 
 
+    #display("W is")
+    #display(W[1:3, 1:3])
+    #display(W[1:3, 4:6])
+    #display(W[1:3, 7:9])
     #TODO
     #work in progress.
-    W[1:3, 1:3] += tm.D .* (ωcap2 * n *  met.J / B.mag_B^2)
+    #W[1:3, 1:3] += tm.D .* (ωcap2 * n *  met.J / B.mag_B^2)
 
 end
 

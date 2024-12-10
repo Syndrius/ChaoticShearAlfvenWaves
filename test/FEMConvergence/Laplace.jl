@@ -177,6 +177,8 @@ function laplace_1d(N::Int64)
 
     xgrid = LinRange(0, π, N)#+1)[1:end-1]
 
+    display(xgrid)
+
 
     gp = 5
     ξ, wg = gausslegendre(gp)
@@ -231,13 +233,20 @@ function laplace_1d(N::Int64)
         A[i, i] = 1.0
     end
 
-    #display(M)
-    #display(A)
+    display(M)
+    display(A)
 
     return eigen(Hermitian(M), Hermitian(A))
 end
 
-N = 30
+ξ, wg = gausslegendre(5)
+
+S = linear_basis(ξ)
+
+display(S.H)
+display(S.dH)
+
+N = 5
 evals, efuncs = laplace_1d(N);
 
 println(evals)
