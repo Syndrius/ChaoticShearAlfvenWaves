@@ -256,14 +256,24 @@ geo = GeoParamsT(R0=10.0)
 prob = init_problem(q=island_mode_21, geo=geo, met=cylindrical_metric!)
 
 rgrid = MID.ContGridDataT(N=Nr)
-θgrid = asm_grid(start=-1, N=9)
-ζgrid = asm_grid(start=-4, N=5)
+#θgrid = asm_grid(start=-1, N=9)
+#ζgrid = asm_grid(start=-4, N=5)
+
+θgrid = asm_grid(start=0, N=1)
+ζgrid = asm_grid(start=0, N=1)
 
 grids = init_grids(rgrid, θgrid, ζgrid)
 
 evals_cont = cyl_cont(prob, grids);
 
+p = scatter(xlabel=L"r", ylabel=L"\frac{\omega  R_0}{v_A}", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10, ylimits=(-0.005, 0.08), legend=false, xlimits=(0.45, 0.55))
 
+evals_cont.r, real.(evals_cont.ω)
+
+scatter!(evals_cont.r, real.(evals_cont.ω), color=2)
+scatter!(evals_cont.r, real.(evals_cont.ω), color=1)
+
+evals_cont.ω
 
 p = scatter(evals_cont.r, real.(evals_cont.ω), group=evals_cont.modelabs, xlabel=L"r", ylabel=L"\frac{\omega  R_0}{v_A}", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10, ylimits=(-0.005, 0.08), legend=false, xlimits=(0.45, 0.55))
 

@@ -56,7 +56,7 @@ end
 
 #prob = init_problem(q = gae_q, dens=gae_dens, geo=geo)
 #isl = IslandT(m0=2, n0=-1, w=0.1)
-prob = init_problem(q = isl_q, geo=geo, met=cylindrical_metric!, dens=gae_dens, isl=isl)
+prob = init_problem(q = gae_isl_q, geo=geo, met=cylindrical_metric!, dens=gae_isl_dens)#, isl=isl)
 prob = init_problem(q = gae_q, geo=geo, met=cylindrical_metric!, dens=test_gae_dens)
 
 
@@ -69,14 +69,46 @@ continuum_plot(evals)#, ymax=10)
 #this might work, problem being the 10 gae's we are finding is a bit annoying!
 
 #pretty similar results with both methods, fss is significanlty faster though!
-gae_ind = find_ind(evals, 0.3565308)
+gae_ind = find_ind(evals, 0.3543694)
 tae_ind = find_ind(ω, 0.49)
 
 gae_ind = 8
 
+1.5/ 0.0003
 
 
-potential_plot(ϕft, grids, gae_ind)
+potential_plot(4000 .* ϕft, grids, gae_ind)
+
+using LaTeXStrings
+using Printf
+using Plots; gr()
+
+p = plot(xlabel=L"r", ylabel=L"\phi", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10)
+
+
+rgrid, θgrid, _ = inst_grids(grids)
+
+
+
+for i in 1:grids.θ.N
+
+    for j in 1:grids.ζ.N
+    
+
+        
+
+        plot!(rgrid,  real.(ϕft[gae_ind, :, i, j]), label=false)
+
+    end
+
+end
+
+plot!(rgrid, 4000 .* real.(ϕft[gae_ind, :, 2, 1]), label=@sprintf("(1, 0)"), color=1)
+
+#display(p)
+
+savefig("aapps_pics/unpertuebd_gae.png")
+
 
 
 #what about the analytical continuum!

@@ -2,9 +2,7 @@
 Base class that just imports everything. We will want a description of the package here and the author etc
 
 # Modules that are still cooked
- - Continuum -> Mainly needs to be adjusted to new method of Io. -> and new grid structure -> probably fix once we get island metric invented. -> completly cooked now!
- - WeakForm -> Bit cooked, mainly needs a good clean!
- - Spectrum -> Mainly just construct, bit of a nightmare!
+ - Continuum -> Mainly needs to be adjusted to new method of Io. -> and new grid structure -> probably fix once we get island metric invented. -> completly cooked now! -> may need to test this with the island case.
 
 
  ###### More Urgent
@@ -12,7 +10,7 @@ Base class that just imports everything. We will want a description of the packa
  - Perhaps change the solver to do a range rather than a target, will need to get this to actually work.
  -  Investigate memory usage, Axel used 800x250x10...
  - If we can solve with more evals and less memory usage, will need to paralise post processing.
- - Try the weakform based on Zhisongs equation for the laplacian term.
+
 
 
 
@@ -20,11 +18,9 @@ Base class that just imports everything. We will want a description of the packa
  - Add try catch to sqrt in solve, most of the time it is just because of ~0 numbers, but it owuld be good to have a warning rather than just always take abs. -> Maybe in this case we dont return the normalised ones? Or should we always have a normalise flag??? -> cka does this better, below some tolerance they are just set to zero.
  - boundary conditions may need modification for flr, and perhaps the m=1 stuff is still not working properly.
  - fix all the examples and extra spectra garbage
- - Reconstruct phi can probbaly be made more efficient -> not sure if we still want to do it one at a time...
  - remove extra exports from this file.
  - Use of kwargs is inconsistent and sometimes annoying.
  - Maybe we should start removing the modes far from the centre as they tend to be garbage.
- - should move to gadi's version of Julia I think. -> we are also running out of space in home directory...
  - Think ideally we would only instantiate grids once...
  - Combine our interpolation thing into MID. (or perhaps make a new package???)
  - Fix Hermite interpolation.
@@ -33,9 +29,7 @@ Base class that just imports everything. We will want a description of the packa
  - It could be worth trying ffs, as we only ever seem to need 0, 2, 4, and the negs for ζ. Maybe more efficient???
  - Eventually want to delete all these random af julia files inside the MID folder.
  - Derivative stuff is no longer working.
- - WeakForm is seriously cooked, needs to be actually fixed not just cleaned, i.e. stop declaring matrices at every step...
  - They way we do normalisation is inconsistent and kind of weird...
- - We probably need to embark on the great memory purge!
 
 
 
@@ -47,6 +41,7 @@ Base class that just imports everything. We will want a description of the packa
  - Make user friendly inputs for grids and problems.
  - Change the names for the grid creation functions
  - Change q-profiles to just accept a polynomial coefficeints, that way we don't need a billion, -> provided our island q thing works, this shouldn't be to bad.
+ - Probably not worth it, but we could plausibly use some kind of cartesian index for the grid point, then it may be possible to just have as single construct functions. -> Still have to figure out to do fft, and how to 'integrate' for spectral method. But they are getting closer and closer to homogeneous.
  
  
 
@@ -133,6 +128,7 @@ using MID.Io; export inputs_to_file
 using MID.Io; export inputs_from_file
 using MID.Io; export evals_from_file
 using MID.Io; export efunc_from_file
+using MID.Io; export fortran_process
 
 
 

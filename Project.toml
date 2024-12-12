@@ -6,6 +6,7 @@ version = "1.0.0-DEV"
 [deps]
 Accessors = "7d9f7c33-5ae7-4f3b-8dc6-eff91059b697"
 Arpack = "7d9fca2a-8960-54d3-9f78-7d1dccf2cb97"
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 EllipsisNotation = "da5c29d0-fa7d-589e-88eb-ea29b0a81949"
 Elliptic = "b305315f-e792-5b7a-8f41-49f472929428"

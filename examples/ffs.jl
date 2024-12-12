@@ -1,6 +1,12 @@
 
 using MID
 using Plots; plotlyjs()
+using JET
+
+
+tm = MID.Geometry.MetT()
+
+tm.gl
 
 #with individual parts.
 #different ways of doing it are basically identical.
@@ -14,18 +20,31 @@ geo = GeoParamsT(R0=10.0)
 
 prob = init_problem(q=Axel_q, geo=geo); 
 
-rgrid = init_fem_grid(N=Nr)
-θgrid = init_fem_grid(N=Nθ, pf=2)
-ζgrid = init_sm_grid(start=-2, count=1)
+rgrid = rfem_grid(N=Nr)
+θgrid = afem_grid(N=Nθ, pf=2)
+ζgrid = asm_grid(start=-2, N=1)
 #grids = init_grids(N=N, mstart=1, mcount=2, nstart=-1, ncount=1);
 grids = init_grids(rgrid, θgrid, ζgrid)
 
+function main()
+    compute_spectrum(prob=prob, grids=grids, full_spectrum=true);
+    #construct(prob, grids)
+end
 
+@report_call main()
 
+@allocated main()
+
+@allocations main()
+
+#call in repl directly!
+@report_opt target_modules=(MID.WeakForm,) main()
 evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, full_spectrum=true);
 
+report_package(MID)
+
 #scatter(cr.r, real.(cr.ω), ylimits=(-0.05, 1.05))
-plot_continuum(evals)
+continuum_plot(evals)
 
 println(ϕft[164, 1:2, :, :])
 display(size(ϕft))

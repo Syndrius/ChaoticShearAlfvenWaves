@@ -13,7 +13,7 @@ include("MatrixSize.jl")
 
 export local_matrix_size 
 export matrix_size 
-export init_bases_function
+export init_basis_function
 
 
 

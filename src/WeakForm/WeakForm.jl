@@ -1,5 +1,7 @@
-#TODO -> module needs to be cleaned up to match the other's and to not be quite so garbage.
+"""
 
+Computes the weak form of our governing equation. This involves computing W and I for a given grid point.
+"""
 module WeakForm
 
 using MID.Geometry
@@ -8,8 +10,27 @@ using MID.Structures
 
 using LinearAlgebra
 
-export W_and_I!
+#struct storing tempory matrices used for memory efficient weak form
+struct TM 
+    C :: Array{Float64, 2}
+    D :: Array{Float64, 2}
+    T :: Array{Float64, 2}
+    F :: Array{Float64}
+    Γ :: Array{Float64, 2}
+    dΓ :: Array{Float64, 3}
+    K :: Array{Float64}
+    function TM()
+        new(zeros(3, 9), zeros(3, 3), zeros(9, 3), zeros(9), zeros(3, 3), zeros(3, 3, 3), zeros(6))
+    end
+end
 
+
+export W_and_I!
+export TM
+export init_tm
+
+include("Tl.jl") #name subject to change
+include("Tj.jl") #name subject to change
 include("W.jl")
 include("I.jl")
 
@@ -20,27 +41,14 @@ include("I.jl")
 
 Computes the two matrices W and I based on the weak form of the SAW governing equation.
 Solving generalised eigenvalue problem Wϕ = ω^2Iϕ
-
-### Args
-- W::Array{ComplexF64, 5} - Matrix storing 9x9 values to be contracted with the derivtaives of ϕ, at each of the three coordinates.
-- I::Array{ComplexF64, 5} - Matrix storing 9x9 values to be contracted with the derivtaives of ϕ, at each of the three coordinates.
-- met::MetT - Struct containing the metric information.
-- B::BfieldT - Struct containing the magnetic field information.
-- prob::ProblemT - Struct containing the functions and parameters that define the problem we are solving
-- r::Float64 - Radial coordinate, 0≤r≤1, minor radius is assumed 1.
-- θ::Float64 - Poloidal angle, 0≤θ≤2π.
-- ζ::Float64 - Toroidal angle, 0≤θ≤2π.
 """
-function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, met::MetT, B::BFieldT, prob::ProblemT, r::Array{Float64}, θ::AbstractArray, ζ::AbstractArray)
+function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, met::MetT, B::BFieldT, prob::ProblemT, r::Array{Float64}, θ::AbstractArray, ζ::AbstractArray, tm::TM)
 
-    #have removed the type for θ, needs to be a vector for zf, but a linrange for normal, need a better way of defining these types.
     
     #compute the density.
     n = prob.dens.(r) :: Array{Float64}
+    #TODO
     ωcap2 = ω_cap2.(r) :: Array{Float64}
-    #hard coded just for a test atm
-    #dont actually need this!
-    #dn = @. -5 * sech(8-10*r)^2
 
     for k=1:1:length(ζ), j=1:1:length(θ), i=1:1:length(r)
 
@@ -48,39 +56,38 @@ function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, met::MetT, B
         prob.compute_met(met, r[i], θ[j], ζ[k], prob.geo.R0)
 
         #compute the magnetic field.
-        #compute_B!(B, met, prob.q, prob.isl, r[i], θ[j], ζ[k])
+        #everywhere else has met then B...
         compute_B!(B, met, prob.q, prob.isl, r[i], θ[j], ζ[k])
-        #note that this is actually wrong, B[2, 2] was being overwritten with zero.
-        #MagneticField.old_compute_B!(B, met, prob.q, prob.isl, r[i], θ[j], ζ[k])
-        
-        #comething about views here doesn't work, I assume it is do to with passing non-indexed things in ala met etc but who knows.
-        #compute the W matrix
-        #@views new_compute_W!(W[:, :, i, j, k], met, B)
-        @views compute_W!(W[:, :, i, j, k], met, B, n[i], ωcap2[i])
 
-        #views are giving us some warnings, may be better to just define the view of I/W not the entire @views thing.
+        #computes the matrix D.
+        compute_D!(met, B, tm.D)
+
+        #compute the W matrix
+        @views compute_W!(W[:, :, i, j, k], met, B, n[i], ωcap2[i], tm)
+
         #compute the I matrix
-        #@views new_compute_I!(I[:, :, i, j, k], met, B, n[i], prob.δ)
-        @views compute_I!(I[:, :, i, j, k], met, B, n[i], prob.flr)
-        #@views newest_compute_I!(I[:, :, i, j, k], met, B, n[i], prob.δ, dn[i], r[i])
+        @views compute_I!(I[:, :, i, j, k], met, B, n[i], prob.flr, tm.D, tm.F)
 
     end
+
+    
 
 end
 
 
 
-#inside island case!
-function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, met::MetT, B::BFieldT, prob::IslProblemT, r::Array{Float64}, θ::AbstractArray, ζ::AbstractArray)
+"""
+    W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, met::MetT, B::BFieldT, prob::ProblemT, r:: Array{Float64}, θ, ζ::AbstractRange)
 
-    #have removed the type for θ, needs to be a vector for zf, but a linrange for normal, need a better way of defining these types.
+Computes the two matrices W and I based on the weak form of the SAW governing equation for the case with island coordinates.
+In this case a specific metric and q-profile are used and the current nerm is not included.
+"""
+function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, met::MetT, B::BFieldT, prob::IslProblemT, r::Array{Float64}, θ::AbstractArray, ζ::AbstractArray, tm::TM)
     
     #compute the density.
     n = prob.dens.(r) :: Array{Float64}
-    #ωcap2 = ω_cap2.(r) :: Array{Float64}
-    #hard coded just for a test atm
-    #dont actually need this!
-    #dn = @. -5 * sech(8-10*r)^2
+    #wcap is unused in this case, perhaps density as well.
+
 
     for k=1:1:length(ζ), j=1:1:length(θ), i=1:1:length(r)
 
@@ -88,27 +95,23 @@ function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, met::MetT, B
         island_metric!(met, r[i], θ[j], ζ[k], prob.geo.R0, prob.isl)
 
         #compute the magnetic field.
-        #compute_B!(B, met, prob.q, prob.isl, r[i], θ[j], ζ[k])
         compute_B_isl!(B, met, prob.isl, r[i], θ[j], ζ[k])
-        #note that this is actually wrong, B[2, 2] was being overwritten with zero.
-        #MagneticField.old_compute_B!(B, met, prob.q, prob.isl, r[i], θ[j], ζ[k])
-        
-        #comething about views here doesn't work, I assume it is do to with passing non-indexed things in ala met etc but who knows.
-        #compute the W matrix
-        #@views new_compute_W!(W[:, :, i, j, k], met, B)
-        @views compute_isl_W!(W[:, :, i, j, k], met, B, n[i])
 
-        #views are giving us some warnings, may be better to just define the view of I/W not the entire @views thing.
+        #computes the matrix D.
+        compute_D!(met, B, tm.D)
+
+        #compute the W matrix
+        @views compute_isl_W!(W[:, :, i, j, k], met, B, tm)
+
         #compute the I matrix
-        #@views new_compute_I!(I[:, :, i, j, k], met, B, n[i], prob.δ)
-        @views compute_I!(I[:, :, i, j, k], met, B, n[i], prob.flr)
-        #@views newest_compute_I!(I[:, :, i, j, k], met, B, n[i], prob.δ, dn[i], r[i])
+        @views compute_I!(I[:, :, i, j, k], met, B, n[i], prob.flr, tm.D, tm.F)
 
     end
 
 end
 
 
+#TODO work in progress.
 function ω_cap2(r::Float64)
 
     #this seems to be having a much larger effect for fff than ffs, interesting...
@@ -118,6 +121,35 @@ function ω_cap2(r::Float64)
 
 end
 
+
+"""
+    function compute_D!(met::MetT, B::BFieldT, D::Array{Float64, 2})
+
+Function to compute D matrix, used by both W and I.
+"""
+function compute_D!(met::MetT, B::BFieldT, D::Array{Float64, 2})
+
+    #D^ij = g^ij - b^i b^j
+    @inbounds for j in 1:3
+        @inbounds for i in 1:3
+
+            D[i, j] = met.gu[i, j] - B.b[i]*B.b[j]
+            
+        end
+    end
+
+end
+
+
+"""
+    function init_tm()
+
+Initialises structure storing the temporary matrices needed for the weak form.
+"""
+function init_tm()
+
+    return TM(zeros(3, 9), zeros(3, 3), zeros(9, 3), zeros(9), zeros(3, 3), zeros(3, 3, 3), zeros(6))
+end
 
 
 end
