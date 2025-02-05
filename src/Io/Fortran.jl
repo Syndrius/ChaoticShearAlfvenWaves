@@ -17,12 +17,23 @@ function fortran_process(dir::String)
     #write the julia version of the prob and grids
     inputs_to_file(prob=prob, grids=grids, dir=dir)
 
-    vals = open(dir*"vals.txt", "r") do file
-        s = readlines(file)[2:end-1] 
-        parse.(ComplexF64, s)
+    #this will need to change with updated solving method
+    open(dir*"vals00.dat", "r") do file
+        
+        s = readlines(file)
+        #don't love the global here...
+        global vals = Array{ComplexF64}(undef, length(s))
+        for (i, line) in enumerate(s)
+            subs = split(strip(line, ['(', ')', ' ']), ",")
+            vals[i] = parse(Float64, subs[1]) + 1im * parse(Float64, subs[2]) 
+        end
+
+        #display()
+
+        #parse.(ComplexF64, s)
     end
 
-    strs = readdir(dir*"/efuncs_raw")
+    strs = readdir(dir*"/efuncs_raw00")
     #not sure if a lock hdf5 is always written?
     #sometimes loc sometimes lock...
     #may be best to just delete the appropriate number of evals
@@ -35,6 +46,7 @@ function fortran_process(dir::String)
     else
         nevals = length(strs)
     end
+    nevals = length(vals)
 
     ϕp, ϕpft = PostProcessing.allocate_phi_arrays(grids, deriv=deriv)
 
@@ -61,18 +73,19 @@ function fortran_process(dir::String)
 
         #this is fkn slow af.
         #need to stick with jld2 I think.
-        efunc_read = @sprintf("efunc%04d.hdf5", i)
-        efunc_write = @sprintf("efunc%04d.jld2", i)
+        #i-1 to match fortran staring at 0 for some reason
+        efunc_read = @sprintf("efunc%05d.hdf5", i-1)
+        efunc_write = @sprintf("efunc%05d.jld2", i)
 
         #unfort doesn't handle complex numbers v well
-        efunc_split = load_object(dir*"/efuncs_raw/"*efunc_read)#[1, :]
+        efunc_split = load_object(dir*"/efuncs_raw00/"*efunc_read)#[1, :]
 
         efunc = efunc_split[1, :] .+ efunc_split[2, :] * 1im
 
 
-        reconstruct_phi!(efunc, grids, ϕp, ϕpft, plan)
+        PostProcessing.reconstruct_phi!(efunc, grids, ϕp, ϕpft, plan)
         
-        rind, mode_lab = label_mode(ϕpft, grids, rmarray, ϕmarray)
+        rind, mode_lab = PostProcessing.label_mode(ϕpft, grids, rmarray, ϕmarray)
 
 
         #if deriv
@@ -148,7 +161,7 @@ function fortran_inputs(dir::String)
         var = s[1]
         
         #line += 1
-        println("$line . $var")
+        #println("$line . $var")
 
         #rgrid
         if var == "Nr"
@@ -174,7 +187,7 @@ function fortran_inputs(dir::String)
             Nζ = parse(Int64, s[2])
         elseif var == "tgp"
             ζgp = parse(Int64, s[2])
-        elseif var == "tpf"
+        elseif var == "zpf"
             ζpf = parse(Int64, s[2])
             #geometry
         elseif var == "R0"
@@ -187,7 +200,8 @@ function fortran_inputs(dir::String)
             continue
             #island #subject to change, using A or w etc
         elseif var == "A"
-            A = parse(Float64, s[2])
+            #pretty fkn annoying, this can't handle d..
+            A = parse(Float64, replace(s[2], "d"=>"e"))
         elseif var == "m0"
             m0 = parse(Int64, s[2])
         elseif var == "n0"

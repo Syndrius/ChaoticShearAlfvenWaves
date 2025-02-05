@@ -36,6 +36,8 @@ function compute_F!(met::MetT, B::BFieldT, F::Array{Float64})
     #TODO
     #need description of this, when we return to damping.
 
+    F .= 0.0
+
     @inbounds for j=1:3, i=1:3
         F[j] += 1/met.J * ( met.dJ[i]*(met.gu[i, j] - B.b[i]*B.b[j])
             + met.J*(met.dgu[i, j, i] - B.b[i]*B.db[j, i] - B.db[i, i] * B.b[j]))

@@ -35,14 +35,14 @@ function efunc_from_file(; dir::String, ind, ft=true, deriv=false)
 
     if ft
         if deriv
-            filename = dir * @sprintf("efuncs_ft_deriv/efunc%04d.jld2", ind)
+            filename = dir * @sprintf("efuncs_ft_deriv/efunc%05d.jld2", ind)
         else
-            filename = dir * @sprintf("efuncs_ft/efunc%04d.jld2", ind)
+            filename = dir * @sprintf("efuncs_ft/efunc%05d.jld2", ind)
         end
     elseif deriv
-        filename = dir * @sprintf("efuncs_deriv/efunc%04d.jld2", ind)
+        filename = dir * @sprintf("efuncs_deriv/efunc%05d.jld2", ind)
     else
-        filename = dir * @sprintf("efuncs/efunc%04d.jld2", ind)
+        filename = dir * @sprintf("efuncs/efunc%05d.jld2", ind)
     end
 
     ϕ = load_object(filename)

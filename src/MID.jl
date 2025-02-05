@@ -122,6 +122,9 @@ include("Integration/Integration.jl")
 
 
 
+include("PostProcessing/PostProcessing.jl")
+
+
 include("Io/Io.jl")
 
 using MID.Io; export inputs_to_file
@@ -145,7 +148,7 @@ include("WeakForm/WeakForm.jl")
 
 
 
-include("PostProcessing/PostProcessing.jl")
+
 
 
 
