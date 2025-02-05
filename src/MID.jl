@@ -123,6 +123,9 @@ include("Integration/Integration.jl")
 
 include("PostProcessing/PostProcessing.jl")
 
+include("PostProcessing/PostProcessing.jl")
+
+
 include("Io/Io.jl")
 
 using MID.Io; export inputs_to_file
