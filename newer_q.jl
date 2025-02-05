@@ -1,12 +1,18 @@
 
-#test for newer q, designed to have tae with n=3, and island with m0=3, so that hopefully n_I=1 modes will overlap with tae.
+#Want q-profile that is pretty flat, and gives low freq's to best match island
+#want 2, 1 island at r=0.5, so q(0.5)=2
+#use density to create v small bump to give gae.
+#so q should be flat ish
+
+#ok, so this combo gives a (2, -1) gae at ω=0.0075, peaking at ~0.68.
+#think this will make a pretty good setup.
 
 using MID
 using Plots; plotlyjs()
 
 function nq(r)
-    a = 1.4
-    b = 6-4*a
+    a = 1.98
+    b = 0.08
 
     q = a + b*r^2
     dq = 2 * b * r
@@ -14,24 +20,58 @@ function nq(r)
     return q, dq
 end
 
+#this is perhaps going to be more complicated unfort.
+#so this is not the go, rather we want to use something like gae_isl_dens, but maybe want to modify κ, however the q-profile is probably a pretty good start.
+function ndens(r)
+
+    p = 1
+    κ = -2
+
+    return ((1-p*r^2)^κ)
+
+    """
+    left = 0.5
+    right = 0.7
+    scale = 10
+
+    if r<left
+        return 1.0
+    elseif r>right
+        return 1.0
+    else
+        return scale*r^2 -scale * (left+right)*r + 1 + left*right*scale
+    end
+    """
+end
+
+rplot = LinRange(0, 1, 100)
+
+plot(rplot, ndens.(rplot))
+
+#plot(rplot, gae_isl_dens.(rplot))
+
+plot(rplot, axel_dens.(rplot))
+
+plot(rplot, nq.(rplot))
+
 #with individual parts.
 #different ways of doing it are basically identical.
 #10.992975 seconds (15.38 M allocations: 1.195 GiB, 4.40% gc time)
 
 #start very small, matrix scales much more extremly
-Nr = 50;
+Nr = 500;
 Nθ = 8
 
-geo = GeoParamsT(R0=5.0)
+geo = GeoParamsT(R0=1000.0)
 
-isl = IslandT(A=0.0e-4, m0=3, n0=2);
+#isl = IslandT(A=0.0e-4, m0=3, n0=2);
 
-prob = init_problem(q=nq, geo=geo, isl=isl); 
+prob = init_problem(q=nq, geo=geo, dens=ndens)#, isl=isl); 
 
-rgrid = init_fem_grid(N=Nr)
-θgrid = init_fem_grid(N=Nθ, pf=3)
-#θgrid = init_sm_grid(start=1, count=5)
-ζgrid = init_sm_grid(start=-3, count=1)
+rgrid = rfem_grid(N=Nr)
+#θgrid = afem_grid(N=Nθ, pf=3)
+θgrid = asm_grid(start=0, N=3)
+ζgrid = asm_grid(start=-1, N=2)
 #grids = init_grids(N=N, mstart=1, mcount=2, nstart=-1, ncount=1);
 grids = init_grids(rgrid, θgrid, ζgrid)
 
@@ -41,49 +81,20 @@ grids = init_grids(rgrid, θgrid, ζgrid)
 
 #plot_continuum(ω_cont, cont_grids)
 
-ω, ϕ = construct_and_solve(prob=prob, grids=grids, full_spectrum=true);
+evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, full_spectrum=false, target_freq=0.008, nev=300);
 
-ϕms = mode_structure(ϕ, grids)
-reconstruct_continuum(ω, ϕms, grids)
+#so island is ω ~ 0.05 in Axel's case
+continuum_plot(evals, ymax=0.1)
+tae_ind = find_ind(evals, 0.0075775)
 
-tae_ind = find_ind(ω, 0.301)
-tae_freq = ω[tae_ind]
-plot_potential(ϕ, grids, tae_ind)
+potential_plot(ϕft, grids, tae_ind)
 
+rgrid_cont = MID.ContGridDataT(N=Nr)
+cont_grids = init_grids(rgrid_cont, θgrid, ζgrid)
+
+evals_cont = cyl_cont(prob, cont_grids)
+
+continuum_plot(evals_cont, ymax=0.1)
 
 #perhaps with more res?
 
-Nr = 80
-Nθ = 30
-
-geo = GeoParamsT(R0=5.0)
-
-isl = IslandT(A=8.0e-4, m0=3, n0=2);
-
-prob = init_problem(q=nq, geo=geo, isl=isl, δ=-4e-7); 
-
-rgrid = init_fem_grid(N=Nr)
-θgrid = init_fem_grid(N=Nθ, pf=3)
-#θgrid = init_sm_grid(start=1, count=5)
-ζgrid = init_sm_grid(start=-3, count=1)
-#grids = init_grids(N=N, mstart=1, mcount=2, nstart=-1, ncount=1);
-grids = init_grids(rgrid, θgrid, ζgrid)
-
-
-ω, ϕ = construct_and_solve(prob=prob, grids=grids, full_spectrum=false, σ = 0.301, nev=100);
-
-ϕms = mode_structure(ϕ, grids)
-reconstruct_continuum(ω, ϕms, grids)
-
-#perf, in theory, island should overlap here!
-#does seem to be no overlap, may a resolution issue, but stil quite surpriseing!
-#maybe we need more toroidal mode numbers? island n should be 1, but we are only considering n=3??
-tae_ind = find_ind(abs.(ω), 0.319)
-tae_freq = ω[tae_ind]
-plot_potential(ϕms, grids, tae_ind)
-
-display(ω[1:5])
-
-display(imag(ω[tae_ind])/real(ω[tae_ind]))
-
-plot_phi_surface(ϕ, grids, tae_ind)

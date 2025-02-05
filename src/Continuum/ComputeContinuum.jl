@@ -202,13 +202,15 @@ function cyl_cont(prob::ProblemT, grids::ContGridsT)
 
         q, _ = prob.q(r)
 
+        dens = prob.dens(r)
+
         for m in mlist
 
             for n in nlist
 
                 push!(mode_labs, (m, n))
 
-                push!(ω, abs(m/q + n)) #already normalised!
+                push!(ω, abs(m/q + n) / sqrt(dens)) #already normalised!
 
                 push!(rms, r)
 

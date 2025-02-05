@@ -5,11 +5,13 @@ using Plots; plotlyjs()
 #Integration has been massivly sped up, but this is still slow af, probbaly requires multiproc.
 #~90% of the time is spent numerically integrating. Wonder if there is anything we can do???
 Nr = 30
-Nθ = 6
-Nζ = 2
-rgrid = rfem_grid(N=Nr, gp=5);
-θgrid = afem_grid(N=Nθ, pf=2, gp=5);
-ζgrid = afem_grid(N=Nζ, pf=-2, gp=5);
+Nθ = 5
+Nζ = 1
+rgrid = rfem_grid(N=Nr, gp=4, sep1=0.4, sep2=0.6, frac=0.0);
+θgrid = afem_grid(N=Nθ, pf=0, gp=4);
+ζgrid = afem_grid(N=Nζ, pf=-0, gp=4);
+
+#println(MID.inst_grid(rgrid))
 
 grids = init_grids(rgrid, θgrid, ζgrid);
 
@@ -32,7 +34,7 @@ prob = init_problem(q=Axel_q, geo=geo);
 #fk load more allocations and gc without views.
 #outrageous spead up shifting the ϕ[:, test, :, ...] to ϕ[:, testr, testθ, :, :]
 
-evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, full_spectrum=true); 
+evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, full_spectrum=false, target_freq=0.0); 
 
 continuum_plot(evals)
 
@@ -44,7 +46,7 @@ ind = find_ind(evals, 0.383)
 #ind = 348
 println((evals.ω[55:60] ./ 10) .^2)
 display((evals.ω[ind] / 10)^2)
-potential_plot(ϕft, grids, ind+3)
+potential_plot(ϕft, grids, ind)
 
 
 contour_plot(ϕ, grids, ind=ind)

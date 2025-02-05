@@ -33,7 +33,7 @@ using Plots; plotlyjs()
 #increasing to R0=20 and comparing the the Axel contour method in phi_two_mode
 #our code with diagonal metrix is v v close. %diff of ~1.7%
 
-N = 1000; 
+N = 100; 
 #the collect is a bit annoying, but ok because we will typically use a clustered grid.
 #rgrid = collect(LinRange(0, 1, N));
 
@@ -49,19 +49,19 @@ geo = GeoParamsT(R0=10.0)
 #test metric is pretty cooked, real tae freq is pretty close, touch higher with og metric
 #damping is just completly cooked though, may need to check out damping 
 #implementation.
-flr = FLRT(δ=-4.0e-7)
+flr = FLRT(δ=-0.0e-7)
 prob = init_problem(q=Axel_q, geo=geo, flr=flr, dens=axel_dens, met=diagonal_toroidal_metric!); #probbaly should use geo if it is part of prob,
 #prob = init_problem(q=singular_bowden_q, geo=geo, δ=-4e-9, dens=bowden_singular_dens); #probbaly should use geo if it is part 
 #even if it is not really used.
 #grids = init_grids(N=N, sep1=0.91, sep2=0.98, frac=0.25, mstart=2, mcount=2, nstart=-2, ncount=1);
 rgrid = rfem_grid(N=N)
-θgrid = asm_grid(start=2, N=2)
-ζgrid = asm_grid(start=-2, N=1)
+θgrid = asm_grid(start=0, N=5)
+ζgrid = asm_grid(start=-3, N=3)
 grids = init_grids(rgrid, θgrid, ζgrid)
 #grids = init_grids(N=N, mstart=2, mcount=2, nstart=-2, ncount=1);
 #tae_freq = (0.381 / geo.R0)^2
 
-evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, target_freq=0.39)
+evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, target_freq=0.4);
 
 #ω, ϕ = construct_and_solve(prob=prob, grids=grids, full_spectrum=false, σ=0.390, reconstruct=true);
 tae_ind = 1
@@ -73,13 +73,14 @@ tae_ind = 1
 potential_plot(ϕft, grids, tae_ind)
 
 
+continuum_plot(evals)
 
 #scale of eigenfunctions is v different here.
 #also singularity is much much more pronounced...
 
-reconstruct_continuum(ω.^2, ϕ, grids, ymax=0.25, ymin=-0.02)
+#reconstruct_continuum(ω.^2, ϕ, grids, ymax=0.25, ymin=-0.02)
 
-tae_ind = find_ind(ω.^2, 0.151)
+#tae_ind = find_ind(ω.^2, 0.151)
 
 tae_ind = 1
 plot_potential(ϕ, grids, tae_ind)
