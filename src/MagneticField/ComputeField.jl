@@ -45,18 +45,23 @@ B is assumed to be in the form (B^r, B^θ, B^ζ) with
 
 This version does not take a quadratic form, this means the behaviour near r=0 will be cooked, requires a restricted grid.
 """
-function compute_B!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, r::Float64, θ::Float64, ζ::Float64)
+function compute_B!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, isl2::IslandT, r::Float64, θ::Float64, ζ::Float64)
 
     q, dq = q_prof(r)
 
     arg = isl.m0 * θ + isl.n0 * ζ
 
+    arg2 = isl.m0 * θ + isl2.n0 * ζ
+
     #I think it is fine to just modify the B^r component, but we may want to confirm.
     #perhaps d amp is not a great name for the derivative.
-    amp, damp = island_amplitude(r, isl)
+    #amp, damp = island_amplitude(r, isl)
+    #amplitude seems to be a problem that will need to be fixed another time.
+    amp = 1.0
+    damp = 0.0 
 
     #assumes B0=1
-    B.B[1] = 1 / (met.J) * isl.A * amp * isl.m0 * sin(arg)
+    B.B[1] = 1 / (met.J) * (isl.A * amp * isl.m0 * sin(arg) + isl2.A  * isl2.m0 * sin(arg2))
                 
     B.B[2] = r / (met.J * q) 
     B.B[3] = r / (met.J)

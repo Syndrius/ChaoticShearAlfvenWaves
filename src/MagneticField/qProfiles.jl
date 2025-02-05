@@ -1,5 +1,10 @@
 #TODO -> should change these names and probably provide the function in the doc.
 
+function chaos_q(r::Float64)
+
+    return 1.0 + 2.0 * r^2, 4.0 * r
+end
+
 function tae_isl_damping_q(r::Float64)
     #should give tae (4/5, -2) tae at 0.75 @~0.2 with (2, -1) isl at 0.5.
     a = 1.8

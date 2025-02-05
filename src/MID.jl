@@ -90,6 +90,7 @@ using MID.MagneticField; export island_mode_21
 using MID.MagneticField; export gae_isl_q
 using MID.MagneticField; export gae_isl_dens
 using MID.MagneticField; export tae_isl_damping_q
+using MID.MagneticField; export chaos_q
 
 
 include("Structures/Structures.jl")
@@ -123,7 +124,6 @@ include("Integration/Integration.jl")
 
 include("PostProcessing/PostProcessing.jl")
 
-include("PostProcessing/PostProcessing.jl")
 
 
 include("Io/Io.jl")

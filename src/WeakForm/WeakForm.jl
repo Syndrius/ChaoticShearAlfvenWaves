@@ -57,7 +57,7 @@ function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, met::MetT, B
 
         #compute the magnetic field.
         #everywhere else has met then B...
-        compute_B!(B, met, prob.q, prob.isl, r[i], θ[j], ζ[k])
+        compute_B!(B, met, prob.q, prob.isl, prob.isl2, r[i], θ[j], ζ[k])
 
         #computes the matrix D.
         compute_D!(met, B, tm.D)

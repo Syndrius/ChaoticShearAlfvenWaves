@@ -36,6 +36,7 @@ export island_mode_21
 export inside_island_q
 export gae_isl_q
 export tae_isl_damping_q
+export chaos_q
 
 include("DensityProfiles.jl") #weird spot!
 

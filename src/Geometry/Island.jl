@@ -101,7 +101,7 @@ function zero_q(r, q0, q_prof)
 
     q, _ = q_prof(r)
 
-    display(q)
+    #display(q)
 
     return q - q0
 end

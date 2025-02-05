@@ -46,6 +46,7 @@ One of the main inputs for matrix construction functions.
     compute_met :: Function = toroidal_metric!
     dens :: Function = uniform_dens
     isl :: IslandT = no_isl
+    isl2 :: IslandT = no_isl
     geo :: GeoParamsT
     flr :: FLRT = no_flr
 end
@@ -78,7 +79,7 @@ Main input for matrix construction functions.
 - geo::GeoParamsT Struct storing geometrical parameters.
 - flr::FLRT=no_flr - Struct storing finite larmor effects, defaults to no corrections.. 
 """
-function init_problem(; q::Function, met::Function=toroidal_metric!, dens::Function=uniform_dens, isl::IslandT=no_isl, geo::GeoParamsT, flr::FLRT=no_flr)
+function init_problem(; q::Function, met::Function=toroidal_metric!, dens::Function=uniform_dens, isl::IslandT=no_isl, isl2::IslandT=no_isl,geo::GeoParamsT, flr::FLRT=no_flr)
 
     #may want to indroduce symbold into here
     #for the metric :toroidal etc may be clearer.
@@ -92,7 +93,10 @@ function init_problem(; q::Function, met::Function=toroidal_metric!, dens::Funct
         if isl != no_isl
             isl = inst_island(isl, q)
         end
-        return TorProblemT(q=q, compute_met=met, dens=dens, isl=isl, flr=flr, geo=geo)
+        if isl2 != no_isl
+            isl2 = inst_island(isl2, q)
+        end
+        return TorProblemT(q=q, compute_met=met, dens=dens, isl=isl, isl2=isl2, flr=flr, geo=geo)
     end 
 
     
