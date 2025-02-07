@@ -5,11 +5,11 @@ using Plots; plotlyjs()
 #Integration has been massivly sped up, but this is still slow af, probbaly requires multiproc.
 #~90% of the time is spent numerically integrating. Wonder if there is anything we can do???
 Nr = 30
-Nθ = 5
-Nζ = 1
+Nθ = 6
+Nζ = 2
 rgrid = rfem_grid(N=Nr, gp=4, sep1=0.4, sep2=0.6, frac=0.0);
-θgrid = afem_grid(N=Nθ, pf=0, gp=4);
-ζgrid = afem_grid(N=Nζ, pf=-0, gp=4);
+θgrid = afem_grid(N=Nθ, pf=2, gp=4);
+ζgrid = afem_grid(N=Nζ, pf=-2, gp=4);
 
 #println(MID.inst_grid(rgrid))
 
@@ -34,7 +34,7 @@ prob = init_problem(q=Axel_q, geo=geo);
 #fk load more allocations and gc without views.
 #outrageous spead up shifting the ϕ[:, test, :, ...] to ϕ[:, testr, testθ, :, :]
 
-evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, full_spectrum=false, target_freq=0.0); 
+evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, full_spectrum=false, target_freq=0.3); 
 
 continuum_plot(evals)
 

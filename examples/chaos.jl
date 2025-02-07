@@ -8,25 +8,32 @@ using Plots; plotlyjs()
 
 
 #start very small, matrix scales much more extremly
-Nr = 100;
+#Nr = 100;
 
 geo = GeoParamsT(R0=10.0)
 
 
-isl = IslandT(m0=2.0, n0=-1.0, A=0e-4)
-isl2 = IslandT(m0=3.0, n0=-2.0, A=0e-4)
+isl = IslandT(m0=2.0, n0=-1.0, A=0.0e-5)
+isl2 = IslandT(m0=3.0, n0=-2.0, A=0.0e-5)
 #rgrid = collect(LinRange(0, 1, N));
 prob = init_problem(q=chaos_q, geo=geo, isl=isl, isl2=isl2); 
-rgrid = rfem_grid(N=Nr)
-θgrid = asm_grid(start=2, N = 2)
-ζgrid = asm_grid(start=-2, N = 2)
-grids = init_grids(rgrid, θgrid, ζgrid);
+#rgrid = rfem_grid(N=Nr)
+#θgrid = asm_grid(start=2, N = 2)
+#ζgrid = asm_grid(start=-2, N = 2)
+#grids = init_grids(rgrid, θgrid, ζgrid);
+
+Nr = 30
+Nθ = 6
+Nζ = 2
+rgrid = rfem_grid(N=Nr, gp=4, sep1=0.4, sep2=0.6, frac=0.0);
+θgrid = afem_grid(N=Nθ, pf=2, gp=4);
+ζgrid = afem_grid(N=Nζ, pf=-2, gp=4);
 #grids = init_grids(N=N, mstart=1, mcount=2, nstart=-1, ncount=1);
 #grids = init_grids(rgrid, θgrid, ζgrid)
 
 
 
-evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, full_spectrum=true);
+evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, full_spectrum=false, target_freq=0.3);
 
 continuum_plot(evals)
 

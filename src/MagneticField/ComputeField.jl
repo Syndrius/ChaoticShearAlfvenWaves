@@ -66,13 +66,20 @@ function compute_B!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, isl2:
     B.B[2] = r / (met.J * q) 
     B.B[3] = r / (met.J)
 
-    B.dB[1, 1] = ( - isl.A * amp * isl.m0 * sin(arg) * met.dJ[1] / met.J^2
-                    + 1 / (met.J) * isl.A * damp * isl.m0 * sin(arg))
+    #ignoring amp/damp for now
+    B.dB[1, 1] = - met.dJ[1] / met.J^2 * (isl.A * isl.m0 * sin(arg) + isl2.A  * isl2.m0 * sin(arg2))
 
-    B.dB[1, 2] = (1 / (met.J) * isl.A * amp * isl.m0^2 * cos(arg)
-                    - isl.A * amp * isl.m0 * sin(arg) * met.dJ[2] / met.J^2)
+    B.dB[1, 2] = - met.dJ[2] / met.J^2 * (isl.A * isl.m0 * sin(arg) + isl2.A  * isl2.m0 * sin(arg2)) + 1 / met.J * (isl.A * isl.m0^2 * cos(arg) + isl2.A  * isl2.m0^2 * cos(arg2))
 
-    B.dB[1, 3] = isl.n0 / (met.J) * isl.A * amp * isl.m0 * cos(arg)
+    B.dB[1, 3] = + 1/ met.J * (isl.A * isl.m0 * isl.n0 * cos(arg) + isl2.A  * isl2.m0 * isl2.n0 * cos(arg2))
+
+    #B.dB[1, 1] = ( - isl.A * amp * isl.m0 * sin(arg) * met.dJ[1] / met.J^2
+    #                + 1 / (met.J) * isl.A * damp * isl.m0 * sin(arg))
+
+    #B.dB[1, 2] = (1 / (met.J) * isl.A * amp * isl.m0^2 * cos(arg)
+    #                - isl.A * amp * isl.m0 * sin(arg) * met.dJ[2] / met.J^2)
+
+    #B.dB[1, 3] = isl.n0 / (met.J) * isl.A * amp * isl.m0 * cos(arg)
 
 
 
