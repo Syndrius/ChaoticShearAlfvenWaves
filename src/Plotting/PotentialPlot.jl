@@ -238,7 +238,7 @@ function potential_plot(ϕ::Array{ComplexF64}, grids::MapGridsT; mlist=nothing, 
         nlist = -Int64(grids.Nφ / 2) - 1 : 1 : Int64(grids.Nφ / 2) + 1
     end
 
-    κgrid = sqrt.(κgrid)
+    #κgrid = sqrt.(κgrid)
 
     p = plot(xlabel=L"\sqrt{\kappa}", ylabel=L"\phi", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10)
 

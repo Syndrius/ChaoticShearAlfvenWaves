@@ -7,11 +7,13 @@
 using MID
 using Plots; plotlyjs()
 
+#fss seems to be incapable of finding any gap modes???
+#bit odd.
 
 
 geo = GeoParamsT(R0 = 1000)
-rgrid = rfem_grid(N=80, start=0.0, stop=0.999, left_bc=false)
-θgrid = asm_grid(start=-2, N=5)
+rgrid = rfem_grid(N=100, start=0.0, stop=0.999, left_bc=false)
+θgrid = asm_grid(start=-3, N=7)
 ζgrid = asm_grid(start=0, N=1)
 
 grids = init_grids(rgrid, θgrid, ζgrid)
@@ -36,11 +38,13 @@ continuum_plot(evals, ymax=0.08)#, ymax=10)#, n=-2)
 #maybe this will change with fff???
 #based on gae testing, this may just be a problem with fss.
 
-ind = find_ind(evals, 0.048)
+ind = find_ind(evals, 0.00812)
 
-#ind = 36
+ind = 234
 
 potential_plot(ϕft, grids, ind)
+
+contour_plot(ϕ, grids, ind=ind)
 
 
 #current hard codes island for this case.
@@ -64,5 +68,3 @@ isl = IslandT(2, -1, 0.00015625000000000003, 2.0, 2.0, 0.5, 0.05)
 scatter!(κlist, sqrt.(abs.(ω2list .* geo.R0^2)), legend=false, markersize=0.1)#, ylimits=(0.3, 0.5))#.2, 0.6))
 #3.997713 = 4
 #0.0049998 = 0.005
-
-4/0.005

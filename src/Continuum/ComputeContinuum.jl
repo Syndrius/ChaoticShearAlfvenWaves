@@ -66,8 +66,8 @@ function compute_continuum(prob::ProblemT, grids::ContGridsT)
     #nθ, mlist, θgrid = spectral_grid(grids.pmd)
     #nζ, nlist, ζgrid = spectral_grid(grids.tmd)
 
-    met = init_empty_met()
-    B = init_empty_B()
+    met = MetT()
+    B = BFieldT()
 
 
     mat_size = matrix_size(grids)
@@ -87,6 +87,8 @@ function compute_continuum(prob::ProblemT, grids::ContGridsT)
     #could probably still be done tbh! would be more complicated and maybe not worth it tbh!
     #p = plan_fft!(I, [4, 5])
 
+    tm = TM()
+
     #now we loop through the grid
 
     for (i, r) in enumerate(rgrid) 
@@ -99,7 +101,7 @@ function compute_continuum(prob::ProblemT, grids::ContGridsT)
 
         #I_and_W!(I, W, B, q_profile, met, compute_met, dens, [r], θgrid, ζgrid, 0.0, isl, R0)
         #does heaps of extra computation, but the continuum is quite efficeint so does not matter.
-        W_and_I!(W, I, met, B, prob, [r], θgrid, ζgrid)
+        W_and_I!(W, I, met, B, prob, [r], θgrid, ζgrid, tm)
 
         #For the continuum we extract the relevant second derivative parts
         Icont = I[[1], [1], :, :, :]

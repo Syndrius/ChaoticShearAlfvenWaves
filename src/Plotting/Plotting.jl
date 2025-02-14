@@ -28,6 +28,7 @@ export potential_plot
 include("ContourPlot.jl")
 
 export contour_plot
+export contour_zeta_plot
 
 
 include("SurfacePlot.jl")

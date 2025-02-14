@@ -134,7 +134,7 @@ function contour_plot(ϕ, grids::MapGridsT, ζ=1; savefile=nothing)
     κgrid, ᾱgrid, _ = inst_grids(grids)
 
     #this makes them more like Axel's, and also shows a less squished region around sepratrix.
-    κgrid = sqrt.(κgrid)
+    #κgrid = sqrt.(κgrid)
 
     #an option...
     #args = 1 .< κgrid
@@ -149,6 +149,51 @@ function contour_plot(ϕ, grids::MapGridsT, ζ=1; savefile=nothing)
     #θgrid = range(0, 2π, θgrid_size+1)
 
     p = contourf(ᾱgrid, κgrid, real.(z), levels=100, color=:turbo)
+
+    display(p)
+
+    if !isnothing(savefile)
+        savefig(p, savefile)
+    end
+
+end
+
+
+
+"""
+    contour_plot(ϕ, grids::FFFGridsT, ind, ζ=1; savefile=nothing)
+
+Plots the contours for a given θ slice. Expects the un-fourier transformed solution.
+"""
+function contour_zeta_plot(ϕ, grids::FFFGridsT, θ=1; ind=1, savefile=nothing)
+
+    #there are more cases now big rip
+    if length(size(ϕ)) == 5 #all solutions and derivs case
+        ϕ_plot = ϕ[ind, :, :, :, 1]
+    elseif length(size(ϕ)) == 4
+        #probably the derivative case, with both conditions this should be fine right???
+        if size(ϕ)[end] == 8 && size(ϕ)[1] == grids.r.N 
+            ϕ_plot = ϕ[:, :, :, 1]
+        else
+            ϕ_plot = ϕ[ind, :, :, :]
+        end
+
+    else
+        ϕ_plot = ϕ
+    end
+    rgrid, _, ζgrid = inst_grids(grids)
+
+    #adds back the periodicity.
+    z = zeros(ComplexF64, grids.r.N, grids.ζ.N+1)
+
+    z[:, 1:end-1] = ϕ_plot[ :, θ, :]
+    z[:, end] = ϕ_plot[ :, θ, 1]
+
+    ζgrid = range(0, 2π, grids.ζ.N+1)
+
+    #so this shit is cooked for non plotly. will case issues in generl!
+
+    p = contourf(ζgrid, rgrid, real.(z), levels=100, color=:turbo, dpi=600)
 
     display(p)
 

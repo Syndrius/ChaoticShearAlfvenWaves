@@ -14,11 +14,50 @@ function fortran_process(dir::String)
 
     prob, grids = fortran_inputs(dir)
 
+    
+
+
+    #need to actually fill in the island details here. Causing many issues.
+
     #write the julia version of the prob and grids
     inputs_to_file(prob=prob, grids=grids, dir=dir)
 
+    #for multiples, we are probably just going to reprocess each time.
+    #ideally this won't happen very often.
+
+    file_list = readdir(dir)
+    vals = ComplexF64[]
+
+    counts = 0
+    count_list = [0]
+        
+    for file in file_list
+        if file[1:4] == "vals"
+            
+            open(dir*file, "r") do file
+        
+                s = readlines(file)
+                #don't love the global here...
+                #global vals = Array{ComplexF64}(undef, length(s))
+                for line in s
+                    subs = split(strip(line, ['(', ')', ' ']), ",")
+                    push!(vals, parse(Float64, subs[1]) + 1im * parse(Float64, subs[2]) )
+                end
+
+                #counts how many runs were made and how many evals in each.
+                
+                push!(count_list, length(vals) - count_list[end])
+
+                counts += 1
+
+    
+            end
+            
+        end
+    end
+
     #this will need to change with updated solving method
-    open(dir*"vals00.dat", "r") do file
+    """open(dir*"vals00.dat", "r") do file
         
         s = readlines(file)
         #don't love the global here...
@@ -31,21 +70,21 @@ function fortran_process(dir::String)
         #display()
 
         #parse.(ComplexF64, s)
-    end
+    end"""
 
-    strs = readdir(dir*"/efuncs_raw00")
+    #strs = readdir(dir*"/efuncs_raw00")
     #not sure if a lock hdf5 is always written?
     #sometimes loc sometimes lock...
     #may be best to just delete the appropriate number of evals
     #or delete the loc vars from efuncs_raw if this happens again.
     #these cases may just be cooked though lol.
     #almost certainly don't need this guard anymore...
-    if strs[end][end-2:end] == "loc"
+    #if strs[end][end-2:end] == "loc"
 
-        nevals = Int64(length(strs)/2)
-    else
-        nevals = length(strs)
-    end
+    #    nevals = Int64(length(strs)/2)
+    #else
+    #    nevals = length(strs)
+    #end
     nevals = length(vals)
 
     ϕp, ϕpft = PostProcessing.allocate_phi_arrays(grids, deriv=deriv)
@@ -68,49 +107,56 @@ function fortran_process(dir::String)
 
     #ok so I think this will work on gadi
     #not on mac as we dont have hdf5.
-    for i in 1:nevals
+    
+    for (run, sub_nevals) in enumerate(count_list)
+        for i in 1:sub_nevals
 
 
-        #this is fkn slow af.
-        #need to stick with jld2 I think.
-        #i-1 to match fortran staring at 0 for some reason
-        efunc_read = @sprintf("efunc%05d.hdf5", i-1)
-        efunc_write = @sprintf("efunc%05d.jld2", i)
+            #this is fkn slow af.
+            #need to stick with jld2 I think.
+            #i-1 to match fortran staring at 0 for some reason
+            efunc_read = @sprintf("efunc%05d.hdf5", (i-1))
+            efunc_write = @sprintf("efunc%05d.jld2", i+count_list[run-1])
 
-        #unfort doesn't handle complex numbers v well
-        efunc_split = load_object(dir*"/efuncs_raw00/"*efunc_read)#[1, :]
+            #unfort doesn't handle complex numbers v well
+            # - 2, -1 for including count_list = 0 at first index
+            #and -1 for indexing stuff.
+            load_dir = @sprintf("/efuncs_raw%02d/", run-2)
+            # "/efuncs_raw0" * String(run) * "/"
+            efunc_split = load_object(dir*load_dir*efunc_read)#[1, :]
 
-        efunc = efunc_split[1, :] .+ efunc_split[2, :] * 1im
+            efunc = efunc_split[1, :] .+ efunc_split[2, :] * 1im
 
 
-        PostProcessing.reconstruct_phi!(efunc, grids, ϕp, ϕpft, plan)
-        
-        rind, mode_lab = PostProcessing.label_mode(ϕpft, grids, rmarray, ϕmarray)
+            PostProcessing.reconstruct_phi!(efunc, grids, ϕp, ϕpft, plan)
+            
+            rind, mode_lab = PostProcessing.label_mode(ϕpft, grids, rmarray, ϕmarray)
 
 
-        #if deriv
-        #    rm, modelab = MID.Spectrum.label_mode(ϕft[:, :, :, 1], grids)
-        #else
-        #    rm, modelab = MID.Spectrum.label_mode(ϕft, grids)
-        #end
+            #if deriv
+            #    rm, modelab = MID.Spectrum.label_mode(ϕft[:, :, :, 1], grids)
+            #else
+            #    rm, modelab = MID.Spectrum.label_mode(ϕft, grids)
+            #end
 
-        
-        #phi, phi_ft, rm, modelab = process_efunc(efunc, grids)
+            
+            #phi, phi_ft, rm, modelab = process_efunc(efunc, grids)
 
-        push!(mode_labs, mode_lab)
+            push!(mode_labs, mode_lab)
 
-        rms[i] = rgrid[rind]
+            rms[i] = rgrid[rind]
 
-        #normalise the eigenvalues
-        ω[i] = prob.geo.R0 * sqrt(vals[i])
-        if deriv
-            save_object(dir * "/efuncs_deriv/"*efunc_write, ϕp)
-            save_object(dir * "/efuncs_ft_deriv/"*efunc_write, ϕpft)
-        else
-            save_object(dir * "/efuncs/"*efunc_write, ϕp)
-            save_object(dir * "/efuncs_ft/"*efunc_write, ϕpft)
+            #normalise the eigenvalues
+            ω[i] = prob.geo.R0 * sqrt(vals[i])
+            if deriv
+                save_object(dir * "/efuncs_deriv/"*efunc_write, ϕp)
+                save_object(dir * "/efuncs_ft_deriv/"*efunc_write, ϕpft)
+            else
+                save_object(dir * "/efuncs/"*efunc_write, ϕp)
+                save_object(dir * "/efuncs_ft/"*efunc_write, ϕpft)
+            end
+            
         end
-        
     end
     evals = EvalsT(ω, rms, mode_labs)
 

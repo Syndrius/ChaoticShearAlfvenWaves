@@ -7,9 +7,9 @@ Base class that just imports everything. We will want a description of the packa
 
  ###### More Urgent
  - Start using Gadi's version of Julia, currently ours is using fkn heaps of memory
- - Perhaps change the solver to do a range rather than a target, will need to get this to actually work.
- -  Investigate memory usage, Axel used 800x250x10...
- - If we can solve with more evals and less memory usage, will need to paralise post processing.
+- Map the island results to normal space to see whats going on.
+- See if there is any evidence of the gae interaction with the new system
+- test m=0 boundaries with fss. Will be annoying.
 
 
 
@@ -141,6 +141,7 @@ include("Plotting/Plotting.jl")
 using MID.Plotting; export potential_plot
 using MID.Plotting; export continuum_plot
 using MID.Plotting; export contour_plot
+using MID.Plotting; export contour_zeta_plot
 using MID.Plotting; export surface_plot
 
 
@@ -177,7 +178,8 @@ include("Mapping/Mapping.jl")
 
 using MID.Mapping; export tor_to_isl
 using MID.Mapping; export isl_to_tor
-using MID.Mapping; export mapped_continuum 
+using MID.Mapping; export isl_to_tor_continuum 
+using MID.Mapping; export tor_to_isl_continuum 
 
 
 #include("ExtraSpectra/ExtraSpectra.jl")

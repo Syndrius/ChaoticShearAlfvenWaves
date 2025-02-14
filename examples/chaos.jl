@@ -42,3 +42,22 @@ tae_ind = find_ind(evals, 0.06327)
 potential_plot(ϕft, grids, tae_ind)
 
 contour_plot(ϕ, grids, ind=tae_ind)
+
+#haveing a look at the og continuum
+
+Nr = 100;
+geo = GeoParamsT(R0=10000.0)
+
+prob = init_problem(q=chaos_q, geo=geo)#, met=no_delta_metric!); 
+
+#rgrid = init_fem_grid(N=Nr)
+rgrid = MID.ContGridDataT(N=100)
+θgrid = asm_grid(start=-5, N=11)
+ζgrid = asm_grid(start=-2, N=5)#, incr=2)
+#grids = init_grids(N=N, mstart=1, mcount=2, nstart=-1, ncount=1);
+grids = init_grids(rgrid, θgrid, ζgrid)
+
+
+ω_cont = continuum(prob, grids);
+
+continuum_plot(ω_cont, grids, ymax=1)

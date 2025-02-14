@@ -19,6 +19,7 @@ using MID.Structures
 using MID.Geometry
 using MID.Io
 using MID.PostProcessing
+using MID.MagneticField
 
 
 include("Interpolation.jl")
@@ -27,7 +28,8 @@ include("IslToToroidal.jl")
 
 include("Continuum.jl")
 
-export mapped_continuum
+export tor_to_isl_continuum
+export isl_to_tor_continuum
 
 
 export tor_to_isl
@@ -45,9 +47,13 @@ function isl_to_tor(tor_grids, ϕ, isl_grids, isl)
     ζgrid = LinRange(0, 2π, tor_grids.Nφ)
 
     #so we actually have periodic grids.
-    κgrid = LinRange(0, isl_grids.κmax, isl_grids.Nκ)
-    ᾱgrid = LinRange(0, 2π, isl_grids.Nᾱ)
-    φgrid = LinRange(0, 2π, isl_grids.Nφ)
+    #κgrid = LinRange(0, isl_grids.κmax, isl_grids.Nκ)
+    #this is extremely confusing because the grids are designed
+    #for the other way...
+    #so all vars are kinda switched.
+    κgrid = LinRange(0, 1.0, isl_grids.r.N)
+    ᾱgrid = LinRange(0, 2π, isl_grids.θ.N)
+    φgrid = LinRange(0, 2π, isl_grids.ζ.N)
 
     #will ignore periodicty for now!
 

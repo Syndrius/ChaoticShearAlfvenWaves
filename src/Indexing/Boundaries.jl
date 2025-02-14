@@ -28,8 +28,8 @@ function compute_boundary_inds(grids::FFFGridsT)
     end
 
     #island case has no left boundaries.
-    #return vcat(right_boundary1, right_boundary2, right_boundary3, right_boundary4)
-    return vcat(left_boundary1, left_boundary2, left_boundary3, left_boundary4, right_boundary1, right_boundary2, right_boundary3, right_boundary4)
+    return vcat(right_boundary1, right_boundary2, right_boundary3, right_boundary4)
+    #return vcat(left_boundary1, left_boundary2, left_boundary3, left_boundary4, right_boundary1, right_boundary2, right_boundary3, right_boundary4)
 
 end
 
@@ -81,7 +81,7 @@ function compute_boundary_inds(grids::FSSGridsT)
     Nm = grids.θ.N
     Nn = grids.ζ.N
 
-    #_, mlist, _ = Inputs.sm_grid(grids.θ) #think this is pointless!
+    mlist = mode_list(grids.θ) #think this is pointless!
 
     #for radiative case the deriv needs to be zero as well.
     left_boundary = 1:2:2*Nm*Nn
@@ -90,7 +90,8 @@ function compute_boundary_inds(grids::FSSGridsT)
     #left_boundary = 1:1:2*Nm*Nn
     #tried to make the distinction between nθ and nm clearer.
     #think this is a waste of time, hard to know for sure though!
-    """
+    
+    #experimenting with m=0 boundary, doesn't seem to help island case.
     if 0 in mlist
         #fu and berk radiative paper seem to imply it should still be m=1 even for phi case...
         zero_ind = argmin(abs.(mlist))
@@ -101,7 +102,7 @@ function compute_boundary_inds(grids::FSSGridsT)
             left_boundary[i] += 1
         end
     end
-    """
+    
 
     #could probably use grid_to_index for this
     right_boundary = 1+(Nr-1)*2*Nm*Nn:2:Nr*2*Nm*Nn
