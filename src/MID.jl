@@ -13,8 +13,9 @@ Base class that just imports everything. We will want a description of the packa
 
 
 
-
+- Perhaps https://github.com/fredrikekre/Literate.jl if we ever want to share this garbage.
  - maybe we should change problem to accept strings - or symbols like plot :green etc so we can explain the possible options when something doesn't work!
+ - Modify the grids structure, it is horrible, in particular the cont grids is terrible.
  - Add try catch to sqrt in solve, most of the time it is just because of ~0 numbers, but it owuld be good to have a warning rather than just always take abs. -> Maybe in this case we dont return the normalised ones? Or should we always have a normalise flag??? -> cka does this better, below some tolerance they are just set to zero.
  - boundary conditions may need modification for flr, and perhaps the m=1 stuff is still not working properly.
  - fix all the examples and extra spectra garbage
@@ -171,6 +172,13 @@ using MID.Continuum; export island_continuum
 using MID.Continuum; export island_width
 using MID.Continuum; export continuum
 using MID.Continuum; export cyl_cont
+
+
+
+include("QFM/QFM.jl")
+
+using MID.QFM; export qfm_continuum
+using MID.QFM; export construct_surfaces
 
 
 

@@ -91,10 +91,12 @@ function init_problem(; q::Function, met::Function=toroidal_metric!, dens::Funct
         return ProblemT(q=q_prof, compute_met=met, dens=dens, isl=isl, flr=flr, geo=geo)
     else
         if isl != no_isl
-            isl = inst_island(isl, q)
+            #ignoreing this for now! 
+            #isl = inst_island(isl, q)
         end
         if isl2 != no_isl
-            isl2 = inst_island(isl2, q)
+            #ignoreing!
+            #isl2 = inst_island(isl2, q)
         end
         return TorProblemT(q=q, compute_met=met, dens=dens, isl=isl, isl2=isl2, flr=flr, geo=geo)
     end 

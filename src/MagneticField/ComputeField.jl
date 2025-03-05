@@ -51,7 +51,8 @@ function compute_B!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, isl2:
 
     arg = isl.m0 * θ + isl.n0 * ζ
 
-    arg2 = isl.m0 * θ + isl2.n0 * ζ
+    arg2 = isl2.m0 * θ + isl2.n0 * ζ
+
 
     #I think it is fine to just modify the B^r component, but we may want to confirm.
     #perhaps d amp is not a great name for the derivative.
