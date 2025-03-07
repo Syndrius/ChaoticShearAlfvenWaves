@@ -24,6 +24,8 @@ function action(pp, qq, prob::ProblemT)
     #but this at 4 and pqNtor the function is v quick.
     pqNtor = 8
     pqMpol = 24 #no idea
+    #pqNtor = 2
+    #pqMpol = 4 #no idea
     iota = pp/qq #iota not q!
 
     qN = qq * pqNtor # looks to be the number toroidal points to consider??? i.e. with a f_quad factor.
@@ -38,6 +40,9 @@ function action(pp, qq, prob::ProblemT)
 
     #theta distance bwteen action curves???
     dt = (2 * π  / qq) / fM
+
+    #display(dz)
+    #display(dt)
 
     #qN + 1 in og python
     nlist = range(0, qN)
@@ -100,19 +105,34 @@ function action(pp, qq, prob::ProblemT)
 
         xx0 = pack_dof(nv0, rcos0, tsin0, rsin0, tcos0)
 
-        #xx0[5] = 0.3
+        #xx0[2] = 2.0 + 1 #+1 for packing!
+        #display(xx0[1:5])
+        #xx0[end] = 8.0
+
+        #xx0[3] = 4.0
+        #xx0[4] = 5.0
 
         #ftest = action_gradient(xx0, pp, qq, a, qN, ζ, nlist)
 
         #println(ftest)
 
-        #short hand so it is a function of one thing for the solve
-        ag(xx) = action_gradient(xx, pp, qq, a, qN, ζ, nlist, prob)
+        #display(ff)
+       
 
-        sol = nlsolve(ag, xx0) #etc
+        #short hand so it is a function of one thing for the solve
+        a!(ff, xx) = action_gradient(ff, xx, pp, qq, a, qN, ζ, nlist, prob)
+        #a!(ff, xx) = action_grad!(ff, xx, pp, qq, a, qN, ζ, nlist, prob)
+
+        sol = nlsolve(a!, xx0) #etc
+        #ff = ag(xx0)
+        #display(ff)#[2:6])
+
+        
 
         #probably want to check for convergence of solution here first!
         nv, rcos, tsin, rsin, tcos = unpack_dof(sol.zero, qN)
+
+        #display(rcos)
 
         nvarr[jpq+1] = nv #this seems to be completly pointless.
         rcosarr[jpq+1, :] = rcos
@@ -123,6 +143,8 @@ function action(pp, qq, prob::ProblemT)
 
     r = irfft1D(rcosarr, rsinarr)
     z = LinRange(0, 2*qq*π, size(r)[end]+1)[1:end-1]
+
+
 
     tcosarr[:, 1] .= 0.0
 
@@ -190,20 +212,27 @@ end
 #perhaps we blindly implement, despite this not really making any sense....
 #alternatively we could try and get PythonCall to work in Julia, however, this sounds awful...
 #function actually used for root finding!
-function action_gradient(xx, pp, qq, a, qN, ζ, nlist, prob)
+function action_gradient(δS, xx, pp, qq, a, qN, ζ, nlist, prob)
 
     iota = pp / qq
 
     nv, rcos, tsin, rsin, tcos = unpack_dof(xx, qN)
 
+    #display(xx[2])
+    #display(rcos)
     #display(length(tsin))
     #display(length(tcos))
     #last var is unspecified atm   
     r = irfft1D(rcos, rsin)#, nfft_multiplier)
 
+    
+
     #this is clearly not working as it should, as only for specific inputs
     #do the arrays match.
     t = irfft1D(tcos, tsin)
+
+    #display(tcos)
+    
 
     #do not have this here.
     z = ζ
@@ -211,6 +240,9 @@ function action_gradient(xx, pp, qq, a, qN, ζ, nlist, prob)
     #display(iota)
     #display(length(t))
     t .+= iota .* z
+
+    #display(t)
+    #println(t)
 
     #v unclear what this is.
     #perhaps area is fixed over the change and this is the og area?
@@ -263,40 +295,53 @@ function action_gradient(xx, pp, qq, a, qN, ζ, nlist, prob)
     #return
 
     rhs_tdot = @. Bt / Bz
+    
     #nv may be the biggest mystery atm.
     #it may be the lagrange multiplier that is mentioned?
     rhs_rdot = @. Br / Bz - nv / Bz
 
+   
     #println(rhs_rdot)
     #println(rhs_tdot)
 
     rhs_rdot_fft_cos, rhs_rdot_fft_sin = rfft1D(rhs_rdot)
     rhs_tdot_fft_cos, rhs_tdot_fft_sin = rfft1D(rhs_tdot)
 
-    #xx should still be 1d. may need to be careful, think it will change once we implement the gradient.
-    ff = zeros(length(xx))
+    #println(rhs_tdot_fft_cos)
+    #display(rhs_rdot)
 
-    ff[1] = area - a
+    #xx should still be 1d. may need to be careful, think it will change once we implement the gradient.
+    #ff = zeros(length(xx))
+
+    #display(length(ff))
+    #display(length(tcos))
+    #pack dof does this.
+    #[[nv]; rcos ; tsin[2:end] ; rsin[2:end] ; tcos] .+ 1
+
+    δS[1] = area - a
     #don't have nlist yet!
     #display(length(rcos))
     #display(length(nlist))
     #display(length(rhs_rdot_fft_sin[1: qN + 1]))
     #println(rhs_rdot_fft_cos[1:qN+1])
     #println(nlist)
-    ff[2 : qN + 2] = @. rsin * nlist / qq - rhs_rdot_fft_cos[1: qN + 1]
+    δS[2 : qN + 2] = @. rsin * nlist / qq - rhs_rdot_fft_cos[1: qN + 1]
 
-    ff[qN+3: 2*qN + 2] = @. (-rcos * nlist / qq - rhs_rdot_fft_sin[1:qN+1])[2:end]
+    δS[qN+3: 2*qN + 2] = @. (-rcos * nlist / qq - rhs_rdot_fft_sin[1:qN+1])[2:end]
 
-    ff[2*qN+3 : 3*qN + 3] = @. (tsin * nlist / qq - rhs_tdot_fft_cos[1 : qN + 1])
+    δS[2*qN+3 : 3*qN + 3] = @. (tsin * nlist / qq - rhs_tdot_fft_cos[1 : qN + 1])
 
-    ff[2 * qN + 3] += iota #wot.
+    δS[2 * qN + 3] += iota #wot.
 
-    ff[3 * qN + 4 : end] = @. (-tcos * nlist / qq - rhs_tdot_fft_sin[1:qN+1])[2:end]
+    δS[3 * qN + 4 : end] = @. (-tcos * nlist / qq - rhs_tdot_fft_sin[1:qN+1])[2:end]
 
+    #display(ff[2:6])
     #ff looks to be ok.
     #println(ff[3 * qN + 4 : end])
+    #println( @. rsin * nlist / qq - rhs_rdot_fft_cos[1: qN + 1])
+    #println(ff)
 
-    return ff
+    #return ff
 end
 
 
@@ -335,6 +380,10 @@ function irfft1D(cos_in::Array{Float64, 1}, sin_in::Array{Float64, 1}, nfft_mult
     ffft = (cos_in .- 1im .* sin_in) .* Nfft
 
     
+    #display(Nfft)
+    #display(length(ffft))
+
+    
     #may need to change this
     #this is differretn, but I think because this is 1d it is ok.
     #will be a problemo later.
@@ -361,6 +410,8 @@ function irfft1D(cos_in::Array{Float64, 1}, sin_in::Array{Float64, 1}, nfft_mult
     #println(irfft(ifftshift(ft_pad), 2 * Nfft))# .* (Nfft / length(ffft)))
     #println(irfft(ft_pad, 2 * Nfft))# .* (Nfft / length
     #perhaps irfft is different in other ways???
+    #display(length(ft_pad))
+    #display(2*Nfft)
     return irfft(ft_pad, 2 * Nfft)
 
 end
@@ -415,6 +466,7 @@ end
 
 function rfft1D(f)
 
+
     Nfft = size(f)[end]
     ffft = rfft(f)
 
@@ -430,6 +482,7 @@ function rfft1D(f)
     sin_out = @. -imag(ffft) / Nfft * 2
 
     sin_out[1] = 0
+
     #print(sin_out)
     return cos_out, sin_out
 

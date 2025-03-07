@@ -51,18 +51,16 @@ prob = init_problem(q=two_wave_q, geo=geo, met=slab_metric!, isl=isl1, isl2=isl2
 #rather, just used to create the interpolants
 #surfs = construct_surfaces([5, 13, 8, 11, 3], [8, 21, 13, 18, 5], prob);
 
-8/13
-13/21
-5/8
+
 
 #think these rationals will be different for flux vs r.
 #this is getting out of hand.
 #guess we can see why Zhisong had a save to file function
 #probably worth implementing.
 #should be easy enough with jld2?
-surfs = construct_surfaces([8, 13, 5], [13, 21, 8], prob);
+#surfs = construct_surfaces([8, 13, 5], [13, 21, 8], prob);
 
-save_object("qfmTest/test_surfs.jld2", surfs)
+#save_object("qfmTest/test_surfs.jld2", surfs)
 
 
 
@@ -73,7 +71,7 @@ save_object("qfmTest/test_surfs.jld2", surfs)
 #ok so we may just need to come up with our own example case?
 #this flux one is not working.
 #ok we are back!
-MID.QFM.plot_surfs(surfs2);
+MID.QFM.plot_surfs(surfs);
 
 
 surfs = load_object("qfmTest/test_surfs.jld2")
@@ -103,3 +101,29 @@ grids = init_grids(rgrid, θgrid, ζgrid)
 #probably easiest to just add a flux surface at r=0 and r=1 tbh.
 ω = qfm_continuum(prob, grids, surfs)
 
+
+#seems to be significantly slower... nice
+#og 36.665801 seconds (162.78 M allocations: 7.552 GiB, 3.15% gc time)
+#new one doesn't work. less than ideal.
+#new one 29.819505 seconds (3.27 M allocations: 4.744 GiB, 1.85% gc time)
+#so an improvement, still work to be done though
+#faster but doesn't work!
+#may perhap explain why the inplace stuff doesn't work.
+#or maybe it doesn't work because we have changed the shape of x?
+#we have succesfully made this way slower, and now doesn't work
+#v nice.
+#so there is no way this is working
+#now in a state where it is closer, but it took 7 mins compared to 1s.
+@time surfs = construct_surfaces([5, 13, 8, 11, 3], [8, 21, 13, 18, 5], prob);
+
+
+
+Ntor = 9
+x = LinRange(0, 2π, Ntor)
+cosx = cos.(x)
+sinx = sin.(x)
+MID.QFM.irfft1D(cosx, sinx);
+
+
+@time res = MID.QFM.action(1, 2, prob);
+@time res = MID.QFM.action2(1, 2, prob, MID.MetT(), MID.BFieldT());

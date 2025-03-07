@@ -130,6 +130,24 @@ function island_amplitude(r::Float64, isl::IslandT)
 
 end
 
+#simplified function that only computes the contravarient components
+#useful for QFM surfaces.
+function compute_B!(B::Array{Float64}, J::Float64, q_prof::Function, isl::IslandT, isl2::IslandT, r::Float64, θ::Float64, ζ::Float64)
+    
+    q, _ = q_prof(r)
+
+    arg = isl.m0 * θ + isl.n0 * ζ
+
+    arg2 = isl2.m0 * θ + isl2.n0 * ζ
+
+    #assumes B0=1
+    B[1] = 1 / J * (isl.A * isl.m0 * sin(arg) + isl2.A  * isl2.m0 * sin(arg2))
+                
+    B[2] = r / (J * q) 
+    B[3] = r / (J)
+
+end
+
 using Elliptic
 
 #computes B when in island coordinates. very different who knew.

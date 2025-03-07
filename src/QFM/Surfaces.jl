@@ -39,12 +39,15 @@ function construct_surfaces(plist, qlist, prob)
     #also, we have not implemented the jacobian for the action.
     #that will probably increase the accuracy.
 
+    met = MetT()
+    B = BFieldT()
     #not sure if this is how this is done.
     surfaces = QFMSurfaceT[]
 
     for i in 1:1:length(plist)
         #obvs will need to pass the other stuff in here somehow.
-        scos, tsin, ssin, tcos = action(plist[i], qlist[i], prob)
+        #scos, tsin, ssin, tcos = action(plist[i], qlist[i], prob)
+        scos, tsin, ssin, tcos = action2(plist[i], qlist[i], prob, met, B)
 
         ρ = scos[1, 1] #surface label.
         push!(surfaces, QFMSurfaceT(ρ, scos, tsin, ssin, tcos))
