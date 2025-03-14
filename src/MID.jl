@@ -14,6 +14,10 @@ Base class that just imports everything. We will want a description of the packa
 
 
 - Perhaps https://github.com/fredrikekre/Literate.jl if we ever want to share this garbage.
+- Split spectrum up into construct and solve modules.
+- Perhaps it would be nicer to have structure definition of a given module in the main file? just for easier access? Although we are probably supposed to be using the ? help or whatever.
+- Start export/using only the functions etc that are actually needed, probably be a lot better. I think ideally this will stop each module from importing the entire module, rather it will import only a few required functions. -> also can make the notation a bit nice, look at QFM for example.
+- Perhaps it is time to move plotting to MIDviz?
  - maybe we should change problem to accept strings - or symbols like plot :green etc so we can explain the possible options when something doesn't work!
  - Modify the grids structure, it is horrible, in particular the cont grids is terrible.
  - Add try catch to sqrt in solve, most of the time it is just because of ~0 numbers, but it owuld be good to have a warning rather than just always take abs. -> Maybe in this case we dont return the normalised ones? Or should we always have a normalise flag??? -> cka does this better, below some tolerance they are just set to zero.
@@ -136,6 +140,13 @@ using MID.Io; export efunc_from_file
 using MID.Io; export fortran_process
 
 
+include("QFM/QFM.jl")
+
+using MID.QFM; export qfm_continuum
+using ..QFM; export construct_surfaces
+using ..QFM; export farey_tree
+
+
 
 include("Plotting/Plotting.jl") 
 
@@ -144,6 +155,7 @@ using MID.Plotting; export continuum_plot
 using MID.Plotting; export contour_plot
 using MID.Plotting; export contour_zeta_plot
 using MID.Plotting; export surface_plot
+using MID.Plotting; export plot_surfs
 
 
 
@@ -172,13 +184,6 @@ using MID.Continuum; export island_continuum
 using MID.Continuum; export island_width
 using MID.Continuum; export continuum
 using MID.Continuum; export cyl_cont
-
-
-
-include("QFM/QFM.jl")
-
-using MID.QFM; export qfm_continuum
-using MID.QFM; export construct_surfaces
 
 
 

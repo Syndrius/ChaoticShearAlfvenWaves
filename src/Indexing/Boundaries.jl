@@ -92,6 +92,7 @@ function compute_boundary_inds(grids::FSSGridsT)
     #think this is a waste of time, hard to know for sure though!
     
     #experimenting with m=0 boundary, doesn't seem to help island case.
+    #=
     if 0 in mlist
         #fu and berk radiative paper seem to imply it should still be m=1 even for phi case...
         zero_ind = argmin(abs.(mlist))
@@ -102,6 +103,7 @@ function compute_boundary_inds(grids::FSSGridsT)
             left_boundary[i] += 1
         end
     end
+    =#
     
 
     #could probably use grid_to_index for this

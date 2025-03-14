@@ -7,6 +7,7 @@ module WeakForm
 using MID.Geometry
 using MID.MagneticField
 using MID.Structures
+using MID.QFM
 
 using LinearAlgebra
 
@@ -105,6 +106,64 @@ function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, met::MetT, B
 
         #compute the I matrix
         @views compute_I!(I[:, :, i, j, k], met, B, n[i], prob.flr, tm.D, tm.F)
+
+    end
+
+end
+
+
+
+#is W and I a stupid name?
+#this kind of needs to be here because of the qfm strutcs,
+#ideally this would not be the case.
+#I guess we could store them in the structure module???
+#seems sub-optimal.
+#but this is not a good place to keep this function
+function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, tor_met::MetT, tor_B::BFieldT, qfm_met::MetT, qfm_B::BFieldT,   prob::ProblemT, r::Array{Float64}, θ::AbstractArray, ζ::AbstractArray, tm::TM, surf::SurfaceITPT, CT::CoordTsfmT)
+
+    #compute the density.
+    n = prob.dens.(r) :: Array{Float64}
+    #TODO
+    #ωcap2 = ω_cap2.(r) :: Array{Float64}
+    ωcap2 = zeros(length(r))
+
+    for k=1:1:length(ζ), j=1:1:length(θ), i=1:1:length(r)
+
+        #so I am unsure if the new coords are ever actually used???
+        coord_transform!(r[i], θ[j], ζ[k], CT, surf)
+        #so the inv is fkn wopping.
+        #display(CT.JM)
+        #display(CT.JM_inv)
+
+        #compute the original metric
+        prob.compute_met(tor_met, r[i], θ[j], ζ[k], prob.geo.R0)
+        #and original B field.
+        compute_B!(tor_B, tor_met, prob.q, prob.isl, prob.isl2, r[i], θ[j], ζ[k])
+
+        #transform the metric
+        met_transform!(tor_met, qfm_met, CT)
+
+        #display(qfm_met.gl)
+        #transform the B field
+        B_transform!(tor_B, qfm_B, qfm_met, CT)
+
+
+        #now we compute the weakform in the usual way.
+        #computes the matrix D.
+        WeakForm.compute_D!(qfm_met, qfm_B, tm.D)
+
+        #compute the W matrix
+        @views WeakForm.compute_W!(W[:, :, i, j, k], qfm_met, qfm_B, n[i], ωcap2[i], tm)
+
+        #compute the I matrix
+        @views WeakForm.compute_I!(I[:, :, i, j, k], qfm_met, qfm_B, n[i], prob.flr, tm.D, tm.F)
+
+        #as a comparison!
+        #does seem to be working in the normal case.
+        #@views WeakForm.compute_W!(W[:, :, i, j, k], tor_met, tor_B, n[i], ωcap2[i], tm)
+
+        #compute the I matrix
+        #@views WeakForm.compute_I!(I[:, :, i, j, k], tor_met, tor_B, n[i], prob.flr, tm.D, tm.F)
 
     end
 

@@ -4,6 +4,7 @@
 
 
 #will almost certainly need more than this
+#hate the order of this, probably makes sense if we understood the theory!
 struct QFMSurfaceT
     ρ :: Float64 #stick with rho for now, but perhaps this should just be s. v unclear exactly what this does. #think it is just a surface label, which we pick to be the edge.
     scos
@@ -25,7 +26,7 @@ end
 #not sure what the inptus will be or the form of the output.
 #this functions is more garbage than anything
 #we need to srsly optimize, just reusing memory allocations will make a big difference.
-function construct_surfaces(plist, qlist, prob)
+function construct_surfaces(plist, qlist, sguesslist, prob)
 
     #qlist and plist are assumed to be the same size.
 
@@ -34,6 +35,14 @@ function construct_surfaces(plist, qlist, prob)
     #we do not use (m, n) here because these are the rational surfaces
     #that we are searching for, i.e p/q
 
+    #still have no idea what these numbers even mean!
+    MM = 4
+    M = 24
+    N = 8
+    #MM = 4
+    #M = 1
+    #N = 2
+    #sguess = 0.4
 
     #no idea what the bounding surfaces are about, going to ignore for now.
     #also, we have not implemented the jacobian for the action.
@@ -47,41 +56,132 @@ function construct_surfaces(plist, qlist, prob)
     for i in 1:1:length(plist)
         #obvs will need to pass the other stuff in here somehow.
         #scos, tsin, ssin, tcos = action(plist[i], qlist[i], prob)
-        scos, tsin, ssin, tcos = action2(plist[i], qlist[i], prob, met, B)
+        scos, tsin, ssin, tcos = action2(plist[i], qlist[i], prob, met, B, MM, M, N, sguesslist[i])
 
         ρ = scos[1, 1] #surface label.
         push!(surfaces, QFMSurfaceT(ρ, scos, tsin, ssin, tcos))
     end
+
+    #now we add the bounding surfaces, assumed to be at 0, 1
+    #subject to chaneg obvs.
+
+    #convert to r from flux.
+    ρ1 = sqrt(2*0.1)
+    ρ2 = sqrt(2*0.9)
+
+    #push!(surfaces, straighten_boundary(ρ1, MM, M, N, prob))
+    #push!(surfaces, straighten_boundary(ρ2, MM, M, N, prob))
 
     #unsure if we actually want to do this, 
     #as I don't think we want the surface objects tbh, just want the interpolant build from them
     return surfaces
 
 
-
-
 end
 
-#this should probably be in plotting eventually!
-function plot_surfs(surfs)
-    #expects an array of surface structs.
+#this seems an odd function to use
+#seems like just picking a rational surface near the boundary and running the og alg would be better?
+function straighten_boundary(ρ, MM, M, N, prob, tol=1e-9, niter=10)
 
-    display(surfs)
+    #need to start passing these around properly.
+    #M = 8
+    #N = 8
 
-    p = plot(xlabel=L"r", ylabel=L"\phi", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10)
+    nfft_θ = MM * M
+    nfft_ζ = MM * N
 
-    for i in surfs
+    r = ones(1, nfft_θ, nfft_ζ) .* ρ
+    ζ = LinRange(0, 2π, nfft_ζ+1)[1:end-1]
+    θ = LinRange(0, 2π, nfft_θ+1)[1:end-1]
 
-        s, t = convert_surf(i)
+    ζarr = zeros(1, nfft_θ, nfft_ζ)
 
-        plot!(t, s)
+    #this is probably the wrong shape, needs to be the same shape as fout
+    #from irfft2d.
+    #can just set the size equal if needed.
+    θarr = zeros(nfft_θ, nfft_ζ)
+
+    for i in 1:nfft_θ, j in 1:nfft_ζ
+        ζarr[1, i, j] = ζ[j]
+    end
+
+    λcos = zeros(M+1, 2*N+1)
+    λsin = zeros(M+1, 2*N+1)
+    iota = 0
+    mlist = collect(range(0, M))
+    nlist = [collect(0:N);collect(-N:-1)] 
+
+    Bs = zeros(nfft_θ, nfft_ζ)
+    Bθ = zeros(nfft_θ, nfft_ζ)
+    Bζ = zeros(nfft_θ, nfft_ζ)
+
+    met = MetT()
+    B = BFieldT()
+
+    for i in 1:niter
+        iota_old = iota
+        λcos_old = λcos
+        λsin_old = λsin
+
+        λreal = irfft2D(λcos, λsin, nfft_θ, nfft_ζ)
+
+        for j in 1:nfft_θ, k in 1:nfft_ζ
+            θarr[j, k] = θ[j] + λreal[j, k]
+
+            prob.compute_met(met, ρ, θarr[j, k], ζarr[1, j, k], prob.geo.R0)
+            compute_B!(B.B, met.J, prob.q, prob.isl, prob.isl2, ρ, θarr[j, k], ζarr[1, j, k])
+            #zero chance this works.
+            Bs[j, k] = B.B[1]
+            Bθ[j, k] = B.B[2]
+            Bζ[j, k] = B.B[3]
+        end
+
+        Bθ_o_Bζ = @. Bθ / Bζ
+
+        cn, sn = rfft2D(Bθ_o_Bζ, M, N)
+
+        iota = cn[1, 1]
+
+        #mnarr = zerso(nfft_θ, nfft_ζ)
+        #for j in 1:nfft_θ, k in 1:nfft_ζ
+        #    mnarr[j, k] = 
+
+
+
+        @. λcos[1, 2:end] = sn[1, 2:end] / (-mlist[1] * iota + nlist[2:end])
+
+        @. λsin[1, 2:end] = cn[1, 2:end] / (+mlist[1] * iota - nlist[2:end])
+
+        for j in 2:M, k in 1:N
+            #    mnarr[j, k] = 
+            λcos[j, k] = sn[j, k] / (-mlist[j] * iota + nlist[k])
+            λsin[j, k] = cn[j, k] / (+mlist[j] * iota - nlist[k])
+        end
+        λcos[1, 1] = 0.0
+        λsin[1, 1] = 0.0
+
+        erriota = abs(iota - iota_old)
+        errcn = maximum(abs.(λcos - λcos_old))
+        errsn = maximum(abs.(λsin - λsin_old))
+
+        if maximum([erriota, errcn, errsn]) < tol
+            #return QFMSurfaceT(ρ, )
+            break
+        end
+
 
     end
 
-    display(p)
+    scos = zeros(size(λcos))
+    scos[1, 1] = ρ
+    ssin = zeros(size(λcos))
 
+    return QFMSurfaceT(ρ, scos, λsin, ssin, λcos)
 
 end
+
+
+
 
 #shorthand for evaluateing our entire Interpolation matrix at once
 #we will eventially want this to have the output as an input for memory reasons etc.
@@ -125,8 +225,22 @@ function create_surf_itp(surfs)
     scosn = zeros((length(surfs), size(surfs[1].scos)[1], size(surfs[1].scos)[2]))
     tsinn = zeros((length(surfs), size(surfs[1].scos)[1], size(surfs[1].scos)[2]))
 
+    #so I think we need to sort this shit.
+    #so this sorts the surfaces by the ρ value, so that interpolation can work properly.
     #display(length(surfs))
-    ρsurfs = zeros(length(surfs))
+    ρsurfs_unsort = zeros(length(surfs))
+
+    for (i, surf) in enumerate(surfs)
+        #won't bother with the others yet.
+
+        ρsurfs_unsort[i] = surf.ρ
+    end
+
+    #may need to double check this is actually working properly!
+    #looks to be sorting properly.
+    perm = sortperm(ρsurfs_unsort)
+    ρsurfs = ρsurfs_unsort[perm]
+    surfs = surfs[perm]
     #so ρsurfs has to be in order
     #we can probably just have our inputs be in order, but 
     #we should also have some sorting here.
@@ -135,7 +249,7 @@ function create_surf_itp(surfs)
         #won't bother with the others yet.
         scosn[i, :, :] = surf.scos
         tsinn[i, :, :] = surf.tsin
-        ρsurfs[i] = surf.ρ
+        #ρsurfs[i] = surf.ρ
     end
 
     #ρsurfs = [0.6, 0.6111111111, 0.61538462, 0.61904762, 0.625]
@@ -202,6 +316,7 @@ function create_surf_itp(surfs)
 
     for i in 1:dim1
         for j in 1:dim2
+            #display((i, j))
             #so interpolations cannot do unequal space other than linear.
             #fk me.
             #try the other package then.
@@ -296,5 +411,121 @@ function convert_surf(surf)
     end
 
     return s, t
+
+end
+
+
+function farey_tree(N, q1, p1, q2, p2)
+
+    #now N is a recursive depth.
+
+    #think this is a stupid assertion.
+    #won't help in weird cases,
+    #also think it depends on the order.
+    #@assert q2*p1 - q1*p2 == -1
+    plist = [p1, p2]
+    qlist = [q1, q2]
+
+    farey_tree_recurs!(N, q1, p1, q2, p2, qlist, plist)
+
+    #println(qlist)
+    #println(plist)
+    for i in eachindex(qlist)
+        a = gcd(plist[i], qlist[i])
+        if a != 1
+            plist[i] ÷= a
+            qlist[i] ÷= a
+        end
+    end
+
+    #think we are going to assume that there are no double ups
+
+    #unsure if this is automatically free from doubles??
+    #now do some stuff with qlist and plist
+    #so here want want to check there are not any doubles.
+    #and reduce the gcd etc.
+    #so this seems to work pretty well, however, this will only ever give surfaces between the islands, unsure how we will do them outside...
+    return qlist, plist
+
+end
+
+
+function farey_tree_recurs!(N, q1, p1, q2, p2, qlist, plist)
+
+    if N != 0
+        N = N-1
+        pnew = p1 + p2
+        qnew = q1 + q2
+        #worried about this tbh.
+        push!(qlist, qnew)
+        push!(plist, pnew)
+        farey_tree_recurs!(N, qnew, pnew, q2, p2, qlist, plist)
+        farey_tree_recurs!(N, q1, p1, qnew, pnew, qlist, plist)
+        #return farey_tree_recurs(N, )
+    end
+
+
+end
+
+
+#probably should just delete this.
+function farey_tree_old(N, q1, p1, q2, p2)
+    #N is the number of rationals we want to find,
+    #eventually we will specify clustering etc.
+    #first check the farey neighbouring condition thing
+
+    @assert q1*p2 - q2*p1 == -1
+
+
+    found = 0
+
+    qlist = []
+    plist = []
+
+    iota1 = p1 / q1
+    iota2 = p2 / q2
+
+    #define the `parent` values.
+    par_q1 = q1
+    par_p1 = p1
+    par_q2 = q2
+    par_p2 = p2
+
+    while found < N
+
+        new_q = par_q1 + par_q2
+        new_p = par_p1 + par_p2
+
+        a = gcd(new_p, new_q)
+
+        if a != 1
+            new_p = new_p ÷ a
+            new_q = new_q ÷ a
+        end
+
+        #check to make sure it is not already in the list.
+
+        qinds = findall(x->x==new_q, qlist)
+        pinds = findall(x->x==new_q, plist)
+
+        if (any(qinds == pinds)) 
+
+        else
+            push!(plist, new_p)
+            push!(qlist, new_q)
+            found += 1
+        end
+
+        #i guess we will try to keep them central?
+        #this is going to be real tricky
+        #ideally this will be done recursively.
+        new_iota = new_p / new_q
+
+
+
+    end
+
+    return qlist, plist
+
 
 end

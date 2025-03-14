@@ -38,6 +38,9 @@ Plots the continuum produces by compute_continuum().
 """
 
 #this is a shit function.
+#don't think this will ever work.
+#only works if we do continuum with the perN function
+#otherwise this is useless.
 function continuum_plot(ω, grids::ContGridsT; savefile=nothing, ymin=-0.05, ymax=1.05)
 
     #note that this does not label m's, not sure if it is possible

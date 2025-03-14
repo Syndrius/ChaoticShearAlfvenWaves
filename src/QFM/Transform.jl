@@ -44,16 +44,16 @@ function coord_transform!(r, θ, ζ, CT, surf)
 
 
     #will have to generalise to lists etc.
-    m = 3
-    n = 2
-
+    #m = 3
+    #n = 2
+    #obvs needs to be passed in by the surface obj.
     pqMpol = 24
     pqNtor = 8
     dim1 = pqMpol+1
     dim2 = 2*pqNtor + 1
     mlist = collect(range(0, pqMpol))
 
-    collect(-pqNtor:0)
+    #collect(-pqNtor:0)
     nlist = [collect(0:pqNtor);collect(-pqNtor:-1)] 
 
     α = zeros((length(mlist), length(nlist)))
@@ -69,6 +69,9 @@ function coord_transform!(r, θ, ζ, CT, surf)
 
     #note scos and ϑsin here is becuase we may later
     #need to use ssin and ϑcos as well.
+    #what is this actually giving us?
+    #perhaps this is givnig us fourier components not 
+    #actual θ, ζ values.
     scos, ϑsin = itp_mat(surf, r, deriv=0)
     #unsure if these shuold be ds or dr.
     dscosdr, dϑsindr = itp_mat(surf, r, deriv=1)
@@ -99,7 +102,7 @@ function coord_transform!(r, θ, ζ, CT, surf)
     dsdζ = 0.0
 
     dϑdr = 0.0
-    dϑdθ = 0.0
+    dϑdθ = 1.0 #this starts at 1.0 because there must be an additional constant or something in the fourier expansion.
     dϑdζ = 0.0
 
     dφdr = 0.0
@@ -133,7 +136,7 @@ function coord_transform!(r, θ, ζ, CT, surf)
     d2φdζdζ = 0.0
 
     for i in 1:dim1
-        for j in dim2
+        for j in 1:dim2
             s += scos[i, j] * cosα[i, j]
             ϑ += ϑsin[i, j] * sinα[i, j]
 
@@ -155,7 +158,7 @@ function coord_transform!(r, θ, ζ, CT, surf)
             d2sdζdζ += -nlist[j]^2 * scos[i, j] * cosα[i, j]
 
 
-            d2ϑdrdr += dϑsindr[i, j] * sinα[i, j]
+            d2ϑdrdr += d2ϑsindrdr[i, j] * sinα[i, j]
             d2ϑdrdθ += mlist[i] * dϑsindr[i, j] * cosα[i, j]
             d2ϑdrdζ += -nlist[j] * dϑsindr[i, j] * cosα[i, j]
 
@@ -166,10 +169,21 @@ function coord_transform!(r, θ, ζ, CT, surf)
         end
     end
 
+    #display(r)
+    #display(scos)
     #display((r, θ, ζ))
     #may want a JM struct tbh. And perhasp a function that fills it in.
     #probably the nicest way to deal with this.
-    CT.JM[:, :] .= [dsdr dsdθ dsdζ; dϑdr dϑdθ dϑdζ; dφdr dφdθ dφdζ]
+    #display(dscosdr)
+    #display(cosα)
+    #display(dsdr)
+    #display(sinα)
+    #display(scos)
+    #display(mlist)
+    #display(dsdθ)
+    #perhaps the [1, 1] component of this is wrong.
+    #display(ϑsin)
+    CT.JM .= [dsdr dsdθ dsdζ; dϑdr dϑdθ dϑdζ; dφdr dφdθ dφdζ]
     #display(CT.JM)
     #so all the interpoaltions outside the domain are set to zero
     #causing this to give an error.
@@ -196,6 +210,13 @@ function met_transform!(tor_met, qfm_met, CT)
     #note we will be using the cylindrical limit of torus for simplicity.
    
     #so pretty sure we do need this!
+
+    #this is actually really, bad.
+    #but required!
+    qfm_met.gl .= 0.0
+    qfm_met.gu .= 0.0
+    qfm_met.dgu .= 0.0
+
     
     for μ in 1:3, ν in 1:3, i in 1:3, j in 1:3
         #damn so indexing this will be a nightmare.

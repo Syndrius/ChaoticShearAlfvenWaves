@@ -13,6 +13,7 @@ Additional plotting functions can be found in the separate package MIDViz.jl.
 module Plotting
 
 using MID.Structures
+using MID.QFM #not ideal, may need to move the QFM structure into Structures.
 
 using Plots
 using LaTeXStrings
@@ -40,5 +41,10 @@ include("ContinuumPlot.jl")
 
 export continuum_plot
 
+
+include("QFMPlotting.jl")
+
+#name of this is unfort, may need to change to qfm_surf_plot or something.
+export plot_surfs
 
 end

@@ -18,14 +18,14 @@ end
 #unsure if action is the best name for this but whatever.
 #this is now much much better.
 #gets better the larger the functions are 
-function action2(p::Int64, q::Int64, prob::ProblemT, met::MetT, B::BFieldT)#, sguess::Float64, MM::Int64, M::Int64, N::Int64)
+function action2(p::Int64, q::Int64, prob::ProblemT, met::MetT, B::BFieldT, MM::Int64, M::Int64, N::Int64, sguess=0.5::Float64)#, sguess::Float64, MM::Int64, M::Int64, N::Int64)
 
-    MM = 4 #this has to be 2 * nfft_multiplier, which is defaulted to 2 in rfft functions.
+    #MM = 4 #this has to be 2 * nfft_multiplier, which is defaulted to 2 in rfft functions.
     #but this at 4 and pqNtor the function is v quick.
     #Ntor = 10
-    N = 8
-    M = 24 #only used in the very last step, so something to do with α?
-    sguess = 1.1
+    #N = 8
+    #M = 24 #only used in the very last step, so something to do with α?
+    #sguess = 1.1
     #these are some of the most unclear peices of garbage going around.
     qN = q * N
     fM = MM * N
@@ -200,6 +200,9 @@ function action2(p::Int64, q::Int64, prob::ProblemT, met::MetT, B::BFieldT)#, sg
         #we had forgotten to return the arg lol.
         #think it is just not working at all lol
         ag!(δS, x) = action_grad!(δS, x, CT, p, q, a, Ntor, r1D, θ1D, ζ, irft_1D_p, prob, met, B, Br, Bθ, Bζ, ift_r1D, ift_θ1D, nlist, rdot_fft_cos, rdot_fft_sin, θdot_fft_cos, θdot_fft_sin, ft_r1D, ft_θ1D, rft_1D_p)
+
+        #the gradient looks to be working at the most basic level now!
+        ag_JM!(JM, x) = action_grad_jm!(JM, x, CT, p, q, a, Ntor, r1D, θ1D, ζ, irft_1D_p, prob, met, B, Br, Bθ, Bζ, ift_r1D, ift_θ1D, nlist, rdot_fft_cos, rdot_fft_sin, θdot_fft_cos, θdot_fft_sin, ft_r1D, ft_θ1D, rft_1D_p)
         #ag!(x) = action_grad!(x, p, q, a, Ntor, r1D, θ1D, ζ, irft_1D_p, prob, met, B, Br, Bθ, Bζ, ft_r1D, ft_θ1D, nlist)
         #ag!(δS, x) = action_gradient(δS, x, p, q, a, qN, ζ, nlist, prob)
 
@@ -207,10 +210,16 @@ function action2(p::Int64, q::Int64, prob::ProblemT, met::MetT, B::BFieldT)#, sg
         #need to figure out what is going on
         #think we have created the simplest problem now.
         #ag!(δS, x0)
+        #x0[4] = 0.3
         #δS = ag!(x0)
         #display(δS)#[1:5])
-        
-        sol = nlsolve(ag!, x0)
+        #JM = zeros(length(x0), length(x0))
+        #ag_JM!(JM, x0)
+        #display("Fin")
+        #display(JM)
+        #break
+        sol = nlsolve(ag!, ag_JM!, x0)
+        #sol = nlsolve(ag!, x0)
 
         #display(sol.zero)
         #nv, rcos, tsin, rsin, tcos = unpack_dof(sol.zero, qN)
@@ -298,6 +307,7 @@ function action2(p::Int64, q::Int64, prob::ProblemT, met::MetT, B::BFieldT)#, sg
     #odd to change r to s here but leave t as theta
     #this should be vartheta I think,
     #unclear what is going on though.
+    #unsure if these are the old or new coordinates.
     scos_surf, ssin_surf = rfft2D(r2D_vartheta, M, N)
     tcos_surf, tsin_surf = rfft2D(θ2D_vartheta, M, N)
 
@@ -345,6 +355,7 @@ function action_grad!(δS::Array{Float64}, x::Array{Float64}, CT::CoefficientsT,
    
     #this is unfortunatly inevitable.
     #think we will need to recompute the B field for this and for the gradient. Don't think it can be shared unfort.
+    #=
     for i in 1:1:length(r)
         #perhaps r, t, z are not what we think they are? 
         #pretty hekin likely I think
@@ -369,6 +380,11 @@ function action_grad!(δS::Array{Float64}, x::Array{Float64}, CT::CoefficientsT,
         Bθ[i] = B.B[2]
         Bζ[i] = B.B[3]
     end
+    =#
+
+    test_compute_B!(Br, Bθ, Bζ, r, θ, ζ)
+
+    
 
     #to be fourier transformed.
     #these are still be allocated here!
@@ -431,6 +447,7 @@ function action_grad!(δS::Array{Float64}, x::Array{Float64}, CT::CoefficientsT,
 
     #wow we finally got this working 
     #holy moly.
+    #=
     δS[1:Ntor] = @. CT.rsin * nlist / q - rdot_fft_cos[1: Ntor]
 
 
@@ -444,32 +461,288 @@ function action_grad!(δS::Array{Float64}, x::Array{Float64}, CT::CoefficientsT,
 
     δS[end] = area - a
 
-    #δS[Ntor+1:2*Ntor] = @. (CT.θsin * nlist / q - rhs_tdot_fft_cos[1 : qN + 1])
-
-    #δS[Ntor+1] += iota
-
-    #δS[2*Ntor+1:3*Ntor-1] = @. (-CT.θcos * nlist / q - rhs_tdot_fft_sin[1:qN+1])[2:end]
-
-    #δS[3*Ntor+1-1:4*Ntor-1-1] = @. (-CT.rcos * nlist / q - rhs_rdot_fft_sin[1:qN+1])[2:end]
-
-    #δS[end] = area - a
+    =#
     
     #og packing
     #[[nv]; rcos ; tsin[2:end] ; rsin[2:end] ; tcos]
-    #qN = Ntor - 1
-    #δS[1] = area - a
+    qN = Ntor - 1
+    δS[1] = area - a
 
-    #δS[2 : qN + 2] = @. CT.rsin * nlist / q - rhs_rdot_fft_cos[1: qN + 1]
+    δS[2 : qN + 2] = @. CT.rsin * nlist / q - rdot_fft_cos[1: qN + 1]
 
-    #δS[qN+3: 2*qN + 2] = @. (-CT.rcos * nlist / q - rhs_rdot_fft_sin[1:qN+1])[2:end]
+    δS[qN+3: 2*qN + 2] = @. (-CT.rcos * nlist / q - rdot_fft_sin[1:qN+1])[2:end]
 
-    #δS[2*qN+3 : 3*qN + 3] = @. (CT.θsin * nlist / q - rhs_tdot_fft_cos[1 : qN + 1])
+    δS[2*qN+3 : 3*qN + 3] = @. (CT.θsin * nlist / q - θdot_fft_cos[1 : qN + 1])
 
-    #δS[2 * qN + 3] += iota #wot.
+    δS[2 * qN + 3] += iota #wot.
 
-    #δS[3 * qN + 4 : end] = @. (-CT.θcos * nlist / q - rhs_tdot_fft_sin[1:qN+1])[2:end]
+    δS[3 * qN + 4 : end] = @. (-CT.θcos * nlist / q - θdot_fft_sin[1:qN+1])[2:end]
     
 
+end
+
+function test_compute_B!(Br, Bθ, Bζ, r, t, z)
+
+    q = @. 2 / r^2
+
+    #zhisongs names for this are frankly unacceptable, we have 
+    #changed to normal coord names.
+    k = 0.0018 #same as python example notebook
+    #gotta deal with vectors here big rip.
+    #we will need to make this conform to our normal method later!
+    #unsure if this will always have vector inputs.
+    #Br = zeros(length(r), length(t), length(z))
+    #Bt = zeros(length(r), length(t), length(z))
+    #Bz = zeros(length(r), length(t), length(z))
+    #this will cause some problemos later, 
+    #this coord setup is weird,
+    #Br is a 1d array.
+    @. Br = - k * (sin(2 * t - z) + sin(3 * t - 2 * z))
+    @. Bθ = r #/ q
+    @. Bζ = r #ones(length(r))
+    Bζ .= 1.0
+
+    #return Br, Bt, Bz
+end
+
+#computes the jacobian matrix for the action grad for efficient root finding.
+#fair bit of overlap with this function and the og
+#may be better to combine them
+#but we are probably getting to diminishing returns.
+
+#this is now working, and offering a significant performance improvement
+#this function is a fkn disaster though, and there is lots of room for improvement.
+function action_grad_jm!(JM::Array{Float64, 2}, x::Array{Float64}, CT::CoefficientsT, p::Int64, q::Int64, a::Float64, Ntor::Int64, r::Array{Float64}, θ::Array{Float64}, ζ::StepRangeLen{Float64}, ift_1D_p::AbstractFFTs.ScaledPlan, prob::ProblemT, met::MetT, B::BFieldT, Br::Array{Float64}, Bθ::Array{Float64}, Bζ::Array{Float64}, ift_r1D::Array{ComplexF64}, ift_θ1D::Array{ComplexF64}, nlist,rdot_fft_cos::Array{Float64}, rdot_fft_sin::Array{Float64}, θdot_fft_cos::Array{Float64}, θdot_fft_sin::Array{Float64}, ft_r1D::Array{ComplexF64}, ft_θ1D::Array{ComplexF64}, rft_1D_p::FFTW.rFFTWPlan)
+
+    iota = p/q
+
+
+    unpack_coeffs!(x, CT, Ntor)
+
+    area = CT.θcos[1]
+    #area = tcos[1]
+
+    #r = irfft1D(rcos, rsin)
+    
+
+    #θ = irfft1D(tcos, tsin)
+
+    get_r_t!(r, θ, CT, ift_1D_p, ift_r1D, ift_θ1D, Ntor)
+    #get_r_t!(r, θ, rcos, tsin, rsin, tcos, ift_1D_p, ft_r1D, ft_θ1D, Ntor)
+    θ .+= iota .* ζ
+
+
+    #not sure how we will actually want to do this.
+    nzq = nlist .* ζ' ./ q
+    cosnzq = cos.(nzq)
+    sinnzq = sin.(nzq)
+    #obvs want to pass this in later!
+    #this is a disaster though, we will probably want a struct to store the magnetic field, probably one for these and the non-deriv terms.
+    dBrdr = zeros(length(r))
+    dBrdθ = zeros(length(r))
+    dBθdr = zeros(length(r))
+    dBθdθ = zeros(length(r))
+    dBζdr = zeros(length(r))
+    dBζdθ = zeros(length(r))
+
+    #=
+    for i in 1:1:length(r)
+        
+        prob.compute_met(met, r[i], θ[i], ζ[i], prob.geo.R0)
+
+        #need B.dB now, so we just compute the full thing!
+        compute_B!(B, met, prob.q, prob.isl, prob.isl2, r[i], θ[i], ζ[i])
+
+        #unsure how jacobian sits with all of this.
+        Br[i] = B.B[1]
+        Bθ[i] = B.B[2]
+        Bζ[i] = B.B[3]
+        #looks like we don't need the d/dζ terms.
+        dBrdr[i] = B.dB[1, 1]
+        dBrdθ[i] = B.dB[1, 2]
+        dBθdr[i] = B.dB[2, 1]
+        dBθdθ[i] = B.dB[2, 2]
+        dBζdr[i] = B.dB[3, 1]
+        dBζdθ[i] = B.dB[3, 2]
+    end
+    =#
+    
+    k = -0.0018
+    #just using the basic test case
+    Br = @. k * (sin(2*θ - ζ) + sin(3*θ - 2 * ζ))
+    Bθ = @. r
+    Bζ .= 1.0
+
+    #Zhisong doesn't take a zeta deriv here...
+    dBrdθ = @. k * (2.0 * cos(2*θ - ζ) + 3.0 * cos(3.0*θ - 2*ζ))
+
+    dBθdr .=  1.0
+
+    #zhisongs code makes basically no sense
+    #return to this if we need, but otherwise we will just ignore!
+    oBζ = @. 1 / Bζ
+
+
+    #we can probably skip the allocated of the derivs and evn B if we just compute these in the same loop as we compute B.
+    rdot_dr = @. dBrdr / Bζ - (Br - CT.nv) / Bζ^2 * dBζdr
+    rdot_dθ = @. dBrdθ / Bζ - (Br - CT.nv) / Bζ^2 * dBζdθ
+    θdot_dr = @. dBθdr / Bζ - Bθ / Bζ^2 * dBζdr
+    θdot_dθ = @. dBθdθ / Bζ - Bθ / Bζ^2 * dBζdθ
+    
+    #oBζcos = zeros(2*Ntor-1)
+    #oBζsin = zeros(2*Ntor-1)
+    #display(Ntor)
+
+    #fft_res = zeros(ComplexF64, 2*Ntor) #obvs no idea
+    #obvs need to define this things.
+    #wonder if the plan is the same, probably not lol.
+    #plan is wrong almost certainly! this is a cooked function now.
+    #rfft1D!(oBζcos, oBζsin, oBζ, fft_res, rft_1D_p)
+
+    oBζcos, oBζsin = rfft1D_simple(oBζ)
+
+    #no idea what these even are tbh.
+    #not actually sure how big these are needed to be yet, but they should be the same shape as nzq.
+    #M = 17 #taken from python, need to understand the shape eventually
+    #N = 64
+
+    nfft_mulitplier = 2
+
+    #unsure about this tbh.
+    size_of_fft_array = nfft_mulitplier * (Ntor - 1)
+    #these are pretty random!
+    M = length(nlist)
+    N = 2 * size_of_fft_array
+    rdot_drcos = zeros(M, N)
+    rdot_drsin = zeros(M, N)
+    rdot_dθcos = zeros(M, N)
+    rdot_dθsin = zeros(M, N)
+    θdot_drcos = zeros(M, N)
+    θdot_drsin = zeros(M, N)
+    θdot_dθcos = zeros(M, N)
+    θdot_dθsin = zeros(M, N)
+
+    for i in 1:M, j in 1:N
+        #may need to transpose these!
+        #just genuinly have no idea what is going on with the fft step.
+        rdot_drcos[i, j] = rdot_dr[j] * cosnzq[i, j]
+        rdot_drsin[i, j] = rdot_dr[j] * sinnzq[i, j]
+        rdot_dθcos[i, j] = rdot_dθ[j] * cosnzq[i, j]
+        rdot_dθsin[i, j] = rdot_dθ[j] * sinnzq[i, j]
+        θdot_drcos[i, j] = θdot_dr[j] * cosnzq[i, j]
+        θdot_drsin[i, j] = θdot_dr[j] * sinnzq[i, j]
+        θdot_dθcos[i, j] = θdot_dθ[j] * cosnzq[i, j]
+        θdot_dθsin[i, j] = θdot_dθ[j] * sinnzq[i, j]
+    end
+
+    #so rdot_dr and variations are good.
+    #println(rdot_drcos)
+    #println(rdot_dθ)
+    #println(rdot_dr)
+
+    #N is probably not right, just needs to match the above dimension 2
+    #this is the point where Zhisongs code actually makes zero sense whatso ever.
+    dummy_nv = zeros(1, N)
+    #like what kind of monstrosoty is this creating.
+    drdot = pack_dof2D(dummy_nv, rdot_drcos, rdot_dθsin, rdot_drsin, rdot_dθcos) .- 1
+    dθdot = pack_dof2D(dummy_nv, θdot_drcos, θdot_dθsin, θdot_drsin, θdot_dθcos) .- 1
+
+    #println(length(drdot[1, :]))
+    #println(drdot[2, :])
+    #println(drdot[3, :])
+    #how can we possibly want whatever the output of this is.
+    #like wot the fek.
+    drdot_cos, drdot_sin = rfft1D_JM(drdot)
+    dθdot_cos, dθdot_sin = rfft1D_JM(dθdot)
+    #display(size(drdot))
+    #println(size(drdot_cos))
+    #println(drdot_cos[2, :])
+    #println(drdot_cos[3, :])
+
+    #println(oBζsin)
+
+    #Zhisong transposes them here, not sure if we should or not...
+    #dδS = zeros(length(x), length(x))
+    #just going to work with Zhisongs shape for now.
+
+    qN = Ntor - 1
+
+    #println(drdot)
+    #println(-drdot_cos[1:qN+1])
+    
+    #wonder if it is possible to reverse engineer these equations
+    #would be very nice to know what equations we are actually solving...
+    #maybe we can get the derivatives jut by assuming the normal ones are correct.
+
+    JM .= 0.0 #needed as they are not set to zero by default
+
+    #unsure what any of this even is tbh. Not even sure what the JM is representing here.
+    #now reasnably confident these are working.
+    JM[2:qN+2, 1:end] .= -drdot_cos[1:qN+1, 1:end]
+    JM[qN+3:2*qN+2, 1:end] .= -drdot_sin[2:qN+1, 1:end]
+
+    JM[2*qN+3:3*qN+3, 1:end] .= -dθdot_cos[1:qN+1, 1:end]
+    JM[3*qN+4:end, 1:end] .= -dθdot_sin[2:qN+1, 1:end]
+
+    JM[1, 3*qN+3] += 1  #θcos[0] apparantly
+
+    #unsure about this, python has swapped to using arange for some reason.
+    #given up on trying to get the indexing right for now.
+    #this obvs won't work either lol.
+    #this needs to be tested.
+    #python indexing for this bit is kind of weird
+    #unsure how best to replicate it.
+    #CartesianIndex here creates pairwise indicies from two lists
+    #eg ([1, 2, 3], [2, 3, 4]) -> [1, 2], [2, 3], [3, 4]
+    JM[CartesianIndex.(2:qN+2, 2*qN+2:3*qN+2)] += nlist / q #rsin
+
+    JM[CartesianIndex.(qN+3:2*qN+2, 3:qN+2)] += -(nlist / q)[2:end] #-rsin[2:end]
+
+    JM[CartesianIndex.(2*qN+3:3*qN+3, qN+2:2*qN+2)] += nlist / q #θsin
+
+    JM[CartesianIndex.(3*qN+4:4*qN+3, 3*qN+4:4*qN+3)] += (-nlist / q)[2:end] #-θcos[2:end]
+
+    #then derivative w.r.t nv
+    #srs what even is this.
+    JM[2:qN+2, 1] += oBζcos[1:qN+1]
+    JM[qN+3:2*qN+2, 1] += oBζsin[2:qN+1]
+    
+    sec1 = 1:17
+    sec2 = 18:34
+    sec3 = 35:51
+    sec4 = 52:67
+    #display(size(drdot_cos))
+    #println(drdot_cos[sec1, sec1])
+    #ok so qN = 16
+    #display(size(JM))
+    #y = JM[sec1, sec1]
+    #y = drdot_cos[sec1, sec4]
+    #y = drdot[sec2, sec1]
+    #y = rdot_dθcos[sec1, sec1]
+    #display(size(nzq))
+    #y = nzq[sec1, sec1]
+    #println(size(y))
+    #for i in 1:size(y)[1]
+    #    println(y[i, :])
+    #end
+    #println(y)
+    #println(JM[3, 2*qN+2])
+    #println(JM[qN+3:2*qN+2, 1:end])
+end
+
+
+function rfft1D_simple(f)
+
+    Nfft = size(f)[end]
+    res = rfft(f)
+
+    cosout = real.(res) ./ Nfft .* 2
+    sinout = -imag.(res) ./ Nfft .* 2
+
+    cosout[1] /= 2
+    sinout[1] = 0.0
+
+    return cosout, sinout
 end
 
 
@@ -616,9 +889,9 @@ function pack_coeffs!(x::Array{Float64}, CT::CoefficientsT, N)
     #so the plus 1 is extremely important for efficient solving!
     #why??>>?>
     #og packing
-    #x .= [CT.nv ; CT.rcos ; CT.θsin[2:end] ; CT.rsin[2:end] ; CT.θcos] .+ 1
+    x .= [CT.nv ; CT.rcos ; CT.θsin[2:end] ; CT.rsin[2:end] ; CT.θcos] .+ 1
     #new packing
-    x .= [CT.rcos ; CT.rsin[2:end] ; CT.θcos ; CT.θsin[2:end] ; CT.nv] .+ 1
+    #x .= [CT.rcos ; CT.rsin[2:end] ; CT.θcos ; CT.θsin[2:end] ; CT.nv] .+ 1
 
 end
 
@@ -630,6 +903,7 @@ function unpack_coeffs!(x::Array{Float64}, CT::CoefficientsT, N)
     #x[1] = CT.nv[1]
     
     #changed the order hopefully not a mistake!
+    #=
     CT.rcos[:] = x[1:N] .- 1
     CT.rsin[2:end] = x[N+1:2*N-1] .- 1
     CT.θcos[:] = x[2*N-1+1:3*N-1] .-1
@@ -637,9 +911,10 @@ function unpack_coeffs!(x::Array{Float64}, CT::CoefficientsT, N)
     CT.nv[1] = x[end] - 1
     CT.rsin[1] = 0.0
     CT.θsin[1] = 0.0
+    =#
 
     #og packing
-    #=
+    
     qN = N - 1
     CT.nv[1] = x[1] - 1
     CT.rcos .= x[2:qN + 2]  .- 1
@@ -647,14 +922,10 @@ function unpack_coeffs!(x::Array{Float64}, CT::CoefficientsT, N)
     CT.θsin .= [[0] ; x[qN + 3:2 * qN + 2] .- 1]
     CT.rsin .= [[0] ; x[2*qN + 3 : 3 * qN + 2] .- 1]
     CT.θcos .= x[3 * qN + 3 : end] .- 1
-    =#
+    
 
     
 
 end
 
 
-#computes the jacobian matrix for the action grad for more efficient root finding!
-function action_grad_jm()
-
-end

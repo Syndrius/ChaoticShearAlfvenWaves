@@ -352,7 +352,20 @@ function pack_dof(nv, rcos, tsin, rsin, tcos)
     #nv is just a single value I think.
 
     #no idea why + 1 is needed.
+    #we have changed this for the 2d case.
     return [[nv]; rcos ; tsin[2:end] ; rsin[2:end] ; tcos] .+ 1
+
+end
+
+
+function pack_dof2D(nv, rcos, tsin, rsin, tcos)
+
+    #nv is just a single value I think.
+
+    #no idea why + 1 is needed.
+    #we have changed this for the 2d case.
+    return [nv; rcos ; tsin[2:end, :] ; rsin[2:end, :] ; tcos] .+ 1
+    #return [nv rcos  tsin[2:end, :]  rsin[2:end, :]  tcos] .+ 1
 
 end
 
@@ -490,6 +503,34 @@ function rfft1D(f)
 end
 
 
+function rfft1D_JM(f)
+
+
+    Nfft = size(f)[end]
+    ffft = rfft(f, [2]) #for the JM case we need to do the second dim.
+    #unsure why or if we can combine these functions.
+
+    #println(ffft)
+
+    cos_out = real.(ffft) ./ Nfft .* 2
+
+    
+    #1d case
+    cos_out[:, 1] ./= 2
+    
+
+    sin_out = @. -imag(ffft) / Nfft * 2
+
+    sin_out[:, 1] .= 0.0
+
+    #print(sin_out)
+    #probably a bad idea to have this here, but it is needed.
+    return transpose(cos_out), transpose(sin_out)
+
+
+end
+
+
 function rfft2D(f, mpol, ntor)
 
     #zhisongs code considers case where mpol and ntor are unspecified.
@@ -548,11 +589,60 @@ function rfft2D(f, mpol, ntor)
 
 end
 
+function irfft2D(cos_in, sin_in, nfft_θ, nfft_ζ)
+
+    mpol = size(cos_in)[1] - 1
+    ntor = (size(sin_in)[2]-1) ÷ 2
+
+    #tells us that we will need to test this with a non-zero cos_in.
+    #display(cos_in)
+    #display(mpol)
+    #display(ntor)
+
+    mpol_new = nfft_θ ÷ 2
+    ntor_new = nfft_ζ ÷ 2
+
+    cos_pad = zeros(mpol_new+1, 2*ntor_new)
+    sin_pad = zeros(mpol_new+1, 2*ntor_new)
+
+    #display(-1 .* collect(1:ntor) .+1)
+    #display(collect(ntor:0))
+    arr = -1 .* collect(1:ntor) .+ size(cos_in)[2] .+ 1
+    arr2 =  collect(ntor:-1:1) .+ 1
+    #println(arr)
+    #println(arr2)
+    #this is wrong for sure.
+    idxlist = [[1] ; arr ; arr2]
+    #display(idxlist)
+
+    cos_pad[1:mpol+1, idxlist[:]] = cos_in
+    sin_pad[1:mpol+1, idxlist] = sin_in
+
+    cos_pad[1, :] .*= 2
+    cos_pad[end, :] .*= 2
+    sin_pad[1, :] *= 2
+    sin_pad[end, :] .*= 2
+
+    #display(cos_pad)
+
+    #so this works for some reason...
+    #need to figure this shit out.
+    #so d needs to be the new size of the array.
+    #v unclear what is deciding that!
+    #not sure if this works in general! #maybe it does
+    #also not sure if we need to do the fft with dimensions flipped.
+    fout = irfft(cos_pad .- 1im .* sin_pad, 2*mpol_new, [1, 2])
+
+    return fout .* nfft_θ .* nfft_ζ ./ 2
+
+end
+
+
 #function used as a test for comparison with Zhisong
 #want to replace with our normal B method.
 function test_compute_B(r, t, z)
 
-    q = @. 2 / r^2
+    #q = @. 2 / r^2
 
     #zhisongs names for this are frankly unacceptable, we have 
     #changed to normal coord names.
@@ -567,8 +657,8 @@ function test_compute_B(r, t, z)
     #this coord setup is weird,
     #Br is a 1d array.
     Br = @. - k * (sin(2 * t - z) + sin(3 * t - 2 * z))
-    Bt = @. r / q
-    Bz = r #ones(length(r))
+    Bt = @. r #/ q
+    Bz = ones(length(r)) #r
 
     return Br, Bt, Bz
 end

@@ -51,7 +51,7 @@ prob = init_problem(q=two_wave_q, geo=geo, met=slab_metric!, isl=isl1, isl2=isl2
 #rather, just used to create the interpolants
 #surfs = construct_surfaces([5, 13, 8, 11, 3], [8, 21, 13, 18, 5], prob);
 
-
+#perhaps we should have just used normal fft everywhere and then taken the real part, may have been simpler...
 
 #think these rationals will be different for flux vs r.
 #this is getting out of hand.
@@ -62,8 +62,28 @@ prob = init_problem(q=two_wave_q, geo=geo, met=slab_metric!, isl=isl1, isl2=isl2
 
 #save_object("qfmTest/test_surfs.jld2", surfs)
 
+#basic shape is correct.
+#but we are running into flux vs r problemos again.
+#the bounding surfaces are not where we want them.
+#so we have boundary surfaces now, unsure if the alg is actually working as everything is just zero...
+#Seems like that won't happen in general.
 
+gcd(14, 8)
 
+@time surfs = construct_surfaces([5], [8], prob);
+
+#I think we want to run some convergence test to see how the interpolation changes based on the number of surfaces.
+#ideally we will reach a point where it doesn't change anymore.
+
+qlist, plist = MID.QFM.farey_tree_(3, 2, 1, 3, 2)
+
+#I guess this shows that it is working.
+qlist, plist = MID.QFM.farey_tree_(3, 1, 0, 0, 1)
+
+display(qlist)
+display(plist)
+
+display(plist ./ qlist)
 
 #this is a wee bit different to before, but the magnetic field is just a wee bit different so it is to be expected.
 #although this is really quite different...
@@ -75,6 +95,7 @@ MID.QFM.plot_surfs(surfs);
 
 
 surfs = load_object("qfmTest/test_surfs.jld2")
+
 #this at least seems to be very quick despite the stupidity.
 surf_itp = MID.QFM.create_surf_itp(surfs);
 
@@ -114,6 +135,17 @@ grids = init_grids(rgrid, θgrid, ζgrid)
 #v nice.
 #so there is no way this is working
 #now in a state where it is closer, but it took 7 mins compared to 1s.
+#this is still significantly slower than python ~1.5 times, hopefully that can be atrributed to using an actual magentic field and metric.
+#with the same magentic field calculation, our method is a bit faster than python, ~0.7 the time.
+#with the jacobian, it is about twice as fast in python
+#probably worth the effort unfort, we will just copy Zhisong's method blindly.
+#without jac 77.366587 seconds (2.27 G allocations: 70.166 GiB
+#note that this is jac using basic B computation and completly unoptimized.
+#with jac, 46.333867 seconds (4.61 M allocations: 23.777 GiB
+#with jac that contains the real magnetic field,
+#17.326900 seconds (4.74 M allocations: 13.280 GiB
+#which is v nice, tests are not accurate due to computer load
+#but good indication that even our suboptimal JM function is giving a significant improvement
 @time surfs = construct_surfaces([5, 13, 8, 11, 3], [8, 21, 13, 18, 5], prob);
 
 
@@ -127,3 +159,12 @@ MID.QFM.irfft1D(cosx, sinx);
 
 @time res = MID.QFM.action(1, 2, prob);
 @time res = MID.QFM.action2(1, 2, prob, MID.MetT(), MID.BFieldT());
+
+
+
+
+
+test = [1 2 3 ; 4 5 6 ; 7 8 9]
+
+inds = [range(1, 2) ; range(2, 3)]
+test[CartesianIndex.([1, 2], [2, 3])]
