@@ -60,14 +60,15 @@ function construct_surfaces(plist, qlist, sguesslist, prob)
 
         ρ = scos[1, 1] #surface label.
         push!(surfaces, QFMSurfaceT(ρ, scos, tsin, ssin, tcos))
+        @printf("Found %d of %d surfaces.\n", i, length(plist))
     end
 
     #now we add the bounding surfaces, assumed to be at 0, 1
     #subject to chaneg obvs.
 
     #convert to r from flux.
-    ρ1 = sqrt(2*0.1)
-    ρ2 = sqrt(2*0.9)
+    #ρ1 = sqrt(2*0.1)
+    #ρ2 = sqrt(2*0.9)
 
     #push!(surfaces, straighten_boundary(ρ1, MM, M, N, prob))
     #push!(surfaces, straighten_boundary(ρ2, MM, M, N, prob))

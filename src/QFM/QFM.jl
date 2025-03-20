@@ -31,6 +31,7 @@ using FFTW
 #using Interpolations
 using BSplineKit
 using LinearAlgebra
+using Printf
 #unsure where this will go in the heirachy yet!
 
 #this needs some serious work still

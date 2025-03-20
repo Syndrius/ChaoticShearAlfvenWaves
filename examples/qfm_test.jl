@@ -70,13 +70,15 @@ prob = init_problem(q=two_wave_q, geo=geo, met=slab_metric!, isl=isl1, isl2=isl2
 
 gcd(14, 8)
 
-@time surfs = construct_surfaces([5], [8], prob);
+@time surfs = construct_surfaces([5], [8], [0.5], prob);
 
 #I think we want to run some convergence test to see how the interpolation changes based on the number of surfaces.
 #ideally we will reach a point where it doesn't change anymore.
 
-qlist, plist = MID.QFM.farey_tree_(3, 2, 1, 3, 2)
+qlist, plist = MID.QFM.farey_tree(3, 2, 1, 3, 2)
 
+
+@time surfs = construct_surfaces(plist, qlist, 0.5 .*ones(length(qlist)), prob);
 #I guess this shows that it is working.
 qlist, plist = MID.QFM.farey_tree_(3, 1, 0, 0, 1)
 

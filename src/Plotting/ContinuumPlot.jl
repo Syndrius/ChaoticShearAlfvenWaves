@@ -1,14 +1,13 @@
 """
-    continuum_plot(evals::EvalsT; savefile=nothing, n=nothing, ymin=-0.05, ymax=1.05)
+    continuum_plot(evals::EvalsT; filename=nothing, n=nothing, ymin=-0.05, ymax=1.05)
 
 Plots the conntinuum based on an EvalsT struct, produced from compute_spectrum.
 """
-function continuum_plot(evals::EvalsT; savefile=nothing, n=nothing, ymin=-0.05, ymax=1.05)
+function continuum_plot(evals::EvalsT; filename=nothing, n=nothing, ymin=-0.05, ymax=1.05)
 
     if isnothing(n)
         p = scatter(evals.r, real.(evals.ω), group=evals.modelabs, xlabel=L"r", ylabel=L"\frac{\omega  R_0}{v_A}", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10, ylimits=(ymin, ymax))
 
-        display(p)
     else
         #think we assume it is just one value for now.
         #seems like this should be doable in one.
@@ -20,19 +19,19 @@ function continuum_plot(evals::EvalsT; savefile=nothing, n=nothing, ymin=-0.05, 
         oms = evals.ω[ns .== n]
 
         p = scatter(rs, real.(oms), group=mls, xlabel=L"r", ylabel=L"\frac{\omega  R_0}{v_A}", yguidefontrotation=0, left_margin=6Plots.mm, yguidefontsize=16, xguidefontsize=18, xtickfontsize=10, ytickfontsize=10, dpi=600, legendfontsize=10, ylimits=(ymin, ymax))
-
-        display(p)
     end
 
-    if !isnothing(savefile)
-        savefig(p, savefile)
+    if !isnothing(filename)
+        savefig(p, filename)
     end
+
+    display(p)
 end
 
 
 
 """
-    continuum_plot(ω, grids::ContGridsT; savefile=nothing, ymin=-0.05, ymax=1.05)
+    continuum_plot(ω, grids::ContGridsT; filename=nothing, ymin=-0.05, ymax=1.05)
 
 Plots the continuum produces by compute_continuum().
 """
@@ -41,7 +40,7 @@ Plots the continuum produces by compute_continuum().
 #don't think this will ever work.
 #only works if we do continuum with the perN function
 #otherwise this is useless.
-function continuum_plot(ω, grids::ContGridsT; savefile=nothing, ymin=-0.05, ymax=1.05)
+function continuum_plot(ω, grids::ContGridsT; filename=nothing, ymin=-0.05, ymax=1.05)
 
     #note that this does not label m's, not sure if it is possible
     #could pair this with an analytical version for cylinder??
@@ -62,10 +61,9 @@ function continuum_plot(ω, grids::ContGridsT; savefile=nothing, ymin=-0.05, yma
         scatter!(vcat(rgrid_plot...), vcat(ω[:, :, i]...), label=@sprintf("n=%d", n))
     end
 
-    display(p)
-
-    if !isnothing(savefile)
-        savefig(p, savefile)
+    if !isnothing(filename)
+        savefig(p, filename)
     end
 
+    display(p)
 end

@@ -1,11 +1,11 @@
 """
-    potential_plot(ϕ::Array{ComplexF64}, grids::FSSGridsT, ind=1::Int64; n=nothing, savefile=nothing)
+    potential_plot(ϕ::Array{ComplexF64}, grids::FSSGridsT, ind=1::Int64; n=nothing, filename=nothing)
 
 
 Plots the potential as a function of radius showing the mode structure. Expects the fourier transformed potential.
 Can set n to only view poloidal modes of a specific toroidal mode. ind is the index of the eigenfunction, used when an array of eigenfunctions is passed in, and is ignored if only a single eigenfunction is passed in.
 """
-function potential_plot(ϕ::Array{ComplexF64}, grids::FSSGridsT, ind=1::Int64; n=nothing, modelist=nothing, savefile=nothing)
+function potential_plot(ϕ::Array{ComplexF64}, grids::FSSGridsT, ind=1::Int64; n=nothing, modelist=nothing, filename=nothing)
 
     rgrid, _, _ = inst_grids(grids)
 
@@ -48,8 +48,8 @@ function potential_plot(ϕ::Array{ComplexF64}, grids::FSSGridsT, ind=1::Int64; n
 
     display(p)
 
-    if !isnothing(savefile)
-        savefig(p, savefile)
+    if !isnothing(filename)
+        savefig(p, filename)
     end
 
 
@@ -57,13 +57,13 @@ end
 
 
 """
-    potential_plot(ϕ::Array{ComplexF64}, grids::FFSGridsT, ind=1::Int64; n=nothing, savefile=nothing)
+    potential_plot(ϕ::Array{ComplexF64}, grids::FFSGridsT, ind=1::Int64; n=nothing, filename=nothing)
 
 
 Plots the potential as a function of radius showing the mode structure. Expects the fourier transformed potential.
 Can set n to only view poloidal modes of a specific toroidal mode. ind is the index of the eigenfunction, used when an array of eigenfunctions is passed in, and is ignored if only a single eigenfunction is passed in.
 """
-function potential_plot(ϕ::Array{ComplexF64}, grids::FFSGridsT, ind=1::Int64; n=nothing, savefile=nothing)
+function potential_plot(ϕ::Array{ComplexF64}, grids::FFSGridsT, ind=1::Int64; n=nothing, filename=nothing)
 
 
     rgrid, _, _ = inst_grids(grids)
@@ -107,8 +107,8 @@ function potential_plot(ϕ::Array{ComplexF64}, grids::FFSGridsT, ind=1::Int64; n
     end
 
     display(p)
-    if !isnothing(savefile)
-        savefig(p, savefile)
+    if !isnothing(filename)
+        savefig(p, filename)
     end
 
     
@@ -117,13 +117,13 @@ end
 
 
 """
-    potential_plot(ϕ::Array{ComplexF64}, grids::FFFGridsT, ind=1::Int64; n=nothing, savefile=nothing)
+    potential_plot(ϕ::Array{ComplexF64}, grids::FFFGridsT, ind=1::Int64; n=nothing, filename=nothing)
 
 
 Plots the potential as a function of radius showing the mode structure. Expects the fourier transformed potential.
 Can set n to only view poloidal modes of a specific toroidal mode. ind is the index of the eigenfunction, used when an array of eigenfunctions is passed in, and is ignored if only a single eigenfunction is passed in.
 """
-function potential_plot(ϕ::Array{ComplexF64}, grids::FFFGridsT, ind=1::Int64; mode_list=nothing, savefile=nothing)#mlist=nothing, nlist=nothing, savefile=nothing)
+function potential_plot(ϕ::Array{ComplexF64}, grids::FFFGridsT, ind=1::Int64; mode_list=nothing, filename=nothing)#mlist=nothing, nlist=nothing, filename=nothing)
    
 
     rgrid, _, _ = inst_grids(grids)
@@ -213,8 +213,8 @@ function potential_plot(ϕ::Array{ComplexF64}, grids::FFFGridsT, ind=1::Int64; m
     """
 
     display(p)
-    if !isnothing(savefile)
-        savefig(p, savefile)
+    if !isnothing(filename)
+        savefig(p, filename)
     end
 
     
@@ -222,7 +222,7 @@ end
 
 
 
-function potential_plot(ϕ::Array{ComplexF64}, grids::MapGridsT; mlist=nothing, nlist=nothing, savefile=nothing)
+function potential_plot(ϕ::Array{ComplexF64}, grids::MapGridsT; mlist=nothing, nlist=nothing, filename=nothing)
 
     κgrid, _, _ = inst_grids(grids)
 
@@ -293,8 +293,8 @@ function potential_plot(ϕ::Array{ComplexF64}, grids::MapGridsT; mlist=nothing, 
     """
 
     display(p)
-    if !isnothing(savefile)
-        savefig(p, savefile)
+    if !isnothing(filename)
+        savefig(p, filename)
     end
 
 

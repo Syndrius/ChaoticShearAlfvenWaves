@@ -160,6 +160,8 @@ function construct(prob::ProblemT, grids::FSSGridsT)
     #construct the sparse matrix.
     Wmat = sparse(rows, cols, Wdata)
     Imat = sparse(rows, cols, Idata)
+    
+    #display(Matrix(Imat))
 
     return Wmat, Imat
 end

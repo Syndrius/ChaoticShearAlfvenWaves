@@ -1,5 +1,4 @@
-#TODO -> should change these names and probably provide the function in the doc.
-
+#TODO -> should change these names and probably provide the function in the doc.@
 function chaos_q(r::Float64)
 
     return 1.0 + 2.0 * r^2, 4.0 * r

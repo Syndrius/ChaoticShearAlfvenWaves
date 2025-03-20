@@ -576,10 +576,12 @@ function rfft2D(f, mpol, ntor)
         cn[1:mpol+1, :] = fftcos[1:mpol+1, idxlist]
         sn[1:mpol+1, :] = fftsin[1:mpol+1, idxlist]
     elseif mpol >= mpol_data && ntor < ntor_data
-        idxlist = [[0] ; -1 .* 1:ntor .+1 ; ntor:0]
+        arr = -1 .* collect(1:ntor) .+ (Nfft2 + 1)
+        arr2 =  collect(ntor:-1:1) .+ 1
+        idxlist = [[1] ; arr ; arr2]
 
-        cn[1:mpol+1, :] = fftcos[1:mpol_data+1, idxlist]
-        sn[1:mpol+1, :] = fftsin[1:mpol_data+1, idxlist]
+        cn[1:mpol_data+1, :] = fftcos[1:mpol_data+1, idxlist]
+        sn[1:mpol_data+1, :] = fftsin[1:mpol_data+1, idxlist]
     else
         display("rfft2d no work.")
     end

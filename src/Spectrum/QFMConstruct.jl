@@ -2,11 +2,12 @@
 function construct(prob::ProblemT, grids::FSSGridsT, surfs::Array{QFMSurfaceT})
 
     #instantiate the grids into arrays.
-    rgrid, θgrid, ζgrid = inst_grids(grids)
+    #note that the inputs are the new coords.
+    sgrid, ϑgrid, φgrid = inst_grids(grids)
 
     #for spectral method we need the length of the arrays
-    Nθ = length(θgrid)
-    Nζ = length(ζgrid)
+    Nϑ = length(ϑgrid)
+    Nφ = length(φgrid)
 
     #and the list of modes to consider.
     mlist = mode_list(grids.θ)
@@ -67,13 +68,15 @@ function construct(prob::ProblemT, grids::FSSGridsT, surfs::Array{QFMSurfaceT})
     for i in 1:grids.r.N-1
 
         #takes the local ξ array to a global r array around the grid point.
-        r, dr = local_to_global(i, ξ, rgrid)
+        s, ds = local_to_global(i, ξ, sgrid)
 
         #jacobian of the local to global transformation.
-        jac = dr/2 
+        jac = ds/2 
 
         #computes the contribution to the W and I matrices.
-        W_and_I!(W, I, tor_met, tor_B, qfm_met, qfm_B, prob, r, θgrid, ζgrid, tm, surf_itp, CT)
+        W_and_I!(W, I, tor_met, tor_B, qfm_met, qfm_B, prob, s, ϑgrid, φgrid, tm, surf_itp, CT)
+
+        #display(W)
         
         #fft the two matrices.
         p * W
@@ -91,8 +94,8 @@ function construct(prob::ProblemT, grids::FSSGridsT, surfs::Array{QFMSurfaceT})
                 create_local_basis!(Ψ, S, -m2, -n2, jac)
 
                 #extract the relevant indicies from the fft'ed matrices.
-                mind = mod(k1-k2 + Nθ, Nθ) + 1
-                nind = mod(l1-l2 + Nζ, Nζ) + 1
+                mind = mod(k1-k2 + Nϑ, Nϑ) + 1
+                nind = mod(l1-l2 + Nφ, Nφ) + 1
 
                 #loop over the Hermite elements for the trial function
                 for trialsf in 1:4
@@ -162,6 +165,8 @@ function construct(prob::ProblemT, grids::FSSGridsT, surfs::Array{QFMSurfaceT})
     #construct the sparse matrix.
     Wmat = sparse(rows, cols, Wdata)
     Imat = sparse(rows, cols, Idata)
+
+    #display(Matrix(Imat))
 
     return Wmat, Imat
 end
@@ -473,9 +478,9 @@ function qfm_continuum(prob::ProblemT, grids::ContGridsT, surfs::Array{QFMSurfac
         #Wmat especially seems to be wopping.
         #slab vs cylinder is not the problemo!
         
-        vals = eigvals(Hermitian(Wmat), Hermitian(Imat))
+        #vals = eigvals(Hermitian(Wmat), Hermitian(Imat))
         #basic benchmark test shows that this is Hermitian!
-        #vals = eigvals(Wmat, Imat)
+        vals = eigvals(Wmat, Imat)
 
 
         ωlist[i, :] = prob.geo.R0 * sqrt.(abs.(vals))

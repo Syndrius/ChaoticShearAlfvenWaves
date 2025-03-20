@@ -56,23 +56,24 @@ function compute_B!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, isl2:
 
     #I think it is fine to just modify the B^r component, but we may want to confirm.
     #perhaps d amp is not a great name for the derivative.
-    #amp, damp = island_amplitude(r, isl)
+    amp, damp = island_amplitude(r, isl)
     #amplitude seems to be a problem that will need to be fixed another time.
-    amp = 1.0
-    damp = 0.0 
+    #amp = 1.0
+    #damp = 0.0 
 
     #assumes B0=1
-    B.B[1] = 1 / (met.J) * (isl.A * amp * isl.m0 * sin(arg) + isl2.A  * isl2.m0 * sin(arg2))
+    B.B[1] = 1 / (met.J) * (isl.A * amp * isl.m0 * sin(arg) + isl2.A * amp * isl2.m0 * sin(arg2))
                 
     B.B[2] = r / (met.J * q) 
     B.B[3] = r / (met.J)
 
     #ignoring amp/damp for now
-    B.dB[1, 1] = - met.dJ[1] / met.J^2 * (isl.A * isl.m0 * sin(arg) + isl2.A  * isl2.m0 * sin(arg2))
+    #added it back in now!
+    B.dB[1, 1] = - met.dJ[1] / met.J^2 * (isl.A * amp * isl.m0 * sin(arg) + isl2.A * amp * isl2.m0 * sin(arg2)) + 1 / (met.J) * (isl.A * damp * isl.m0 * sin(arg) + isl2.A * damp  * isl2.m0 * sin(arg2))
 
-    B.dB[1, 2] = - met.dJ[2] / met.J^2 * (isl.A * isl.m0 * sin(arg) + isl2.A  * isl2.m0 * sin(arg2)) + 1 / met.J * (isl.A * isl.m0^2 * cos(arg) + isl2.A  * isl2.m0^2 * cos(arg2))
+    B.dB[1, 2] = - met.dJ[2] / met.J^2 * (isl.A * amp * isl.m0 * sin(arg) + isl2.A * amp * isl2.m0 * sin(arg2)) + 1 / met.J * (isl.A * amp * isl.m0^2 * cos(arg) + isl2.A * amp * isl2.m0^2 * cos(arg2))
 
-    B.dB[1, 3] = + 1/ met.J * (isl.A * isl.m0 * isl.n0 * cos(arg) + isl2.A  * isl2.m0 * isl2.n0 * cos(arg2))
+    B.dB[1, 3] = + 1/ met.J * (isl.A * amp * isl.m0 * isl.n0 * cos(arg) + isl2.A * amp * isl2.m0 * isl2.n0 * cos(arg2))
 
     #B.dB[1, 1] = ( - isl.A * amp * isl.m0 * sin(arg) * met.dJ[1] / met.J^2
     #                + 1 / (met.J) * isl.A * damp * isl.m0 * sin(arg))
@@ -111,7 +112,10 @@ function island_amplitude(r::Float64, isl::IslandT)
     #doesn't actually use the island at the moment, but probably will one day.
     #currently will only work for islands at r0=0.5.
 
+    #ideally, this would be an input like q or density tbh
+
     #returns value and derivative.
+    #return 4*r*(1-r), 4 - 8 * r
 
     #case where this function is not included
     #useful to distinguish problemo's between GAM and between axis.

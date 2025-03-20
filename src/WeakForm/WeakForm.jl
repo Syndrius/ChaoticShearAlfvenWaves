@@ -119,33 +119,37 @@ end
 #I guess we could store them in the structure module???
 #seems sub-optimal.
 #but this is not a good place to keep this function
-function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, tor_met::MetT, tor_B::BFieldT, qfm_met::MetT, qfm_B::BFieldT,   prob::ProblemT, r::Array{Float64}, θ::AbstractArray, ζ::AbstractArray, tm::TM, surf::SurfaceITPT, CT::CoordTsfmT)
+#special case for qfm surfaces
+function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, tor_met::MetT, tor_B::BFieldT, qfm_met::MetT, qfm_B::BFieldT,   prob::ProblemT, s::Array{Float64}, ϑ::AbstractArray, φ::AbstractArray, tm::TM, surfs::SurfaceITPT, CT::CoordTsfmT)
 
     #compute the density.
-    n = prob.dens.(r) :: Array{Float64}
+    n = prob.dens.(s) :: Array{Float64}
     #TODO
     #ωcap2 = ω_cap2.(r) :: Array{Float64}
-    ωcap2 = zeros(length(r))
+    ωcap2 = zeros(length(s))
 
-    for k=1:1:length(ζ), j=1:1:length(θ), i=1:1:length(r)
+    for k=1:1:length(φ), j=1:1:length(ϑ), i=1:1:length(s)
 
         #so I am unsure if the new coords are ever actually used???
-        coord_transform!(r[i], θ[j], ζ[k], CT, surf)
+        coord_transform!(s[i], ϑ[j], φ[k], CT, surfs)
         #so the inv is fkn wopping.
         #display(CT.JM)
         #display(CT.JM_inv)
 
         #compute the original metric
-        prob.compute_met(tor_met, r[i], θ[j], ζ[k], prob.geo.R0)
+        #using the computed values of (r, θ, ζ)
+        prob.compute_met(tor_met, CT.coords[1], CT.coords[2], CT.coords[3], prob.geo.R0)
         #and original B field.
-        compute_B!(tor_B, tor_met, prob.q, prob.isl, prob.isl2, r[i], θ[j], ζ[k])
-
+        compute_B!(tor_B, tor_met, prob.q, prob.isl, prob.isl2, CT.coords[1], CT.coords[2], CT.coords[3]) 
         #transform the metric
         met_transform!(tor_met, qfm_met, CT)
 
         #display(qfm_met.gl)
         #transform the B field
         B_transform!(tor_B, qfm_B, qfm_met, CT)
+
+        #display(tor_met.gl)
+        #display(qfm_met.gl)
 
 
         #now we compute the weakform in the usual way.

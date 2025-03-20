@@ -355,7 +355,7 @@ function action_grad!(δS::Array{Float64}, x::Array{Float64}, CT::CoefficientsT,
    
     #this is unfortunatly inevitable.
     #think we will need to recompute the B field for this and for the gradient. Don't think it can be shared unfort.
-    #=
+    
     for i in 1:1:length(r)
         #perhaps r, t, z are not what we think they are? 
         #pretty hekin likely I think
@@ -380,9 +380,9 @@ function action_grad!(δS::Array{Float64}, x::Array{Float64}, CT::CoefficientsT,
         Bθ[i] = B.B[2]
         Bζ[i] = B.B[3]
     end
-    =#
+    
 
-    test_compute_B!(Br, Bθ, Bζ, r, θ, ζ)
+    #test_compute_B!(Br, Bθ, Bζ, r, θ, ζ)
 
     
 
@@ -545,7 +545,7 @@ function action_grad_jm!(JM::Array{Float64, 2}, x::Array{Float64}, CT::Coefficie
     dBζdr = zeros(length(r))
     dBζdθ = zeros(length(r))
 
-    #=
+    
     for i in 1:1:length(r)
         
         prob.compute_met(met, r[i], θ[i], ζ[i], prob.geo.R0)
@@ -565,8 +565,8 @@ function action_grad_jm!(JM::Array{Float64, 2}, x::Array{Float64}, CT::Coefficie
         dBζdr[i] = B.dB[3, 1]
         dBζdθ[i] = B.dB[3, 2]
     end
-    =#
     
+    #=
     k = -0.0018
     #just using the basic test case
     Br = @. k * (sin(2*θ - ζ) + sin(3*θ - 2 * ζ))
@@ -577,6 +577,8 @@ function action_grad_jm!(JM::Array{Float64, 2}, x::Array{Float64}, CT::Coefficie
     dBrdθ = @. k * (2.0 * cos(2*θ - ζ) + 3.0 * cos(3.0*θ - 2*ζ))
 
     dBθdr .=  1.0
+
+    =#
 
     #zhisongs code makes basically no sense
     #return to this if we need, but otherwise we will just ignore!

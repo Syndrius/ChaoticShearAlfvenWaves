@@ -14,6 +14,9 @@ Base class that just imports everything. We will want a description of the packa
 
 
 - Perhaps https://github.com/fredrikekre/Literate.jl if we ever want to share this garbage.
+- Probably is not time to change from (r, θ, ζ) into (x1, x2, x3), and change the grids process
+think it is best to have a single init_grid function, that just has args for periodicity, boundaries fourier vs fem etc. Alternatively, coords could be labeled as (r, p, t) as in radial poloidal and toroidal? Perhaps that would be clearest?
+- pick a lane with met or metric. naming convention of our functions are completly random! And make sure use of ! for in place functions is consistent
 - Split spectrum up into construct and solve modules.
 - Perhaps it would be nicer to have structure definition of a given module in the main file? just for easier access? Although we are probably supposed to be using the ? help or whatever.
 - Start export/using only the functions etc that are actually needed, probably be a lot better. I think ideally this will stop each module from importing the entire module, rather it will import only a few required functions. -> also can make the notation a bit nice, look at QFM for example.
@@ -173,6 +176,7 @@ using MID.Spectrum; export construct
 using MID.Spectrum; export arpack_solve
 using MID.Spectrum; export full_spectrum_solve
 using MID.Spectrum; export compute_spectrum
+using MID.Spectrum; export compute_spectrum_qfm
 using MID.Spectrum; export spectrum_from_file
 
 
