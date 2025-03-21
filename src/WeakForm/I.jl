@@ -16,11 +16,11 @@ function compute_I!(I::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT,
         #δ is artifical resitivity
         #ρ_i is ion gyro radius
         #δ_e is electron resistivity
-        I[i, j] = -F[i] * F[j] * met.J * n / B.mag_B^2*(1.0im * flr.δ + 3/4 * flr.ρ_i^2 + (1-flr.δ_e*1im) * flr.ρ_i^2)
+        I[i, j] = -F[i] * F[j] * met.J[1] * n / B.mag_B[1]^2*(1.0im * flr.δ + 3/4 * flr.ρ_i^2 + (1-flr.δ_e*1im) * flr.ρ_i^2)
     end
     
     #this is the ideal term, it is computed second to ensure I is zero everywhere first.
-    I[1:3, 1:3] += D .* (n * met.J / B.mag_B^2)
+    I[1:3, 1:3] += D .* (n * met.J[1] / B.mag_B[1]^2)
 
 
 end
@@ -39,8 +39,8 @@ function compute_F!(met::MetT, B::BFieldT, F::Array{Float64})
     F .= 0.0
 
     @inbounds for j=1:3, i=1:3
-        F[j] += 1/met.J * ( met.dJ[i]*(met.gu[i, j] - B.b[i]*B.b[j])
-            + met.J*(met.dgu[i, j, i] - B.b[i]*B.db[j, i] - B.db[i, i] * B.b[j]))
+        F[j] += 1/met.J[1] * ( met.dJ[i]*(met.gu[i, j] - B.b[i]*B.b[j])
+            + met.J[1]*(met.dgu[i, j, i] - B.b[i]*B.db[j, i] - B.db[i, i] * B.b[j]))
     end
 
     #ϕ_rr, i=r, j=r

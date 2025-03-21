@@ -10,7 +10,7 @@ function Tj!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT, B::BFi
     #Γ_i^n ∂_nΨ 1/J ϵ^{ijk}(Γ_k^q∂_j∂_qΦ + ∂_j(Γ_k^q)∂_qΦ) + Γ_i^n ∂_nΦ 1/J ϵ^{ijk}(Γ_k^q∂_j∂_qΨ + ∂_j(Γ_k^q)∂_qΨ)
 
     #scale factor for this term.
-    sf = - met.J * jparonB(met, B) / 2.0
+    sf = - met.J[1] * jparonB(met, B) / 2.0
 
 
     #computes the Γ matrix and its derivative dΓ
@@ -38,7 +38,7 @@ function Tj!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT, B::BFi
             #ideally this will have a better and more meaningful name.
             val = 0
             for i in 1:3, j in 1:3, k in 1:3
-                val += Γ[i, n] / met.J * lct[i, j, k] * dΓ[k, q, j]
+                val += Γ[i, n] / met.J[1] * lct[i, j, k] * dΓ[k, q, j]
             end
 
             #transpose is added to reflect that the two terms of Tj are identical expect Ψ -> Φ.
@@ -79,17 +79,17 @@ Computes the K vector, which stores the contribution for Tj for the double deriv
 function compute_K!(met::MetT, Γ::Array{Float64}, K::Array{Float64}, n::Int64)
 
     for i in 1:3, k in 1:3
-        K[1] += Γ[i, n] * lct[i, 1, k] * Γ[k, 1] / met.J 
+        K[1] += Γ[i, n] * lct[i, 1, k] * Γ[k, 1] / met.J[1] 
 
-        K[2] += Γ[i, n] * (lct[i, 1, k] * Γ[k, 2] + lct[i, 2, k] * Γ[k, 1]) / met.J
+        K[2] += Γ[i, n] * (lct[i, 1, k] * Γ[k, 2] + lct[i, 2, k] * Γ[k, 1]) / met.J[1]
 
-        K[3] += Γ[i, n] * (lct[i, 1, k] * Γ[k, 3] + lct[i, 3, k] * Γ[k, 1]) / met.J
+        K[3] += Γ[i, n] * (lct[i, 1, k] * Γ[k, 3] + lct[i, 3, k] * Γ[k, 1]) / met.J[1]
 
-        K[4] += Γ[i, n] * lct[i, 2, k] * Γ[k, 2] / met.J
+        K[4] += Γ[i, n] * lct[i, 2, k] * Γ[k, 2] / met.J[1]
 
-        K[5] += Γ[i, n] * (lct[i, 2, k] * Γ[k, 3] + lct[i, 3, k] * Γ[k, 2]) / met.J
+        K[5] += Γ[i, n] * (lct[i, 2, k] * Γ[k, 3] + lct[i, 3, k] * Γ[k, 2]) / met.J[1]
 
-        K[6] += Γ[i, n] * lct[i, 3, k] * Γ[k, 3] / met.J
+        K[6] += Γ[i, n] * lct[i, 3, k] * Γ[k, 3] / met.J[1]
     end
 end
 
@@ -129,9 +129,9 @@ function jparonB(met::MetT, B::BFieldT)
     #J_∥ = g_{ij}B^i J^j
     #J^j = (∇×B)^j = 1/J * ϵ^{jkl}∂_k B_l = 1/J * ϵ^{jkl}∂_k (g_{lp} B^p)
     for i in 1:3, j in 1:3, k in 1:3, l in 1:3, m in 1:3
-        jpar += met.gl[i, j] * B.b[i] * 1.0 / met.J * lct[j, k, l] * (met.gl[l, m] * B.dB[m, k] + met.dgl[l, m, k] * B.B[m])
+        jpar += met.gl[i, j] * B.b[i] * 1.0 / met.J[1] * lct[j, k, l] * (met.gl[l, m] * B.dB[m, k] + met.dgl[l, m, k] * B.B[m])
     end
-    return jpar/B.mag_B
+    return jpar/B.mag_B[1]
 end
 
 

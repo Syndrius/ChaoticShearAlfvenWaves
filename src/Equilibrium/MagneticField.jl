@@ -7,31 +7,21 @@ Struct for storing the magnetic field and related variables at a given coordinat
 - b::Array{Float64} - Vector storing the normalised magnetic field.
 - dB::Array{Float64, 2} V- ector storing the derivative of the magnetic field, second index refers to derivative coordinate.
 - db::Array{Float64, 2} - Vector storing the derivative of the normalised magnetic field, second index refers to derivative coordinate.
-- mag_B::Float64 - Magnitude of the magnetic field.
+- mag_B::Array{Float64} - Magnitude of the magnetic field. Stored as an array so struct is immutable.
 - dmag_B::Array{Float64} - Derivative of the magnitude of B, index refers to derivative coordinate.
 """
-mutable struct BFieldT
+struct BFieldT
     B :: Array{Float64, 1} 
     b :: Array{Float64, 1} 
     dB :: Array{Float64, 2} 
     db :: Array{Float64, 2} 
-    mag_B :: Float64 
+    mag_B :: Array{Float64, 1}
     dmag_B :: Array{Float64, 1} 
     function BFieldT()
-        new(zeros(3), zeros(3), zeros(3, 3), zeros(3, 3), 0.0, zeros(3))
+        new(zeros(3), zeros(3), zeros(3, 3), zeros(3, 3), zeros(1), zeros(3))
     end
 end
 
-
-"""
-    init_empty_B()
-
-Initialises empty BFieldT struct.
-"""
-function init_empty_B()
-
-    return BFieldT(zeros(3), zeros(3), zeros(3, 3), zeros(3, 3), 0.0, zeros(3))
-end
 
 
 """
@@ -39,8 +29,8 @@ end
 
 Function the fills the BFieldT struct based on an q-profile and and island for a given coordinate.
 B is assumed to be in the form (B^r, B^θ, B^ζ) with 
- - B^r = A m_0 r^2 (1-r) sin(m_0 θ - n_0 ζ) / J
- - B^θ = r/(J q) + A (1-2r) cos(m_0 θ - n_0 ζ) / J
+ - B^r = [A1(r) sin(m1_0 θ + n1_0 ζ) + A2(r) sin(m2_0 θ + n2_0 ζ)] / J
+ - B^θ = r/(J q) 
  - B^ζ = r / J
 
 This version does not take a quadratic form, this means the behaviour near r=0 will be cooked, requires a restricted grid.
@@ -62,51 +52,55 @@ function compute_B!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, isl2:
     #damp = 0.0 
 
     #assumes B0=1
-    B.B[1] = 1 / (met.J) * (isl.A * amp * isl.m0 * sin(arg) + isl2.A * amp * isl2.m0 * sin(arg2))
+    B.B[1] = 1 / (met.J[1]) * (isl.A * amp * isl.m0 * sin(arg) + isl2.A * amp * isl2.m0 * sin(arg2))
                 
-    B.B[2] = r / (met.J * q) 
-    B.B[3] = r / (met.J)
+    B.B[2] = r / (met.J[1] * q) 
+    B.B[3] = r / (met.J[1])
 
     #ignoring amp/damp for now
     #added it back in now!
-    B.dB[1, 1] = - met.dJ[1] / met.J^2 * (isl.A * amp * isl.m0 * sin(arg) + isl2.A * amp * isl2.m0 * sin(arg2)) + 1 / (met.J) * (isl.A * damp * isl.m0 * sin(arg) + isl2.A * damp  * isl2.m0 * sin(arg2))
+    B.dB[1, 1] = - met.dJ[1] / met.J[1]^2 * (isl.A * amp * isl.m0 * sin(arg) + isl2.A * amp * isl2.m0 * sin(arg2)) + 1 / (met.J[1]) * (isl.A * damp * isl.m0 * sin(arg) + isl2.A * damp  * isl2.m0 * sin(arg2))
 
-    B.dB[1, 2] = - met.dJ[2] / met.J^2 * (isl.A * amp * isl.m0 * sin(arg) + isl2.A * amp * isl2.m0 * sin(arg2)) + 1 / met.J * (isl.A * amp * isl.m0^2 * cos(arg) + isl2.A * amp * isl2.m0^2 * cos(arg2))
+    B.dB[1, 2] = - met.dJ[2] / met.J[1]^2 * (isl.A * amp * isl.m0 * sin(arg) + isl2.A * amp * isl2.m0 * sin(arg2)) + 1 / met.J[1] * (isl.A * amp * isl.m0^2 * cos(arg) + isl2.A * amp * isl2.m0^2 * cos(arg2))
 
-    B.dB[1, 3] = + 1/ met.J * (isl.A * amp * isl.m0 * isl.n0 * cos(arg) + isl2.A * amp * isl2.m0 * isl2.n0 * cos(arg2))
+    B.dB[1, 3] = + 1/ met.J[1] * (isl.A * amp * isl.m0 * isl.n0 * cos(arg) + isl2.A * amp * isl2.m0 * isl2.n0 * cos(arg2))
 
-    #B.dB[1, 1] = ( - isl.A * amp * isl.m0 * sin(arg) * met.dJ[1] / met.J^2
-    #                + 1 / (met.J) * isl.A * damp * isl.m0 * sin(arg))
+    #B.dB[1, 1] = ( - isl.A * amp * isl.m0 * sin(arg) * met.dJ[1] / met.J[1]^2
+    #                + 1 / (met.J[1]) * isl.A * damp * isl.m0 * sin(arg))
 
-    #B.dB[1, 2] = (1 / (met.J) * isl.A * amp * isl.m0^2 * cos(arg)
-    #                - isl.A * amp * isl.m0 * sin(arg) * met.dJ[2] / met.J^2)
+    #B.dB[1, 2] = (1 / (met.J[1]) * isl.A * amp * isl.m0^2 * cos(arg)
+    #                - isl.A * amp * isl.m0 * sin(arg) * met.dJ[2] / met.J[1]^2)
 
-    #B.dB[1, 3] = isl.n0 / (met.J) * isl.A * amp * isl.m0 * cos(arg)
+    #B.dB[1, 3] = isl.n0 / (met.J[1]) * isl.A * amp * isl.m0 * cos(arg)
 
 
 
-    B.dB[2, 1] = (1 / (met.J * q) 
-                    - (r / q) * met.dJ[1] / met.J^2
-                    - r * dq /(met.J * q^2) )
+    B.dB[2, 1] = (1 / (met.J[1] * q) 
+                    - (r / q) * met.dJ[1] / met.J[1]^2
+                    - r * dq /(met.J[1] * q^2) )
                     
-    B.dB[2, 2] = - (r / q ) * met.dJ[2] / met.J^2
+    B.dB[2, 2] = - (r / q ) * met.dJ[2] / met.J[1]^2
     
 
 
-    B.dB[3, 1] = (met.J - r * met.dJ[1]) / met.J^2
-    B.dB[3, 2] = -r*met.dJ[2]/met.J^2
+    B.dB[3, 1] = (met.J[1] - r * met.dJ[1]) / met.J[1]^2
+    B.dB[3, 2] = -r*met.dJ[2]/met.J[1]^2
     
 
     #note this also does B.db
     magnitude_B!(B, met)
     
     #unsure if there should be extra approximation here as Br is a pert and therefore small?
-    B.b[1] = B.B[1]/B.mag_B
-    B.b[2] = B.B[2]/B.mag_B
-    B.b[3] = B.B[3]/B.mag_B
+    B.b[1] = B.B[1]/B.mag_B[1]
+    B.b[2] = B.B[2]/B.mag_B[1]
+    B.b[3] = B.B[3]/B.mag_B[1]
 end
 
 
+"""
+
+Function to determine the island amplitude. Needs work
+"""
 function island_amplitude(r::Float64, isl::IslandT)
 
     #doesn't actually use the island at the moment, but probably will one day.
@@ -115,7 +109,7 @@ function island_amplitude(r::Float64, isl::IslandT)
     #ideally, this would be an input like q or density tbh
 
     #returns value and derivative.
-    #return 4*r*(1-r), 4 - 8 * r
+    return 4*r*(1-r), 4 - 8 * r
 
     #case where this function is not included
     #useful to distinguish problemo's between GAM and between axis.
@@ -152,9 +146,12 @@ function compute_B!(B::Array{Float64}, J::Float64, q_prof::Function, isl::Island
 
 end
 
-using Elliptic
 
-#computes B when in island coordinates. very different who knew.
+"""
+    compute_B_isl!(B::BFieldT, met::MetT, isl::IslandT, κ::Float64, ᾱ::Float64, φ::Float64)
+
+Computes the magnetic field for the island case. This requires a specific q-profile and a conversion between r and flux ψ.
+"""
 function compute_B_isl!(B::BFieldT, met::MetT, isl::IslandT, κ::Float64, ᾱ::Float64, φ::Float64)
 
     #q, dq = q_prof(r)
@@ -179,17 +176,17 @@ function compute_B_isl!(B::BFieldT, met::MetT, isl::IslandT, κ::Float64, ᾱ::
     
     B.B[1] = 0
     #Axel just has R0 here, which doesn't make anysense!
-    B.B[2] = 1/(q * met.J) * dψ̄dκ
+    B.B[2] = 1/(q * met.J[1]) * dψ̄dκ
 
-    B.B[3] = 1 / met.J * dψ̄dκ
-
-
-    B.dB[2, 1] = -dq / (q^2*met.J) - met.dJ[1] / (q*met.J^2)
-    B.db[2, 2] = - met.dJ[2] / (q*met.J^2)
+    B.B[3] = 1 / met.J[1] * dψ̄dκ
 
 
-    B.dB[3, 1] = - met.dJ[1] / (met.J^2)
-    B.dB[3, 2] = - met.dJ[2] / (met.J^2)
+    B.dB[2, 1] = -dq / (q^2*met.J[1]) - met.dJ[1] / (q*met.J[1]^2)
+    B.db[2, 2] = - met.dJ[2] / (q*met.J[1]^2)
+
+
+    B.dB[3, 1] = - met.dJ[1] / (met.J[1]^2)
+    B.dB[3, 2] = - met.dJ[2] / (met.J[1]^2)
 
 
     magnitude_B!(B, met)
@@ -225,29 +222,29 @@ function flux_compute_B!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, 
     arg = isl.m0 * θ + isl.n0 * ζ
 
     #assumes B0=1
-    B.B[1] = 1 / (met.J) * isl.A * isl.m0 * sin(arg)
+    B.B[1] = 1 / (met.J[1]) * isl.A * isl.m0 * sin(arg)
                 
-    B.B[2] = 1 / (met.J * q) 
-    B.B[3] = 1 / (met.J)
+    B.B[2] = 1 / (met.J[1] * q) 
+    B.B[3] = 1 / (met.J[1])
 
-    B.dB[1, 1] = ( - isl.A * isl.m0 * sin(arg) * met.dJ[1] / met.J^2)
+    B.dB[1, 1] = ( - isl.A * isl.m0 * sin(arg) * met.dJ[1] / met.J[1]^2)
 
-    B.dB[1, 2] = (1 / (met.J) * isl.A * isl.m0^2 * cos(arg)
-                    - isl.A * isl.m0 * sin(arg) * met.dJ[2] / met.J^2)
+    B.dB[1, 2] = (1 / (met.J[1]) * isl.A * isl.m0^2 * cos(arg)
+                    - isl.A * isl.m0 * sin(arg) * met.dJ[2] / met.J[1]^2)
 
-    B.dB[1, 3] = isl.n0 / (met.J) * isl.A * isl.m0 * cos(arg)
+    B.dB[1, 3] = isl.n0 / (met.J[1]) * isl.A * isl.m0 * cos(arg)
 
 
 
-    B.dB[2, 1] = ( - (1 / q) * met.dJ[1] / met.J^2
-                    - 1 * dq /(met.J * q^2) )
+    B.dB[2, 1] = ( - (1 / q) * met.dJ[1] / met.J[1]^2
+                    - 1 * dq /(met.J[1] * q^2) )
                     
-    B.dB[2, 2] = - (1 / q ) * met.dJ[2] / met.J^2
+    B.dB[2, 2] = - (1 / q ) * met.dJ[2] / met.J[1]^2
     
 
 
-    B.dB[3, 1] = ( - met.dJ[1]) / met.J^2
-    B.dB[3, 2] = - met.dJ[2] / met.J^2
+    B.dB[3, 1] = ( - met.dJ[1]) / met.J[1]^2
+    B.dB[3, 2] = - met.dJ[2] / met.J[1]^2
     
 
     #note this also does B.db
@@ -279,30 +276,30 @@ function constant_amp_compute_B!(B::BFieldT, met::MetT, q_prof::Function, isl::I
     arg = isl.m0 * θ + isl.n0 * ζ
 
     #assumes B0=1
-    B.B[1] = 1 / (met.J) * isl.A * isl.m0 * sin(arg)
+    B.B[1] = 1 / (met.J[1]) * isl.A * isl.m0 * sin(arg)
                 
-    B.B[2] = r / (met.J * q) 
-    B.B[3] = r / (met.J)
+    B.B[2] = r / (met.J[1] * q) 
+    B.B[3] = r / (met.J[1])
 
-    B.dB[1, 1] = ( - isl.A * isl.m0 * sin(arg) * met.dJ[1] / met.J^2)
+    B.dB[1, 1] = ( - isl.A * isl.m0 * sin(arg) * met.dJ[1] / met.J[1]^2)
 
-    B.dB[1, 2] = (1 / (met.J) * isl.A * isl.m0^2 * cos(arg)
-                    - isl.A * isl.m0 * sin(arg) * met.dJ[2] / met.J^2)
+    B.dB[1, 2] = (1 / (met.J[1]) * isl.A * isl.m0^2 * cos(arg)
+                    - isl.A * isl.m0 * sin(arg) * met.dJ[2] / met.J[1]^2)
 
-    B.dB[1, 3] = isl.n0 / (met.J) * isl.A * isl.m0 * cos(arg)
+    B.dB[1, 3] = isl.n0 / (met.J[1]) * isl.A * isl.m0 * cos(arg)
 
 
 
-    B.dB[2, 1] = (1 / (met.J * q) 
-                    - (r / q) * met.dJ[1] / met.J^2
-                    - r * dq /(met.J * q^2) )
+    B.dB[2, 1] = (1 / (met.J[1] * q) 
+                    - (r / q) * met.dJ[1] / met.J[1]^2
+                    - r * dq /(met.J[1] * q^2) )
                     
-    B.dB[2, 2] = - (r / q ) * met.dJ[2] / met.J^2
+    B.dB[2, 2] = - (r / q ) * met.dJ[2] / met.J[1]^2
     
 
 
-    B.dB[3, 1] = (met.J - r * met.dJ[1]) / met.J^2
-    B.dB[3, 2] = -r*met.dJ[2]/met.J^2
+    B.dB[3, 1] = (met.J[1] - r * met.dJ[1]) / met.J[1]^2
+    B.dB[3, 2] = -r*met.dJ[2]/met.J[1]^2
     
 
     #note this also does B.db
@@ -333,35 +330,35 @@ function compute_B_quadratic!(B::BFieldT, met::MetT, q_prof::Function, isl::Isla
     arg = isl.m0 * θ + isl.n0 * ζ
 
     #assumes B0=1
-    B.B[1] = 1 / (met.J) * isl.A * isl.m0 * r^2 * (1-r) * sin(arg)
+    B.B[1] = 1 / (met.J[1]) * isl.A * isl.m0 * r^2 * (1-r) * sin(arg)
                 
-    B.B[2] = r / (met.J * q) + isl.A / met.J * (1-2*r) * cos(arg)
-    B.B[3] = r / (met.J)
+    B.B[2] = r / (met.J[1] * q) + isl.A / met.J[1] * (1-2*r) * cos(arg)
+    B.B[3] = r / (met.J[1])
 
-    B.dB[1, 1] = (1 / (met.J) * isl.A * isl.m0 * (2*r-3*r^2) * sin(arg) 
-                    - isl.A * isl.m0 * r^2 * (1-r) * sin(arg) * met.dJ[1] / met.J^2)
+    B.dB[1, 1] = (1 / (met.J[1]) * isl.A * isl.m0 * (2*r-3*r^2) * sin(arg) 
+                    - isl.A * isl.m0 * r^2 * (1-r) * sin(arg) * met.dJ[1] / met.J[1]^2)
 
-    B.dB[1, 2] = (1 / (met.J) * isl.A * isl.m0^2 * r^2 * (1-r) * cos(arg)
-                    - isl.A * isl.m0 * r^2 * (1-r) * sin(arg) * met.dJ[2] / met.J^2)
+    B.dB[1, 2] = (1 / (met.J[1]) * isl.A * isl.m0^2 * r^2 * (1-r) * cos(arg)
+                    - isl.A * isl.m0 * r^2 * (1-r) * sin(arg) * met.dJ[2] / met.J[1]^2)
 
-    B.dB[1, 3] = isl.n0 / (met.J) * isl.A * isl.m0 * r^2 * (1-r) * cos(arg)
+    B.dB[1, 3] = isl.n0 / (met.J[1]) * isl.A * isl.m0 * r^2 * (1-r) * cos(arg)
 
 
 
-    B.dB[2, 1] = (1 / (met.J * q) - 2 * isl.A / met.J * cos(arg)
-                    - (r / q - isl.A * (1-2*r) * cos(arg)) * met.dJ[1] / met.J^2
-                    - r * dq /(met.J * q^2) )
+    B.dB[2, 1] = (1 / (met.J[1] * q) - 2 * isl.A / met.J[1] * cos(arg)
+                    - (r / q - isl.A * (1-2*r) * cos(arg)) * met.dJ[1] / met.J[1]^2
+                    - r * dq /(met.J[1] * q^2) )
                     
-    B.dB[2, 2] = (- isl.m0 * isl.A / met.J * (1-2*r) * sin(arg)
-                    - (r / q + isl.A * (1-2*r) * cos(arg)) * met.dJ[2] / met.J^2)
+    B.dB[2, 2] = (- isl.m0 * isl.A / met.J[1] * (1-2*r) * sin(arg)
+                    - (r / q + isl.A * (1-2*r) * cos(arg)) * met.dJ[2] / met.J[1]^2)
     
     #doing this correctly has changed a few things...
-    B.dB[2, 3] = isl.n0 * isl.A / met.J * (1-2*r) * sin(arg)
+    B.dB[2, 3] = isl.n0 * isl.A / met.J[1] * (1-2*r) * sin(arg)
 
 
 
-    B.dB[3, 1] = (met.J - r * met.dJ[1]) / met.J^2
-    B.dB[3, 2] = -r*met.dJ[2]/met.J^2
+    B.dB[3, 1] = (met.J[1] - r * met.dJ[1]) / met.J[1]^2
+    B.dB[3, 2] = -r*met.dJ[2]/met.J[1]^2
     
 
     #note this also does B.db
@@ -382,26 +379,38 @@ Function that computes the magnitude of B and its derivative once the other fiel
 """
 function magnitude_B!(B::BFieldT, met::MetT)
 
-    B2 = 0.0
-    dB2 = zeros(Float64, 3)
-    #
+    #B2 = 0.0
+    #dB2 = zeros(Float64, 3)
+    #changing this, hopefully not a problemo!
+    B.mag_B .= 0.0
+    B.dmag_B .= 0.0
+    
     for i in 1:3, j in 1:3
 
-        B2 += B.B[i] * B.B[j] * met.gl[i, j]
+        #note that this is actual |B|^2
+        #B2 += B.B[i] * B.B[j] * met.gl[i, j]
+        B.mag_B[1] += B.B[i] * B.B[j] * met.gl[i, j]
 
         for k in 1:3
             #should this be views? May need to look into that!
-            dB2[k] += (B.B[i] * B.B[j] * met.dgl[i, j, k] +
+            #dB2[k] += (B.B[i] * B.B[j] * met.dgl[i, j, k] +
+            #            B.B[i] * met.gl[i, j] * B.dB[j, k] +
+            #            B.B[j] * met.gl[i, j] * B.dB[i, k])
+            #needs to be modified to actually be the correct expression
+            #We are just reusing memory
+            B.dmag_B[k] += (B.B[i] * B.B[j] * met.dgl[i, j, k] +
                         B.B[i] * met.gl[i, j] * B.dB[j, k] +
                         B.B[j] * met.gl[i, j] * B.dB[i, k])
         end
     end
 
-    B.mag_B = sqrt(B2)
-    B.dmag_B[:] = @. 1/(2*sqrt(B2)) * dB2
+    B.mag_B[1] = sqrt(B.mag_B[1])
+    B.dmag_B[:] = @. 1/(2*B.mag_B[1]) * B.dmag_B
+    #B.mag_B = sqrt(B2)
+    #B.dmag_B[:] = @. 1/(2*sqrt(B2)) * dB2
 
     for i in 1:3, j in 1:3
-        B.db[j, i] = B.dB[j, i]/B.mag_B - B.B[j]*B.dmag_B[i]/B.mag_B^2
+        B.db[j, i] = B.dB[j, i]/B.mag_B[1] - B.B[j]*B.dmag_B[i]/B.mag_B[1]^2
     end
 end
 
@@ -420,8 +429,8 @@ function compute_island_B!(B::BFieldT, met::MetT, isl, ψ::Float64, α::Float64)
 
     #may want a factor or 1/4 in here to make this match our other cases.
     B.B[1] = isl.A * isl.m0 *sin(isl.m0 * α)
-    B.B[2] = 1 / (met.J * q)
-    B.B[3] = 1 / met.J 
+    B.B[2] = 1 / (met.J[1] * q)
+    B.B[3] = 1 / met.J[1] 
 
 
     B2 = 0

@@ -17,7 +17,7 @@ module QFM
 
 using ..Structures
 using ..Geometry
-using ..MagneticField
+using ..Equilibrium
 
 #using MID.Indexing
 #using MID.Basis

@@ -9,8 +9,9 @@ module Io
 
 using MID.Structures
 using MID.Geometry
-using MID.MagneticField
+using MID.Equilibrium
 using MID.PostProcessing
+
 using JLD2
 using Printf
 

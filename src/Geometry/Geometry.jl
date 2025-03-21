@@ -26,7 +26,6 @@ export init_island
 include("Metric.jl")
 
 export MetT
-export init_empty_met
 export toroidal_metric!
 export no_delta_metric!
 export diagonal_toroidal_metric!
@@ -34,6 +33,7 @@ export flux_toroidal_metric!
 export cylindrical_metric!
 export slab_metric!
 export island_metric!
+
 
 
 include("Flux.jl")

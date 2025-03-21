@@ -10,6 +10,7 @@ Then the grid resolution is increased and we solve using Arpack, using shift-and
 
 
 using MID
+using MIDViz
 using Plots; plotlyjs() #having this here, and installed in the global environment tricks it into using plotlyjs for interactive plots. This is an awful solution.
 #also gives some fkn warning, I think becuase MID doesn't have PlotlyJS.
 """
@@ -21,7 +22,7 @@ Each grid is defined individually, the finite element grid requires the number o
 """;
 
 Nr = 100;
-rgrid = init_fem_grid(N=Nr);
+rgrid = init_grid(type=:rf, N=Nr);
 
 """
 
@@ -29,8 +30,8 @@ Then we define the spectral grids, these require a starting mode then the total 
 
 """;
 
-θgrid = init_sm_grid(start=1, count=2);
-ζgrid = init_sm_grid(start=-1, count=1);
+θgrid = init_grid(type=:as, N=2, start=1);
+ζgrid = init_grid(type=:as, N=1, start=-1);
 
 """
 
@@ -46,7 +47,7 @@ Then we define the problem to be solved, first we define our geometry, which jus
 
 """;
 
-geo = GeoParamsT(R0=4.0);
+geo = init_geo(R0=4.0);
 
 """
 
@@ -65,7 +66,6 @@ With the grids and the problem structs defined, we now have all required inputs 
 
 """;
 
-#should chaneg cr to evals. Cause it is just evals but with some extra data.
 evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, full_spectrum=true);
 
 
@@ -80,7 +80,7 @@ We can now view the reconstruction of the continuum:
 
 """;
 
-plot_continuum(evals);
+continuum_plot(evals);
 
 """
 
@@ -97,7 +97,7 @@ Now we plot the mode structure of the eigenfunction.
 
 """;
 
-plot_potential(ϕft, grids, tae_ind);
+potential_plot(ϕft, grids, tae_ind);
 
 """;
 
@@ -106,17 +106,17 @@ Now that we know the frequency of interest, we can increase the grid resolution,
 """;
 
 Nr = 1000;
-rgrid = init_fem_grid(N=Nr);
-θgrid = init_sm_grid(start=1, count=2)
-ζgrid = init_sm_grid(start=-1, count=1);
+rgrid = init_grid(type=:rf, N=Nr);
+θgrid = init_grid(type=:as, N=2, start=1)
+ζgrid = init_grid(type=:as, N=1, start=-1)
 grids = init_grids(rgrid, θgrid, ζgrid)
-evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, full_spectrum=false, σ=tae_freq);
+evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, full_spectrum=false, target_freq=tae_freq);
 
 
 #now conitnuum only shows region around the tae frequency
-plot_continuum(evals);
+continuum_plot(evals);
 #Tae is now the first index returned.
-plot_potential(ϕft, grids, 1);
+potential_plot(ϕft, grids, 1);
 
 """
 

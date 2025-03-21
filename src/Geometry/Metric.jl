@@ -7,31 +7,21 @@ Struct for storing the metric which describes the geometry and related derivativ
 - gu::Array{Float64, 2} - 3x3 matrix storing the raised metric g^{ij}
 - dgl::Array{Float64, 3} - Derivative of gl, 3rd index labels coordinate that derivative is taken with respect to.
 - dgl::Array{Float64, 3} - Derivative of gu, 3rd index labels coordinate that derivative is taken with respect to.
-- J::Float64 - Jacobian of the metric. #may want to change to single element array so struct is immutable.
+- J::Array{Float64} - Jacobian of the metric. Stored as an array so struct is immutable.
 - dJ::Array{Float64, 1} - Derivative of J, index labels coordinate that derivative is taken with respect to.
 """
-mutable struct MetT
+struct MetT
     gl :: Array{Float64, 2}
     gu :: Array{Float64, 2} 
     dgl :: Array{Float64, 3} 
     dgu :: Array{Float64, 3} 
-    J :: Float64 
+    J :: Array{Float64, 1}
     dJ :: Array{Float64, 1} 
     function MetT()
-        new(zeros(3, 3), zeros(3, 3), zeros(3, 3, 3), zeros(3, 3, 3), 0.0, zeros(3))
+        new(zeros(3, 3), zeros(3, 3), zeros(3, 3, 3), zeros(3, 3, 3), zeros(1), zeros(3))
     end
 end
 
-
-"""
-    init_empty_met()
-  
-Creates and empty MetT object.
-"""
-function init_empty_met()
-
-    return MetT(zeros(3, 3), zeros(3, 3), zeros(3, 3, 3), zeros(3, 3, 3), 0.0, zeros(3))
-end
 
 
 """
@@ -51,7 +41,7 @@ function toroidal_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::F
 
     ηp = 1/2* (1/R0 + Δpp)
 
-    met.J = r * R0 * (1+2*ϵ*cos(θ))
+    met.J[1] = r * R0 * (1+2*ϵ*cos(θ))
 
     met.gl[1, 1] = 1-2*Δp * cos(θ)
     met.gl[1, 2] = r*(ϵ + Δp + r*Δpp) * sin(θ)
@@ -106,6 +96,12 @@ function toroidal_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::F
 end
 
 
+
+"""
+    island_metric!(met::MetT, κ::Float64, ᾱ::Float64, φ::Float64, R0::Float64, isl::IslandT)
+
+Function that fills out the MetT structure for magnetic island striaght field line geometry. Based on Konies et al 2024. κ is the radial variable, measure from island center, ᾱ is the striaghtened helical angle and φ is a typical toroidal angle. This assumed the original geometry was cylindrical.
+"""
 function island_metric!(met::MetT, κ::Float64, ᾱ::Float64, φ::Float64, R0::Float64, isl::IslandT)
 
 
@@ -227,7 +223,7 @@ function Axel_island_metric!(met::MetT, κ::Float64, ᾱ::Float64, φ::Float64,
     #this term does not match paper, lone κ should be on top.
     dᾱdκ = 2 * π / (4*K * κ * (1-κ^2)) * (Z - κ^2*cn*sn / dn)
 
-    met.J = 4*R0 * κ * K * w / (2*π*m0^2)
+    met.J[1] = 4*R0 * κ * K * w / (2*π*m0^2)
     
     
     met.gu[1, 1] = ∇κ2
@@ -249,6 +245,11 @@ function Axel_island_metric!(met::MetT, κ::Float64, ᾱ::Float64, φ::Float64,
 end
 
 
+"""
+    slab_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
+
+Function that fills out the MetT structure for a slab of plasma/cartesian geometry.
+"""
 function slab_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
 
     met.gl[1, 1] = 1.0
@@ -259,7 +260,7 @@ function slab_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float
     met.gu[2, 2] = 1.0
     met.gu[3, 3] = 1 / R0^2
 
-    met.J = R0
+    met.J[1] = R0
 
 
 end
@@ -283,7 +284,7 @@ function no_delta_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::F
 
     ηp = 1/2* (1/R0 + Δpp)
 
-    met.J = r * R0 * (1+2*ϵ*cos(θ))
+    met.J[1] = r * R0 * (1+2*ϵ*cos(θ))
 
     met.gl[1, 1] = 1-2*Δp * cos(θ)
     met.gl[1, 2] = r*(ϵ + Δp + r*Δpp) * sin(θ)
@@ -358,7 +359,7 @@ function diagonal_toroidal_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float
 
     ηp = 1/2* (1/R0 + Δpp)
 
-    met.J = r * R0 * (1+2*ϵ*cos(θ))
+    met.J[1] = r * R0 * (1+2*ϵ*cos(θ))
 
     #don't really know anyting about gl from paper.
     met.gl[1, 1] = 1-2*Δp * cos(θ)
@@ -414,14 +415,16 @@ function diagonal_toroidal_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float
 end
 
 
-#probably only used for testing
-#Unused so far, and probably not needed, can probably just set R0=1000 in other casees.
-#note that this is like the toroidal cylindrical metric...
-#not just a cylinder.
+
+"""
+    cylindrical_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
+
+Cylindrical limit of toroidal metric, equivalent to taking R0→∞.
+"""
 function cylindrical_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
     #this is regular old cylindrical for comparing our weak form
 
-    met.J = r * R0
+    met.J[1] = r * R0
 
     met.gl[1, 1] = 1
 
@@ -471,7 +474,7 @@ function flux_toroidal_metric!(met::MetT, ψ::Float64, θ::Float64, ζ::Float64,
 
     ηp = 1/2* (1/R0 + Δpp)
 
-    met.J = r * R0 * (1+2*ϵ*cos(θ)) / dψdr
+    met.J[1] = r * R0 * (1+2*ϵ*cos(θ)) / dψdr
 
     #guessing that gl would be divided by dψdr, will have to compare the resulting metrics.
     met.gl[1, 1] = (1-2*Δp * cos(θ)) / dψdr^2
@@ -524,7 +527,7 @@ function new_flux_toroidal_metric!(met::MetT, ψ::Float64, θ::Float64, ζ::Floa
 
     #so we will be using the radial form and modifying for flux.
 
-    met.J = r * R0 * (1+2*ϵ*cos(θ)) / dψdr
+    met.J[1] = r * R0 * (1+2*ϵ*cos(θ)) / dψdr
 
     #guessing that gl would be divided by dψdr, will have to compare the resulting metrics.
     met.gl[1, 1] = (1-2*Δp * cos(θ)) / dψdr^2

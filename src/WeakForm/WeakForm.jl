@@ -5,7 +5,7 @@ Computes the weak form of our governing equation. This involves computing W and 
 module WeakForm
 
 using MID.Geometry
-using MID.MagneticField
+using MID.Equilibrium
 using MID.Structures
 using MID.QFM
 
@@ -54,7 +54,7 @@ function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, met::MetT, B
     for k=1:1:length(ζ), j=1:1:length(θ), i=1:1:length(r)
 
         #compute the metric
-        prob.compute_met(met, r[i], θ[j], ζ[k], prob.geo.R0)
+        prob.met(met, r[i], θ[j], ζ[k], prob.geo.R0)
 
         #compute the magnetic field.
         #everywhere else has met then B...
@@ -138,7 +138,7 @@ function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, tor_met::Met
 
         #compute the original metric
         #using the computed values of (r, θ, ζ)
-        prob.compute_met(tor_met, CT.coords[1], CT.coords[2], CT.coords[3], prob.geo.R0)
+        prob.met(tor_met, CT.coords[1], CT.coords[2], CT.coords[3], prob.geo.R0)
         #and original B field.
         compute_B!(tor_B, tor_met, prob.q, prob.isl, prob.isl2, CT.coords[1], CT.coords[2], CT.coords[3]) 
         #transform the metric

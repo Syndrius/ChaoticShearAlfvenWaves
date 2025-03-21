@@ -9,8 +9,8 @@ Contains the structures and constructors used, includes
 module Structures
 
 
-using MID.Geometry
-using MID.MagneticField
+using ..Geometry
+using ..Equilibrium
 
 
 """
@@ -31,16 +31,17 @@ abstract type ProblemT end
 include("FEMGrid.jl")
 include("SMGrid.jl")
 
-export rfem_grid
-export ContGridDataT
-export afem_grid
-export SMGridDataT
-export asm_grid
+#export rfem_grid
+#export ContGridDataT
+#export afem_grid
+#export SMGridDataT
+#export asm_grid
 export periodic_grid
 export mode_list
 export ifft_size
 export mode_label
 export inst_grid
+
 
 
 
@@ -53,6 +54,8 @@ export FSSGridsT
 export FFSGridsT
 export FFFGridsT
 export init_grids
+export init_grid
+export init_geo
 export inst_grids
 
 
