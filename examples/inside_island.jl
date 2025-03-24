@@ -12,9 +12,10 @@ using Plots; plotlyjs()
 
 
 geo = GeoParamsT(R0 = 1000)
-rgrid = rfem_grid(N=100, start=0.0, stop=0.999, left_bc=false)
-θgrid = asm_grid(start=-3, N=7)
-ζgrid = asm_grid(start=0, N=1)
+rgrid = rfem_grid(N=80, start=0.0, stop=0.999, left_bc=false)
+#θgrid = asm_grid(start=-4, N=9)
+θgrid = afem_grid(N=6, pf=1)
+ζgrid = asm_grid(start=-1, N=2)
 
 grids = init_grids(rgrid, θgrid, ζgrid)
 
@@ -25,10 +26,10 @@ isl = IslandT(m0=2, n0=-1, r0=0.5, w=0.03, qp=2.0)
 prob = MID.Structures.init_isl_problem(geo=geo, isl=isl)
 
 
-
+#so ϕ for fss is not working... gee wiz.
 evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, full_spectrum=true);#, target_freq=10);
 
-continuum_plot(evals, ymax=0.08)#, ymax=10)#, n=-2)
+continuum_plot(evals, ymax=0.08, ymin=-0.01)#, ymax=10)#, n=-2)
 
 #obvs not working, check equivalence between ours and Axel, by considering coord transformation from κ to κ^2
 #also may need to check elliptic functions are doing what we want...
@@ -38,7 +39,7 @@ continuum_plot(evals, ymax=0.08)#, ymax=10)#, n=-2)
 #maybe this will change with fff???
 #based on gae testing, this may just be a problem with fss.
 
-ind = find_ind(evals, 0.00812)
+ind = find_ind(evals, 0.00665294)
 
 ind = 234
 

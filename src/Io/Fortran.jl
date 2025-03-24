@@ -25,6 +25,8 @@ function fortran_process(dir::String)
     #for multiples, we are probably just going to reprocess each time.
     #ideally this won't happen very often.
 
+    #multiples do not work for some reason. really good.
+
     file_list = readdir(dir)
     vals = ComplexF64[]
 

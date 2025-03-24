@@ -8,8 +8,8 @@ Base class that just imports everything. We will want a description of the packa
  ###### More Urgent
  - Start using Gadi's version of Julia, currently ours is using fkn heaps of memory
 - Map the island results to normal space to see whats going on.
-- See if there is any evidence of the gae interaction with the new system
-- test m=0 boundaries with fss. Will be annoying.
+- Test island coord case with ffs, fss doesn't seem to give gap modes?? but looks much better, perhaps ffs will be best of both worlds.
+- May need to start removing the raw data as we are using stupid amounts of data...
 
 
 
