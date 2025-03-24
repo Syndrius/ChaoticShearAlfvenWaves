@@ -28,9 +28,9 @@ R0=4.0
 
 #amp needs further thought!
 #define the non-resonant island
-isl = IslandT(m0=3, n0=2, A=0.005)
+isl = init_island(m0=3, n0=2, A=0.005)
 
-geo = GeoParamsT(R0=R0)
+geo = init_geo(R0=R0)
 
 prob = init_problem(q=qfm_benchmark_q, geo=geo, isl=isl)
 un_prob = init_problem(q=qfm_benchmark_q, geo=geo)

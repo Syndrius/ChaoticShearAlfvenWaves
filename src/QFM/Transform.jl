@@ -22,7 +22,7 @@ function B_transform!(tor_B, qfm_B, qfm_met, CT)
     #v simple transformation!
     #B^μ = JM^μ_i B^i
     #Note that JM^μ_i is the inverse
-    qfm_B.B = CT.JM_inv * tor_B.B
+    qfm_B.B .= CT.JM_inv * tor_B.B
 
     #temporary solution!
     dJMinv = zeros(3, 3, 3)
@@ -41,9 +41,9 @@ function B_transform!(tor_B, qfm_B, qfm_met, CT)
     end
 
     #same as normal, all in terms of new B and new met!
-    MagneticField.magnitude_B!(qfm_B, qfm_met)
+    Equilibrium.magnitude_B!(qfm_B, qfm_met)
     for i in 1:3
-        qfm_B.b[i] = qfm_B.B[i]/qfm_B.mag_B
+        qfm_B.b[i] = qfm_B.B[i]/qfm_B.mag_B[1]
     end
 end
 
@@ -285,13 +285,13 @@ function met_transform!(tor_met, qfm_met, CT)
     #sqrt here is annoying for values v close to zero
     #qfm_met.J = sqrt(det(qfm_met.gl))
     #alternatively, we could use
-    qfm_met.J = tor_met.J * CT.jac[1]
+    qfm_met.J[1] = tor_met.J[1] * CT.jac[1]
     #However, this requires storing CT.jac
     # now we take the derivative, noting that 
     # ∂(det(A)) = det(A) * Tr(A^{-1} ∂(A))
     # Here we just iterate over the derivatives, no funny buisness, as this is all in terms of the new metric.
     for μ in 1:3
-        qfm_met.dJ[μ] = qfm_met.J/2 * tr(qfm_met.gu * qfm_met.dgl[:, :, μ])
+        qfm_met.dJ[μ] = qfm_met.J[1]/2 * tr(qfm_met.gu * qfm_met.dgl[:, :, μ])
     end
 
     #display(JM)

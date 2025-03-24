@@ -14,6 +14,7 @@ Base class that just imports everything. We will want a description of the packa
 
 
 - Perhaps https://github.com/fredrikekre/Literate.jl if we ever want to share this garbage.
+- Maybe we should have surfs as part of prob? dealing with parallel surfs is going to be a bit of a disaster! Although having surfs inside prob is a lot of bloat! Perhaps just a string that stores the location? As we only need to create the interpolant, don't actually need the surfaces themselves? Think this could be ok. seems kind of silly for everything else to be stored as is though!
 - May want to change the way the q-profile is done. May be better to precompute the values, and just pass in q and dq and floats so that there is no uncertainty, will need to profile.
 - Probably want to start removing some things, like og island continuum etc from the module. Bit of a trim tbh., also like fortran processs etc. This shot should just be somewhere else. We can just create a MIDtesting folder or something that deals with all this extra shite.
 - One day we want to only have a few densities and q-profiles, for function that are commonly used, perhaps we can have an additional file with a heap of q-profiles etc so that they can be called if needed, but won't make the final cut. Unsure how this will go with parallel tbh. Shouldn't be too hard to just import the q-profile functions tbh. Once we have some examples more solidly written then I think this will be a good idea!
@@ -81,6 +82,7 @@ using ..Geometry; export init_island
 include("Equilibrium/Equilibrium.jl")
 
 using ..Equilibrium; export fu_dam_q
+using ..Equilibrium; export qfm_benchmark_q
 #using ..Equilibrium; export Axel_q
 #using MID.MagneticField; export axel_dens
 #using MID.MagneticField; export island_damping_q
@@ -181,6 +183,7 @@ using ..Construct; export construct
 include("Solve/Solve.jl")
 
 using ..Solve; export compute_spectrum
+using ..Solve; export compute_spectrum_qfm
 using ..Solve; export compute_continuum
 
 

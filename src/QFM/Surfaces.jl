@@ -7,10 +7,10 @@
 #hate the order of this, probably makes sense if we understood the theory!
 struct QFMSurfaceT
     ρ :: Float64 #stick with rho for now, but perhaps this should just be s. v unclear exactly what this does. #think it is just a surface label, which we pick to be the edge.
-    scos
-    tsin
-    ssin
-    tcos
+    scos :: Array{Float64, 2}
+    tsin :: Array{Float64, 2}
+    ssin :: Array{Float64, 2}
+    tcos :: Array{Float64, 2}
 end
 
 

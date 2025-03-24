@@ -10,6 +10,7 @@ using ..Structures
 using ..Construct
 using ..Basis
 using ..PostProcessing
+using ..QFM
 
 
 
@@ -22,6 +23,7 @@ include("ShiftInvertSolve.jl")
 
 
 export compute_spectrum
+export compute_spectrum_qfm
 export compute_continuum
 
 """
@@ -66,6 +68,41 @@ function compute_spectrum(; prob::ProblemT, grids::GridsT, target_freq=0.0::Floa
 
     display("Finished.")
     @printf("Total time = %f\n", time() - t1)
+    return evals, ϕ, ϕft
+
+end
+
+#perhaps we should stop using generic names quite as much, instead we could call this compute spectrum qfm.
+#this is causing some precompilation issues, may need to change the name.
+function compute_spectrum_qfm(; prob::ProblemT, grids::GridsT, surfs::Array{QFM.QFMSurfaceT}, target_freq=0.0::Float64, full_spectrum=false::Bool, nev=100::Int64, deriv=false::Bool)
+
+    t1 = time()
+
+    display("Constructing...")
+    @allocated W, I = construct(prob, grids, surfs)
+    mat_size = matrix_size(grids)
+    @printf("Construction of %dx%d matrices complete.\n", mat_size, mat_size)
+    display("Solving...")
+    if full_spectrum 
+        #with no non-ideal effects the matrices are Hermitian.
+        if prob.flr.δ == 0.0 && prob.flr.ρ_i == 0 && prob.flr.δ_e == 0
+            @allocated evals, efuncs = full_spectrum_solve(Wmat=W, Imat=I, ideal=true)
+        #other wise use a non-hermitian solver.
+        else
+            evals, efuncs = full_spectrum_solve(Wmat=W, Imat=I, ideal=false)
+        end
+    else
+        #un-normalise the target frequency for the shift and invert
+        target_freq = target_freq^2 / prob.geo.R0^2 
+        evals, efuncs = arpack_solve(Wmat=W, Imat=I, nev=nev, target_freq=target_freq)
+    end
+    @printf("Solving complete, %d eigenvalues found.\n", length(evals))
+    display("Post Processing...")
+
+    @allocated evals, ϕ, ϕft = post_process(evals, efuncs, grids, prob.geo, deriv)
+
+    display("Finished.")
+    @printf("total time = %f\n", time() - t1)
     return evals, ϕ, ϕft
 
 end

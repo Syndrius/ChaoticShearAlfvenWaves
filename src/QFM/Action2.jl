@@ -369,11 +369,14 @@ function action_grad!(δS::Array{Float64}, x::Array{Float64}, CT::CoefficientsT,
         #we can probably just have a compute B where instead of passing in a BFieldT and a MetT we just pass in a 3 array and a single jacobian value.
         #could also be a problem that our structs are mutable
         #maybe worth changing met.J to met.J[1] etc
-        prob.compute_met(met, r[i], θ[i], ζ[i], prob.geo.R0)
+        prob.met(met, r[i], θ[i], ζ[i], prob.geo.R0)
 
         #unsure why it is still unhappy.
         #maybe this is just how the q-profile works
-        compute_B!(B.B, met.J, prob.q, prob.isl, prob.isl2, r[i], θ[i], ζ[i])
+        #we have kind of gotten rid of this function, just use the full version for now.
+        #compute_B!(B.B, met.J, prob.q, prob.isl, prob.isl2, r[i], θ[i], ζ[i])
+        compute_B!(B, met, prob.q, prob.isl, prob.isl2, r[i], θ[i], ζ[i])
+        
 
         #unsure how jacobian sits with all of this.
         Br[i] = B.B[1]
@@ -548,7 +551,7 @@ function action_grad_jm!(JM::Array{Float64, 2}, x::Array{Float64}, CT::Coefficie
     
     for i in 1:1:length(r)
         
-        prob.compute_met(met, r[i], θ[i], ζ[i], prob.geo.R0)
+        prob.met(met, r[i], θ[i], ζ[i], prob.geo.R0)
 
         #need B.dB now, so we just compute the full thing!
         compute_B!(B, met, prob.q, prob.isl, prob.isl2, r[i], θ[i], ζ[i])
