@@ -48,6 +48,9 @@ This grid has the additional option of a phase factor (pf), to focus on a specif
     pf :: Int64 = 0
 end
 
+
+#this should be in SM grid
+#or redefined tbh.
 @kwdef struct ContGridDataT <: GridDataT
     N :: Int64
     start :: Real = 0 #maybe this will be useful??
@@ -201,5 +204,5 @@ end
 #eg the exponential clustering used.
 function inst_grid(grid::ContGridDataT)
     #to rpevent r=0 in the continuum case
-    return LinRange(0, 1, grid.N+1)[2:end]
+    return LinRange(grid.start, grid.stop, grid.N+1)[2:end]
 end

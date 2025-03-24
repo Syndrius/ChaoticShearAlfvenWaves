@@ -14,6 +14,7 @@ Struct storing the geometrical parameters.
     B0 :: Float64 = 1.0 #not implemented yet, assume 1.
 end
 
+
 """
 This struct stores Finite Larmor Radius effects to add.
 
@@ -43,7 +44,7 @@ One of the main inputs for matrix construction functions.
 """
 @kwdef struct TorProblemT <: ProblemT
     q :: Function 
-    compute_met :: Function = toroidal_metric!
+    met :: Function = toroidal_metric!
     dens :: Function = uniform_dens
     isl :: IslandT = no_isl
     isl2 :: IslandT = no_isl
@@ -67,6 +68,7 @@ const no_isl = IslandT(m0=1.0, n0=1.0, A=0.0)
 #constant flr for cases without any flr corrections.
 const no_flr = FLRT(δ=0.0, ρ_i=0.0, δ_e=0.0)
 
+
 """
 Constructor for struct which stores the key information that defines the problem to be solved.
 Main input for matrix construction functions.
@@ -79,7 +81,18 @@ Main input for matrix construction functions.
 - geo::GeoParamsT Struct storing geometrical parameters.
 - flr::FLRT=no_flr - Struct storing finite larmor effects, defaults to no corrections.. 
 """
-function init_problem(; q::Function, met::Function=toroidal_metric!, dens::Function=uniform_dens, isl::IslandT=no_isl, isl2::IslandT=no_isl,geo::GeoParamsT, flr::FLRT=no_flr)
+function init_problem(; q::Function, met::Symbol=:torus, dens::Function=uniform_dens, isl::IslandT=no_isl, isl2::IslandT=no_isl,geo::GeoParamsT, flr::FLRT=no_flr)
+
+    if met == :torus
+        met_func = toroidal_metric!
+    elseif met == :cylinder
+        met_func = cylindrical_metric!
+    elseif met == :island #this may not be possible tbh!
+        met_func = island_metric!
+    else
+        display("Metric not available")
+        return
+    end
 
     #may want to indroduce symbold into here
     #for the metric :toroidal etc may be clearer.
@@ -88,15 +101,17 @@ function init_problem(; q::Function, met::Function=toroidal_metric!, dens::Funct
         #we should probably be asserting some stuff about the ol island first
         q_prof(r) = q(r, isl)
         #not sure if this actually works
-        return ProblemT(q=q_prof, compute_met=met, dens=dens, isl=isl, flr=flr, geo=geo)
+        return ProblemT(q=q_prof, met=met_func, dens=dens, isl=isl, flr=flr, geo=geo)
     else
         if isl != no_isl
-            isl = inst_island(isl, q)
+            #ignoreing this for now! 
+            #isl = inst_island(isl, q)
         end
         if isl2 != no_isl
-            isl2 = inst_island(isl2, q)
+            #ignoreing!
+            #isl2 = inst_island(isl2, q)
         end
-        return TorProblemT(q=q, compute_met=met, dens=dens, isl=isl, isl2=isl2, flr=flr, geo=geo)
+        return TorProblemT(q=q, met=met_func, dens=dens, isl=isl, isl2=isl2, flr=flr, geo=geo)
     end 
 
     
@@ -110,4 +125,10 @@ function init_isl_problem(; dens::Function=uniform_dens, geo::GeoParamsT, flr::F
     return IslProblemT(dens=dens, geo=geo, flr=flr, isl=isl)
 
     
+end
+
+
+function init_geo(; R0::Float64)
+
+    return GeoParamsT(R0=R0)
 end

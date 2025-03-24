@@ -6,7 +6,7 @@ module Continuum
 
 using MID.Structures
 using MID.Geometry
-using MID.MagneticField
+using MID.Equilibrium
 using MID.Basis #needed for matrix size. not ideal
 using MID.Indexing
 using MID.WeakForm
@@ -36,17 +36,17 @@ export continuum
 export cyl_cont
 
 
-include("IslandCoordinates.jl")
+#include("IslandCoordinates.jl")
 
-export compute_ψ̄
-
-
-include("IslandWeakForm.jl")
+#export compute_ψ̄
 
 
+#include("IslandWeakForm.jl")
 
-include("IslandContinuum.jl")
 
-export island_continuum
+
+#include("IslandContinuum.jl")
+
+#export island_continuum
 
 end

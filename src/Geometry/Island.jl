@@ -45,11 +45,11 @@ end
 
 
 """
-    instantiate_island(isl::IslandT, q)
+    inst_island(isl::IslandT, q::Functions)
 
 Fills in the remaining values of the island struct based on the q-profile.
 """
-function inst_island(isl::IslandT, q)
+function inst_island(isl::IslandT, q::Function)
 
     #accounts for cases where q0 is not set.
     q0 = -isl.m0/isl.n0
@@ -108,7 +108,7 @@ end
 
 
 """
-    instantiate_island(isl::IslandT)
+    inst_island(isl::IslandT)
 
 Case for island coords where most information must be predefined.
 """

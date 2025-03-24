@@ -10,7 +10,8 @@ module Mapping
 
 using Elliptic
 using FFTW
-using Interpolations #one day we will just Hermite I think.
+#using Interpolations #one day we will just Hermite I think.
+#need to swap interpolations to Bspline kit to match other case
 using Printf
 using JLD2
 
@@ -19,7 +20,7 @@ using MID.Structures
 using MID.Geometry
 using MID.Io
 using MID.PostProcessing
-using MID.MagneticField
+using MID.Equilibrium
 
 
 include("Interpolation.jl")

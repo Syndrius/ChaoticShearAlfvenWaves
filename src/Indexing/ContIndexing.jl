@@ -14,8 +14,8 @@ end
 function index_to_grid(i::Int64, grids::ContGridsT)
 
     #guess!
-    θ = mod(div(i-1, grids.ζ.count), grids.θ.count) + 1
-    ζ = mod(i-1, grids.ζ.count) + 1
+    θ = mod(div(i-1, grids.ζ.N), grids.θ.N) + 1
+    ζ = mod(i-1, grids.ζ.N) + 1
 
     return θ, ζ
 

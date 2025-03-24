@@ -62,6 +62,61 @@ end
 
 
 """
+This may be an improvement, it is always hard to tell.
+"""
+function init_grid(; type::Symbol=:empty, method::Symbol=:empty, bcs::Symbol=:empty, N::Int64, start::Real=0.0, stop::Real=NaN, sep1::Float64=0.0, sep2::Float64=1.0, frac::Float64=0.0, gp::Int64=4, left_bc=true, pf::Int64=0, incr::Int64=1, f_quad::Int64=3)
+    #shorthands for the most typical cases
+    #radial finite element grid
+    if type==:rf
+        if isnan(stop)
+            stop = 1.0
+        end
+        return rfem_grid(N=N, start=start, stop=stop, sep1=sep1, sep2=sep2, frac=frac, gp=gp, left_bc=left_bc)
+    end
+    #angular finite element grid
+    if type==:af
+        if isnan(stop)
+            stop = 2π
+        end
+        return afem_grid(N=N, start=start, stop=stop, gp=gp, pf=pf)
+    end
+    #angular spectral method grid
+    if type==:as
+        return asm_grid(N=N, start=start, stop=stop, incr=incr, f_quad=f_quad)
+    end
+
+    if type==:rc
+        if isnan(stop)
+            stop = 1.0
+        end
+        return ContGridDataT(N=N, start=start, stop=stop)
+    end
+
+
+    if method == :FEM
+        if bcs == :dirichlet
+            return rfem_grid()
+        elseif bcs == :periodic
+            return afem_grid()
+        else
+            display("Only dirichlet and periodic boundary conditions are supported.")
+        end
+    elseif method == :SM
+
+        if bcs == :periodic
+            return asm_grid()
+        else
+            display("Only periodic boundary conditions are supported.")
+        end
+    else
+        display("Method must be either finite elements (:FEM) or fourier spectral method (:SM).")
+    end
+
+end
+
+
+
+"""
     init_grids(rgrid::GridDataT, θgrid::GridDataT, ζgrid::GridDataT)
 
 Initialises the grid structure from the three individual grids.
@@ -108,31 +163,3 @@ function inst_grids(grids::ContGridsT)
     return inst_grid(grids.r), inst_grid(grids.θ), inst_grid(grids.ζ)
 end
 
-#have this and alternatives to cut the shit.
-#I guess this can be like the user interface that we will probably never use.
-#could even do some custom printing of the struct.
-#not sure if this will ever be used.
-function init_grid(type::Symbol, method::Symbol; N::Int64, start::Real=NaN, stop::Real=NaN, sep1::Float64=0.0, sep2::Float64=1.0, frac::Float64=0.0, gp::Int64=4)
-    #TODO - if we ever push this publically, this is probably a good idea to fix.
-    if type==:radial
-
-        if method == :FEM
-            return rfem_grid()
-        else
-            display("Radial grid must be FEM.")
-        end
-
-    elseif type == :angular
-
-        if method == :FEM
-            return afem_grid()
-        elseif method == :SM
-            return asm_grid()
-        else
-            display("Angular grids must be either FEM or SM.")
-        end
-    else
-        display("Only radial and angular grids are accepted.")
-    end
-
-end
