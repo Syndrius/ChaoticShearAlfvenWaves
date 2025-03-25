@@ -17,7 +17,7 @@ function compute_W!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT,
     #display(W[1:3, 7:9])
 
     #compute the current term.
-    Tj!(W, met, B, tm.Γ, tm.dΓ, tm.K)
+    #Tj!(W, met, B, tm.Γ, tm.dΓ, tm.K)
     
 
 
