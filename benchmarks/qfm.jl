@@ -3,7 +3,6 @@
 This file shows a simple example of the qfm surfaces. Here we add a non-resonant perturbation (in the same form as our magentic islands) and compare the spectrum computed with and without qfm surfaces and also compare these to the unperturbed spectrum.
 """
 #%%
-using Revise
 using MID
 using MIDViz
 using JLD2
@@ -60,7 +59,7 @@ plot_surfs(bounding_surfs);
 #So this is getting stupid af, the args of this need to be in the correct order, otherwise this cooks itself.
 #perhaps kwargs are needed for this p/q stuff, or at least make this consistent.
 #or perhaps have a check in the construct surfaces function that asserst that q>p or whatever we actually want.
-qlist, plist = farey_tree(5, 2, 1, 3, 1)
+qlist, plist = farey_tree(3, 2, 1, 3, 1)
 
 
 guess_list = 0.5 .* ones(length(qlist));
@@ -84,7 +83,7 @@ surfs = load_object("data/qfm/benchmark_surfs.jld2");
 
 #implies we may need a slower growing q-profile, or perhaps it would be better to be able to combine multiple surface runs together, as per Zhisongs add surf.
 #still a big gap at the edge unfort, perhaps in general we define the domain based on where the surfaces are? Rather than trying to put the surfaces where we want?
-plot_surfs(surfs, filename="data/qfm/benchmark_surfs.png");
+plot_surfs(surfs)#, filename="data/qfm/benchmark_surfs.png");
 
 #%%
 
