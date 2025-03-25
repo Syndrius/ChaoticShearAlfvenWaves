@@ -8,18 +8,9 @@ using MID
 using MIDViz
 using JLD2
 
-using Plots; gr()
-#using Plots; plotlyjs()
+#using Plots; gr()
+using Plots; plotlyjs()
 
-function qfm_benchmark_q(r::Float64)
-    #a = 0.954545
-    #b = 1.515151
-    
-    a = 1.93333
-    b = 1.66666
-
-    return a + b*r^2, 2 * b * r
-end
 
 #%%
 #define the problem to solve
@@ -155,9 +146,9 @@ continuum_plot(cont_norm_ω, cont_grids, filename="data/qfm/unpert_cont.png")
 #Perhaps we need to change the island amplitude!
 #with the amplitude quadratic, and a smaller amp, going from 0.4 seems to have fixed the issue, 
 #Seems like the problemo is just that the flux surface at the left edge is both the largest, and least dense part of the flux surfaces
-rgrid = rfem_grid(N=80, start=0.4, stop=0.8)
-θgrid = asm_grid(start=2, N=4)#, f_quad=1)
-ζgrid = asm_grid(start=-2, N=3)#, f_quad=1)#, incr=2)
+rgrid = MID.Structures.rfem_grid(N=80, start=0.4, stop=0.8)
+θgrid = MID.Structures.asm_grid(start=2, N=4)#, f_quad=1)
+ζgrid = MID.Structures.asm_grid(start=-2, N=3)#, f_quad=1)#, incr=2)
 
 grids = init_grids(rgrid, θgrid, ζgrid)
 
@@ -165,6 +156,7 @@ grids = init_grids(rgrid, θgrid, ζgrid)
 #seems to be a fair bit slower!
 #makes sense, will want to use MIDParallel oneday.
 evals, ϕ, ϕft = compute_spectrum_qfm(prob=prob, grids=grids, surfs=surfs, full_spectrum=true);
+evals, ϕ, ϕft = compute_spectrum_qfm(prob=prob, grids=grids, surfs=surfs, full_spectrum=false, nev=200, target_freq=0.3);
 
 evals_norm, ϕ_norm, ϕft_norm = compute_spectrum(prob=un_prob, grids=grids, full_spectrum=true);
 
