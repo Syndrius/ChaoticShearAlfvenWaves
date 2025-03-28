@@ -5,14 +5,19 @@ Base class that just imports everything. We will want a description of the packa
  - Continuum -> Mainly needs to be adjusted to new method of Io. -> and new grid structure -> probably fix once we get island metric invented. -> completly cooked now! -> may need to test this with the island case.
 
 
+####################
+Note that Current term has been switched off! Seems to improve the QFM results. Probably need to investigate!!!
+####################
+
  ###### More Urgent
- - Start using Gadi's version of Julia, currently ours is using fkn heaps of memory
 - Map the island results to normal space to see whats going on.
 - Test island coord case with ffs, fss doesn't seem to give gap modes?? but looks much better, perhaps ffs will be best of both worlds.
 - May need to start removing the raw data as we are using stupid amounts of data...
 
 
-
+- With a basic comparison to Stuarts paper, it kind of looks like our qfm surfaces may be wrong
+- not to mention that they overlap when there is a lot of them!
+- Something is wrong with the current term, (I think!) we need to check all the derivatives of the metric and magentic field using an autodiff type thing. Should also do this for qfm.
 - Perhaps https://github.com/fredrikekre/Literate.jl if we ever want to share this garbage.
 - Maybe we should have surfs as part of prob? dealing with parallel surfs is going to be a bit of a disaster! Although having surfs inside prob is a lot of bloat! Perhaps just a string that stores the location? As we only need to create the interpolant, don't actually need the surfaces themselves? Think this could be ok. seems kind of silly for everything else to be stored as is though!
 - May want to change the way the q-profile is done. May be better to precompute the values, and just pass in q and dq and floats so that there is no uncertainty, will need to profile.

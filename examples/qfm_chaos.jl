@@ -12,7 +12,8 @@ using MID
 using MIDViz
 using JLD2
 
-using Plots; gr()#plotlyjs()
+#using Plots; gr()#plotlyjs()
+using Plots; plotlyjs()
 
 function qfm_benchmark_q(r::Float64)
     #a = 0.954545
@@ -32,15 +33,15 @@ R0=10.0
 
 #amp needs further thought!
 #define the non-resonant island
-isl = IslandT(m0=5, n0=-2, A=0.0002)
-isl2 = IslandT(m0=7, n0=-3, A=0.0001)
+isl = init_island(m0=5, n0=-2, A=0.0002)
+isl2 = init_island(m0=7, n0=-3, A=0.0001)
 
-geo = GeoParamsT(R0=R0)
+geo = init_geo(R0=R0)
 
 #to solve non-Hermitian
-flr = FLRT(δ = 1e-18)
-prob = init_problem(q=qfm_benchmark_q, met=cylindrical_metric!, geo=geo, isl=isl, isl2=isl2, flr=flr)
-un_prob = init_problem(q=qfm_benchmark_q, met=cylindrical_metric!, geo=geo)
+flr = MID.Structures.FLRT(δ = 1e-18)
+prob = init_problem(q=qfm_benchmark_q, met=:cylinder, geo=geo, isl=isl, isl2=isl2, flr=flr)
+un_prob = init_problem(q=qfm_benchmark_q, met=:cylinder, geo=geo)
 
 
 #%%
@@ -86,6 +87,8 @@ guess_list[2] = 0.8
 #%%
 #For depth of 3, giving 9 surfaces, took ~70s
 #fkn stupid af this is plist then qlist, opposite to farey_tree.
+#depth of 5 took 33 mins lol. But basically only 2 surfs where the problemo.
+#and they are cooked implying a proper solution was not found
 @time surfs = construct_surfaces(plist, qlist, guess_list, prob);
 
 #%%
@@ -101,13 +104,24 @@ surfs = load_object("data/qfm/chaos_surfs.jld2");
 #implies we may need a slower growing q-profile, or perhaps it would be better to be able to combine multiple surface runs together, as per Zhisongs add surf.
 plot_surfs(surfs)#, filename="data/qfm/benchmark_surfs.png");
 
+#so the ones that took fkn ages are also the guilty ones of being shite.
+#need to fix this, probably by increasing the random af params
+#looks to be some of the largest rationals, so perhaps this makes sense.
+println(qlist[22:27])
+println(plist[22:27])
+cooked_surfs = [surfs[23], surfs[25]]
+plot_surfs(cooked_surfs)
+
 #%%
 
 #now use the qfm surfaces to view the new poincare plot.
 ##small case with 10, 100 shows pretty stratight B field, this is kinda slow tho!
 Ntraj = 40;
-rlist = collect(LinRange(0.25, 0.75, Ntraj));
+rlist = collect(LinRange(0.4, 0.75, Ntraj));
 Nlaps = 300;
+
+#so this doesn't work v nice.
+#guess this tells us that the surfaces are cooked
 
 #poincare_plot(qfm_benchmark_q, slab_to_plot, Nlaps, Ntraj, 0, 0.0, 0.0, 0.0, R0, isl, MID.Structures.no_isl, rlist)
 x, z = poincare_plot(prob, Nlaps, Ntraj, rlist,  R0, surfs=surfs)#, filename="data/qfm/qfm_poincare.png");
@@ -155,16 +169,16 @@ continuum_plot(cont_norm_ω, cont_grids)#, filename="data/qfm/unpert_cont.png")
 
 #now we consider the full spectrum
 
-rgrid = rfem_grid(N=80, start=0.4, stop=0.7)
-θgrid = asm_grid(start=4, N=4)#, f_quad=1)
-ζgrid = asm_grid(start=-3, N=3)#, f_quad=1)#, incr=2)
+rgrid = MID.Structures.rfem_grid(N=80, start=0.4, stop=0.7)
+θgrid = MID.Structures.asm_grid(start=4, N=8)#, f_quad=1)
+ζgrid = MID.Structures.asm_grid(start=-3, N=6)#, f_quad=1)#, incr=2)
 
 grids = init_grids(rgrid, θgrid, ζgrid)
 
 #%%
 #seems to be a fair bit slower!
 #makes sense, will want to use MIDParallel oneday.
-evals, ϕ, ϕft = compute_spectrum_qfm(prob=prob, grids=grids, surfs=surfs, full_spectrum=true);
+evals, ϕ, ϕft = compute_spectrum_qfm(prob=prob, grids=grids, surfs=surfs, full_spectrum=false);
 
 evals_norm, ϕ_norm, ϕft_norm = compute_spectrum(prob=un_prob, grids=grids, full_spectrum=true);
 
@@ -178,6 +192,6 @@ continuum_plot(evals_weird)#, filename="data/qfm/weird_spectrum.png")
 
 #%%
 
-ind = find_ind(evals, 0.357)
+ind = find_ind(evals, 0.206)
 
 potential_plot(ϕft, grids, ind)

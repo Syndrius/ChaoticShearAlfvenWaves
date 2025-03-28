@@ -199,11 +199,14 @@ function coord_transform!(s, ϑ, φ, CT, surf)
     #Don't think we ever actually needed this lol.
     CT.JM_inv .= inv(CT.JM)
 
+    #this function is slow af (not surprising!) probably need to predefine arrays and reuse them!
+    #or just add directly into these arrays? bit of a mess tbh.
+
     CT.dJM[:, :, 1] = [d2rdsds d2rdsdϑ d2rdsdφ; d2θdsds d2θdsdϑ d2θdsdφ; d2ζdsds d2ζdsdϑ d2ζdsdφ] 
 
     CT.dJM[:, :, 2] = [d2rdsdϑ d2rdϑdϑ d2rdϑdφ; d2θdsdϑ d2θdϑdϑ d2θdϑdφ; d2ζdsdϑ d2ζdϑdϑ d2ζdϑdφ]
 
-    CT.dJM[:, :, 3] = [d2rdϑdφ d2rdϑdφ d2rdφdφ; d2θdϑdφ d2θdϑdφ d2θdφdφ; d2ζdϑdφ d2ζdϑdφ d2ζdφdφ]
+    CT.dJM[:, :, 3] = [d2rdsdφ d2rdϑdφ d2rdφdφ; d2θdsdφ d2θdϑdφ d2θdφdφ; d2ζdsdφ d2ζdϑdφ d2ζdφdφ]
 
     #note that this makes assumptions on the form of the transformation,
     #namely that the ζ transform is simple
@@ -256,6 +259,7 @@ function met_transform!(tor_met, qfm_met, CT)
         qfm_met.gu[μ, ν] += CT.JM_inv[μ, i] * tor_met.gu[i, j] * CT.JM_inv[ν, j]
 
         #because of this call we need to get JM_inv
+        #this seems to be a bit wrong unfort. Unsure tbh.
         for σ in 1:3
 
             #∂_σ g_{μν} = ∂_σ(JM^i_μ) g_{ij} JM^j_ν + JM^i_μ g_{ij} ∂_σ(JM^j_ν) 
@@ -265,7 +269,7 @@ function met_transform!(tor_met, qfm_met, CT)
                                      + CT.JM[i, μ] * tor_met.gl[i, j] * CT.dJM[j, ν, σ])
 
             #this term does not need be done separatly!
-            qfm_met.dgl[μ, ν, σ] += dot(CT.JM[:, σ], tor_met.dgl[i, j, :]) * CT.JM[j, ν]
+            qfm_met.dgl[μ, ν, σ] += CT.JM[i, μ] * dot(CT.JM[:, σ], tor_met.dgl[i, j, :]) * CT.JM[j, ν]
                             
         end
 
