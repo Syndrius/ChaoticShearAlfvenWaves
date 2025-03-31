@@ -48,6 +48,46 @@ function B_transform!(tor_B, qfm_B, qfm_met, CT)
 end
 
 
+function test_s(s, deriv)
+
+    #test case to see if interpolation is problemo
+    pqMpol = 24
+    pqNtor = 8
+    dim1 = pqMpol+1
+    dim2 = 2*pqNtor + 1
+    rcos = zeros(dim1, dim2)
+    θsin = zeros(dim1, dim2)
+
+    a = 0.001
+    b = 0.0005
+
+    if deriv == 0
+        
+        rcos[3, 2] = a*s^4
+        θsin[3, 2] = b*(2*s + s^3)
+    elseif deriv == 1
+        rcos[3, 2] = a*4 * s^3
+        θsin[3, 2] = b*(2 + 3*s^2)
+    elseif deriv == 2
+        rcos[3, 2] = a* 12 * s^2
+        θsin[3, 2] = b * 6*s
+    end
+    #=
+    if deriv == 0
+        
+        rcos .= a*s^4
+        θsin .= b*(2*s + s^3)
+    elseif deriv == 1
+        rcos .= a*4 * s^3
+        θsin .= b*(2 + 3*s^2)
+    elseif deriv == 2
+        rcos .= a* 12 * s^2
+        θsin .= b * 6*s
+    end
+    =#
+    return rcos, θsin
+end
+
 #this function computes the coordinate transform from toroidal like coordinates to qfm surfaces.
 #returns the new coord and a struct containing the transoformation invormation.
 #this will need more infor about the qfm surgaces etc.
@@ -93,6 +133,11 @@ function coord_transform!(s, ϑ, φ, CT, surf)
     #unsure if these shuold be ds or dr.
     drcosds, dθsinds = itp_mat(surf, s, deriv=1)
     d2rcosdsds, d2θsindsds = itp_mat(surf, s, deriv=2)
+    #=
+    rcos, θsin = test_s(s, 0)
+    drcosds, dθsinds = test_s(s, 1)
+    d2rcosdsds, d2θsindsds = test_s(s, 2)
+    =#
     
 
     #this will be a function of surface interpolation.
@@ -156,7 +201,7 @@ function coord_transform!(s, ϑ, φ, CT, surf)
     for i in 1:dim1
         for j in 1:dim2
             r += rcos[i, j] * cosα[i, j]
-            ϑ += θsin[i, j] * sinα[i, j]
+            θ += θsin[i, j] * sinα[i, j]
 
             drds += drcosds[i, j] * cosα[i, j]
             drdϑ += -mlist[i] * rcos[i, j] * sinα[i, j]
@@ -189,6 +234,7 @@ function coord_transform!(s, ϑ, φ, CT, surf)
 
     #th jacobian Matrix, J_μ^i = ∂x^i/∂x^μ
     #CT.JM .= [dsdr dsdθ dsdζ; dϑdr dϑdθ dϑdζ; dφdr dφdθ dφdζ]
+    #JM[i, μ] denotes i as original var, (r, θ, ζ), and μ as new vars (s, ϑ, φ)
     CT.JM .= [drds drdϑ drdφ; dθds dθdϑ dθdφ; dζds dζdϑ dζdφ]
     #display(CT.JM)
     #so all the interpoaltions outside the domain are set to zero
@@ -211,6 +257,7 @@ function coord_transform!(s, ϑ, φ, CT, surf)
     #note that this makes assumptions on the form of the transformation,
     #namely that the ζ transform is simple
     CT.jac[1] = drds * dθdϑ - dθds * drdϑ
+    #CT.jac[1] = sqrt(det(CT.JM))
     #perhaps we want include the derivative here?
     #
     CT.coords .= [r, θ, ζ]
@@ -287,9 +334,12 @@ function met_transform!(tor_met, qfm_met, CT)
 
     #perhap a try catche here?
     #sqrt here is annoying for values v close to zero
-    #qfm_met.J = sqrt(det(qfm_met.gl))
+    qfm_met.J[1] = sqrt(det(qfm_met.gl))
     #alternatively, we could use
-    qfm_met.J[1] = tor_met.J[1] * CT.jac[1]
+    #looks like this expression is actually wrong. at least derivative computation becomes wrong
+    #bit unfor as now we have to use the sqrt.
+    #may be worth re-looking at this at some stage.
+    #qfm_met.J[1] = tor_met.J[1] * CT.jac[1]
     #However, this requires storing CT.jac
     # now we take the derivative, noting that 
     # ∂(det(A)) = det(A) * Tr(A^{-1} ∂(A))

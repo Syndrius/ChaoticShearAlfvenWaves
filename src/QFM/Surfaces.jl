@@ -326,8 +326,11 @@ function create_surf_itp(surfs)
             #perhaps it would be better to store the approximate functions?
             #who knows tbh.
             #may want 3 to be a param, but for second deriv this is the minimum
-            scos_itp[i, j] = interpolate(ρsurfs, scosn[:, i, j], BSplineOrder(3))
-            tsin_itp[i, j] = interpolate(ρsurfs, tsinn[:, i, j], BSplineOrder(3))
+            #so with 4, the convergence behaviour is much better, i.e. maximim error vs finite diff goes to zero quite rapdily
+            #however, with 5 we actually see the mathematically correct behaviour, with first order finite diff.
+            #I think 4 may actually be better long term, but 5 is more justifiable.
+            scos_itp[i, j] = interpolate(ρsurfs, scosn[:, i, j], BSplineOrder(5))
+            tsin_itp[i, j] = interpolate(ρsurfs, tsinn[:, i, j], BSplineOrder(5))
         end
     end
     #tsin_itp = CubicSplineInterpolation(ρsurfs,  tsinn)
