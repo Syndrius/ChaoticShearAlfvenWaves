@@ -51,7 +51,7 @@ function compute_spectrum(; prob::ProblemT, grids::GridsT, target_freq=0.0::Floa
     if full_spectrum 
         #with no non-ideal effects the matrices are hermitian.
         if prob.flr.δ == 0.0 && prob.flr.ρ_i == 0 && prob.flr.δ_e == 0
-            @allocated evals, efuncs = full_spectrum_solve(W, I, true)
+            @allocated evals, efuncs = full_spectrum_solve(Wmat=W, Imat=I, ideal=true)
         #other wise use a non-hermitian solver.
         else
             evals, efuncs = full_spectrum_solve(Wmat=W, Imat=I, ideal=false)

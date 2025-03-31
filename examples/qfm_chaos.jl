@@ -15,15 +15,6 @@ using JLD2
 #using Plots; gr()#plotlyjs()
 using Plots; plotlyjs()
 
-function qfm_benchmark_q(r::Float64)
-    #a = 0.954545
-    #b = 1.515151
-    
-    a = 1.93333
-    b = 1.66666
-
-    return a + b*r^2, 2 * b * r
-end
 
 #%%
 #define the problem to solve
@@ -33,21 +24,22 @@ R0=10.0
 
 #amp needs further thought!
 #define the non-resonant island
-isl = init_island(m0=5, n0=-2, A=0.0002)
-isl2 = init_island(m0=7, n0=-3, A=0.0001)
+k = 0.00022
+isl = init_island(m0=5, n0=-2, A=k/5)
+isl2 = init_island(m0=7, n0=-3, A=k/7)
 
 geo = init_geo(R0=R0)
 
 #to solve non-Hermitian
-flr = MID.Structures.FLRT(δ = 1e-18)
-prob = init_problem(q=qfm_benchmark_q, met=:cylinder, geo=geo, isl=isl, isl2=isl2, flr=flr)
+#flr = MID.Structures.FLRT(δ = 1e-18)
+prob = init_problem(q=qfm_benchmark_q, met=:cylinder, geo=geo, isl=isl, isl2=isl2)#, flr=flr)
 un_prob = init_problem(q=qfm_benchmark_q, met=:cylinder, geo=geo)
 
 
 #%%
 #Define parameters needed for the poincare plot
-Ntraj = 80;
-rlist = collect(LinRange(0.25, 0.75, Ntraj));
+Ntraj = 100;
+rlist = collect(LinRange(0.4, 0.65, Ntraj));
 Nlaps = 500;
 
 #poincare_plot(qfm_benchmark_q, slab_to_plot, Nlaps, Ntraj, 0, 0.0, 0.0, 0.0, R0, isl, MID.Structures.no_isl, rlist)
@@ -123,6 +115,7 @@ Nlaps = 300;
 #so this doesn't work v nice.
 #guess this tells us that the surfaces are cooked
 
+#this looks to sort of be working now, probably need many more surfaces tbh.
 #poincare_plot(qfm_benchmark_q, slab_to_plot, Nlaps, Ntraj, 0, 0.0, 0.0, 0.0, R0, isl, MID.Structures.no_isl, rlist)
 x, z = poincare_plot(prob, Nlaps, Ntraj, rlist,  R0, surfs=surfs)#, filename="data/qfm/qfm_poincare.png");
 
@@ -145,18 +138,20 @@ end
 #%%
 #now we construct the cotninuum grids
 
-ϑgrid = asm_grid(start=2, N=4)#, f_quad=1)
-φgrid = asm_grid(start=-2, N=3)#, f_quad=1)#, incr=2)
+ϑgrid = MID.Structures.asm_grid(start=2, N=4)#, f_quad=1)
+φgrid = MID.Structures.asm_grid(start=-2, N=3)#, f_quad=1)#, incr=2)
 #grids = init_grids(N=N, mstart=1, mcount=2, nstart=-1, ncount=1);
 
 #bounds chosen to not go outside the bounding surfaces
-sgrid = MID.ContGridDataT(N=50, start=0.2, stop=0.8)
+sgrid = MID.Structures.ContGridDataT(N=50, start=0.2, stop=0.8)
 cont_grids = init_grids(sgrid, ϑgrid, φgrid)
 
 #%%
 #now we construct the continuum
-cont_ω = reconstruct_ω(MID.Spectrum.qfm_continuum(prob, cont_grids, surfs), cont_grids);
-cont_norm_ω = reconstruct_ω(continuum(un_prob, cont_grids, false), cont_grids);
+cont_ω = reconstruct_ω(MID.Construct.qfm_continuum(prob, cont_grids, surfs), cont_grids);
+#we have removed the perN option, not ideal. should add back in!
+#cont_norm_ω = reconstruct_ω(MID.Construct.continuum(un_prob, cont_grids, false), cont_grids);
+cont_norm_ω = reconstruct_ω(MID.Construct.continuum(un_prob, cont_grids), cont_grids);
 
 
 #%%
@@ -180,9 +175,9 @@ grids = init_grids(rgrid, θgrid, ζgrid)
 #makes sense, will want to use MIDParallel oneday.
 evals, ϕ, ϕft = compute_spectrum_qfm(prob=prob, grids=grids, surfs=surfs, full_spectrum=false);
 
-evals_norm, ϕ_norm, ϕft_norm = compute_spectrum(prob=un_prob, grids=grids, full_spectrum=true);
+evals_norm, ϕ_norm, ϕft_norm = compute_spectrum(prob=un_prob, grids=grids, full_spectrum=false);
 
-evals_weird, ϕ_weird, ϕft_weird = compute_spectrum(prob=prob, grids=grids, full_spectrum=true);
+evals_weird, ϕ_weird, ϕft_weird = compute_spectrum(prob=prob, grids=grids, full_spectrum=false);
 
 #%%
 
@@ -192,6 +187,8 @@ continuum_plot(evals_weird)#, filename="data/qfm/weird_spectrum.png")
 
 #%%
 
-ind = find_ind(evals, 0.206)
+ind = find_ind(evals, 0.05917)
+ind = 10
 
+#hard to be certain, but looks a lot better now, may even be working!
 potential_plot(ϕft, grids, ind)
