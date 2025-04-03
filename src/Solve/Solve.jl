@@ -21,6 +21,9 @@ include("FullSpectrumSolve.jl")
 include("ShiftInvertSolve.jl")
 
 
+include("SliceSolve.jl")
+
+
 
 export compute_spectrum
 export compute_spectrum_qfm
@@ -39,7 +42,8 @@ constructs the two matrices, solves for the eigenvalues and eigenfunctions then 
 - nev::int64=100 - number of eigenvalues to solve for if using arpack.
 """
 
-function compute_spectrum(; prob::ProblemT, grids::GridsT, target_freq=0.0::Float64, full_spectrum=false::Bool, nev=100::Int64, deriv=false::Bool)
+#we have removed the derivative option! May want to reintroduce at some stage
+function compute_spectrum(; prob::ProblemT, grids::GridsT, solver::SolverT)
 
     t1 = time()
 
@@ -48,23 +52,13 @@ function compute_spectrum(; prob::ProblemT, grids::GridsT, target_freq=0.0::Floa
     mat_size = matrix_size(grids)
     @printf("Construction of %dx%d matrices complete.\n", mat_size, mat_size)
     display("Solving...")
-    if full_spectrum 
-        #with no non-ideal effects the matrices are hermitian.
-        if prob.flr.δ == 0.0 && prob.flr.ρ_i == 0 && prob.flr.δ_e == 0
-            @allocated evals, efuncs = full_spectrum_solve(Wmat=W, Imat=I, ideal=true)
-        #other wise use a non-hermitian solver.
-        else
-            evals, efuncs = full_spectrum_solve(Wmat=W, Imat=I, ideal=false)
-        end
-    else
-        #un-normalise the target frequency for the shift and invert
-        target_freq = target_freq^2 / prob.geo.R0^2 
-        evals, efuncs = shift_invert_solve(Wmat=W, Imat=I, nev=nev, target_freq=target_freq)
-    end
+    #with no non-ideal effects the matrices are hermitian.
+    evals, efuncs = solve(W, I, solver)
     @printf("Solving complete, %d eigenvalues found.\n", length(evals))
     display("Post processing...")
 
-    @allocated evals, ϕ, ϕft = post_process(evals, efuncs, grids, prob.geo, deriv)
+    deriv = false # not ideal, not sure if we will ever bother with this again
+    evals, ϕ, ϕft = post_process(evals, efuncs, grids, prob.geo, deriv)
 
     display("Finished.")
     @printf("Total time = %f\n", time() - t1)
@@ -74,7 +68,7 @@ end
 
 #perhaps we should stop using generic names quite as much, instead we could call this compute spectrum qfm.
 #this is causing some precompilation issues, may need to change the name.
-function compute_spectrum_qfm(; prob::ProblemT, grids::GridsT, surfs::Array{QFM.QFMSurfaceT}, target_freq=0.0::Float64, full_spectrum=false::Bool, nev=100::Int64, deriv=false::Bool)
+function compute_spectrum_qfm(; prob::ProblemT, grids::GridsT, solver::SolverT, surfs::Array{QFM.QFMSurfaceT})
 
     t1 = time()
 
@@ -82,26 +76,16 @@ function compute_spectrum_qfm(; prob::ProblemT, grids::GridsT, surfs::Array{QFM.
     @allocated W, I = construct(prob, grids, surfs)
     mat_size = matrix_size(grids)
     @printf("Construction of %dx%d matrices complete.\n", mat_size, mat_size)
+
     display("Solving...")
-    if full_spectrum 
-        #with no non-ideal effects the matrices are Hermitian.
-        if prob.flr.δ == 0.0 && prob.flr.ρ_i == 0 && prob.flr.δ_e == 0
-            @allocated evals, efuncs = full_spectrum_solve(Wmat=W, Imat=I, ideal=true)
-        #other wise use a non-hermitian solver.
-        else
-            evals, efuncs = full_spectrum_solve(Wmat=W, Imat=I, ideal=false)
-        end
-    else
-        #un-normalise the target frequency for the shift and invert
-        target_freq = target_freq^2 / prob.geo.R0^2 
-        evals, efuncs = shift_invert_solve(Wmat=W, Imat=I, nev=nev, target_freq=target_freq)
-    end
+    evals, efuncs = solve(W, I, solver)
     @printf("Solving complete, %d eigenvalues found.\n", length(evals))
+
     display("Post Processing...")
-
+    deriv = false # not ideal, not sure if we will ever bother with this again
     @allocated evals, ϕ, ϕft = post_process(evals, efuncs, grids, prob.geo, deriv)
-
     display("Finished.")
+
     @printf("total time = %f\n", time() - t1)
     return evals, ϕ, ϕft
 

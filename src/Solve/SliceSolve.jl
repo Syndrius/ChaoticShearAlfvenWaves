@@ -1,3 +1,4 @@
+
 """
     shift_inver_solve(; Wmat, Imat, nev=100::Int64, σ=0.0::Float64, geo::GeoParamsT)
 
@@ -11,10 +12,19 @@ Note that Arpack version 0.5.4 is broken but is the default version installed wi
 - nev::Int64 - Number of eigenvalues to solve for.
 - geo::GeoParamsT - Geometry struct, used for un-normalising target frequency.
 """
-function solve(Wmat::SparseMatrixCSC, Imat::SparseMatrixCSC, solver::ShiftInvertSolverT)
+function solve(Wmat::SparseMatrixCSC, Imat::SparseMatrixCSC, solver::SliceSolverT)
 
-    evals, efuncs = eigs(Wmat, Imat, nev=solver.nev, ritzvec=true, sigma=solver.target)
+    eval_list =  ComplexF64[]
+    efunc_list = zeros(ComplexF64, Wmat.m, length(solver.targets)*solver.nev)
 
-    return evals, efuncs
+    for (i, target) in enumerate(solver.targets)
+
+        evals, efuncs = eigs(Wmat, Imat, nev=solver.nev, ritzvec=true, sigma=target)
+
+        eval_list = vcat(eval_list, evals)
+        efunc_list[:, (i-1)*solver.nev+1:i*solver.nev] = efuncs[:, :]
+    end
+
+    return eval_list, efunc_list
 
 end

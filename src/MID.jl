@@ -7,6 +7,7 @@ Base class that just imports everything. We will want a description of the packa
 
 ####################
 Note that Current term has been switched off! Seems to improve the QFM results. Probably need to investigate!!!
+Current term also seems to cook basic toroidal cases. Think there is a mistake somewhere. No current term results look significantly better.
 ####################
 
  ###### More Urgent
@@ -124,6 +125,7 @@ using ..Structures; export init_grid
 using ..Structures; export init_geo
 using ..Structures; export init_flr
 using ..Structures; export init_problem
+using ..Structures; export init_solver
 #using MID.Structures; export inst_grids
 using ..Structures; export find_ind
 #using MID.Structures; export rfem_grid

@@ -25,7 +25,16 @@ Abstract type for the global grids.
 abstract type GridsT end
 
 
+"""
+Abstract type for the Problem.
+"""
 abstract type ProblemT end
+
+
+"""
+Abstract type for the Solving.
+"""
+abstract type SolverT end
 
 
 include("FEMGrid.jl")
@@ -69,6 +78,17 @@ export init_problem
 export IslProblemT
 export TorProblemT #this is a bad name for this, given this can work with any metric....
 
+
+
+include("Solver.jl")
+
+export SolverT
+export FullSpectrumSolverT
+export ShiftInvertSolverT
+export SliceSolverT
+export init_solver
+
+    
 
 include("Output.jl")
 
