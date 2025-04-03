@@ -3,10 +3,11 @@
 
 Writes the prob and grids structs to file using JLD2.
 """
-function inputs_to_file(; prob::ProblemT, grids::GridsT, dir::String)
+function inputs_to_file(; prob::ProblemT, grids::GridsT, solver::SolverT, dir::String)
 
     save_object(dir*"prob.jld2", prob)
     save_object(dir*"grids.jld2", grids)
+    save_object(dir*"solver.jld2", solver)
 
 end
 

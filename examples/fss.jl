@@ -1,86 +1,43 @@
 
 using MID
-using Plots; plotlyjs()
+using MIDViz
+#%%
 
-
-#start very small, matrix scales much more extremly
-Nr = 100;
-
-geo = GeoParamsT(R0=10.0)
+#first define the problem
+geo = init_geo(R0=4.0)
 
 #rgrid = collect(LinRange(0, 1, N));
-prob = init_problem(q=Axel_q, geo=geo); 
-rgrid = rfem_grid(N=Nr)
-θgrid = asm_grid(start=2, N = 2)
-ζgrid = asm_grid(start=-2, N = 1)
+prob = init_problem(q=fu_dam_q, geo=geo); 
+#%%
+#then create the grids
+Nr = 100;
+rgrid = init_grid(type=:rf, N=Nr)
+θgrid = init_grid(type=:as, N = 2, start = 1)
+ζgrid = init_grid(type=:as, N = 1, start = -1)
 grids = init_grids(rgrid, θgrid, ζgrid);
-#grids = init_grids(N=N, mstart=1, mcount=2, nstart=-1, ncount=1);
-#grids = init_grids(rgrid, θgrid, ζgrid)
 
+#%%
+#then define the solver
+#solver = init_solver(full_spectrum=true, prob=prob)
+#solver = init_solver(target=0.33, prob=prob)
+#solver = init_solver(prob=prob, nshifts=4)
+solver = init_solver(prob=prob, targets=[0.2, 0.3, 0.4, 0.5])
+#%%
 
-
-evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, full_spectrum=true);
-
+evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, solver=solver);
+#%%
 #scatter(cr.r, real.(cr.ω), ylimits=(-0.05, 1.05))
-continuum_plot(evals, ymax=1)
+continuum_plot(evals)
 
-println(evals.ω)
 
-ind = find_ind(evals, 0.3762)
+ind = find_ind(evals, 0.33)
 ind = 348
-plot_potential(ϕft, grids, ind)
+potential_plot(ϕft, grids, ind)
 
-println(evals.ω[1:20])
+#%%
 
-0.3762^2 / 100
+ar1 = [[1, 2], [3, 4]]
+ar2 = [[5, 6], [7, 8]]
+ar3 = Vector{Int64}[]
 
-contour_plot(ϕ, grids, ind=ind)
-
-
-
-
-reconstruct_continuum(ω, ϕ, grids)#, filename="data/fu_dam_spectrum.png")
-
-#unsure why it is flipped... hopefully a resolution problemo
-tae_ind = find_ind(ω, 0.39)
-tae_freq = ω[tae_ind]
-plot_potential(ϕ, grids, tae_ind, 1)
-
-
-#now increase the resolution,
-Nr = 500
-
-geo = GeoParamsT(R0=10.0)
-
-prob = init_problem(q=Axel_q, geo=geo)#, met=no_delta_metric!); 
-
-rgrid = init_fem_grid(N=Nr)
-θgrid = init_sm_grid(start=2, count=2)
-ζgrid = init_sm_grid(start=-2, count=1)
-#grids = init_grids(N=N, mstart=1, mcount=2, nstart=-1, ncount=1);
-grids = init_grids(rgrid, θgrid, ζgrid)
-
-#tae_freq=0.30
-ω, ϕ = construct_and_solve(prob=prob, grids=grids, full_spectrum=false, σ=0.376);
-
-
-
-reconstruct_continuum(ω, ϕ, grids)#, filename="data/fu_dam_spectrum.png")
-
-#unsure why it is flipped... hopefully a resolution problemo
-tae_ind = find_ind(ω, 0.38)
-tae_freq = ω[tae_ind]
-#now tae modes are same sign, is that correct??? would match the fem1d case.
-
-#the mode structure for the tae look identical, but the surface is wildly different
-#mode structure for non-tae modes is much more localized, is that good?
-#why are these so different?
-#non-tae modes seem to look better, but idk wth.
-plot_potential(ϕ, grids, tae_ind, 1)
-
-ϕsur = construct_surface(ϕ, length(ω), grids, 0.0);
-
-
-#this one looks more like a combo of m=2 and m=3 but fk me 
-#we must be doing something wrong with the fourier transforms!
-plot_phi_surface(ϕsur, grids, tae_ind)
+vcat(ar1, ar3)

@@ -7,8 +7,9 @@ function inputs_from_file(; dir::String)
 
     grids = load_object(dir*"grids.jld2")
     prob = load_object(dir*"prob.jld2")
+    solver = load_object(dir*"solver.jld2")
     
-    return prob, grids
+    return prob, grids, solver
 
 end
 
