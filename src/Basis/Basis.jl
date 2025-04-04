@@ -4,8 +4,9 @@ Deals with the Hermite basis functions in 1, 2 and 3 dimensions and modifies the
 """
 module Basis
 
+#Maybe consider moving some of MatrixSize and LocalBasis to Indexing.
 
-using MID.Structures
+using ..Structures
 
 
 

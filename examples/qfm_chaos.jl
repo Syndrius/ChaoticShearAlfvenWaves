@@ -7,14 +7,14 @@ Shows some indication of working, but needs more surfaces and resolution.
 """
 
 #%%
-using Revise
 using MID
 using MIDViz
 using JLD2
 
-#using Plots; gr()#plotlyjs()
-using Plots; plotlyjs()
+#using Plots; gr()
+#using Plots; plotlyjs()
 
+save_dir = "data/qfm/"
 
 #%%
 #define the problem to solve
@@ -24,7 +24,7 @@ R0=10.0
 
 #amp needs further thought!
 #define the non-resonant island
-k = 0.00022
+k = 0.00035
 isl = init_island(m0=5, n0=-2, A=k/5)
 isl2 = init_island(m0=7, n0=-3, A=k/7)
 
@@ -43,7 +43,7 @@ rlist = collect(LinRange(0.4, 0.65, Ntraj));
 Nlaps = 500;
 
 #poincare_plot(qfm_benchmark_q, slab_to_plot, Nlaps, Ntraj, 0, 0.0, 0.0, 0.0, R0, isl, MID.Structures.no_isl, rlist)
-poincare_plot(prob, Nlaps, Ntraj, rlist,  R0)#, filename="data/qfm/bench_og_poincare.png");
+poincare_plot(prob, Nlaps, Ntraj, rlist,  R0)#, filename=save_dir * "original_poincare.png");
 
 #%%
 #Now we construct the qfm surfaces, starting with the 2 boundaries
@@ -69,7 +69,7 @@ plot_surfs(bounding_surfs);
 #So this is getting stupid af, the args of this need to be in the correct order, otherwise this cooks itself.
 #perhaps kwargs are needed for this p/q stuff, or at least make this consistent.
 #or perhaps have a check in the construct surfaces function that asserst that q>p or whatever we actually want.
-qlist, plist = farey_tree(4, 2, 1, 3, 1)
+qlist, plist = farey_tree(5, 2, 1, 3, 1)
 
 
 guess_list = 0.5 .* ones(length(qlist));
@@ -90,19 +90,13 @@ save_object("data/qfm/chaos_surfs.jld2", surfs)
 #%%
 
 surfs = load_object("data/qfm/chaos_surfs.jld2");
+surfs = load_object("surfs5.jld2");
 
 #%%
 
 #implies we may need a slower growing q-profile, or perhaps it would be better to be able to combine multiple surface runs together, as per Zhisongs add surf.
-plot_surfs(surfs)#, filename="data/qfm/benchmark_surfs.png");
+plot_surfs(surfs, filename=save_dir*"surfs.png");
 
-#so the ones that took fkn ages are also the guilty ones of being shite.
-#need to fix this, probably by increasing the random af params
-#looks to be some of the largest rationals, so perhaps this makes sense.
-println(qlist[22:27])
-println(plist[22:27])
-cooked_surfs = [surfs[23], surfs[25]]
-plot_surfs(cooked_surfs)
 
 #%%
 
@@ -117,7 +111,7 @@ Nlaps = 300;
 
 #this looks to sort of be working now, probably need many more surfaces tbh.
 #poincare_plot(qfm_benchmark_q, slab_to_plot, Nlaps, Ntraj, 0, 0.0, 0.0, 0.0, R0, isl, MID.Structures.no_isl, rlist)
-x, z = poincare_plot(prob, Nlaps, Ntraj, rlist,  R0, surfs=surfs)#, filename="data/qfm/qfm_poincare.png");
+x, z = poincare_plot(prob, Nlaps, Ntraj, rlist,  R0, surfs=surfs, filename=save_dir * "qfm_poincare.png");
 
 #%%
 
@@ -138,8 +132,8 @@ end
 #%%
 #now we construct the cotninuum grids
 
-ϑgrid = MID.Structures.asm_grid(start=2, N=4)#, f_quad=1)
-φgrid = MID.Structures.asm_grid(start=-2, N=3)#, f_quad=1)#, incr=2)
+ϑgrid = MID.Structures.asm_grid(start=-5, N=30)#, f_quad=1)
+φgrid = MID.Structures.asm_grid(start=-2, N=20)#, f_quad=1)#, incr=2)
 #grids = init_grids(N=N, mstart=1, mcount=2, nstart=-1, ncount=1);
 
 #bounds chosen to not go outside the bounding surfaces
@@ -148,7 +142,7 @@ cont_grids = init_grids(sgrid, ϑgrid, φgrid)
 
 #%%
 #now we construct the continuum
-cont_ω = reconstruct_ω(MID.Construct.qfm_continuum(prob, cont_grids, surfs), cont_grids);
+cont_ω = reconstruct_ω(MID.Construct.continuum(prob, cont_grids, surfs), cont_grids);
 #we have removed the perN option, not ideal. should add back in!
 #cont_norm_ω = reconstruct_ω(MID.Construct.continuum(un_prob, cont_grids, false), cont_grids);
 cont_norm_ω = reconstruct_ω(MID.Construct.continuum(un_prob, cont_grids), cont_grids);
@@ -164,16 +158,22 @@ continuum_plot(cont_norm_ω, cont_grids)#, filename="data/qfm/unpert_cont.png")
 
 #now we consider the full spectrum
 
-rgrid = MID.Structures.rfem_grid(N=80, start=0.4, stop=0.7)
+rgrid = MID.Structures.rfem_grid(N=50, start=0.4, stop=0.7)
 θgrid = MID.Structures.asm_grid(start=4, N=8)#, f_quad=1)
 ζgrid = MID.Structures.asm_grid(start=-3, N=6)#, f_quad=1)#, incr=2)
 
 grids = init_grids(rgrid, θgrid, ζgrid)
 
 #%%
+
+#solver = init_solver(nev=100, target = 0.3, prob=prob)
+solver = init_solver(nev=100, targets = [0.0, 0.1, 0.2, 0.3], prob=prob)
+
+#%%
+
 #seems to be a fair bit slower!
 #makes sense, will want to use MIDParallel oneday.
-evals, ϕ, ϕft = compute_spectrum_qfm(prob=prob, grids=grids, surfs=surfs, full_spectrum=false);
+evals, ϕ, ϕft = compute_spectrum_qfm(prob=prob, grids=grids, solver=solver, surfs=surfs);
 
 evals_norm, ϕ_norm, ϕft_norm = compute_spectrum(prob=un_prob, grids=grids, full_spectrum=false);
 

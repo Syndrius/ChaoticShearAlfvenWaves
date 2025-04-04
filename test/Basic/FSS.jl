@@ -13,20 +13,20 @@ rgrid = init_grid(type=:rf, N=Nr)
 
 grids = init_grids(rgrid, θgrid, ζgrid)
 
+solver = init_solver(full_spectrum=true, prob=prob)
 
-
-evals, _, _ = compute_spectrum(prob=prob, grids=grids, full_spectrum=true);
+evals, _, _ = compute_spectrum(prob=prob, grids=grids, solver=solver);
 
 #continuum_plot(evals)
 
 
-tae_ind = find_ind(evals, 0.2879)
+tae_ind = find_ind(evals, 0.289)
 tae_freq = evals.ω[tae_ind]
 
 #potential_plot(ϕft, grids, tae_ind)
 
 @test tae_ind == 58
-@test tae_freq ≈ 0.2879 atol=0.001
+@test tae_freq ≈ 0.2889 atol=0.001
 
 
 #=

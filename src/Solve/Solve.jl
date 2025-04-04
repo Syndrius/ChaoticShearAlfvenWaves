@@ -1,4 +1,13 @@
+"""
 
+This modules solve the eigenvalues problem Wϕ - ω²Iϕ given the two matrices W and I. 
+Solving can be done
+ - directly via Julia's LinearAlgebra, which is slow and not practical for large grids.
+ - using shift and invert to target a specific frequency, obtaining the nev::Int64 nearest eigenvalues.
+ - using a 'slicing' method where the shift invert method is used multiple times to build up a larger portion of the spectrum.
+
+Also contains the compute_spectrum function, which is essentially the main() of this package. This function constructs the matrices, solves the eigenvalue problem then processes the output.
+"""
 module Solve
 
 using Printf
@@ -14,7 +23,6 @@ using ..QFM
 
 
 
-
 include("FullSpectrumSolve.jl")
 
 
@@ -24,25 +32,21 @@ include("ShiftInvertSolve.jl")
 include("SliceSolve.jl")
 
 
-
 export compute_spectrum
 export compute_spectrum_qfm
 export compute_continuum
 
-"""
-    compute_spectrum(; prob::problemt, grids::gridst, σ=0.0::float64, full_spectrum=false::bool, nev=100::int64)
 
-constructs the two matrices, solves for the eigenvalues and eigenfunctions then processes the results. can either solve the full spectrum via inbuilt solving (slow), or use a shift and invert to find nev amount of eigenvalues closest to σ (fast).
+"""
+    compute_spectrum(; prob::ProblemT, grids::GridsT, solver::SolverT)
+
+Constructs the two matrices, solves for the eigenvalues and eigenfunctions then processes the results. 
 
 ### args
-- prob::problemt - struct containing the functions and parameters that define the problem we are solving
-- grids::gridt - grids to solve over.
-- σ::float64=0.0 - find nev nearest evals to σ when solving with arpack.
-- full_spectrum::bool=false - whether to solve for the full spectrum with inbuilt solver (slow) or use arpack (fast).
-- nev::int64=100 - number of eigenvalues to solve for if using arpack.
+- prob::ProblemT - struct containing the functions and parameters that define the problem we are solving
+- grids::GridT - grids to solve over.
+- solver::SolverT - struct storing the parameters for solving.
 """
-
-#we have removed the derivative option! May want to reintroduce at some stage
 function compute_spectrum(; prob::ProblemT, grids::GridsT, solver::SolverT)
 
     t1 = time()
@@ -66,9 +70,18 @@ function compute_spectrum(; prob::ProblemT, grids::GridsT, solver::SolverT)
 
 end
 
-#perhaps we should stop using generic names quite as much, instead we could call this compute spectrum qfm.
-#this is causing some precompilation issues, may need to change the name.
-function compute_spectrum_qfm(; prob::ProblemT, grids::GridsT, solver::SolverT, surfs::Array{QFM.QFMSurfaceT})
+"""
+    compute_spectrum_qfm(; prob::ProblemT, grids::GridsT, solver::SolverT, surfs::Array{QFMSurfaceT})
+
+Same as compute_spectrum, but uses qfm surfaces.
+
+### args
+- prob::ProblemT - struct containing the functions and parameters that define the problem we are solving
+- grids::GridT - grids to solve over.
+- solver::SolverT - struct storing the parameters for solving.
+- surfs::Array{QFMSurfaceT} - array of the qfm surfaces.
+"""
+function compute_spectrum_qfm(; prob::ProblemT, grids::GridsT, solver::SolverT, surfs::Array{QFMSurfaceT})
 
     t1 = time()
 
@@ -124,8 +137,12 @@ function compute_continuum(prob::ProblemT, grids::ContGridsT, perN=true::Bool)
 
 end
 
-#
-#can do this in the analytical limit, useful for actually having the mode labels.
+
+"""
+    analytical_continuum(prob::ProblemT, grids::ContGridsT)
+
+Computes the continuum analytically, assuming cylindrical geometry and no perturbations. Useful as a comparison.
+"""
 function analytical_continuum(prob::ProblemT, grids::ContGridsT)
 
 
@@ -133,29 +150,22 @@ function analytical_continuum(prob::ProblemT, grids::ContGridsT)
     mlist = mode_list(grids.θ)
     nlist = mode_list(grids.ζ)
 
-    #can make this the same as evalsT for plotting.
     ω = []
     mode_labs = Tuple{Int, Int}[] 
     rms = []
 
     for r in rgrid
-
-
         q, _ = prob.q(r)
 
         dens = prob.dens(r)
 
-        for m in mlist
+        for m in mlist, n in nlist
 
-            for n in nlist
+            push!(mode_labs, (m, n))
 
-                push!(mode_labs, (m, n))
+            push!(ω, abs(m/q + n) / sqrt(dens)) #already normalised!
 
-                push!(ω, abs(m/q + n) / sqrt(dens)) #already normalised!
-
-                push!(rms, r)
-
-            end
+            push!(rms, r)
         end
 
     end
@@ -163,7 +173,6 @@ function analytical_continuum(prob::ProblemT, grids::ContGridsT)
     return EvalsT(ω, rms, mode_labs)
 
 end
-
 
 
 end

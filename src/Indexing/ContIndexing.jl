@@ -1,5 +1,8 @@
+"""
+    grid_to_index(θind::Int64, ζind::Int64, grids::ContGridsT)
 
-
+Converts the index of the 2d grid into the proper place in the matrix.
+"""
 function grid_to_index(θind::Int64, ζind::Int64, grids::ContGridsT)
 
     Nn = grids.ζ.N
@@ -21,9 +24,3 @@ function index_to_grid(i::Int64, grids::ContGridsT)
 
 end
 
-
-#still used!
-function matrix_dim(grids::ContGridsT)
-
-    return grids.θ.count * grids.ζ.count
-end

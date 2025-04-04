@@ -1,12 +1,12 @@
 """
-    full_spectrum_solve(; Wmat, Imat, ideal=true::Bool)
+    solve(Wmat::SparseMatrixCSC, Imat::SparseMatrixCSC, solver::FullSpectrumSolverT)
 
 Uses Julias inbuilt eigen function from LinearAlgebra. Solves the generalised eigenvalue problem Wϕ = ω^2Iϕ, finding the full spectrum of eigenvalues.
 
 ### Args
 - Wmat::SparseMatrixCSC - W matrix.
 - Imat::SparseMatrixCSC - I matrix.
-- ideal::Bool - Whether we are solving with ideal mhd, if so matricies are Hermitian.
+- solver::FullSpectrumSolverT - solver struct, informs if problem is ideal or not, meaning the matrices are Hermitian or not.
 """
 function solve(Wmat::SparseMatrixCSC, Imat::SparseMatrixCSC, solver::FullSpectrumSolverT)
 

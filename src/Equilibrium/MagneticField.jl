@@ -98,6 +98,50 @@ end
 
 
 """
+    magnitude_B!(B::BFieldT, met::MetT)
+
+Function that computes the magnitude of B and its derivative once the other fields of BFieldT have been computed.
+"""
+function magnitude_B!(B::BFieldT, met::MetT)
+
+    #B2 = 0.0
+    #dB2 = zeros(Float64, 3)
+    #changing this, hopefully not a problemo!
+    B.mag_B .= 0.0
+    B.dmag_B .= 0.0
+    
+    for i in 1:3, j in 1:3
+
+        #note that this is actual |B|^2
+        #B2 += B.B[i] * B.B[j] * met.gl[i, j]
+        B.mag_B[1] += B.B[i] * B.B[j] * met.gl[i, j]
+
+        for k in 1:3
+            #should this be views? May need to look into that!
+            #dB2[k] += (B.B[i] * B.B[j] * met.dgl[i, j, k] +
+            #            B.B[i] * met.gl[i, j] * B.dB[j, k] +
+            #            B.B[j] * met.gl[i, j] * B.dB[i, k])
+            #needs to be modified to actually be the correct expression
+            #We are just reusing memory
+            B.dmag_B[k] += (B.B[i] * B.B[j] * met.dgl[i, j, k] +
+                        B.B[i] * met.gl[i, j] * B.dB[j, k] +
+                        B.B[j] * met.gl[i, j] * B.dB[i, k])
+        end
+    end
+
+    B.mag_B[1] = sqrt(B.mag_B[1])
+    B.dmag_B[:] = @. 1/(2*B.mag_B[1]) * B.dmag_B
+    #B.mag_B = sqrt(B2)
+    #B.dmag_B[:] = @. 1/(2*sqrt(B2)) * dB2
+
+    for i in 1:3, j in 1:3
+        B.db[j, i] = B.dB[j, i]/B.mag_B[1] - B.B[j]*B.dmag_B[i]/B.mag_B[1]^2
+    end
+end
+
+
+
+"""
 
 Function to determine the island amplitude. Needs work
 """
@@ -257,188 +301,3 @@ function flux_compute_B!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, 
 end
 
 
-
-"""
-    compute_B!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, r::Float64, θ::Float64, ζ::Float64)
-
-Function the fills the BFieldT struct based on an q-profile and and island for a given coordinate.
-B is assumed to be in the form (B^r, B^θ, B^ζ) with 
- - B^r = A m_0 r^2 (1-r) sin(m_0 θ - n_0 ζ) / J
- - B^θ = r/(J q) + A (1-2r) cos(m_0 θ - n_0 ζ) / J
- - B^ζ = r / J
-
-This version does not take a quadratic form, this means the behaviour near r=0 will be cooked, requires a restricted grid.
-"""
-function constant_amp_compute_B!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, r::Float64, θ::Float64, ζ::Float64)
-
-    q, dq = q_prof(r)
-
-    arg = isl.m0 * θ + isl.n0 * ζ
-
-    #assumes B0=1
-    B.B[1] = 1 / (met.J[1]) * isl.A * isl.m0 * sin(arg)
-                
-    B.B[2] = r / (met.J[1] * q) 
-    B.B[3] = r / (met.J[1])
-
-    B.dB[1, 1] = ( - isl.A * isl.m0 * sin(arg) * met.dJ[1] / met.J[1]^2)
-
-    B.dB[1, 2] = (1 / (met.J[1]) * isl.A * isl.m0^2 * cos(arg)
-                    - isl.A * isl.m0 * sin(arg) * met.dJ[2] / met.J[1]^2)
-
-    B.dB[1, 3] = isl.n0 / (met.J[1]) * isl.A * isl.m0 * cos(arg)
-
-
-
-    B.dB[2, 1] = (1 / (met.J[1] * q) 
-                    - (r / q) * met.dJ[1] / met.J[1]^2
-                    - r * dq /(met.J[1] * q^2) )
-                    
-    B.dB[2, 2] = - (r / q ) * met.dJ[2] / met.J[1]^2
-    
-
-
-    B.dB[3, 1] = (met.J[1] - r * met.dJ[1]) / met.J[1]^2
-    B.dB[3, 2] = -r*met.dJ[2]/met.J[1]^2
-    
-
-    #note this also does B.db
-    magnitude_B!(B, met)
-    
-    #unsure if there should be extra approximation here as Br is a pert and therefore small?
-    B.b[1] = B.B[1]/B.mag_B
-    B.b[2] = B.B[2]/B.mag_B
-    B.b[3] = B.B[3]/B.mag_B
-end
-
-
-
-
-"""
-    compute_B!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, r::Float64, θ::Float64, ζ::Float64)
-
-Function the fills the BFieldT struct based on an q-profile and and island for a given coordinate.
-B is assumed to be in the form (B^r, B^θ, B^ζ) with 
- - B^r = A m_0 r^2 (1-r) sin(m_0 θ - n_0 ζ) / J
- - B^θ = r/(J q) + A (1-2r) cos(m_0 θ - n_0 ζ) / J
- - B^ζ = r / J
-"""
-function compute_B_quadratic!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, r::Float64, θ::Float64, ζ::Float64)
-
-    q, dq = q_prof(r)
-
-    arg = isl.m0 * θ + isl.n0 * ζ
-
-    #assumes B0=1
-    B.B[1] = 1 / (met.J[1]) * isl.A * isl.m0 * r^2 * (1-r) * sin(arg)
-                
-    B.B[2] = r / (met.J[1] * q) + isl.A / met.J[1] * (1-2*r) * cos(arg)
-    B.B[3] = r / (met.J[1])
-
-    B.dB[1, 1] = (1 / (met.J[1]) * isl.A * isl.m0 * (2*r-3*r^2) * sin(arg) 
-                    - isl.A * isl.m0 * r^2 * (1-r) * sin(arg) * met.dJ[1] / met.J[1]^2)
-
-    B.dB[1, 2] = (1 / (met.J[1]) * isl.A * isl.m0^2 * r^2 * (1-r) * cos(arg)
-                    - isl.A * isl.m0 * r^2 * (1-r) * sin(arg) * met.dJ[2] / met.J[1]^2)
-
-    B.dB[1, 3] = isl.n0 / (met.J[1]) * isl.A * isl.m0 * r^2 * (1-r) * cos(arg)
-
-
-
-    B.dB[2, 1] = (1 / (met.J[1] * q) - 2 * isl.A / met.J[1] * cos(arg)
-                    - (r / q - isl.A * (1-2*r) * cos(arg)) * met.dJ[1] / met.J[1]^2
-                    - r * dq /(met.J[1] * q^2) )
-                    
-    B.dB[2, 2] = (- isl.m0 * isl.A / met.J[1] * (1-2*r) * sin(arg)
-                    - (r / q + isl.A * (1-2*r) * cos(arg)) * met.dJ[2] / met.J[1]^2)
-    
-    #doing this correctly has changed a few things...
-    B.dB[2, 3] = isl.n0 * isl.A / met.J[1] * (1-2*r) * sin(arg)
-
-
-
-    B.dB[3, 1] = (met.J[1] - r * met.dJ[1]) / met.J[1]^2
-    B.dB[3, 2] = -r*met.dJ[2]/met.J[1]^2
-    
-
-    #note this also does B.db
-    magnitude_B!(B, met)
-    
-    #unsure if there should be extra approximation here as Br is a pert and therefore small?
-    B.b[1] = B.B[1]/B.mag_B
-    B.b[2] = B.B[2]/B.mag_B
-    B.b[3] = B.B[3]/B.mag_B
-end
-
-
-
-"""
-    magnitude_B!(B::BFieldT, met::MetT)
-
-Function that computes the magnitude of B and its derivative once the other fields of BFieldT have been computed.
-"""
-function magnitude_B!(B::BFieldT, met::MetT)
-
-    #B2 = 0.0
-    #dB2 = zeros(Float64, 3)
-    #changing this, hopefully not a problemo!
-    B.mag_B .= 0.0
-    B.dmag_B .= 0.0
-    
-    for i in 1:3, j in 1:3
-
-        #note that this is actual |B|^2
-        #B2 += B.B[i] * B.B[j] * met.gl[i, j]
-        B.mag_B[1] += B.B[i] * B.B[j] * met.gl[i, j]
-
-        for k in 1:3
-            #should this be views? May need to look into that!
-            #dB2[k] += (B.B[i] * B.B[j] * met.dgl[i, j, k] +
-            #            B.B[i] * met.gl[i, j] * B.dB[j, k] +
-            #            B.B[j] * met.gl[i, j] * B.dB[i, k])
-            #needs to be modified to actually be the correct expression
-            #We are just reusing memory
-            B.dmag_B[k] += (B.B[i] * B.B[j] * met.dgl[i, j, k] +
-                        B.B[i] * met.gl[i, j] * B.dB[j, k] +
-                        B.B[j] * met.gl[i, j] * B.dB[i, k])
-        end
-    end
-
-    B.mag_B[1] = sqrt(B.mag_B[1])
-    B.dmag_B[:] = @. 1/(2*B.mag_B[1]) * B.dmag_B
-    #B.mag_B = sqrt(B2)
-    #B.dmag_B[:] = @. 1/(2*sqrt(B2)) * dB2
-
-    for i in 1:3, j in 1:3
-        B.db[j, i] = B.dB[j, i]/B.mag_B[1] - B.B[j]*B.dmag_B[i]/B.mag_B[1]^2
-    end
-end
-
-
-"""
-    compute_island_B!(B::BFieldT, met::MetT, isl::ContIslandT, ψ::Float64, α::Float64)
-
-Function the fills the BFieldT struct specifically for the case of the island continuum.
-This employs special island flux coordinates, uses a specific q-profile
-and only requires the magnitude of B.
-"""
-function compute_island_B!(B::BFieldT, met::MetT, isl, ψ::Float64, α::Float64)
-
-    #specifc q-profile required for the coordinate transformation.
-    q = 1 / (1 / isl.q0 - isl.qp /isl.q0^2 * (ψ - isl.ψ0))
-
-    #may want a factor or 1/4 in here to make this match our other cases.
-    B.B[1] = isl.A * isl.m0 *sin(isl.m0 * α)
-    B.B[2] = 1 / (met.J[1] * q)
-    B.B[3] = 1 / met.J[1] 
-
-
-    B2 = 0
-
-    for i in 1:3, j in 1:3
-
-        B2 += B.B[i] * met.gl[i, j] * B.B[j]
-    end
-    B.mag_B = sqrt(B2)
-
-end

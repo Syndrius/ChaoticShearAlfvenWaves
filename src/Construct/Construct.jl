@@ -1,4 +1,7 @@
+"""
 
+Module for Constructing the two main matrices in the equation Wϕ = ω²Iϕ. Construction is split up based on which grids are used. Additionally, construction with qfm surfaces is slightly modified.
+"""
 module Construct
 
 using FFTW

@@ -1,5 +1,3 @@
-
-
 """
     reconstruct_phi(efuncs::Array{ComplexF64, 2}, nevals::Int64, grids::FSSGridsT)
 
@@ -59,7 +57,6 @@ function reconstruct_phi!(efunc::Array{ComplexF64}, grids::FFFGridsT, ϕ::Array{
 
     _, θgrid, ζgrid = inst_grids(grids)
 
-    #should skip over derivative inds.
     for i in 1:8:matrix_size(grids)
 
         #note these are the indicies.

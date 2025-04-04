@@ -161,14 +161,17 @@ function construct(prob::ProblemT, grids::FSSGridsT)
     Wmat = sparse(rows, cols, Wdata)
     Imat = sparse(rows, cols, Idata)
     
-    #display(Matrix(Imat))
-
     return Wmat, Imat
 end
 
 
 
 
+"""
+    construct(prob::ProblemT, grids::FSSGridsT, surfs::Array{QFMSurfaceT})
+
+Constructs the W and I matrices with qfm surfaces using the spectral method in ϑ, φ.
+"""
 function construct(prob::ProblemT, grids::FSSGridsT, surfs::Array{QFMSurfaceT})
 
     #instantiate the grids into arrays.
@@ -246,8 +249,6 @@ function construct(prob::ProblemT, grids::FSSGridsT, surfs::Array{QFMSurfaceT})
         #computes the contribution to the W and I matrices.
         W_and_I!(W, I, tor_met, tor_B, qfm_met, qfm_B, prob, s, ϑgrid, φgrid, tm, surf_itp, CT)
 
-        #display(W)
-        
         #fft the two matrices.
         p * W
         p * I
@@ -335,8 +336,6 @@ function construct(prob::ProblemT, grids::FSSGridsT, surfs::Array{QFMSurfaceT})
     #construct the sparse matrix.
     Wmat = sparse(rows, cols, Wdata)
     Imat = sparse(rows, cols, Idata)
-
-    #display(Matrix(Imat))
 
     return Wmat, Imat
 end

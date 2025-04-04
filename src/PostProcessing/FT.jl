@@ -1,5 +1,3 @@
-
-
 """
     create_ft_plan(ϕ::Array{ComplexF64}, grids::FSSGridsT)
 
@@ -8,6 +6,7 @@ Creates a fourier transform plan to speed up repeated ft. For FSS this is not ac
 function create_ft_plan(ϕ::Array{ComplexF64}, grids::FSSGridsT)
     return plan_fft(ϕ) #not actually used, needed for type information.
 end
+
 
 """
     create_ft_plan(ϕ::Array{ComplexF64}, grids::FFSGridsT)

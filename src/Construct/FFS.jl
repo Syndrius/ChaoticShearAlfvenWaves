@@ -169,6 +169,11 @@ end
 
 
 
+"""
+    construct(prob::ProblemT, grids::FFSGridsT, surfs::Array{QFMSurfaceT})
+
+Constructs the matrices using qfm surfaces. 
+"""
 function construct(prob::ProblemT, grids::FFSGridsT, surfs::Array{QFMSurfaceT})
     
     #instantiate the grids into arrays.
@@ -178,7 +183,6 @@ function construct(prob::ProblemT, grids::FFSGridsT, surfs::Array{QFMSurfaceT})
     Nζ = length(ζgrid)
     #and the mode list.
     nlist = mode_list(grids.ζ)
-
 
     #initialise the two structs to store the metric and the magnetic field.
     tor_met = MetT()

@@ -1,6 +1,3 @@
-
-
-
 """
 Struct storing the data required for the Radial grid using the Finite Element Method.
 Specifally, this grid will use Direchlet boundary conditions, and is assumed to have the domain (0, 1).
@@ -46,15 +43,6 @@ This grid has the additional option of a phase factor (pf), to focus on a specif
     stop :: Real = 2π
     gp :: Int64 = 4
     pf :: Int64 = 0
-end
-
-
-#this should be in SM grid
-#or redefined tbh.
-@kwdef struct ContGridDataT <: GridDataT
-    N :: Int64
-    start :: Real = 0 #maybe this will be useful??
-    stop :: Real = 1 #maybe this will be useful??
 end
 
 
@@ -130,7 +118,6 @@ function clustered_grid(grid::RFEMGridDataT)
 
     nleft = nrest-nright
 
-    #FKN CHANGE THIS JESUS. #TODO
     rleft = LinRange(grid.start, sep1, nleft+1)[1:end-1]
 
     rright = LinRange(sep2, grid.stop, nright+1)[2:end]
@@ -198,11 +185,3 @@ function mode_list(gd::AFEMGridDataT)
 end
 
 
-#may not want this. Instead we might want a custom continuum grid, at least for island case
-#we will want clustering near the sepratrix.
-#I guess we can add clustering as an option, and allow more sophisticated clustering
-#eg the exponential clustering used.
-function inst_grid(grid::ContGridDataT)
-    #to rpevent r=0 in the continuum case
-    return LinRange(grid.start, grid.stop, grid.N+1)[2:end]
-end

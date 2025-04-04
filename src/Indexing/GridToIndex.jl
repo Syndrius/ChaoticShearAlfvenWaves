@@ -1,4 +1,3 @@
-
 """
     grid_to_index(rind::Int64, θind::Int64, ζind::Int64, hbind::Int64, grids::FSSGridsT)
 
@@ -26,10 +25,8 @@ function grid_to_index(rind::Int64, θind::Int64, ζind::Int64, hr::Int64, grids
 
     segment = (ζind - 1) + Nn * (θind - 1) + Nm * Nn * (rind - 1 + grid_id[hr])
 
-    #the index from 1 is going to change things a bit.
-    #can be made clearer but does seem to be working ish.
+    
     return 1 + basis_id[hr] + 2 * segment
-    #return 1+2*Nm*Nn*(rind-1) + basis_id[hbind] + 2*Nn*(θind-1) + 2*(ζind-1) + 2*Nm*Nn*grid_id[hbind]
 
 end
 

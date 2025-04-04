@@ -5,7 +5,7 @@ Module for indexing our matrices. Deals with the mapping between 3d space and th
 module Indexing
 
 
-using MID.Structures
+using ..Structures
 
 
 """
@@ -23,14 +23,10 @@ export compute_boundary_inds
 
 
 include("GridToIndex.jl")
+include("ContIndexing.jl")
 
 export grid_to_index
 export index_to_grid
-
-
-#needs serious work, should conform to everything else.
-include("ContIndexing.jl")
-#export cont_grid_to_index
 
 
 end

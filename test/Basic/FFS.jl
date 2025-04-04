@@ -14,11 +14,11 @@ rgrid = init_grid(type=:rf, N=Nr)
 #grids = init_grids(N=N, mstart=1, mcount=2, nstart=-1, ncount=1);
 grids = init_grids(rgrid, θgrid, ζgrid)
 
+solver = init_solver(full_spectrum=true, prob=prob)
 
+evals, _, _ = compute_spectrum(prob=prob, grids=grids, solver=solver);
 
-evals, _, _ = compute_spectrum(prob=prob, grids=grids, full_spectrum=true);
-
-
+#continuum_plot(evals);
 
 #unsure why it is flipped... hopefully a resolution problemo
 #this is an extremly different tae frequency... real good lol

@@ -1,5 +1,3 @@
-
-
 """
 Struct storing the geometrical parameters.
 
@@ -38,7 +36,7 @@ One of the main inputs for matrix construction functions.
 - q::Function - The q-profile, function of r that return (q, dq)
 - met::Function=toroidal_metric! - Computes the metric at each coordinates, defaults to toroidal.
 - dens::Function=uniform_dens - Computes the density as a function of r, defaults to uniform density.
-- isl::IslandT=no_isl Struct - storing the island parameters, defaults to no island.
+- isl::IslandT=no_isl - Struct storing the island parameters, defaults to no island.
 - geo::GeoParamsT - Struct storing the geometrical parameters.
 - flr::FLRT - Struct storing finite larmor effects.
 """
@@ -53,7 +51,15 @@ One of the main inputs for matrix construction functions.
 end
 
 
-#problem with (κ, ᾱ, φ)
+"""
+Struct for problems using island coordinates, defined for multiple dispatch. Less information is needed here as the metric and q-profile are predetermined.
+
+### Fields
+- dens::Function=uniform_dens - Computes the density as a function of r, defaults to uniform density.
+- geo::GeoParamsT - Struct storing the geometrical parameters.
+- flr::FLRT - Struct storing finite larmor effects.
+- isl::IslandT - Struct storing the island parameters, defaults to no island.
+"""
 @kwdef struct IslProblemT <: ProblemT
     dens :: Function = uniform_dens
     geo :: GeoParamsT
@@ -74,11 +80,11 @@ Constructor for struct which stores the key information that defines the problem
 Main input for matrix construction functions.
 
 # Args
-- q::Function The q-profile, function of r that return (q, dq)
-- met::Function=toroidal_metric! Computes the metric at each coordinates, defaults to toroidal.
-- dens::Function=uniform_dens Computes the density as a function of r, defaults to uniform density.
-- isl::IslandT=no_isl Struct storing the island parameters, defaults to no island.
-- geo::GeoParamsT Struct storing geometrical parameters.
+- q::Function - The q-profile, function of r that return (q, dq)
+- met::Function=toroidal_metric! - Computes the metric at each coordinates, defaults to toroidal.
+- dens::Function=uniform_dens - Computes the density as a function of r, defaults to uniform density.
+- isl::IslandT=no_isl - Struct storing the island parameters, defaults to no island.
+- geo::GeoParamsT - Struct storing geometrical parameters.
 - flr::FLRT=no_flr - Struct storing finite larmor effects, defaults to no corrections.. 
 """
 function init_problem(; q::Function, met::Symbol=:torus, dens::Function=uniform_dens, isl::IslandT=no_isl, isl2::IslandT=no_isl,geo::GeoParamsT, flr::FLRT=no_flr)
@@ -114,10 +120,14 @@ function init_problem(; q::Function, met::Symbol=:torus, dens::Function=uniform_
         return TorProblemT(q=q, met=met_func, dens=dens, isl=isl, isl2=isl2, flr=flr, geo=geo)
     end 
 
-    
 end
 
 
+"""
+    init_isl_problem(; dens::Function=uniform_dens, geo::GeoParamsT, flr::FLRT=no_flr, isl::IslandT)
+
+Function to initialise an island problem.
+"""
 function init_isl_problem(; dens::Function=uniform_dens, geo::GeoParamsT, flr::FLRT=no_flr, isl::IslandT)
 
     isl = inst_island(isl)
@@ -128,6 +138,11 @@ function init_isl_problem(; dens::Function=uniform_dens, geo::GeoParamsT, flr::F
 end
 
 
+"""
+    init_geo(; R0::Float64)
+
+Function to initialise the GeoParamsT struct. Currently very barebones.
+"""
 function init_geo(; R0::Float64)
 
     return GeoParamsT(R0=R0)

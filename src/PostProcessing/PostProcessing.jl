@@ -1,12 +1,15 @@
+"""
 
+This modules handles the processing of the eigenvalues and eigenfunctions returned by the solver into convenient forms. In particular, the eigenvalues are normalised to the eigenfrequency at the axis, and the eigenfunctions are converted from 1d arrays into 3d arrays reflecting the grid. Additionally, the eigenfunctions are also Fourier transformed in θ and ζ so the mode structure can be viewed.
+"""
 module PostProcessing
 
 using FFTW
 using EllipsisNotation
 
-using MID.Structures
-using MID.Indexing
-using MID.Basis
+using ..Structures
+using ..Indexing
+using ..Basis
 
 
 export post_process

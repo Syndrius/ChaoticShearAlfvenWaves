@@ -1,6 +1,3 @@
-
-
-
 """
 Struct for storing data on the modes considered with the Fourier spectral method.
 
@@ -18,8 +15,6 @@ Struct for storing data on the modes considered with the Fourier spectral method
     incr :: Int64 = 1
     f_quad :: Int64 = 3
 end
-
-
 
 
 """

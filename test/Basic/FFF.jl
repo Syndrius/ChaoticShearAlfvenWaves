@@ -10,16 +10,16 @@ geo = init_geo(R0=4.0)
 
 prob = init_problem(q=fu_dam_q, geo=geo); 
 
+solver = init_solver(full_spectrum=true, prob=prob);
 
 #with @views. 22.907080 seconds (8.07 M allocations: 721.379 MiB, 1.36% gc time)
 #fk load more allocations and gc without views.
 #outrageous spead up shifting the ϕ[:, test, :, ...] to ϕ[:, testr, testθ, :, :]
 
-evals, _, _ = compute_spectrum(prob=prob, grids=grids, full_spectrum=true);
+evals, _, _ = compute_spectrum(prob=prob, grids=grids, solver=solver);
 
 
-#ϕms = mode_structure(ϕ, grids);
-#reconstruct_continuum(ω, ϕms, grids)
+#continuum_plot(evals)
 
 
 #almost impossible to tell from the continuum reconstruction,

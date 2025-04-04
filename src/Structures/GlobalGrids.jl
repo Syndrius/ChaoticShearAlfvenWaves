@@ -1,6 +1,3 @@
-
-
-
 """
 Struct storing the grids in the FSS case.
 
@@ -30,6 +27,7 @@ Struct storing the grids in the FFS case.
     ζ :: SMGridDataT
 end
 
+
 """
 Struct storing the grids in the FFS case.
 
@@ -58,7 +56,6 @@ Struct storing the grids in the FFS case.
     θ :: SMGridDataT
     ζ :: SMGridDataT
 end
-
 
 
 """
@@ -158,6 +155,12 @@ function inst_grids(grids::GridsT)
 
 end
 
+
+"""
+    inst_grids(grids::ContGridsT)
+
+Creates the grids used in the computation from the GridDataT structures.
+"""
 function inst_grids(grids::ContGridsT)
 
     return inst_grid(grids.r), inst_grid(grids.θ), inst_grid(grids.ζ)

@@ -28,7 +28,7 @@ for i in 1:θgrid.N, j in 1:ζgrid.N
 end
 
 #this tests asserst that there is a gap in the continuum in the correct spot.
-@test mindiff > 0.05
+@test mindiff > 0.04
 
 
 

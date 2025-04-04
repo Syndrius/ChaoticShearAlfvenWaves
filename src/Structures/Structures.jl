@@ -3,6 +3,7 @@
 Contains the structures and constructors used, includes
  - The ProblemT type.
  - The GridsT type.
+ - The SolverT type.
  - The EvalsT type.
 
 """
@@ -32,19 +33,15 @@ abstract type ProblemT end
 
 
 """
-Abstract type for the Solving.
+Abstract type for Solving.
 """
 abstract type SolverT end
 
 
 include("FEMGrid.jl")
 include("SMGrid.jl")
+include("ContGrid.jl")
 
-#export rfem_grid
-#export ContGridDataT
-#export afem_grid
-#export SMGridDataT
-#export asm_grid
 export periodic_grid
 export mode_list
 export ifft_size
@@ -94,10 +91,5 @@ include("Output.jl")
 
 export EvalsT
 export find_ind
-
-
-include("Mapping.jl")
-
-export MapGridsT
 
 end
