@@ -12,14 +12,16 @@ module MIDTests
 using Test
 using MID
 
+display("Running Basic Tests")
 @time @testset "Basic" begin include("Basic/Basic.jl") end
 
-#@time @testset "FSS" begin include("FSSTests/FSSTest.jl") end
+display("Running QFM Tests")
+@time @testset "QFM" begin include("QFM/QFM.jl") end
 
-#@time @testset "FFS" begin include("FFSTests/FFSTest.jl") end
+#TODO
+#Island coordinates
 
-#this takes 2 and half minutes for fk sake, may need to reduce the size significantly.
-#@time @testset "FFF" begin include("FFFTests/FFFTest.jl") end
+#Damping
 
 
 end

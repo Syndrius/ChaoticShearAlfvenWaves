@@ -71,7 +71,7 @@ function construct(prob::ProblemT, grids::FFSGridsT)
 
 
         #computes the contribution to the W and I matrices.
-        W_and_I!(W, I, met, B, prob, r, θ, ζgrid, tm)
+        W_and_I!(W, I, B, met, prob, r, θ, ζgrid, tm)
         
         #fft the two matrices.
         p * W
@@ -191,7 +191,7 @@ function construct(prob::ProblemT, grids::FFSGridsT, surfs::Array{QFMSurfaceT})
     qfm_B = BFieldT()
 
     #creates the interpolations for the surfaces.
-    surf_itp = create_surf_itp(surfs)
+    surf_itp, sd = create_surf_itp(surfs)
 
     #compute the gaussian qudrature points for finite elements.
     ξr, wgr = gausslegendre(grids.r.gp) 
@@ -245,8 +245,8 @@ function construct(prob::ProblemT, grids::FFSGridsT, surfs::Array{QFMSurfaceT})
 
 
         #computes the contribution to the W and I matrices.
-        #W_and_I!(W, I, met, B, prob, r, θ, ζgrid, tm)
-        W_and_I!(W, I, tor_met, tor_B, qfm_met, qfm_B, prob, r, θ, ζgrid, tm, surf_itp, CT)
+        #W_and_I!(W, I, B, met, prob, r, θ, ζgrid, tm)
+        W_and_I!(W, I, tor_B, tor_met, qfm_B, qfm_met, prob, r, θ, ζgrid, tm, surf_itp, CT, sd)
         
         #fft the two matrices.
         p * W

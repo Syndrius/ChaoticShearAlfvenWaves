@@ -1,9 +1,5 @@
 """
-For this one we actually add overlapping islands
-Looks like garbage atm, but that is probably just because we dont have enough resolution.
-In particular, we don't even have the fourier harmonics of the islands.
-Think fff will be better for this.
-Shows some indication of working, but needs more surfaces and resolution.
+Same as the benchmark case, we consider a non-resonant island, but now we work in toroidal coordinates.
 """
 
 #%%
@@ -14,26 +10,26 @@ using JLD2
 #using Plots; gr()
 #using Plots; plotlyjs()
 
-save_dir = "data/qfm/"
+#save_dir = "data/qfm/"
 
 #%%
 #define the problem to solve
 
 #should be arbitrary!
-R0=10.0
+R0=4.0
 
 #amp needs further thought!
 #define the non-resonant island
-k = 0.00035
-isl = init_island(m0=5, n0=-2, A=k/5)
-isl2 = init_island(m0=7, n0=-3, A=k/7)
+k = 0.005
+isl = init_island(m0=3, n0=2, A=k)
+#isl2 = init_island(m0=7, n0=-3, A=k/7)
 
 geo = init_geo(R0=R0)
 
 #to solve non-Hermitian
 #flr = MID.Structures.FLRT(δ = 1e-18)
-prob = init_problem(q=qfm_benchmark_q, met=:cylinder, geo=geo, isl=isl, isl2=isl2)#, flr=flr)
-un_prob = init_problem(q=qfm_benchmark_q, met=:cylinder, geo=geo)
+prob = init_problem(q=qfm_benchmark_q, geo=geo, isl=isl)#, isl2=isl2)#, flr=flr)
+un_prob = init_problem(q=qfm_benchmark_q, geo=geo)
 
 
 #%%
@@ -57,12 +53,6 @@ N = 8
 bound1 = MID.QFM.straighten_boundary(1.0, MM, M, N, prob)
 bound2 = MID.QFM.straighten_boundary(0.000001, MM, M, N, prob)
 bound3 = MID.QFM.straighten_boundary(0.6, MM, M, N, prob)
-
-
-
-
-
-
 
 #%%
 #Now we construct the qfm surfaces, starting with the 2 boundaries
@@ -111,11 +101,11 @@ push!(surfs, bound2);
 
 #%%
 
-save_object("/Users/matt/phd/MID/data/qfm/chaos_surfs.jld2", surfs)
+save_object("/Users/matt/phd/MID/data/qfm/tor_bench_surfs.jld2", surfs)
 
 #%%
 
-surfs = load_object("/Users/matt/phd/MID/data/qfm/chaos_surfs.jld2");
+surfs = load_object("/Users/matt/phd/MID/data/qfm/tor_bench_surfs.jld2");
 #surfs = load_object("surfs5.jld2");
 
 #%%
@@ -183,8 +173,9 @@ continuum_plot(cont_norm_ω, cont_grids)#, filename="data/qfm/unpert_cont.png")
 #%%
 
 #now we consider the full spectrum
-
-rgrid = MID.Structures.rfem_grid(N=50, start=0.4)#, stop=0.7)
+#extrapolation is kind of working, but not really!
+#starting at 0.1 doesn't work??
+rgrid = MID.Structures.rfem_grid(N=50, start=0.15, stop=0.8)
 θgrid = MID.Structures.asm_grid(start=-2, N=8)#, f_quad=1)
 ζgrid = MID.Structures.asm_grid(start=-3, N=6)#, f_quad=1)#, incr=2)
 
@@ -193,7 +184,7 @@ grids = init_grids(rgrid, θgrid, ζgrid)
 #%%
 
 #solver = init_solver(nev=100, target = 0.3, prob=prob)
-solver = init_solver(nev=100, targets = [0.0, 0.1, 0.2, 0.3], prob=prob)
+solver = init_solver(nev=250, targets = [0.0, 0.15, 0.3, 0.5], prob=prob)
 
 #%%
 

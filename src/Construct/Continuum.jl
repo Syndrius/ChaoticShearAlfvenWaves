@@ -58,7 +58,7 @@ function continuum(prob::ProblemT, grids::ContGridsT)
     for (i, r) in enumerate(rgrid) 
 
         #computes the full weakform
-        W_and_I!(W, I, met, B, prob, [r], θgrid, ζgrid, tm)
+        W_and_I!(W, I, B, met, prob, [r], θgrid, ζgrid, tm)
 
         #For the continuum we extract the relevant second derivative parts
         Icont = pI * I[[1], [1], :, :, :]
@@ -132,7 +132,7 @@ function continuum(prob::ProblemT, grids::ContGridsT, surfs::Array{QFMSurfaceT})
     nlist = mode_list(grids.ζ)
 
     #creates the interpolation from the surfaces
-    surf_itp = create_surf_itp(surfs);
+    surf_itp, sd = create_surf_itp(surfs);
 
     #define structures to store the old and new metric and magnetic field
     tor_met = MetT()
@@ -169,7 +169,7 @@ function continuum(prob::ProblemT, grids::ContGridsT, surfs::Array{QFMSurfaceT})
 
 
         #computes the weakform and coordinate transform
-        W_and_I!(W, I, tor_met, tor_B, qfm_met, qfm_B, prob, [r], θgrid, ζgrid, tm, surf_itp, CT)
+        W_and_I!(W, I, tor_B, tor_met, qfm_B, qfm_met, prob, [r], θgrid, ζgrid, tm, surf_itp, CT, sd)
 
 
         Icont = pI * I[[1], [1], :, :, :]

@@ -1,13 +1,13 @@
 
 """
-    function compute_I!(I::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT, B::BFieldT, n::Float64, flr::FLRT, D::Array{Float64, 2}, F::Array{Float64})
+    function compute_I!(I::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, B::BFieldT, met::MetT, n::Float64, flr::FLRT, D::Array{Float64, 2}, F::Array{Float64})
 
 Computes the I matrix for the weak form at a single coordinate. 
 """
-function compute_I!(I::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, met::MetT, B::BFieldT, n::Float64, flr::FLRT, D::Array{Float64, 2}, F::Array{Float64})
+function compute_I!(I::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, B::BFieldT, met::MetT, n::Float64, flr::FLRT, D::Array{Float64, 2}, F::Array{Float64})
 
 
-    compute_F!(met, B, F)
+    compute_F!(B, met, F)
 
     @inbounds for j=1:9, i=1:9
         #computes the non-ideal effects
@@ -27,11 +27,11 @@ end
 
 
 """
-    compute_F!(met::MetT, B::BFieldT, F::Array{Float64})
+    compute_F!(B::BFieldT, met::MetT, F::Array{Float64})
 
 Computes the F array, used for the non-ideal part of I.
 """
-function compute_F!(met::MetT, B::BFieldT, F::Array{Float64})
+function compute_F!(B::BFieldT, met::MetT, F::Array{Float64})
 
     #TODO
     #need description of this, when we return to damping.

@@ -105,6 +105,36 @@ function compute_spectrum_qfm(; prob::ProblemT, grids::GridsT, solver::SolverT, 
 end
 
 
+"""
+    compute_continuum(prob::ProblemT, grids::ContGridsT, perN=true::Bool)
+
+Computes the shear Aflven continuum for the non-island case. Has the default option to compute the continuum for each n (toroidal mode number) individually.
+"""
+function compute_continuum(prob::ProblemT, grids::ContGridsT, surfs::Array{QFMSurfaceT}, perN=true::Bool)
+
+    #we can do this because usual cases (i.e. no island) have no toroidal coupling
+    #so we can compute the continuum for each n individually
+    if perN
+        #_, _, _, _, _, nlist, _ = instantiate_grids(grids)
+        nlist = mode_list(grids.ζ)
+
+        ωlist = zeros(grids.r.N, grids.θ.N, grids.ζ.N)
+
+        for (i, n) in enumerate(nlist)
+            temp_ζgrid = init_grid(type=:as, start=n, N=1)
+            temp_grids = init_grids(grids.r, grids.θ, temp_ζgrid)
+
+            ωlist[:, :, i] = continuum(prob, temp_grids, surfs)
+        end
+    else
+        #are we ever actually going to want this??
+        ωlist = continuum(prob, grids, surfs)
+        #need to reformat the output.
+    end
+
+    return ωlist
+
+end
 
 """
     compute_continuum(prob::ProblemT, grids::ContGridsT, perN=true::Bool)

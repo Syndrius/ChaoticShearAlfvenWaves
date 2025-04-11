@@ -62,7 +62,7 @@ function construct(prob::ProblemT, grids::FFFGridsT)
         jac = dr * dθ * dζ / 8 
 
         #computes the contribution to the W and I matrices.
-        W_and_I!(W, I, met, B, prob, r, θ, ζ, tm)
+        W_and_I!(W, I, B, met, prob, r, θ, ζ, tm)
         
         #adjust the basis functions to the current coordinates/mode numbers considered.
         create_local_basis!(Φ, S, grids.θ.pf, grids.ζ.pf, dr, dθ, dζ)
@@ -168,7 +168,7 @@ function construct(prob::ProblemT, grids::FFFGridsT, surfs::Array{QFMSurfaceT})
     qfm_B = BFieldT()
 
     #creates the interpolations for the surfaces.
-    surf_itp = create_surf_itp(surfs)
+    surf_itp, sd = create_surf_itp(surfs)
 
     #compute the gaussian qudrature points for finite elements.
     ξr, wgr = gausslegendre(grids.r.gp) #same as python!
@@ -218,7 +218,7 @@ function construct(prob::ProblemT, grids::FFFGridsT, surfs::Array{QFMSurfaceT})
         jac = dr * dθ * dζ / 8 
 
         #computes the contribution to the W and I matrices.
-        W_and_I!(W, I, tor_met, tor_B, qfm_met, qfm_B, prob, r, θ, ζ, tm, surf_itp, CT)
+        W_and_I!(W, I, tor_B, tor_met, qfm_B, qfm_met, prob, r, θ, ζ, tm, surf_itp, CT, sd)
         
         #adjust the basis functions to the current coordinates/mode numbers considered.
         create_local_basis!(Φ, S, grids.θ.pf, grids.ζ.pf, dr, dθ, dζ)
