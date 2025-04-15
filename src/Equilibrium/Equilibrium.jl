@@ -23,6 +23,7 @@ export compute_B_isl!
 include("qProfiles.jl")
 
 export fu_dam_q
+export qfm_q
 export qfm_benchmark_q
 
 

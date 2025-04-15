@@ -1,4 +1,18 @@
 #TODO -> should change these names and probably provide the function in the doc.@
+
+#chosen to be 1+2*r^2, but shifted a bit so that the qfm surfaces at r=0 (1, 1) and r=1 (3, 1) do not go outside the domain.
+#this is causing heaps of issues, unsure why. Seems like most of the problemo is coming from 
+#outside the chaotic region, which is very weird.
+#perhaps the islands in this case are too far away, meaning chaos only occurs when we have very large islands, causing problems in the outer regions.
+#think perhaps our ideal q profile would be the (4, 3) and (3, 2) islands, starting at 1 ish
+#but we probably need the two island chains to be within 0.1 of each other.
+#this version is better, but we still have huge issues for r < 0.4
+function qfm_q(r::Float64)
+    a = 0.954545
+    b = 1.515151
+    return a + b * r^2, 2 * b * r
+end
+
 function chaos_q(r::Float64)
 
     return 1.0 + 2.0 * r^2, 4.0 * r

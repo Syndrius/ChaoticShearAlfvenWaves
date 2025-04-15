@@ -12,7 +12,7 @@ using MIDViz
 using JLD2
 
 #using Plots; gr()
-#using Plots; plotlyjs()
+using Plots; plotlyjs()
 
 save_dir = "data/qfm/"
 
@@ -20,26 +20,35 @@ save_dir = "data/qfm/"
 #define the problem to solve
 
 #should be arbitrary!
-R0=10.0
+R0=4.0
 
 #amp needs further thought!
 #define the non-resonant island
-k = 0.00035
-isl = init_island(m0=5, n0=-2, A=k/5)
-isl2 = init_island(m0=7, n0=-3, A=k/7)
+#with chaos_q, k=0.0025 is very chaotic while sitll having an inner island chain
+#0.0027 seems to be about when there is no structures left
+#think k=0.0022 may be the best bet, there are very clear structures but it is also very chaotic elsewhere.
+k = 0.0006
+isl = init_island(m0=3, n0=-2, A=k/3)
+isl2 = init_island(m0=4, n0=-3, A=k/4)
+k = 0.008
+isl = init_island(m0=3, n0=2, A=k/3)
+isl2 = init_island(m0=4, n0=-3, A=0.0)
 
 geo = init_geo(R0=R0)
 
 #to solve non-Hermitian
 #flr = MID.Structures.FLRT(δ = 1e-18)
-prob = init_problem(q=qfm_benchmark_q, met=:cylinder, geo=geo, isl=isl, isl2=isl2)#, flr=flr)
-un_prob = init_problem(q=qfm_benchmark_q, met=:cylinder, geo=geo)
+
+prob = init_problem(q=qfm_q, geo=geo, isl=isl, isl2=isl2)#, flr=flr)
+#prob = init_problem(q=qfm_benchmark_q, met=:cylinder, geo=geo, isl=isl, isl2=isl2)#, flr=flr)
+un_prob = init_problem(q=qfm_benchmark_q, geo=geo)
 
 
 #%%
 #Define parameters needed for the poincare plot
 Ntraj = 100;
-rlist = collect(LinRange(0.001, 1.0, Ntraj));
+rlist = collect(LinRange(0.4, 0.65, Ntraj));
+#rlist = collect(LinRange(0.1, 1.0, Ntraj));
 Nlaps = 500;
 
 #poincare_plot(qfm_benchmark_q, slab_to_plot, Nlaps, Ntraj, 0, 0.0, 0.0, 0.0, R0, isl, MID.Structures.no_isl, rlist)
@@ -57,11 +66,6 @@ N = 8
 bound1 = MID.QFM.straighten_boundary(1.0, MM, M, N, prob)
 bound2 = MID.QFM.straighten_boundary(0.000001, MM, M, N, prob)
 bound3 = MID.QFM.straighten_boundary(0.6, MM, M, N, prob)
-
-
-
-
-
 
 
 #%%
@@ -88,13 +92,43 @@ plot_surfs(bounding_surfs);
 #So this is getting stupid af, the args of this need to be in the correct order, otherwise this cooks itself.
 #perhaps kwargs are needed for this p/q stuff, or at least make this consistent.
 #or perhaps have a check in the construct surfaces function that asserst that q>p or whatever we actually want.
-qlist, plist = farey_tree(4, 2, 1, 3, 1)
+#qlist, plist = farey_tree(4, 11, 10, 3, 1)
+#qlist, plist = farey_tree(4, 5, 4, 3, 1)
+qlist, plist = farey_tree(4, 1, 1, 2, 1)
+
+#the fifth element is ~1.5, very close to the island, so does not converge.
+#deleteat!(qlist, 5)
+#deleteat!(plist, 5)
+#qlist = [11, 3, 14, 17, 37, 31, 48, 45, 25, 39, 53, 64, 36, 61, 47]
+#plist = [10, 1, 11, 12, 25, 23, 35, 34, 21, 32, 43, 53, 31, 52, 41]
+
+#qlist = [1, 4, 3, 3, 2, 5, 5, 5] 
+#plist = [1, 3, 1, 2, 1, 2, 3, 4] 
+
+#push!(qlist, 12)
+#push!(qlist, 5)
+#push!(plist, 11)
+#push!(plist, 4)
 
 
-guess_list = 0.5 .* ones(length(qlist));
-guess_list[1] = 0.2
-guess_list[2] = 0.8
-
+#naturally, this one will take ages to find.
+#this may be to big for this to be practical tbh. At least without improving the alg.
+#think the other new surface is worthwhile. Think we can at least generate the spectrum from 0.3 onwards.
+#this surface took almost 2 hours to find... not ideal
+#this surface has not improved the problem. For some reason
+#anything below r=0.4 is completly cooked. 
+#adding in this extra surface does not help.
+#push!(qlist, 29) #gives a surface for qfm_benchmark at 0.01 ish
+#push!(plist, 25)
+#push!(qlist, 7) #gives a surface for qfm_benchmark at 0.96 ish
+#push!(plist, 2)
+#we should probably start doing better guesses, i.e. at least invert the q-profile to compute r for each rational.
+#0.99 is because one surface whould lie on 0.0, causing issues.
+guess_list = sqrt(0.5) .* sqrt.(qlist ./ plist .- 0.99);
+#guess_list[1] = 0.2
+#guess_list[2] = 0.8
+#deleteat!(qlist, 16)
+#deleteat!(plist, 16)
 #%%
 #For depth of 3, giving 9 surfaces, took ~70s
 #fkn stupid af this is plist then qlist, opposite to farey_tree.
@@ -102,6 +136,8 @@ guess_list[2] = 0.8
 #and they are cooked implying a proper solution was not found
 @time surfs = construct_surfaces(plist, qlist, guess_list, prob);
 
+#so (1, 1) works now, but goes below r=0. may need to change the q-profile a bit.
+plot_surfs(surfs)#, filename=save_dir*"surfs.png");
 #%%
 #adding the boundary at 0.0 is not good, because the flux surface there is not actually straight. the one at 1.0 is fine though!
 #may just need to focus in on the chaotic region.
@@ -128,16 +164,24 @@ plot_surfs(surfs)#, filename=save_dir*"surfs.png");
 
 #now use the qfm surfaces to view the new poincare plot.
 ##small case with 10, 100 shows pretty stratight B field, this is kinda slow tho!
+#this seems to be cooked af now for the chaos case, probably a bad sign for the future.
+#think this might actually be broken, or this is more sensitive to the Jacobian being less than ideal.
+#so it seems like the real problemo is outside the chaotic region. Pretty annoying tbh.
+#perhaps we should stick with the original case, and just consider a truncated domain, 
+#that we can finish the draft and then try and fix this garbage later
 Ntraj = 40;
-rlist = collect(LinRange(0.4, 0.75, Ntraj));
-Nlaps = 300;
+#rlist = collect(LinRange(0.4, 0.65, Ntraj));
+#so r < 0.4 seems to be completly cooked for every situation...
+#not ideal
+rlist = collect(LinRange(0.4, 0.8, Ntraj));
+Nlaps = 500;
 
 #so this doesn't work v nice.
 #guess this tells us that the surfaces are cooked
 
 #this looks to sort of be working now, probably need many more surfaces tbh.
 #poincare_plot(qfm_benchmark_q, slab_to_plot, Nlaps, Ntraj, 0, 0.0, 0.0, 0.0, R0, isl, MID.Structures.no_isl, rlist)
-x, z = poincare_plot(prob, Nlaps, Ntraj, rlist,  R0, surfs=surfs, filename=save_dir * "qfm_poincare.png");
+x, z = poincare_plot(prob, Nlaps, Ntraj, rlist,  R0, surfs=surfs)#, filename=save_dir * "qfm_poincare.png");
 
 #%%
 
@@ -158,12 +202,12 @@ end
 #%%
 #now we construct the cotninuum grids
 
-ϑgrid = MID.Structures.asm_grid(start=-5, N=30)#, f_quad=1)
-φgrid = MID.Structures.asm_grid(start=-2, N=20)#, f_quad=1)#, incr=2)
+ϑgrid = MID.Structures.asm_grid(start=0, N=6)#, f_quad=1)
+φgrid = MID.Structures.asm_grid(start=-3, N=3)#, f_quad=1)#, incr=2)
 #grids = init_grids(N=N, mstart=1, mcount=2, nstart=-1, ncount=1);
 
 #bounds chosen to not go outside the bounding surfaces
-sgrid = MID.Structures.ContGridDataT(N=50, start=0.2, stop=0.8)
+sgrid = MID.Structures.ContGridDataT(N=50, start=0.4, stop=0.8)
 cont_grids = init_grids(sgrid, ϑgrid, φgrid)
 
 #%%
@@ -184,16 +228,19 @@ continuum_plot(cont_norm_ω, cont_grids)#, filename="data/qfm/unpert_cont.png")
 
 #now we consider the full spectrum
 
-rgrid = MID.Structures.rfem_grid(N=50, start=0.4)#, stop=0.7)
-θgrid = MID.Structures.asm_grid(start=-2, N=8)#, f_quad=1)
-ζgrid = MID.Structures.asm_grid(start=-3, N=6)#, f_quad=1)#, incr=2)
+rgrid = MID.Structures.rfem_grid(N=80, start=0.3, stop=0.8)
+θgrid = MID.Structures.asm_grid(start=0, N=6, f_quad=4)
+ζgrid = MID.Structures.asm_grid(start=-3, N=3, f_quad=4)#, incr=2)
+#rgrid = MID.Structures.rfem_grid(N=50, start=0.3, stop=0.8)
+#θgrid = MID.Structures.afem_grid(N=8, pf=3)
+#ζgrid = MID.Structures.afem_grid(N=2, pf=-2)#, incr=2)
 
 grids = init_grids(rgrid, θgrid, ζgrid)
 
 #%%
 
 #solver = init_solver(nev=100, target = 0.3, prob=prob)
-solver = init_solver(nev=100, targets = [0.0, 0.1, 0.2, 0.3], prob=prob)
+solver = init_solver(nev=100, targets = [0.1, 0.2, 0.3, 0.4], prob=prob)
 
 #%%
 
@@ -213,7 +260,7 @@ continuum_plot(evals_weird)#, filename="data/qfm/weird_spectrum.png")
 
 #%%
 
-ind = find_ind(evals, 0.05917)
+ind = find_ind(evals, 0.28715)
 ind = 10
 
 #hard to be certain, but looks a lot better now, may even be working!

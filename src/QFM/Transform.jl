@@ -161,7 +161,9 @@ function met_transform!(tor_met::MetT, qfm_met::MetT, CT::CoordTsfmT)
     end
     #perhap a try catche here?
     #sqrt here is annoying for values v close to zero
+    #display((CT.coords[1], CT.coords[2], CT.coords[3]))
     qfm_met.J[1] = sqrt(det(qfm_met.gl))
+    #qfm_met.J[1] = sqrt(abs(det(qfm_met.gl)))
 
     # now we take the derivative, noting that 
     # ∂(det(A)) = det(A) * Tr(A^{-1} ∂(A))

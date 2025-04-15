@@ -48,6 +48,7 @@ using ..Geometry; export init_island
 include("Equilibrium/Equilibrium.jl")
 
 using ..Equilibrium; export fu_dam_q
+using ..Equilibrium; export qfm_q
 using ..Equilibrium; export qfm_benchmark_q
 
 
