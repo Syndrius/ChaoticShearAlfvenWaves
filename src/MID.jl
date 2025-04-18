@@ -30,6 +30,8 @@ Current term is back on, it is working fine, may need higher res for best result
  - Change q-profiles to just accept a polynomial coefficeints, that way we don't need a billion, -> provided our island q thing works, this shouldn't be to bad.
  - Maybe we should change from (r, θ, ζ) into (x1, x2, x3), and change the grids process
  - It is plausible that our main matrices for fff can be changed from complex to real? Unsure, also probably only true for W.
+ - Make the construct functions a bit nicer, mainly just make sure all the array size functions we made get used, and ensure comments are done properly, bit annoying as we now have lots of cases.
+ - Above point is true for MIDParallel as well.
  
  
 

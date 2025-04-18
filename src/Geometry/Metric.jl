@@ -63,7 +63,6 @@ function toroidal_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::F
     met.dgl[1, 2, 1] = ((ϵ + Δp + r*Δpp) + r*(1/R0 + 2*Δpp)) * sin(θ)
     met.dgl[1, 2, 2] = r*(ϵ + Δp + r*Δpp) * cos(θ)
 
-    #this one is wrong!!!!
     met.dgl[2, 1, 1] = ((ϵ + Δp + r*Δpp) + r*(1/R0 + 2*Δpp)) * sin(θ)
     met.dgl[2, 1, 2] = r*(ϵ + Δp + r*Δpp) * cos(θ)
 

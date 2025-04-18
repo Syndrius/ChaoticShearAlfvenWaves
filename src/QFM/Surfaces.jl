@@ -34,6 +34,7 @@ struct TempSurfT
     end
 end
 
+
 """
 Struct storing the interpolations used to create surfaces in between the qfm surfaces found.
 Derivatives are stored individually for extrapolation to work.
@@ -267,13 +268,15 @@ function convert_surf(surf::QFMSurfaceT)
 
     r = zeros(Nϑ)
     θ = zeros(Nϑ)
+    θ = collect(LinRange(0, 2π, Nϑ))
 
     for i in 1:Nϑ
 
         for j in 1:size(rcos)[1]
             for k in 1:size(rcos)[2]
                 r[i] += rcos[j, k] * cosα[i, j, k]
-                θ[i] += ϑgrid[i] + θsin[j, k] * sinα[i, j, k]
+                #θ[i] += ϑgrid[i] + θsin[j, k] * sinα[i, j, k]
+                θ[i] += θsin[j, k] * sinα[i, j, k]
             end
         end
     end

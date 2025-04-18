@@ -12,9 +12,9 @@ using MIDViz
 using JLD2
 
 #using Plots; gr()
-using Plots; plotlyjs()
+#using Plots; plotlyjs()
 
-save_dir = "data/qfm/"
+#save_dir = "data/qfm/"
 
 #%%
 #define the problem to solve
@@ -47,7 +47,7 @@ un_prob = init_problem(q=qfm_benchmark_q, geo=geo)
 #%%
 #Define parameters needed for the poincare plot
 Ntraj = 100;
-rlist = collect(LinRange(0.4, 0.65, Ntraj));
+rlist = collect(LinRange(0.45, 0.65, Ntraj));
 #rlist = collect(LinRange(0.1, 1.0, Ntraj));
 Nlaps = 500;
 
