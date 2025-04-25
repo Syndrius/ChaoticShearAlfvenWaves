@@ -17,6 +17,7 @@ Current term is back on, it is working fine, may need higher res for best result
 
 #Long Term fixes
  - Perhaps https://github.com/fredrikekre/Literate.jl if we ever want to share this garbage.
+ - Choice of p,q for rational numbers is not ideal with a q-profile, we probably want to swap to a/b or something. a/b is set in surface struct, need to make this uniform throughout the paper.
  - Do the interpolation and derivatives etc for all cases. And/or move mapping to a separate module.
  - Re do all the example cases, include proper benchmarks and tests.
  - QFM Module could do with some more optimization, however, probably not important.

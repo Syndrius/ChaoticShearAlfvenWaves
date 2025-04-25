@@ -1,5 +1,10 @@
-#testing the jacobain of the qfm transformation.
-#in particular, for our chaos base case, using a depth of 6, we get numerical issues. Can be distinguish this from the case with a depth of 5?
+#here we offer some tests for properly choosing the right number and specific surfaces.
+#this is not very scientific, ideally we would have more.
+
+#this will mainly consist of looking at the new poincare plot
+#and looking at the jacobain in the new coordinates, where we want the value to not get that large.
+
+#ideally, in the future, we will have a much more sophisticated method of choosing the surfaces.
 using MID
 using MIDViz
 using Plots
@@ -7,76 +12,49 @@ using JLD2
 #%%
 R0=4.0
 
-#amp needs further thought!
-#define the non-resonant island
-k = 0.00022
-isl = init_island(m0=5, n0=-2, A=k/5)
-isl2 = init_island(m0=7, n0=-3, A=k/7)
-
 geo = init_geo(R0=R0)
 
-#to solve non-Hermitian
-#flr = MID.Structures.FLRT(δ = 1e-18)
-prob = init_problem(q=qfm_benchmark_q, met=:cylinder, geo=geo, isl=isl, isl2=isl2)#, flr=flr)
-#so this benchmark case works fine for r<0.4. Unsure why..
+#non-resonant case
 k = 0.05
 isl = init_island(m0=3, n0=2, A=k/5)
 isl2 = init_island(m0=7, n0=-3, A=0.0)
 prob = init_problem(q=qfm_q, geo=geo, isl=isl, isl2=isl2)#, flr=flr)
 
+#chaotic case
 k = 0.0006
 isl = init_island(m0=3, n0=-2, A=k/3)
 isl2 = init_island(m0=4, n0=-3, A=k/4)
+#isl2 = init_island(m0=4, n0=-3, A=0.0)
 
 prob = init_problem(q=qfm_q, geo=geo, isl=isl, isl2=isl2)#, flr=flr)
 #%%
-qlist, plist = farey_tree(4, 1, 1, 5, 2)
+qlist, plist = farey_tree(5, 1, 1, 2, 1)
 guess_list = 0.5 .* ones(length(qlist));
+guess_list = @. sqrt(qlist / plist - 0.95) / sqrt(1.5);
 #needed for the single island chain case, this one is probably at the sepratrix I guess.
-deleteat!(qlist, 8)
-deleteat!(plist, 8)
-deleteat!(qlist, 12)
-deleteat!(plist, 12)
 @time surfs = construct_surfaces(plist, qlist, guess_list, prob);
 plot_surfs(surfs)
 #%%
 #save_object("surf_test_chaos.jld2", surfs)
-save_object("surf_test_bench.jld2", surfs)
+save_object("surf_test_isl.jld2", surfs)
+#these are worse based on Jacobian eye test. Ideally we could make this a bit more analytical.
+save_object("surf_test_chaos5.jld2", surfs)
 #%%
 surfs_chaos = load_object("surf_test_chaos.jld2");
 surfs_bench = load_object("surf_test_bench.jld2");
 plot_surfs(surfs_chaos)
-qfm_q(0.3)
 #%%
-#adding this extra surface seems to have completly fixed the problem.
-#before the jacobian was getting to ~150 (even worse closer to the axis!)
-#now the jacobain is only getting to 6.
-#looks like the jacobain oscilated betwee r=0.4 and r=0.2, so this was missed.
-extra_surfs = construct_surfaces([15], [16], [0.3], prob);
+#the 20/21 surface has a huge effect on the jacobian around 0.2, before it was varying by like 2
+#now it varies by 0.2.
+#so this doesn't work for q/p < 1 or whichever way around.
+#poses a problem for the current q-profile, where 1/1 is at 0.2 ish, meaning we cannot put another surface at 0.05 etc, which would be required to get the full domain.
+#the 12/29 surfaces is at 0.97 ish, this fixes the problems for r>0.8.
+#looks like we will need a new q-profile where the 1,1 surface is at 0.05 ish.
+extra_surfs = construct_surfaces([15, 13, 20, 12], [16, 15, 21, 29], [0.3, 0.3, 0.26, 0.95], prob);
 comb_surfs = vcat(extra_surfs, surfs_chaos);
 plot_surfs(comb_surfs)
 #%%
-    #=
-    rvals = []
-    θvals = []
-    ζvals = []
-
-    #Main loop just gets all the actual values that are evaluated.
-    for i in 1:grids.r.N-1, j in 1:grids.θ.N, k in 1:grids.ζ.N 
-
-        #takes the local ξ arrays to a global arrays around the grid point.
-        r, θ, ζ, dr, dθ, dζ = MID.Basis.local_to_global(i, j, k, ξr, ξθ, ξζ, rgrid, θgrid, ζgrid) 
-
-        for x1 in r, x2 in θ, x3 in ζ
-            push!(rvals, x1)
-            push!(θvals, x2)
-            push!(ζvals, x3)
-
-        end
-
-    end
-    =#
-#%%
+#think we should actually put this inside MID, as this is quite a useful function for QFM checking!
 function compute_jac(prob, grids, surfs)
 
     #instantiate the grids into arrays. 
@@ -101,6 +79,7 @@ function compute_jac(prob, grids, surfs)
     #jac = zeros(length(rvals), length(θvals), length(ζvals))
     jac = zeros(grids.r.N, grids.θ.N, grids.ζ.N)
     jac_tor = zeros(grids.r.N, grids.θ.N, grids.ζ.N)
+    djac = zeros(3, grids.r.N, grids.θ.N, grids.ζ.N)
 
     #for (i, r) in enumerate(rvals), (j, θ) in enumerate(θvals), (k, ζ) in enumerate(ζvals)
     for (i, r) in enumerate(rgrid), (j, θ) in enumerate(θgrid), (k, ζ) in enumerate(ζgrid)
@@ -111,69 +90,67 @@ function compute_jac(prob, grids, surfs)
         MID.QFM.B_transform!(tor_B, qfm_B, qfm_met, CT)
 
         jac[i, j, k] = qfm_met.J[1]
+        djac[:, i, j, k] = qfm_met.dJ[:]
         jac_tor[i, j, k] = tor_met.J[1]
         #jac[i, j, k] = qfm_B.B[1]
         #jac_tor[i, j, k] = qfm_B.B[2]
     end
-    return jac, jac_tor
+    return jac, djac, jac_tor
 end
 #%%
-#this grid caused issues.
+
+
+
 Nr = 100
 Nθ = 20
 Nζ = 1
 #ok so the jacobian below ~r=0.4 is completly cooked. No idea why. unsure how to fix.
 #I guess this is because of the axis? not really sure how to fix that though?
-rgrid = init_grid(type=:rf, N = Nr, start = 0.2, stop =0.7)
+rgrid = init_grid(type=:rf, N = Nr, start = 0.2, stop =0.9999)
 θgrid = init_grid(type=:af, N = Nθ, pf=5)
 ζgrid = init_grid(type=:af, N = Nζ, pf=-2)
 
 grids = init_grids(rgrid, θgrid, ζgrid)
 #%%
-surfs5 = load_object("surfs5.jld2");
-surfs6 = load_object("surfs6.jld2");
-#%%
+jac, djac, jac_tor = compute_jac(prob, grids, comb_surfs);
+jac, jac_tor = compute_jac(prob, grids, surfs);
 jac, jac_tor = compute_jac(prob, grids, surfs_chaos);
-jac, jac_tor = compute_jac(prob, grids, comb_surfs);
 #%%
-jac5 = compute_jac(prob, grids, surfs5);
-jac6 = compute_jac(prob, grids, surfs6);
-#%%
-#jacobian for r<0.4 seems to be breaking down, correlated with original jacobian being less than 1.
-#so the jacobian is clearly just very large inside the islands, We can perhaps avoid this problemo by just considering the region away from the islands. At least no jacobian value is negative or anything stupid, just very large.
-#perhaps we could remove some of the surfaces around the islands.
 rgrid_plot, θgrid_plot, _ = MID.Structures.inst_grids(grids);
 contourf(θgrid_plot, rgrid_plot, jac[:, :, 1], levels=50)
-contourf(θgrid_plot, rgrid_plot, jac_tor[:, :, 1], levels=50)#, ylims=(0.2, 0.4))
-contourf(θgrid_plot, rgrid_plot, jac_tor[:, :, 1] ./ jac[:, :, 1], levels=50)
-contourf(θgrid_plot, rgrid_plot, jac5[:, :, 3])
-contourf(θgrid_plot, rgrid_plot, jac6[:, :, 3])
+contourf(θgrid_plot, rgrid_plot, djac[1, :, :, 1], levels=50)
+contourf(θgrid_plot, rgrid_plot, djac[2, :, :, 1], levels=50)
+contourf(θgrid_plot, rgrid_plot, jac_tor[:, :, 1], levels=50)
+#%%
+Ntraj = 100
+rlist = collect(LinRange(0.0001, 1.0, Ntraj));
+Nlaps = 500
+poincare_plot(prob, Nlaps, Ntraj, rlist, R0);
+#%%
+#now the qfm poincare plot
+Ntraj = 40
+#starting this below 0.4 causes immediate issues for the Jacobain being enourmous/negative
+rlist = collect(LinRange(0.4, 0.9, Ntraj));
+Nlaps = 500
+x, z = poincare_plot(prob, Nlaps, Ntraj, rlist, R0, surfs=surfs_chaos);
+#%%
+#now the qfm poincare plot with better surfaces
+Ntraj = 40
+#this doesn't seem to be any better.
+#I guess this doesn't matter if the range has to be restricted tho!
+rlist = collect(LinRange(0.4, 0.9, Ntraj));
+Nlaps = 500
+x, z = poincare_plot(prob, Nlaps, Ntraj, rlist, R0, surfs=comb_surfs);
 
-plot(θgrid_plot, jac[30, :, 1])
-plot(θgrid_plot, jac_tor[30, :, 1])
+
 
 #%%
-function compute_small_jac(met, r, θ, ζ, R0)
 
-    MID.Geometry.toroidal_metric!(met, r, θ, ζ, 4.0)
-
-    return met.J[1]
+qlist = zeros(100);
+rlist = LinRange(0, 0.5, 100);
+for (i, r) in enumerate(rlist)
+    qlist[i], _ = qfm_q(r)
 end
 #%%
 
-θgrid_test = LinRange(0, 2π, 100);
-
-jac_test = zeros(100);
-
-met = MID.MetT()
-for i in 1:100
-    jac_test[i] = compute_small_jac(met, 0.25, θgrid_test[i], 0.5, 4.0)
-end
-#%%
-
-plot(θgrid_test, jac_test)
-
-
-
-
-
+plot(rlist, qlist)

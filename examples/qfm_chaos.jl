@@ -6,6 +6,26 @@ Think fff will be better for this.
 Shows some indication of working, but needs more surfaces and resolution.
 """
 
+#so investigating the r <0.4 error,
+#adding an extra surface at r~0.3, fixes the magnitude of the jacobain, this does not make the spectrum any better.
+#considering just teh (3, 2) island, the spectrum is very good, and with the extra surface pretty much perfect.
+#just the (4, 3) island, the spectrum is awful, and adding the extra surface does not help
+#seems like the (4, 3) island is having some kind of second resonance or something.
+#we probbaly need to test a different q-profile to see what is going on tbh.
+#really quite confusing what is going on here.
+#adding another new surface (15/13) makes a big difference for the second island. still big issues around r=0.25, but r=0.4 seems to have fixed itself.
+#these exacmples also show that a single island case may actually be practical.
+#adding another surface may have actually fixed it. still unsure about going below 0.2 though!
+#but still, this shows that the problem is simple not a dense enough list of surfaces, I guess in this region
+#the flux surfaces are changing more than it looks like.
+#extra surfaces have fixed the choatic case! not bahd.
+#note that the extra surfaces have fixed the chaotic case in the cotninuum
+#looks like have also fixed the chaotic case for full spectrum, perhaps needs more investigation.
+#but this is very promising! -> need better metric for determing the surfaces and if they are good or not.
+#extra surfaces also make the poincare plot in qfm coords work perfectly.
+#seems like we needed more surfaces, but we probably still need to be careful around the sepratrix.
+#perhaps we need to check that again though! -> things may have changed since we last removed them!
+
 #%%
 using MID
 using MIDViz
@@ -29,7 +49,9 @@ R0=4.0
 #think k=0.0022 may be the best bet, there are very clear structures but it is also very chaotic elsewhere.
 k = 0.0006
 isl = init_island(m0=3, n0=-2, A=k/3)
+#isl = init_island(m0=3, n0=-2, A=0.0)
 isl2 = init_island(m0=4, n0=-3, A=k/4)
+#isl2 = init_island(m0=4, n0=-3, A=0.0)
 k = 0.008
 isl = init_island(m0=3, n0=2, A=k/3)
 isl2 = init_island(m0=4, n0=-3, A=0.0)
@@ -41,14 +63,14 @@ geo = init_geo(R0=R0)
 
 prob = init_problem(q=qfm_q, geo=geo, isl=isl, isl2=isl2)#, flr=flr)
 #prob = init_problem(q=qfm_benchmark_q, met=:cylinder, geo=geo, isl=isl, isl2=isl2)#, flr=flr)
-un_prob = init_problem(q=qfm_benchmark_q, geo=geo)
+un_prob = init_problem(q=qfm_q, geo=geo)
 
 
 #%%
 #Define parameters needed for the poincare plot
 Ntraj = 100;
-rlist = collect(LinRange(0.45, 0.65, Ntraj));
-#rlist = collect(LinRange(0.1, 1.0, Ntraj));
+#rlist = collect(LinRange(0.45, 0.65, Ntraj));
+rlist = collect(LinRange(0.1, 1.0, Ntraj));
 Nlaps = 500;
 
 #poincare_plot(qfm_benchmark_q, slab_to_plot, Nlaps, Ntraj, 0, 0.0, 0.0, 0.0, R0, isl, MID.Structures.no_isl, rlist)
@@ -139,6 +161,10 @@ guess_list = sqrt(0.5) .* sqrt.(qlist ./ plist .- 0.99);
 #so (1, 1) works now, but goes below r=0. may need to change the q-profile a bit.
 plot_surfs(surfs)#, filename=save_dir*"surfs.png");
 #%%
+extra_surfs = construct_surfaces([15, 13, 20], [16, 15, 21], [0.3, 0.3, 0.26], prob);
+comb_surfs = vcat(extra_surfs, surfs);
+plot_surfs(comb_surfs)
+#%%
 #adding the boundary at 0.0 is not good, because the flux surface there is not actually straight. the one at 1.0 is fine though!
 #may just need to focus in on the chaotic region.
 #ideally we can show the entire plot. In particular, we want to show the eigenfunctions across the whole domain.
@@ -148,11 +174,13 @@ push!(surfs, bound2);
 #%%
 
 save_object("/Users/matt/phd/MID/data/qfm/chaos_surfs.jld2", surfs)
+save_object("/Users/matt/phd/MID/surf_test_isl2.jld2", surfs)
 
 #%%
 
 surfs = load_object("/Users/matt/phd/MID/data/qfm/chaos_surfs.jld2");
 #surfs = load_object("surfs5.jld2");
+surfs = load_object("/Users/matt/phd/MID/surf_test_isl.jld2");
 
 #%%
 
@@ -173,7 +201,7 @@ Ntraj = 40;
 #rlist = collect(LinRange(0.4, 0.65, Ntraj));
 #so r < 0.4 seems to be completly cooked for every situation...
 #not ideal
-rlist = collect(LinRange(0.4, 0.8, Ntraj));
+rlist = collect(LinRange(0.2, 0.8, Ntraj));
 Nlaps = 500;
 
 #so this doesn't work v nice.
@@ -181,7 +209,7 @@ Nlaps = 500;
 
 #this looks to sort of be working now, probably need many more surfaces tbh.
 #poincare_plot(qfm_benchmark_q, slab_to_plot, Nlaps, Ntraj, 0, 0.0, 0.0, 0.0, R0, isl, MID.Structures.no_isl, rlist)
-x, z = poincare_plot(prob, Nlaps, Ntraj, rlist,  R0, surfs=surfs)#, filename=save_dir * "qfm_poincare.png");
+x, z = poincare_plot(prob, Nlaps, Ntraj, rlist,  R0, surfs=comb_surfs)#, filename=save_dir * "qfm_poincare.png");
 
 #%%
 
@@ -207,12 +235,13 @@ end
 #grids = init_grids(N=N, mstart=1, mcount=2, nstart=-1, ncount=1);
 
 #bounds chosen to not go outside the bounding surfaces
-sgrid = MID.Structures.ContGridDataT(N=50, start=0.4, stop=0.8)
+sgrid = MID.Structures.ContGridDataT(N=50, start=0.2, stop=0.8)
 cont_grids = init_grids(sgrid, ϑgrid, φgrid)
 
 #%%
 #now we construct the continuum
 cont_ω = reconstruct_ω(MID.Construct.continuum(prob, cont_grids, surfs), cont_grids);
+cont_ω = reconstruct_ω(MID.Construct.continuum(prob, cont_grids, comb_surfs), cont_grids);
 #we have removed the perN option, not ideal. should add back in!
 #cont_norm_ω = reconstruct_ω(MID.Construct.continuum(un_prob, cont_grids, false), cont_grids);
 cont_norm_ω = reconstruct_ω(MID.Construct.continuum(un_prob, cont_grids), cont_grids);
@@ -228,7 +257,7 @@ continuum_plot(cont_norm_ω, cont_grids)#, filename="data/qfm/unpert_cont.png")
 
 #now we consider the full spectrum
 
-rgrid = MID.Structures.rfem_grid(N=80, start=0.3, stop=0.8)
+rgrid = MID.Structures.rfem_grid(N=80, start=0.2, stop=0.8)
 θgrid = MID.Structures.asm_grid(start=0, N=6, f_quad=4)
 ζgrid = MID.Structures.asm_grid(start=-3, N=3, f_quad=4)#, incr=2)
 #rgrid = MID.Structures.rfem_grid(N=50, start=0.3, stop=0.8)
@@ -246,7 +275,7 @@ solver = init_solver(nev=100, targets = [0.1, 0.2, 0.3, 0.4], prob=prob)
 
 #seems to be a fair bit slower!
 #makes sense, will want to use MIDParallel oneday.
-evals, ϕ, ϕft = compute_spectrum_qfm(prob=prob, grids=grids, solver=solver, surfs=surfs);
+evals, ϕ, ϕft = compute_spectrum_qfm(prob=prob, grids=grids, solver=solver, surfs=comb_surfs);
 
 evals_norm, ϕ_norm, ϕft_norm = compute_spectrum(prob=un_prob, grids=grids, full_spectrum=false);
 

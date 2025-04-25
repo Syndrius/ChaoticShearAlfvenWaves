@@ -1,5 +1,16 @@
 #TODO -> should change these names and probably provide the function in the doc.@
 
+#chosen so 1/1 surface is at r~0.05 and 5/2 surface is at r~0.95, should allow us to view the entire domain
+#this results in a 4/3 island at r=0.45, and a 3/2 island at r=0.55.
+function qfm_q(r::Float64)
+    #a = 0.995833333
+    #b = 1.66666666
+    a = 239 / 240
+    b = 5 / 3
+    return a + b * r^2, 2 * b * r
+end
+
+
 #chosen to be 1+2*r^2, but shifted a bit so that the qfm surfaces at r=0 (1, 1) and r=1 (3, 1) do not go outside the domain.
 #this is causing heaps of issues, unsure why. Seems like most of the problemo is coming from 
 #outside the chaotic region, which is very weird.
@@ -7,7 +18,7 @@
 #think perhaps our ideal q profile would be the (4, 3) and (3, 2) islands, starting at 1 ish
 #but we probably need the two island chains to be within 0.1 of each other.
 #this version is better, but we still have huge issues for r < 0.4
-function qfm_q(r::Float64)
+function old_qfm_q(r::Float64)
     a = 0.954545
     b = 1.515151
     return a + b * r^2, 2 * b * r

@@ -5,6 +5,8 @@ r(ζ) = ∑ r_n^c cos(ζ) + r_n^s sin(ζ)
 θ(ζ) = θ_0 + ∑ θ_n^c cos(ζ) + θ_n^s sin(ζ)
 """
 struct QFMSurfaceT
+    a :: Int64  # q(r) = a/b, so a is ζ mode number, b is θ mode number
+    b :: Int64 #a ≡ q, b ≡ p
     ρ :: Float64 #rho is a surface label, it could/should be 'r', but we use rho to distinguish
     #rho is also just set to rcos[1, 1] so we could probably do without it tbh.
     rcos :: Array{Float64, 2}
@@ -69,7 +71,7 @@ function construct_surfaces(plist::Array{Int64}, qlist::Array{Int64}, sguesslist
         rcos, θsin, rsin, θcos = action(plist[i], qlist[i], prob, met, B, MM, M, N, sguesslist[i])
 
         ρ = rcos[1, 1] #surface label.
-        push!(surfaces, QFMSurfaceT(ρ, rcos, θsin, rsin, θcos))
+        push!(surfaces, QFMSurfaceT(qlist[i], plist[i], ρ, rcos, θsin, rsin, θcos))
         @printf("Found %d of %d surfaces.\n", i, length(plist))
     end
 
@@ -283,6 +285,59 @@ function convert_surf(surf::QFMSurfaceT)
 
     return r, θ
 
+end
+
+
+#perhaps doesn't belong here, but this is a useful function for giving some sense of if the surfaces are good or not.
+#note that this computes the jacobin at the grid points, not at the Gaussing weight points, which is perhaps misleading.
+#this also assumes fff grids for some reason.
+#needs a new name, as this is kind of doing more than just the jacobain now.
+function compute_jac(prob::ProblemT, grids::FFFGridsT, surfs::Array{QFMSurfaceT})
+
+    #instantiate the grids into arrays. 
+    #note that these grids are not actually the points used in construct, as we either use fourier exansion or gaussian weight points
+    #but this should still give us a good idea, but care must be taken for r=0.
+    rgrid, θgrid, ζgrid = inst_grids(grids)
+
+    #initialise the two structs to store the metric and the magnetic field.
+    tor_met = MetT()
+    qfm_met = MetT()
+    tor_B = BFieldT()
+    qfm_B = BFieldT()
+
+    #creates the interpolations for the surfaces.
+    surf_itp, sd = create_surf_itp(surfs)
+
+    #compute the gaussian qudrature points for finite elements.
+    #ξr, wgr = MID.Construct.FastGaussQuadrature.gausslegendre(grids.r.gp) #same as python!
+    #ξθ, wgθ = MID.Construct.FastGaussQuadrature.gausslegendre(grids.θ.gp)
+    #ξζ, wgζ = MID.Construct.FastGaussQuadrature.gausslegendre(grids.ζ.gp)
+
+    #struct for storing the intermediate data for the coordinate transform
+    CT = CoordTsfmT()
+
+    jac = zeros(grids.r.N, grids.θ.N, grids.ζ.N)
+    djac = zeros(3, grids.r.N, grids.θ.N, grids.ζ.N)
+    #for comparisons.
+    jac_tor = zeros(grids.r.N, grids.θ.N, grids.ζ.N)
+    djac_tor = zeros(3, grids.r.N, grids.θ.N, grids.ζ.N)
+    coords = zeros(3, grids.r.N, grids.θ.N, grids.ζ.N)
+
+    #for (i, r) in enumerate(rvals), (j, θ) in enumerate(θvals), (k, ζ) in enumerate(ζvals)
+    for (i, r) in enumerate(rgrid), (j, θ) in enumerate(θgrid), (k, ζ) in enumerate(ζgrid)
+        coord_transform!(r, θ, ζ, CT, surf_itp, sd)
+        toroidal_metric!(tor_met, CT.coords[1], CT.coords[2], CT.coords[3], prob.geo.R0)
+        #compute_B!(tor_B, tor_met, prob.q, prob.isl, prob.isl2, CT.coords[1], CT.coords[2], CT.coords[3])
+        met_transform!(tor_met, qfm_met, CT)
+        #B_transform!(tor_B, qfm_B, qfm_met, CT)
+
+        jac[i, j, k] = qfm_met.J[1]
+        djac[:, i, j, k] = qfm_met.dJ[:]
+        jac_tor[i, j, k] = tor_met.J[1]
+        djac_tor[:, i, j, k] = tor_met.dJ[:]
+        coords[:, i, j, k] = CT.coords[:]
+    end
+    return jac, djac, jac_tor, djac_tor, coords
 end
 
 ##########################################################
