@@ -1,8 +1,17 @@
 #TODO -> should change these names and probably provide the function in the doc.@
 
+#chosen so that 4, 3 island at r=0.4, (3, 2) island at 0.6, (1, 1)/(2, 1) tae at r~0.5
+#this gives a=6/5 and b=5/6
+#q profile is then shifted so that end points are moved to 0.05 and 0.95 for qfm surfaces
+function qfm_q(r::Float64)
+    a = 539/450
+    b = 8/9
+    return a + b * r^2, 2 * b * r
+end
+
 #chosen so 1/1 surface is at r~0.05 and 5/2 surface is at r~0.95, should allow us to view the entire domain
 #this results in a 4/3 island at r=0.45, and a 3/2 island at r=0.55.
-function qfm_q(r::Float64)
+function old_qfm_q(r::Float64)
     #a = 0.995833333
     #b = 1.66666666
     a = 239 / 240
@@ -18,7 +27,7 @@ end
 #think perhaps our ideal q profile would be the (4, 3) and (3, 2) islands, starting at 1 ish
 #but we probably need the two island chains to be within 0.1 of each other.
 #this version is better, but we still have huge issues for r < 0.4
-function old_qfm_q(r::Float64)
+function oldest_qfm_q(r::Float64)
     a = 0.954545
     b = 1.515151
     return a + b * r^2, 2 * b * r

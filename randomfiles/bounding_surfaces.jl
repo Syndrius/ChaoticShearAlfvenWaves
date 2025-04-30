@@ -47,4 +47,4 @@ rgrid = init_grid(type=:rf, N = Nr, start = 0.2, stop =0.9999)
 ζgrid = init_grid(type=:af, N = Nζ, pf=-2)
 
 grids = init_grids(rgrid, θgrid, ζgrid)
-jac, djac, jac_tor, djac_tor, coords = MID.QFM.compute_jac(
+jac, djac, jac_tor, djac_tor, coords = MID.QFM.compute_jac()
