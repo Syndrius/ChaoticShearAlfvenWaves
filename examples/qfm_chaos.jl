@@ -32,7 +32,7 @@ using MIDViz
 using JLD2
 
 #using Plots; gr()
-#using Plots; plotlyjs()
+using Plots; plotlyjs()
 
 #save_dir = "data/qfm/"
 
@@ -116,8 +116,13 @@ plot_surfs(bounding_surfs);
 #or perhaps have a check in the construct surfaces function that asserst that q>p or whatever we actually want.
 #qlist, plist = farey_tree(4, 11, 10, 3, 1)
 #qlist, plist = farey_tree(4, 5, 4, 3, 1)
-qlist, plist = farey_tree(4, 1, 1, 2, 1)
+#qlist, plist = farey_tree(4, 1, 1, 2, 1)
+qlist, plist = farey_tree(4, 1, 1, 5, 2)
 
+#this is perhaps way to many for the benchmarking case.
+rationals = [(1, 1), (31, 30), (21, 20), (16, 15), (11, 10), (15, 13), (6, 5), (16, 13), (5, 4), (14, 11), (13, 10), (4, 3), (11, 8), (7, 5), (10, 7), (13, 9), (3, 2), (17, 11), (8, 5), (23, 14), (5, 3), (7, 4), (11, 6), (25, 13), (2, 1), (15, 7), (9, 4), (7, 3), (29, 12), (5, 2)]
+qlist = [i[1] for i in rationals]
+plist = [i[2] for i in rationals]
 #the fifth element is ~1.5, very close to the island, so does not converge.
 #deleteat!(qlist, 5)
 #deleteat!(plist, 5)
@@ -146,7 +151,7 @@ qlist, plist = farey_tree(4, 1, 1, 2, 1)
 #push!(plist, 2)
 #we should probably start doing better guesses, i.e. at least invert the q-profile to compute r for each rational.
 #0.99 is because one surface whould lie on 0.0, causing issues.
-guess_list = sqrt(0.5) .* sqrt.(qlist ./ plist .- 0.99);
+guess_list = sqrt(5/3) .* sqrt.(qlist ./ plist .- 239/240);
 #guess_list[1] = 0.2
 #guess_list[2] = 0.8
 #deleteat!(qlist, 16)
@@ -173,14 +178,17 @@ push!(surfs, bound2);
 
 #%%
 
-save_object("/Users/matt/phd/MID/data/qfm/chaos_surfs.jld2", surfs)
-save_object("/Users/matt/phd/MID/surf_test_isl2.jld2", surfs)
+#save_object("/Users/matt/phd/MID/data/qfm/chaos_surfs.jld2", surfs)
+#save_object("/Users/matt/phd/MID/surf_test_isl2.jld2", surfs)
+save_object("/Users/matt/phd/MID/data/surfaces/total_bench_surfs.jld2", surfs)
 
 #%%
 
 surfs = load_object("/Users/matt/phd/MID/data/qfm/chaos_surfs.jld2");
 #surfs = load_object("surfs5.jld2");
 surfs = load_object("/Users/matt/phd/MID/surf_test_isl.jld2");
+
+surfs = load_object("/Users/matt/phd/MID/data/surfaces/total_chaos_surfs.jld2");
 
 #%%
 
@@ -209,7 +217,7 @@ Nlaps = 500;
 
 #this looks to sort of be working now, probably need many more surfaces tbh.
 #poincare_plot(qfm_benchmark_q, slab_to_plot, Nlaps, Ntraj, 0, 0.0, 0.0, 0.0, R0, isl, MID.Structures.no_isl, rlist)
-x, z = poincare_plot(prob, Nlaps, Ntraj, rlist,  R0, surfs=comb_surfs)#, filename=save_dir * "qfm_poincare.png");
+x, z = poincare_plot(prob, Nlaps, Ntraj, rlist,  R0, surfs=surfs)#, filename=save_dir * "qfm_poincare.png");
 
 #%%
 
@@ -235,13 +243,13 @@ end
 #grids = init_grids(N=N, mstart=1, mcount=2, nstart=-1, ncount=1);
 
 #bounds chosen to not go outside the bounding surfaces
-sgrid = MID.Structures.ContGridDataT(N=50, start=0.2, stop=0.8)
+sgrid = MID.Structures.ContGridDataT(N=50, start=0.05, stop=0.95)
 cont_grids = init_grids(sgrid, ϑgrid, φgrid)
 
 #%%
 #now we construct the continuum
 cont_ω = reconstruct_ω(MID.Construct.continuum(prob, cont_grids, surfs), cont_grids);
-cont_ω = reconstruct_ω(MID.Construct.continuum(prob, cont_grids, comb_surfs), cont_grids);
+#cont_ω = reconstruct_ω(MID.Construct.continuum(prob, cont_grids, comb_surfs), cont_grids);
 #we have removed the perN option, not ideal. should add back in!
 #cont_norm_ω = reconstruct_ω(MID.Construct.continuum(un_prob, cont_grids, false), cont_grids);
 cont_norm_ω = reconstruct_ω(MID.Construct.continuum(un_prob, cont_grids), cont_grids);
@@ -257,7 +265,7 @@ continuum_plot(cont_norm_ω, cont_grids)#, filename="data/qfm/unpert_cont.png")
 
 #now we consider the full spectrum
 
-rgrid = MID.Structures.rfem_grid(N=80, start=0.2, stop=0.8)
+rgrid = MID.Structures.rfem_grid(N=80, start=0.05, stop=0.95)
 θgrid = MID.Structures.asm_grid(start=0, N=6, f_quad=4)
 ζgrid = MID.Structures.asm_grid(start=-3, N=3, f_quad=4)#, incr=2)
 #rgrid = MID.Structures.rfem_grid(N=50, start=0.3, stop=0.8)
@@ -275,9 +283,9 @@ solver = init_solver(nev=100, targets = [0.1, 0.2, 0.3, 0.4], prob=prob)
 
 #seems to be a fair bit slower!
 #makes sense, will want to use MIDParallel oneday.
-evals, ϕ, ϕft = compute_spectrum_qfm(prob=prob, grids=grids, solver=solver, surfs=comb_surfs);
+evals, ϕ, ϕft = compute_spectrum_qfm(prob=prob, grids=grids, solver=solver, surfs=surfs);
 
-evals_norm, ϕ_norm, ϕft_norm = compute_spectrum(prob=un_prob, grids=grids, full_spectrum=false);
+evals_norm, ϕ_norm, ϕft_norm = compute_spectrum(prob=un_prob, grids=grids, solver=solver);
 
 evals_weird, ϕ_weird, ϕft_weird = compute_spectrum(prob=prob, grids=grids, full_spectrum=false);
 
@@ -289,8 +297,10 @@ continuum_plot(evals_weird)#, filename="data/qfm/weird_spectrum.png")
 
 #%%
 
-ind = find_ind(evals, 0.28715)
-ind = 10
+ind = find_ind(evals, 0.3108)
+ind_norm = find_ind(evals_norm, 0.366)
+ind = 202
 
 #hard to be certain, but looks a lot better now, may even be working!
-potential_plot(ϕft, grids, ind)
+potential_plot(ϕft, grids, ind, label_max=0.5)
+potential_plot(ϕft_norm, grids, ind_norm, label_max=0.5)
