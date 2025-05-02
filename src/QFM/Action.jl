@@ -285,7 +285,7 @@ function wrap_field_lines(rcosarr, rsinarr, θcosarr, θsinarr, MM, M, N, p, q, 
 end
 
 
-    
+
 """
     action_grad!(δS::Array{Float64}, x::Array{Float64}, p::Int64, q::Int64, a::Float64, qN::Int64, ζ, nlist, prob::ProblemT)
 
@@ -309,10 +309,11 @@ function action_grad!(δS::Array{Float64}, x::Array{Float64}, a::Float64, coefs:
 
         #alt smaller function, not being used atm
         #compute_B!(B.B, met.J, prob.q, prob.isl, prob.isl2, r[i], θ[i], ζ[i])
-        compute_B!(ip.B, ip.met, ip.prob.q, ip.prob.isl, ip.prob.isl2, ip.r[i], ip.θ[i], ip.ζ[i])
+        compute_B!(ip.B, ip.met, ip.prob.q, ip.prob.isls, ip.r[i], ip.θ[i], ip.ζ[i])
 
         #unsure if perhaps the jacobian is required in here somewhere.
         ip.θdot[i] = ip.B.B[2] / ip.B.B[3]
+        #pretty sure the Jacobian is requried here, this will mess up the JM function though!
         ip.rdot[i] = (ip.B.B[1] - coefs.nv[1]) / ip.B.B[3]
     end
     
@@ -322,6 +323,22 @@ function action_grad!(δS::Array{Float64}, x::Array{Float64}, a::Float64, coefs:
 
     
     #note that thes equations are not clear from the paper.
+    #I think these basically have nothing to do with the equations as written in the paper.
+
+    #we are essentially saying that our current guess of the path is given by 
+    #r(ζ) = r_0^c ∑_{n=1}^qN (r_n^c cos(nζ/q) + r_n^s sin(nζ/q))
+    #this should have a plus ζ term though!
+    #θ(ζ) = θ_0^c ∑_{n=1}^qN (θ_n^c cos(nζ/q) + θ_n^s sin(nζ/q))
+
+    #we then take the difference between the ideal dynamics
+    #∂r/∂ζ = B^r/B^ζ - ν
+    #∂θ/∂ζ = B^θ/B^ζ
+
+    #where ν is the extra area bit that allows approx solutions to be found, true, integrable dynamics would satisfy these two equation without needing the ν
+    #we then find the coeffs that define our initial guess
+    #based on the difference between the current guess and the `ideal' dynamics based on the field.
+    #the equations quoted seem unhelpful.
+
     #og packing
     #[[nv]; rcos ; tsin[2:end] ; rsin[2:end] ; tcos]
     qN = ip.Ntor - 1
@@ -380,7 +397,7 @@ function action_grad_jm!(JM::Array{Float64, 2}, x::Array{Float64}, a::Float64, c
         ip.prob.met(ip.met, ip.r[i], ip.θ[i], ip.ζ[i], ip.prob.geo.R0)
 
         #need B.dB now, so we just compute the full thing!
-        compute_B!(ip.B, ip.met, ip.prob.q, ip.prob.isl, ip.prob.isl2, ip.r[i], ip.θ[i], ip.ζ[i])
+        compute_B!(ip.B, ip.met, ip.prob.q, ip.prob.isls, ip.r[i], ip.θ[i], ip.ζ[i])
 
         #unsure how jacobian sits with all of this.
         #dBrdr/Bζ - (Br - nv) / Bζ^2 * dBζdr
@@ -436,6 +453,10 @@ function action_grad_jm!(JM::Array{Float64, 2}, x::Array{Float64}, a::Float64, c
 
     #unsure what any of this even is tbh. Not even sure what the JM is representing here.
     #now reasnably confident these are working.
+    #genuuinly now way this can be right,
+    #should be JM[coef, deriv]
+    #these are implying that the derivative of the rcos with respect to every coef is the same?
+    #probbaly an indexing issue.
     JM[2:qN+2, 1:end] .= -drdot_cos[1:qN+1, 1:end]
     JM[qN+3:2*qN+2, 1:end] .= -drdot_sin[2:qN+1, 1:end]
 

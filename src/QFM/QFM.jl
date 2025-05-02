@@ -37,6 +37,7 @@ export SurfaceITPT
 export TempSurfT #terrible name
 export construct_surfaces
 export farey_tree
+export lowest_rationals
 export convert_surf
 export create_surf_itp
 

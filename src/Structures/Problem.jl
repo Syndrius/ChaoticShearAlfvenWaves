@@ -44,8 +44,7 @@ One of the main inputs for matrix construction functions.
     q :: Function 
     met :: Function = toroidal_metric!
     dens :: Function = uniform_dens
-    isl :: IslandT = no_isl
-    isl2 :: IslandT = no_isl
+    isls :: Array{IslandT} = IslandT[]
     geo :: GeoParamsT
     flr :: FLRT = no_flr
 end
@@ -87,7 +86,7 @@ Main input for matrix construction functions.
 - geo::GeoParamsT - Struct storing geometrical parameters.
 - flr::FLRT=no_flr - Struct storing finite larmor effects, defaults to no corrections.. 
 """
-function init_problem(; q::Function, met::Symbol=:torus, dens::Function=uniform_dens, isl::IslandT=no_isl, isl2::IslandT=no_isl,geo::GeoParamsT, flr::FLRT=no_flr)
+function init_problem(; q::Function, met::Symbol=:torus, dens::Function=uniform_dens, isl::IslandT=no_isl, isls::Array{IslandT}=IslandT[], geo::GeoParamsT, flr::FLRT=no_flr)
 
     if met == :torus
         met_func = toroidal_metric!
@@ -100,24 +99,26 @@ function init_problem(; q::Function, met::Symbol=:torus, dens::Function=uniform_
         return
     end
 
+    #puts island into array for consistent usage throughout code.
+    if isempty(isls)
+        isls = [isl]
+    end
+
     #may want to indroduce symbold into here
     #for the metric :toroidal etc may be clearer.
+    #TODO, no longer works now that islands are done via array.
     if length(methods(q)[1].sig.parameters) == 3
         #this q -profile uses island parameters as input, this creates an appropriate q-profile
         #we should probably be asserting some stuff about the ol island first
         q_prof(r) = q(r, isl)
         #not sure if this actually works
-        return ProblemT(q=q_prof, met=met_func, dens=dens, isl=isl, flr=flr, geo=geo)
+        return ProblemT(q=q_prof, met=met_func, dens=dens, isls=isls, flr=flr, geo=geo)
     else
         if isl != no_isl
             #ignoreing this for now! 
             #isl = inst_island(isl, q)
         end
-        if isl2 != no_isl
-            #ignoreing!
-            #isl2 = inst_island(isl2, q)
-        end
-        return TorProblemT(q=q, met=met_func, dens=dens, isl=isl, isl2=isl2, flr=flr, geo=geo)
+        return TorProblemT(q=q, met=met_func, dens=dens, isls=isls, flr=flr, geo=geo)
     end 
 
 end

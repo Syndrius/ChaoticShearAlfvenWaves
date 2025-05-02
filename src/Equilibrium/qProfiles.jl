@@ -1,5 +1,12 @@
 #TODO -> should change these names and probably provide the function in the doc.@
 
+
+function low_shear_q(r::Float64)
+    a = 1.05
+    b = 0.45
+    return a + b * r^2, 2 * b * r
+end
+
 #chosen so that 4, 3 island at r=0.4, (3, 2) island at 0.6, (1, 1)/(2, 1) tae at r~0.5
 #this gives a=6/5 and b=5/6
 #q profile is then shifted so that end points are moved to 0.05 and 0.95 for qfm surfaces

@@ -60,7 +60,7 @@ function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, B::BFieldT, 
         prob.met(met, r[i], θ[j], ζ[k], prob.geo.R0)
 
         #compute the magnetic field.
-        compute_B!(B, met, prob.q, prob.isl, prob.isl2, r[i], θ[j], ζ[k])
+        compute_B!(B, met, prob.q, prob.isls, r[i], θ[j], ζ[k])
 
         #computes the matrix D.
         compute_D!(B, met, tm.D)
@@ -85,6 +85,7 @@ In this case a specific metric and q-profile are used and the current nerm is no
 """
 function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, B::BFieldT, met::MetT, prob::IslProblemT, r::Array{Float64}, θ::AbstractArray, ζ::AbstractArray, tm::TM)
     
+    #TODO, no longer working with island as an array
     #compute the density.
     n = prob.dens.(r) :: Array{Float64}
     #wcap is unused in this case, perhaps density as well.
@@ -136,7 +137,7 @@ function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, tor_B::BFiel
         prob.met(tor_met, CT.coords[1], CT.coords[2], CT.coords[3], prob.geo.R0)
 
         #and original B field.
-        compute_B!(tor_B, tor_met, prob.q, prob.isl, prob.isl2, CT.coords[1], CT.coords[2], CT.coords[3]) 
+        compute_B!(tor_B, tor_met, prob.q, prob.isls, CT.coords[1], CT.coords[2], CT.coords[3]) 
 
         #transform the metric
         met_transform!(tor_met, qfm_met, CT)

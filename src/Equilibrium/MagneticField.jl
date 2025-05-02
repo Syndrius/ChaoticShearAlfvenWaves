@@ -35,35 +35,51 @@ B is assumed to be in the form (B^r, B^θ, B^ζ) with
 
 This version does not take a quadratic form, this means the behaviour near r=0 will be cooked, requires a restricted grid.
 """
-function compute_B!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, isl2::IslandT, r::Float64, θ::Float64, ζ::Float64)
+function compute_B!(B::BFieldT, met::MetT, q_prof::Function, isls::Array{IslandT}, r::Float64, θ::Float64, ζ::Float64)
 
     q, dq = q_prof(r)
-
-    arg = isl.m0 * θ + isl.n0 * ζ
-
-    arg2 = isl2.m0 * θ + isl2.n0 * ζ
 
 
     #I think it is fine to just modify the B^r component, but we may want to confirm.
     #perhaps d amp is not a great name for the derivative.
-    amp, damp = island_amplitude(r, isl)
+    amp, damp = island_amplitude(r)
     #amplitude seems to be a problem that will need to be fixed another time.
     #amp = 1.0
     #damp = 0.0 
 
+    B.B[1] = 0.0
+    B.dB[1, :] .= 0.0
+    for isl in isls
+        B.B[1] += isl.A * amp * isl.m0 * sin(isl.m0 * θ + isl.n0 * ζ)
+        B.dB[1, 1] += isl.A * damp * isl.m0 * sin(isl.m0 * θ + isl.n0 * ζ)
+        B.dB[1, 2] += isl.A * amp * isl.m0^2 * cos(isl.m0 * θ + isl.n0 * ζ)
+        B.dB[1, 3] += isl.A * amp * isl.m0 * isl.n0 * cos(isl.m0 * θ + isl.n0 * ζ)
+    end
+
+    B.B[1] /= met.J[1]
+
+    B.dB[1, 1] /= met.J[1]
+    B.dB[1, 1] -= B.B[1] * met.dJ[1] / met.J[1]
+
+    B.dB[1, 2] /= met.J[1]
+    B.dB[1, 2] -= B.B[1] * met.dJ[2] / met.J[1]
+
+    B.dB[1, 3] /= met.J[1]
+    B.dB[1, 3] -= B.B[1] * met.dJ[3] / met.J[1] #typically dJ/dζ = 0.
+
     #assumes B0=1
-    B.B[1] = 1 / (met.J[1]) * (isl.A * amp * isl.m0 * sin(arg) + isl2.A * amp * isl2.m0 * sin(arg2))
+    #B.B[1] = 1 / (met.J[1]) * (isl.A * amp * isl.m0 * sin(arg) + isl2.A * amp * isl2.m0 * sin(arg2))
                 
     B.B[2] = r / (met.J[1] * q) 
     B.B[3] = r / (met.J[1])
 
     #ignoring amp/damp for now
     #added it back in now!
-    B.dB[1, 1] = - met.dJ[1] / met.J[1]^2 * (isl.A * amp * isl.m0 * sin(arg) + isl2.A * amp * isl2.m0 * sin(arg2)) + 1 / (met.J[1]) * (isl.A * damp * isl.m0 * sin(arg) + isl2.A * damp  * isl2.m0 * sin(arg2))
+    #B.dB[1, 1] = - met.dJ[1] / met.J[1]^2 * (isl.A * amp * isl.m0 * sin(arg) + isl2.A * amp * isl2.m0 * sin(arg2)) + 1 / (met.J[1]) * (isl.A * damp * isl.m0 * sin(arg) + isl2.A * damp  * isl2.m0 * sin(arg2))
 
-    B.dB[1, 2] = - met.dJ[2] / met.J[1]^2 * (isl.A * amp * isl.m0 * sin(arg) + isl2.A * amp * isl2.m0 * sin(arg2)) + 1 / met.J[1] * (isl.A * amp * isl.m0^2 * cos(arg) + isl2.A * amp * isl2.m0^2 * cos(arg2))
+    #B.dB[1, 2] = - met.dJ[2] / met.J[1]^2 * (isl.A * amp * isl.m0 * sin(arg) + isl2.A * amp * isl2.m0 * sin(arg2)) + 1 / met.J[1] * (isl.A * amp * isl.m0^2 * cos(arg) + isl2.A * amp * isl2.m0^2 * cos(arg2))
 
-    B.dB[1, 3] = + 1/ met.J[1] * (isl.A * amp * isl.m0 * isl.n0 * cos(arg) + isl2.A * amp * isl2.m0 * isl2.n0 * cos(arg2))
+    #B.dB[1, 3] = + 1/ met.J[1] * (isl.A * amp * isl.m0 * isl.n0 * cos(arg) + isl2.A * amp * isl2.m0 * isl2.n0 * cos(arg2))
 
     #B.dB[1, 1] = ( - isl.A * amp * isl.m0 * sin(arg) * met.dJ[1] / met.J[1]^2
     #                + 1 / (met.J[1]) * isl.A * damp * isl.m0 * sin(arg))
@@ -82,9 +98,11 @@ function compute_B!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, isl2:
     B.dB[2, 2] = - (r / q ) * met.dJ[2] / met.J[1]^2
     
 
+    B.dB[2, 3] = - (r / q ) * met.dJ[3] / met.J[1]^2 #typically dJ/dζ = 0.
 
     B.dB[3, 1] = (met.J[1] - r * met.dJ[1]) / met.J[1]^2
     B.dB[3, 2] = -r*met.dJ[2]/met.J[1]^2
+    B.dB[3, 3] = -r*met.dJ[3]/met.J[1]^2 #typically dJ/dζ = 0.
     
 
     #note this also does B.db
@@ -145,7 +163,7 @@ end
 
 Function to determine the island amplitude. Needs work
 """
-function island_amplitude(r::Float64, isl::IslandT)
+function island_amplitude(r::Float64)
 
     #doesn't actually use the island at the moment, but probably will one day.
     #currently will only work for islands at r0=0.5.

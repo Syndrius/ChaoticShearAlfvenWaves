@@ -58,7 +58,7 @@ end
 
 Main function for computing the qfm surfaces. Iterates over the p/q rational inputs and creates a surface for each value.
 """
-function construct_surfaces(plist::Array{Int64}, qlist::Array{Int64}, sguesslist::Array{Float64}, prob::ProblemT, MM=4::Int64, M=24::Int64, N=8::Int64)
+function construct_surfaces(plist::Array{Int64}, qlist::Array{Int64}, sguesslist::Array{Float64}, prob::ProblemT; MM=4::Int64, M=24::Int64, N=8::Int64)
 
     #qlist and plist are assumed to be the same size.
 
@@ -174,6 +174,32 @@ end
 
 
 """
+Creates a list of rationals, by getting all rationals between min and max, with a maximimum denominator of depth.
+"""
+function lowest_rationals(depth::Int64, min::Float64, max::Float64)
+
+    rats = Tuple[]
+    for i in 1:depth
+        j = 1
+        while (j / i < max)
+            if j/i > min
+                a = gcd(j, i)
+                if !((j, i) in rats)
+                    if a==1
+                        push!(rats, (j, i))
+                    elseif !((Int(j/a), Int(i/a)) in rats)
+                        push!(rats, (Int(j/a), Int(i/a)))
+                    end
+                end
+            end
+            j += 1
+        end
+    end
+    return rats
+end
+
+
+"""
 
 Creates a list of rationals using a farey tree.
 """
@@ -252,6 +278,9 @@ function convert_surf(surf::QFMSurfaceT)
     #if only we understood these arrays.
     pqMpol = 24
     pqNtor = 8
+    #really good
+    pqMpol = 32
+    pqNtor = 12
     mlist = collect(range(0, pqMpol))
 
     collect(-pqNtor:0)
