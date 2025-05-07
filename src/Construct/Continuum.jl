@@ -15,10 +15,14 @@ function continuum(prob::ProblemT, grids::ContGridsT)
     nlist = mode_list(grids.ζ)
 
 
-    if prob.isl.A != 0.0
+    #this condition no longer works with the new setup.
+    #probably need to check that there is only a single, A=0.0 island.
+    #=
+    if !isempty(prob.isls)
         display("Continuum can't handle islands you goose.")
         #exit()
     end
+    =#
 
     if prob.flr.δ != 0.0
         display("Continuum can't handle resisitivity you goose.")

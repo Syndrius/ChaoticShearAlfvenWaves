@@ -208,6 +208,7 @@ function action(p::Int64, q::Int64, prob::ProblemT, met::MetT, B::BFieldT, MM::I
 
         #solve for the psuedo field line.
         sol = nlsolve(ag!, ag_JM!, x0)
+        #sol = nlsolve(ag!, x0)
 
         #unpacks the single array solution into CoefficientsT struct.
         unpack_coeffs!(sol.zero, coefs, Ntor)
@@ -318,8 +319,8 @@ function action_grad!(δS::Array{Float64}, x::Array{Float64}, a::Float64, coefs:
     end
     
 
-    rfft1D!(ftd.rdot_fft_cos, ftd.rdot_fft_sin, ip.rdot, ftd.ft_r1D, ftd.rft_1D_p)
-    rfft1D!(ftd.θdot_fft_cos, ftd.θdot_fft_sin, ip.θdot, ftd.ft_θ1D, ftd.rft_1D_p)
+    rfft1D!(ftd.rdot_fft_cos, ftd.rdot_fft_sin, ip.rdot, ftd.ft_r1D, ftd.rft_1D_p, 2*2*(ip.Ntor-1))
+    rfft1D!(ftd.θdot_fft_cos, ftd.θdot_fft_sin, ip.θdot, ftd.ft_θ1D, ftd.rft_1D_p, 2*2*(ip.Ntor-1))
 
     
     #note that thes equations are not clear from the paper.
@@ -457,6 +458,12 @@ function action_grad_jm!(JM::Array{Float64, 2}, x::Array{Float64}, a::Float64, c
     #should be JM[coef, deriv]
     #these are implying that the derivative of the rcos with respect to every coef is the same?
     #probbaly an indexing issue.
+    #so drdot_cos, is the derivative of rdot^c w.r.t every coefficient, but they have just been smashed together in this ridiculous way
+    #so that the fourier transform can be taken all at once.
+    #still seems surprising that the fourier transform does work tbh
+    #seems like there would be a crazy shift on the edge ones?
+    #fourier transform is taken in the second dim, so each one is getting fourier transformed individually.
+    #don't think we want to do it like this.
     JM[2:qN+2, 1:end] .= -drdot_cos[1:qN+1, 1:end]
     JM[qN+3:2*qN+2, 1:end] .= -drdot_sin[2:qN+1, 1:end]
 
@@ -481,6 +488,7 @@ function action_grad_jm!(JM::Array{Float64, 2}, x::Array{Float64}, a::Float64, c
 
     JM[CartesianIndex.(3*qN+4:4*qN+3, 3*qN+4:4*qN+3)] += (-ip.nlist / ip.q)[2:end] #-θcos[2:end]
 
+    #[[nv]; rcos ; tsin[2:end] ; rsin[2:end] ; tcos]
     #then derivative w.r.t nv
     #srs what even is this.
     JM[2:qN+2, 1] += ipjm.ooBζcos[1:qN+1]

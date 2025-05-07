@@ -86,6 +86,33 @@ function construct_surfaces(plist::Array{Int64}, qlist::Array{Int64}, sguesslist
 
 end
 
+function new_construct_surfaces(plist::Array{Int64}, qlist::Array{Int64}, sguesslist::Array{Float64}, prob::ProblemT; nfft=2::Int64, M=24::Int64, N=8::Int64)
+
+    #qlist and plist are assumed to be the same size.
+
+    met = MetT()
+    B = BFieldT()
+    surfaces = QFMSurfaceT[]
+
+    for i in 1:1:length(plist)
+        #obvs will need to pass the other stuff in here somehow.
+        rcos, θsin, rsin, θcos = new_action(plist[i], qlist[i], prob, met, B, M, N, sguesslist[i], nfft)
+
+        ρ = rcos[1, 1] #surface label.
+        push!(surfaces, QFMSurfaceT(qlist[i], plist[i], ρ, rcos, θsin, rsin, θcos))
+        @printf("Found %d of %d surfaces.\n", i, length(plist))
+    end
+
+    #now we add the bounding surfaces, assumed to be at 0, 1
+    #Doesn't work!
+    #push!(surfaces, straighten_boundary(ρ1, MM, M, N, prob))
+    #push!(surfaces, straighten_boundary(ρ2, MM, M, N, prob))
+
+    #unsure if we actually want to do this, 
+    #as I don't think we want the surface objects tbh, just want the interpolant build from them
+    return surfaces
+
+end
 
 
 

@@ -4,25 +4,107 @@
 #probably gotta be a problemo for another day!
 
 
-#takes the real fft in 1D.
-function rfft1D!(cos_coef::Array{Float64}, sin_coef::Array{Float64}, func::Array{Float64}, fft_res::Array{ComplexF64}, plan::FFTW.rFFTWPlan)
+"""
+    rfft1D!(cos_coef::Array{Float64}, sin_coef::Array{Float64}, func::Array{Float64}, fft_res::Array{ComplexF64}, plan::FFTW.rFFTWPlan, Nfft::Int64)
 
-    #shouldn't be doing this.
-    Nfft = length(func)
+Takes the real fft in 1D in place. fft_res is a temporary array to store the rfft, before it is converted sin and cos.
+For func of size N, fft_res, cos_coef and sin_coef must all be size N/2 +1, while the plan is created based on size N array.
+"""
+function rfft1D!(cos_coef::Array{Float64}, sin_coef::Array{Float64}, func::Array{Float64}, fft_res::Array{ComplexF64}, plan::FFTW.rFFTWPlan, Nfft::Int64)
 
 
+    #takes the rfft.
     fft_res .= plan * func
 
-    cos_coef .= real.(fft_res) ./ Nfft .* 2
+    #note the additional scaling by a*π here has been divided in the main equations.
 
+    #gets the cos component, 
+    cos_coef .= real.(fft_res) ./ Nfft .* 2
+    #const term does not need the 2 scaling
+    #I am not sure there is any reason to do this.
+    #also think the sin_coef[1] will always be zero for real fft.
+    #this is required to reflect the *= 2 in irfft1D.
     cos_coef[1] /= 2
 
+    #gets the sin component
     sin_coef .= @. -imag(fft_res) / Nfft * 2
-
+    #sin(n=0) term is always zero
     sin_coef[1] = 0.0
 
 end
 
+
+function rfft1D!(cos_coef::Array{Float64, 2}, sin_coef::Array{Float64, 2}, func::Array{Float64, 2}, fft_res::Array{ComplexF64, 2}, plan::FFTW.rFFTWPlan, Nfft::Int64)
+
+
+    #takes the rfft.
+    fft_res .= plan * func
+
+    #note the additional scaling by a*π here has been divided in the main equations.
+
+    #gets the cos component, 
+    cos_coef .= real.(fft_res) ./ Nfft .* 2
+    #const term does not need the 2 scaling
+    #I am not sure there is any reason to do this.
+    #also think the sin_coef[1] will always be zero for real fft.
+    #this is required to reflect the *= 2 in irfft1D.
+    cos_coef[1, :] ./= 2
+
+    #gets the sin component
+    sin_coef .= @. -imag(fft_res) / Nfft * 2
+    #sin(n=0) term is always zero
+    sin_coef[1, :] .= 0.0
+
+end
+
+"""
+    irfft1D!(res::Array{Float64}, cos_in::Array{Float64}, sin_in::Array{Float64}, irfft_p::AbstractFFTs.ScaledPlan, fft_arr::Array{ComplexF64}, qN::Int64, nfft::Int64)
+
+Takes the inverse real fourier transform. cos_in and sin_in are length qN+1, temporary array to be irfft'd is length qN+1, and res is size 2*qN*nfft, irfft plan is based on size of res.
+"""
+function irfft1D!(res::Array{Float64}, cos_in::Array{Float64}, sin_in::Array{Float64}, irfft_p::AbstractFFTs.ScaledPlan, fft_arr::Array{ComplexF64}, qN::Int64, nfft::Int64)
+
+    #scaled size of array
+    Nfft = nfft * qN
+
+    fft_arr .= 0.0
+
+    #reconstruct the fourier representation
+    #fft_arr[1:qN+1] .= @. (cos_in - 1im * sin_in) * Nfft
+    fft_arr[1:qN+1] .= @. (cos_in - 1im * sin_in) * Nfft
+
+    #don't think this is needed either!
+    #so for some reason this is essential, probably explains the /2 for cos_coeff[1]
+    fft_arr[1] *= 2
+
+    res .= irfft_p * fft_arr
+end
+
+
+#old now.
+"""
+    get_r_t!(r::Array{Float64}, θ::Array{Float64}, coefs::CoefficientsT, ift_plan::AbstractFFTs.ScaledPlan, ft_r1D::Array{ComplexF64}, ft_θ1D::Array{ComplexF64}, qN::Int64, nfft::Int64)
+
+Reconstructs r, θ from the fourier coefficients. This is done with an invert real fft. Fourier coefficients are length qN+1, 
+"""
+function get_r_t!(r::Array{Float64}, θ::Array{Float64}, coefs::CoefficientsT, ift_plan::AbstractFFTs.ScaledPlan, ft_r1D::Array{ComplexF64}, ft_θ1D::Array{ComplexF64}, Ntor::Int64)
+
+    #2 is an optional arg.
+    Nfft = 2*(Ntor-1)
+
+    #+1 is for the cos(n=0) and sin(n=0) terms
+    ft_r1D[1:Ntor] .= @. (coefs.rcos - 1im * coefs.rsin) * Nfft
+    ft_θ1D[1:Ntor] .= @. (coefs.θcos - 1im * coefs.θsin) * Nfft
+
+    #unclear!
+    ft_r1D[1] *= 2
+    ft_θ1D[1] *= 2
+
+    #take the inverse ft.
+    r .= ift_plan * ft_r1D
+    θ .= ift_plan * ft_θ1D
+    
+end
 
 #obvs this should not exist, it is still being used by grad_jm!
 function rfft1D_simple(f)
@@ -39,27 +121,10 @@ function rfft1D_simple(f)
     return cosout, sinout
 end
 
+
 #reconstructs r and t from the combined fourier coefficients.
 #takes in inverse real fourier transform to get r, θ from the coefficients.
 #somewhat inconsistently named tbh. May be worth changing this or the other stuff.
-function get_r_t!(r::Array{Float64}, θ::Array{Float64}, coefs::CoefficientsT, ift_plan::AbstractFFTs.ScaledPlan, ft_r1D::Array{ComplexF64}, ft_θ1D::Array{ComplexF64}, Ntor::Int64)
-
-    #2 is an optional arg.
-    Nfft = 2 * (Ntor - 1)
-
-    #note that these arrays have been pre-padded with zeros to make sure the ifft works.
-    ft_r1D[1:Ntor] .= @. (coefs.rcos - 1im * coefs.rsin) * Nfft
-    ft_θ1D[1:Ntor] .= @. (coefs.θcos - 1im * coefs.θsin) * Nfft
-
-    #unclear!
-    ft_r1D[1] *= 2
-    ft_θ1D[1] *= 2
-
-    #take the inverse ft.
-    r .= ift_plan * ft_r1D
-    θ .= ift_plan * ft_θ1D
-    
-end
 
 #still being used!
 function rfft1D_JM(f)

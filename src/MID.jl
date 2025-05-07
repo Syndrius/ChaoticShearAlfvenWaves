@@ -12,6 +12,7 @@ Current term is back on, it is working fine, may need higher res for best result
 - Add continuum plotting option to ignore eigenmodes far from validity.
 
 
+- Based on fft stuff in qfm, we may need to double check fft in the spectral method to make sure the scaling is actually correct
 
 
 #Long Term fixes

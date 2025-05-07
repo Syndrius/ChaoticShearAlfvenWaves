@@ -189,11 +189,12 @@ display(length(rats1))
 curr_surfs = vcat(surfs1[1:13], surfs1[15:18], surfs1[20:24], surfs1[26:end]);
 plot_surfs(curr_surfs)
 save_object("total_low_shear_surfs.jld2", curr_surfs)
+curr_surfs = load_object("total_low_shear_surfs.jld2");
 #%%
 
 evals, ϕ, ϕft = compute_spectrum_qfm(grids=grids, prob=prob, solver=solver, surfs=curr_surfs);
 
-continuum_plot(evals)
+ontinuum_plot(evals)
 
 ind = find_ind(evals, 0.343)
 
