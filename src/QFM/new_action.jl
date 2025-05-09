@@ -221,6 +221,8 @@ function new_action(a::Int64, b::Int64, prob::ProblemT, met::MetT, B::BFieldT, M
         #combine the values into a single array for the root findning alg's argument
         new_pack_coeffs!(x0, coefs)
 
+        F0 = similar(x0)
+
         #creates a standin function that fits the form needed for NLSolve.
         ag!(δS, x) = new_action_grad!(δS, x, a, coefs, ip, ftd)
 
@@ -228,8 +230,15 @@ function new_action(a::Int64, b::Int64, prob::ProblemT, met::MetT, B::BFieldT, M
         #this function defines the gradient, improving efficiency.
         ag_JM!(JM, x) = new_action_grad_jm!(JM, x, a, coefs, ip, ftd, ipjm)
 
+        ag_fj!(δS, JM, x) = action_grad_fj!(δS, JM, x, a, coefs, ip, ftd, ipjm)
+
+        df = OnceDifferentiable(ag!, ag_JM!, ag_fj!, x0, F0)
+
         #solve for the psuedo field line.
-        sol = nlsolve(ag!, ag_JM!, x0)
+        #sol = nlsolve(ag!, ag_JM!, x0)
+        #this approach doesn't seem to make much of a speed improvement, but uses less allocations so perhaps faster 
+        #for larger cases?
+        sol = nlsolve(df, x0)
         #sol = nlsolve(ag!, x0)
 
         #unpacks the single array solution into CoefficientsT struct.
@@ -356,7 +365,7 @@ function new_action_grad!(δS::Array{Float64}, x::Array{Float64}, a::Float64, co
     #δS[3 * qN + 4 : end] = @. (-coefs.θcos * ip.nlist / ip.q - ftd.θdot_fft_sin[1:qN+1])[2:end]
 end
 
-function new_action_grad_jm!(JM::Array{Float64, 2}, x::Array{Float64}, a, coefs::CoefficientsT, ip::NewActionGradInputsT, ftd::NewFTDataT, ipjm::NewActionGradInputsJMT)
+function new_action_grad_jm!(JM::Array{Float64, 2}, x::Array{Float64}, a::Float64, coefs::CoefficientsT, ip::NewActionGradInputsT, ftd::NewFTDataT, ipjm::NewActionGradInputsJMT)
 
     new_unpack_coeffs!(x, coefs, ip.qN+1)
 
@@ -573,6 +582,164 @@ function new_action_grad_jm!(JM::Array{Float64, 2}, x::Array{Float64}, a, coefs:
 
     #derivative w.r.t r^c
 end
+
+function action_grad_fj!(δS::Array{Float64}, JM::Array{Float64, 2}, x::Array{Float64}, a::Float64, coefs::CoefficientsT, ip::NewActionGradInputsT, ftd::NewFTDataT, ipjm::NewActionGradInputsJMT)
+    new_unpack_coeffs!(x, coefs, ip.qN+1)
+
+    #should be changed to b / a to match other work.
+    iota = ip.b / ip.a
+
+    #note this is the area of the trial function
+    area = coefs.θcos[1]
+
+
+    #inverse fourier transform, done for r and θ at the same time.
+    irfft1D!(ip.r, coefs.rcos, coefs.rsin, ftd.irfft_1D_p, ftd.temp, ip.qN, ip.nfft)
+    irfft1D!(ip.θ, coefs.θcos, coefs.θsin, ftd.irfft_1D_p, ftd.temp, ip.qN, ip.nfft)
+    #get_r_t!(ip.r, ip.θ, coefs, ftd.ift_1D_p, ftd.ift_r1D, ftd.ift_θ1D, ip.Ntor)
+
+    #ip.r .= irfft1D(coefs.rcos, coefs.rsin)
+    #ip.θ .= irfft1D(coefs.θcos, coefs.θsin)
+
+    #reflects that there is an additional term in the trial function for θ
+    ip.θ .+= iota .* ip.ζ
+
+    for i in 1:2*ip.qN*ip.nfft
+        ip.prob.met(ip.met, ip.r[i], ip.θ[i], ip.ζ[i], ip.prob.geo.R0)
+
+        #need B.dB now, so we just compute the full thing!
+        compute_B!(ip.B, ip.met, ip.prob.q, ip.prob.isls, ip.r[i], ip.θ[i], ip.ζ[i])
+
+        ip.rdot_rhs[i] = ip.B.B[1] / ip.B.B[3] - coefs.nv[1] / (2*ip.a*π*ip.B.B[3] * ip.met.J[1])
+
+        ip.θdot_rhs[i] = ip.B.B[2] / ip.B.B[3]
+
+
+        rdot_rhs_dr = (ip.B.dB[1, 1]/ip.B.B[3] - ip.B.B[1] * ip.B.dB[3, 1] / ip.B.B[3]^2 
+                       + coefs.nv[1] * (ip.B.dB[3, 1] / (2*ip.a*π*ip.B.B[3]^2*ip.met.J[1]) 
+                                        + ip.met.dJ[1] / (2*ip.a*π*ip.B.B[3] * ip.met.J[1]^2)))
+        rdot_rhs_dθ = (ip.B.dB[1, 2]/ip.B.B[3] - ip.B.B[1] * ip.B.dB[3, 2] / ip.B.B[3]^2 
+                       + coefs.nv[1] * (ip.B.dB[3, 2] / (2*ip.a*π*ip.B.B[3]^2*ip.met.J[1]) 
+                                        + ip.met.dJ[2] / (2*ip.a*π*ip.B.B[3] * ip.met.J[1]^2)))
+
+        θdot_rhs_dr = ip.B.dB[2, 1]/ip.B.B[3] - ip.B.B[2] * ip.B.dB[3, 1] / ip.B.B[3]^2
+
+        θdot_rhs_dθ = ip.B.dB[2, 2]/ip.B.B[3] - ip.B.B[2] * ip.B.dB[3, 2] / ip.B.B[3]^2
+
+        #terrible name, this was the ooBζ
+        #weird shape is so this fits in array below
+        ipjm.ν_term[i] = 1 / (2*ip.a*π * ip.B.B[3] * ip.met.J[1])
+        #ipjm.ν_term[i, 1] = 1 / ip.B.B[3]
+        
+        #rdot_rhs_dr = ip.B.dB[1, 1] / ip.B.B[3] - (ip.B.B[1] - coefs.nv[1]) / ip.B.B[3] * ip.B.dB[3, 1]
+        #dBrdθ/Bζ - (Br - nv) / Bζ^2 * dBζdθ
+        #rdot_rhs_dθ = ip.B.dB[1, 2] / ip.B.B[3] - (ip.B.B[1] - coefs.nv[1]) / ip.B.B[3] * ip.B.dB[3, 2]
+        #dBθdr/Bζ - Bθ / Bζ^2 * dBζdr
+        #θdot_rhs_dr = ip.B.dB[2, 1] / ip.B.B[3] - ip.B.B[2] / ip.B.B[3] * ip.B.dB[3, 1]
+        #dBθdθ/Bζ - Bθ / Bζ^2 * dBζdθ
+        #θdot_rhs_dθ = ip.B.dB[2, 2] / ip.B.B[3] - ip.B.B[2] / ip.B.B[3] * ip.B.dB[3, 2]
+        
+        #ipjm.ooBζ[i] = 1 / ip.B.B[3]
+
+
+        #iterates over the n's
+        for j in 1:ip.qN+1
+            #this notation is a bit nicer, probbaly change everything from rcos to rc.
+            #although having rs could be confusing with our new s variable.
+            #but this doesn't come up heaps tbh.
+            #derivative w.r.t r^c
+            ipjm.rdot_rhs_drc[i, j] = rdot_rhs_dr * ipjm.cosnzq[i, j]
+            #derivative w.r.t r^s
+            ipjm.rdot_rhs_drs[i, j] = rdot_rhs_dr * ipjm.sinnzq[i, j]
+            #derivative w.r.t θ^c
+            ipjm.rdot_rhs_dθc[i, j] = rdot_rhs_dθ * ipjm.cosnzq[i, j]
+            #derivative w.r.t θ^s
+            ipjm.rdot_rhs_dθs[i, j] = rdot_rhs_dθ * ipjm.sinnzq[i, j]
+
+            #derivative w.r.t r^c
+            ipjm.θdot_rhs_drc[i, j] = θdot_rhs_dr * ipjm.cosnzq[i, j]
+            #derivative w.r.t r^s
+            ipjm.θdot_rhs_drs[i, j] = θdot_rhs_dr * ipjm.sinnzq[i, j]
+            #derivative w.r.t θ^c
+            ipjm.θdot_rhs_dθc[i, j] = θdot_rhs_dθ * ipjm.cosnzq[i, j]
+            #derivative w.r.t θ^s
+            ipjm.θdot_rhs_dθs[i, j] = θdot_rhs_dθ * ipjm.sinnzq[i, j]
+        end
+    end
+    rfft1D!(ip.rdot_rhs_cos, ip.rdot_rhs_sin, ip.rdot_rhs, ftd.temp, ftd.rfft_1D_p, 2*ip.nfft*ip.qN)
+    rfft1D!(ip.θdot_rhs_cos, ip.θdot_rhs_sin, ip.θdot_rhs, ftd.temp, ftd.rfft_1D_p, 2*ip.nfft*ip.qN)
+
+
+
+    ipjm.drdot .= [ipjm.rdot_rhs_drc  ipjm.rdot_rhs_drs[:, 2:end]  ipjm.rdot_rhs_dθc  ipjm.rdot_rhs_dθs[:, 2:end]]
+    ipjm.dθdot .= [ipjm.θdot_rhs_drc  ipjm.θdot_rhs_drs[:, 2:end]  ipjm.θdot_rhs_dθc  ipjm.θdot_rhs_dθs[:, 2:end]]
+
+    #take the fourier transform along the second dimension, to efficiently fourier trasnform everthing at once.
+    #TODO
+    rfft1D!(ipjm.drdot_cos, ipjm.drdot_sin, ipjm.drdot, ftd.jm_temp, ftd.jmrfft_1D_p, 2*ip.nfft*ip.qN)
+    rfft1D!(ipjm.dθdot_cos, ipjm.dθdot_sin, ipjm.dθdot, ftd.jm_temp, ftd.jmrfft_1D_p, 2*ip.nfft*ip.qN)
+
+    δS[1:ip.qN+1] = @. coefs.rsin * ip.nlist / ip.a - ip.rdot_rhs_cos[1:ip.qN+1]
+
+    #[2:end] as we dont need the rsin[1] coef, as it is zero
+    #rsin coefs come from δS/δθ * sin
+    #only qN coeffs for r^s
+    δS[ip.qN+2:2*ip.qN+1] = @. (-coefs.rcos * ip.nlist / ip.a - ip.rdot_rhs_sin[1:ip.qN+1])[2:end]
+
+    #θcos
+    δS[2*ip.qN+2:3*ip.qN+2] = @. coefs.θsin * ip.nlist / ip.a - ip.θdot_rhs_cos[1:ip.qN+1]
+
+    #(n=0) term for cos has additional iota term
+    δS[2*ip.qN+2] += iota
+
+    #θsin
+    δS[3*ip.qN+3:4*ip.qN+2] = @. (-coefs.θcos * ip.nlist / ip.a - ip.θdot_rhs_sin[1:ip.qN+1])[2:end]
+
+    #lagrange multiplier term
+    δS[end] = area - a
+    
+    JM .= 0.0
+
+    #[rcos ; rsin[2:end] ; tcos ; tsin[2:end] ; [nv]]
+
+    #Derivtive of first set of equations, w.r.t every other coefficient.
+    #end - 1 here as the new drdot doesn't include the ν terms.
+    JM[1:ip.qN+1, 1:end-1] .= -ipjm.drdot_cos[1:ip.qN+1, 1:end]
+    #JM[1:ip.qN+1, 1:end] .= -drdot_cos[1:ip.qN+1, 1:end]
+
+    #display(length(ip.nlist))
+    #display(ip.qN)
+    #display(length(CartesianIndex.(1:ip.qN+1, ip.qN+2:2*ip.qN+1)))
+    #we are excluding the n=0 contribution
+    JM[CartesianIndex.(2:ip.qN+1, ip.qN+2:2*ip.qN+1)] += ip.nlist[2:end] / ip.a
+
+    #same with r^s terms, note that we still don't include the sin(0) term.
+    JM[ip.qN+2:2*ip.qN+1, 1:end-1] .= -ipjm.drdot_sin[2:ip.qN+1, 1:end]
+
+    JM[CartesianIndex.(ip.qN+2:2*ip.qN+1, 2:ip.qN+1)] += -ip.nlist[2:end]/ip.a
+
+    #θ^c terms
+    JM[2*ip.qN+2:3*ip.qN+2, 1:end-1] .= -ipjm.dθdot_cos[1:ip.qN+1, 1:end]
+
+    JM[CartesianIndex.(2*ip.qN+3:3*ip.qN+2, 3*ip.qN+3:4*ip.qN+2)] += ip.nlist[2:end]/ip.a
+
+    #θ^s terms
+    JM[3*ip.qN+3:4*ip.qN+2, 1:end-1] .= -ipjm.dθdot_sin[2:ip.qN+1, 1:end]
+
+    #fourth set with respect to θ^c (no θ^s derivs)
+    JM[CartesianIndex.(3*ip.qN+3:4*ip.qN+2, 2*ip.qN+3:3*ip.qN+2)] += -ip.nlist[2:end]/ip.a
+
+    #extra term from ν equation
+    #this is d/dθ_0^c.
+    JM[end, 2*ip.qN+2] += 1.0
+
+    #in theory, these are not needed anymore, as there are in the big fourier transform thingo.
+    JM[1:ip.qN+1, end] += ipjm.ν_cos[1:ip.qN+1]
+    JM[ip.qN+2:2*ip.qN+1, end] += ipjm.ν_sin[2:ip.qN+1]
+
+
+end
+
 
 
 """

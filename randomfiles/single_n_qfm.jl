@@ -10,18 +10,32 @@ function q_prof(r::Float64)
     #n=-3 harmonics for perturbations
     #if we need to look at tae, we will need to change the density profile
     
+    #this should have a 7/3 island at 0.8 ish
+    #and a 8/3 island at 0.85
     a = 1.05
     b = 0.5
-    c = 9.0
-    d = 0.0
-    return a + b*r^2 + c*r^6, 2 * b * r + 6*c*r^5
+    c = 2.35
+    return a + b*r^2 + c*r^4, 2 * b * r + 4*c*r^3
     #return a + b*r^2 + c*r^10 + d*r^4, 2*b*r + 10*c*r^9 + 4*d*r^3
     #return a + b*r^6, 6 * b * r^5
     #return a + b*r^4, 4 * b * r^3
 end
 function dens_prof(r::Float64)
+    a = 1.05
+    b = 0.4
+    c = 5.0
+    d = 6
 
-    return 1.0 #- tanh((r-0.85)/0.15)
+    #this og version doesn't seem to prevent continuum interaction
+    #but does isolate the tae's a bit.
+    #so it is still nicer
+    #rh = 0.7
+    #scale = 0.3
+    rh = 0.8
+    scale = 0.2
+
+    return 1/2 * (1-tanh((r-rh)/scale))
+
 end
 #%%
 
@@ -44,14 +58,16 @@ evals_cont = compute_continuum(prob, cont_grids);
 continuum_plot(evals_cont, cont_grids)
 
 #%%
-rgrid = init_grid(type=:rf, N=60)
-θgrid = init_grid(type=:as, start=0, N=9)
-ζgrid = init_grid(type=:as, start=-5, N=5)
+rgrid = init_grid(type=:rf, N=150)
+θgrid = init_grid(type=:as, start=0, N=10)
+#θgrid = init_grid(type=:af, pf=2, N=10)
+ζgrid = init_grid(type=:as, start=-3, N=3)
+#ζgrid = init_grid(type=:af, pf=-2, N=4)
 
 grids = init_grids(rgrid, θgrid, ζgrid)
 #%%
 
-solver = init_solver(nev = 200, targets=[0.25, 0.30, 0.35], prob=prob)
+solver = init_solver(nev = 200, target=0.35, prob=prob)
 
 #%%
 evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, solver=solver);
@@ -60,9 +76,9 @@ evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, solver=solver);
 continuum_plot(evals)
 continuum_plot(evals, n=-2)
 
-ind  = find_ind(evals, 0.2466243)
+ind  = find_ind(evals, 0.366)
 
-potential_plot(ϕft, grids, ind, label_max=0.5)
+potential_plot(ϕft, grids, ind, label_max=0.2)
 
 #%%
 k = 0.0015
@@ -81,6 +97,7 @@ Nlaps = 500
 poincare_plot(isl_prob, Nlaps, Ntraj, rlist);
 
 #%%
+using Roots
 #see if we can plot the edge of the gaps, this will help us make the tae gap 'straight'
 function get_gaps(q, dens, n)
 
@@ -111,26 +128,36 @@ function get_gaps(q, dens, n)
     return sols, freqs
 end 
 #%%
-function q_prof(r)
+#these two pair pretty well for 7/3 and 8/3, 
+#however, there still seems to be a significant amount of interaction
+#between tae's and continuum, despite frequency gap being open.
+function q_prof(r::Float64)
+    #we are going to stick with the q-prof
+    #n=-3 harmonics for perturbations
+    #if we need to look at tae, we will need to change the density profile
+    
+    #this should have a 7/3 island at 0.8 ish
+    #and a 8/3 island at 0.85
     a = 1.05
-    b = 0.4
-    c = 5.0
-    d = 6
-    return a + b*r^2 + c*r^d, 2*b*r + d*c*r^(d-1) 
+    b = 0.5
+    c = 2.35
+    return a + b*r^2 + c*r^4, 2 * b * r + 4*c*r^3
+    #return a + b*r^2 + c*r^10 + d*r^4, 2*b*r + 10*c*r^9 + 4*d*r^3
     #return a + b*r^6, 6 * b * r^5
     #return a + b*r^4, 4 * b * r^3
-    #return a + b*r^2, 2 * b * r
 end
+
 function dens_prof(r::Float64)
     a = 1.05
     b = 0.4
     c = 5.0
     d = 6
 
-    if r < 0.6
-        return 1.0
-    end
-    return 1/(-0.867647*r + 0.937941)^2
+    rh = 0.7
+    scale = 0.3
+
+    return 1/2 * (1-tanh((r-rh)/scale))
+
 end
 
 sols1, freqs1 = get_gaps(q_prof, dens_prof, -1)

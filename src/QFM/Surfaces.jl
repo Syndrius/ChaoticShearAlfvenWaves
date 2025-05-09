@@ -303,11 +303,8 @@ function convert_surf(surf::QFMSurfaceT)
 
     #this should be determinable from the array size.
     #if only we understood these arrays.
-    pqMpol = 24
-    pqNtor = 8
     #really good
-    pqMpol = 32
-    pqNtor = 12
+    pqMpol, pqNtor = size(rcos)
     mlist = collect(range(0, pqMpol))
 
     collect(-pqNtor:0)
@@ -344,6 +341,17 @@ function convert_surf(surf::QFMSurfaceT)
 end
 
 
+function surface_guess(rationals::Array{Tuple}, q::Function)
+    gl = Float64[]
+
+    for i in rats
+        diff(r) = i[1]/i[2] - q_prof(r)[1]
+        sol = find_zero(diff, 0.5)
+        push!(gl, sol)
+    end
+    return gl
+end
+
 #perhaps doesn't belong here, but this is a useful function for giving some sense of if the surfaces are good or not.
 #note that this computes the jacobin at the grid points, not at the Gaussing weight points, which is perhaps misleading.
 #this also assumes fff grids for some reason.
@@ -374,26 +382,29 @@ function compute_jac(prob::ProblemT, grids::FFFGridsT, surfs::Array{QFMSurfaceT}
 
     jac = zeros(grids.r.N, grids.θ.N, grids.ζ.N)
     djac = zeros(3, grids.r.N, grids.θ.N, grids.ζ.N)
+    B = zeros(3, grids.r.N, grids.θ.N, grids.ζ.N)
     #for comparisons.
-    jac_tor = zeros(grids.r.N, grids.θ.N, grids.ζ.N)
-    djac_tor = zeros(3, grids.r.N, grids.θ.N, grids.ζ.N)
-    coords = zeros(3, grids.r.N, grids.θ.N, grids.ζ.N)
+    #jac_tor = zeros(grids.r.N, grids.θ.N, grids.ζ.N)
+    #djac_tor = zeros(3, grids.r.N, grids.θ.N, grids.ζ.N)
+    #coords = zeros(3, grids.r.N, grids.θ.N, grids.ζ.N)
 
     #for (i, r) in enumerate(rvals), (j, θ) in enumerate(θvals), (k, ζ) in enumerate(ζvals)
     for (i, r) in enumerate(rgrid), (j, θ) in enumerate(θgrid), (k, ζ) in enumerate(ζgrid)
         coord_transform!(r, θ, ζ, CT, surf_itp, sd)
         toroidal_metric!(tor_met, CT.coords[1], CT.coords[2], CT.coords[3], prob.geo.R0)
-        #compute_B!(tor_B, tor_met, prob.q, prob.isl, prob.isl2, CT.coords[1], CT.coords[2], CT.coords[3])
+        compute_B!(tor_B, tor_met, prob.q, prob.isls, CT.coords[1], CT.coords[2], CT.coords[3])
         met_transform!(tor_met, qfm_met, CT)
-        #B_transform!(tor_B, qfm_B, qfm_met, CT)
+        B_transform!(tor_B, qfm_B, qfm_met, CT)
 
         jac[i, j, k] = qfm_met.J[1]
         djac[:, i, j, k] = qfm_met.dJ[:]
-        jac_tor[i, j, k] = tor_met.J[1]
-        djac_tor[:, i, j, k] = tor_met.dJ[:]
-        coords[:, i, j, k] = CT.coords[:]
+        #jac_tor[i, j, k] = tor_met.J[1]
+        #djac_tor[:, i, j, k] = tor_met.dJ[:]
+        #coords[:, i, j, k] = CT.coords[:]
+        B[:, i, j, k] = qfm_B.B[:]
+
     end
-    return jac, djac, jac_tor, djac_tor, coords
+    return B, jac, djac
 end
 
 ##########################################################

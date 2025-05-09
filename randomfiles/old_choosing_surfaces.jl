@@ -10,6 +10,35 @@ using MIDViz
 using Plots
 using JLD2
 #%%
+function q_prof(r::Float64)
+    #we are going to stick with the q-prof
+    #n=-3 harmonics for perturbations
+    #if we need to look at tae, we will need to change the density profile
+    
+    #this should have a 7/3 island at 0.8 ish
+    #and a 8/3 island at 0.85
+    a = 1.05
+    b = 0.5
+    c = 2.35
+    return a + b*r^2 + c*r^4, 2 * b * r + 4*c*r^3
+    #return a + b*r^2 + c*r^10 + d*r^4, 2*b*r + 10*c*r^9 + 4*d*r^3
+    #return a + b*r^6, 6 * b * r^5
+    #return a + b*r^4, 4 * b * r^3
+end
+
+function dens_prof(r::Float64)
+    a = 1.05
+    b = 0.4
+    c = 5.0
+    d = 6
+
+    rh = 0.7
+    scale = 0.3
+
+    return 1/2 * (1-tanh((r-rh)/scale))
+
+end
+#%%
 R0=4.0
 
 geo = init_geo(R0=R0)
@@ -18,15 +47,15 @@ geo = init_geo(R0=R0)
 k = 0.05
 isl = init_island(m0=3, n0=2, A=k/5)
 isl2 = init_island(m0=7, n0=-3, A=0.0)
-prob = init_problem(q=qfm_q, geo=geo, isl=isl, isl2=isl2)#, flr=flr)
+prob = init_problem(q=qfm_q, geo=geo, isls=[isl, isl2])
 
 #chaotic case
 k = 0.0006
-isl = init_island(m0=3, n0=-2, A=k/3)
-isl2 = init_island(m0=4, n0=-3, A=k/4)
+isl = init_island(m0=7, n0=-3, A=k/7)
+isl2 = init_island(m0=8, n0=-3, A=k/8)
 #isl2 = init_island(m0=4, n0=-3, A=0.0)
 
-prob = init_problem(q=qfm_q, geo=geo, isl=isl, isl2=isl2)#, flr=flr)
+prob = init_problem(q=qfm_q, geo=geo, isls=[isl, isl2])
 #%%
 qlist, plist = farey_tree(5, 1, 1, 2, 1)
 guess_list = 0.5 .* ones(length(qlist));

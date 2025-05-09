@@ -1,5 +1,27 @@
 #TODO -> should change these names and probably provide the function in the doc.@
 
+#
+#desgined for chaotic region between ~0.77-0.9
+#with (7, -4), (5, -3), (8, -5) islands
+function low_shear_qfm_q(r::Float64)
+    a = 1.2
+    b = 0.6
+    c = 0.1
+    return a + b * r^2 + c*r^4, 2 * b * r + 4*c*r^3
+end
+
+#stupid af q-profile, should have n=3 islands, starting from m=7 at 0.7
+#up to m=14 at 0.9
+function single_n_q_prof(r::Float64)
+    a = 1.05
+    b = 1.3
+    c = 0.83254
+    d = 3.8
+    return a + b*r^2 + c*r^4 + d*r^6, 2 * b * r + 4*c*r^3 + 6*d*r^5
+    #return a + b*r^2 + c*r^10 + d*r^4, 2*b*r + 10*c*r^9 + 4*d*r^3
+    #return a + b*r^6, 6 * b * r^5
+    #return a + b*r^4, 4 * b * r^3
+end
 
 function low_shear_q(r::Float64)
     a = 1.05
