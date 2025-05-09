@@ -17,10 +17,7 @@ Current term is back on, it is working fine, may need higher res for best result
 
 #Long Term fixes
  - Perhaps https://github.com/fredrikekre/Literate.jl if we ever want to share this garbage.
- - Choice of p,q for rational numbers is not ideal with a q-profile, we probably want to swap to a/b or something. a/b is set in surface struct, need to make this uniform throughout the paper.
- - Do the interpolation and derivatives etc for all cases. And/or move mapping to a separate module.
  - Re do all the example cases, include proper benchmarks and tests.
- - QFM Module could do with some more optimization, however, probably not important.
  - Add try catch to sqrt in solve, most of the time it is just because of ~0 numbers, but it owuld be good to have a warning rather than just always take abs. -> Maybe in this case we dont return the normalised ones? Or should we always have a normalise flag??? -> cka does this better, below some tolerance they are just set to zero.
  - Use of kwargs is inconsistent and sometimes annoying.
  - May want to change the way the q-profile is done. May be better to precompute the values, and just pass in q and dq and floats so that there is no uncertainty, will need to profile.
@@ -52,7 +49,7 @@ include("Equilibrium/Equilibrium.jl")
 
 using ..Equilibrium; export fu_dam_q
 using ..Equilibrium; export qfm_q
-using ..Equilibrium; export low_shear_q
+using ..Equilibrium; export low_shear_qfm_q
 using ..Equilibrium; export qfm_benchmark_q
 
 
@@ -100,6 +97,8 @@ include("QFM/QFM.jl")
 using ..QFM; export construct_surfaces
 using ..QFM; export farey_tree
 using ..QFM; export lowest_rationals
+using ..QFM; export surface_guess
+using ..QFM; export compute_jac #perhaps shouldn't be exported
 
 
 

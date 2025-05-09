@@ -1,19 +1,59 @@
 """
-So this file is starting to come together.
-Big issues still:
-- What is field wrapping? Why are we doing it?
-- Parameters/shape of arrays, need to understand the Rfft stuff more.
-- The actual equations we are solving.
-- Doubly so for JM, that makes little to no sense.
-- JM is still allocating a lot. Understanding the above will help with that.
-"""
-#we have basic functionality again. This is all still pretty cooked though!
 
-#no idea what to call this damn thing!
-#not even sure we want this tbh!
-#note we are incosisntently using coefs and coeffs
+This file and GradAction.jl extremize the action
+∮ A⋅dl - ν(1/2aπ ∮θ∇ζ⋅dl - bπ - α)
+to find qfm surfaces.
+
+This involves finding the zeros of the gradient of the action, written as 3 equations,
+1) ṙ - B^r/B^ζ + ν/2aπJB^ζ = 0
+2) θ̇ - B^θ/B^ζ = 0
+3) 1/2aπ∫_0^2aπ θ dζ - bπ - α = 0
+
+This is done by expanding r, θ via their fourier coefficients,
+
+r(ζ) = r_0^c + ∑_{n=1}^aN (r_n^c cos(nζ/q) + r_n^s sin(nζ/q))
+θ(ζ) = θ_0^c + ι*ζ + ∑_{n=1}^aN (θ_n^c cos(nζ/q) + θ_n^s sin(nζ/q))
+
+leading to 4*aN+3 eqautions to solve (+3 due to n=0 terms and ν equation).
+
+This is done with the NLSolve package.
+Following their notation, in GradAction.jl we have the functions
+action_grad_f! - Computes the residuals of the above equations.
+action_grad_j! - Computes the jacobian of the above equations.
+action_grad_fj! - Computes both, used for efficient solving.
+
+Each function required many inputs which have been preallocated for efficieny.
+These inputs are stored in the Structs below, which also follow the naming pattern used by NLSolve.
+
+We use the terminology `rhs' for the parts of the equations above that are not ṙ or θ̇, eg ṙ_rhs is B^r/B^ζ - ν/2aπJB^ζ.
+
+The equations are stored in the array δS, the first aN+1 elements are from the first equation above, multiplied by cos and integrated, to extract a single coeffienct, in this case the r_n^s coefficeints due to the derivative.
+
+The next aN equations are the same equation but with sin.
+Then aN+1 from the second equation with cos followed by aN equations from sin.
+Finally, the remaining equation 3).
+
+The Jacobian matrix used requires that derivatives of each of these equations is taken with respect to all the variables.
+
+The order of this matrix depends on the order of the variables, which we take to be
+[r^c_n, r^s_n, θ^c_n, θ^s_n, ν]
+
+Final note on the size of the arrays used,
+- the coefficients are length aN (+1 for the ^c cases from n=0)
+- Arrays are expanded with nfft to reduce aliasing issues, so N = nfft * aN
+- These are irfft'd to get values for r,θ. these arrays are size 2*(N-1)
+- This is the size of most arrays used in the computation.
+
+"""
+
+#these extra structs may have made this much slower unfort.
+
+"""
+Structure that stores the variables to solve for.
+This includes the fourier coefficients for r and θ, and the lagrange multiplier ν.
+"""
 struct CoefficientsT
-    nv :: Array{Float64, 1} #this is actually just a float. but we want to mutate it.
+    ν :: Array{Float64, 1} #this is actually just a float. but we want to mutate it.
     rcos :: Array{Float64, 1}
     θcos :: Array{Float64, 1}
     rsin :: Array{Float64, 1}
@@ -24,13 +64,57 @@ struct CoefficientsT
 end
 
 
-#struct to condense the inputs for action grad. allowing preallocation of variables.
-#perhaps this should be split up into multiple structs. this is wild.
-#the split between this struct and the next is much more arbitrary than we would like.
-struct ActionGradInputsT
-    p :: Int64
-    q :: Int64
-    Ntor :: Int64
+"""
+Structure for storing data used for the fourier transformations.
+This includes temp arrays to store the output of real fft's before being split into sin/cos components and fourier transform plans.
+"""
+struct FTDataT
+    irfft_1D_p :: AbstractFFTs.ScaledPlan
+    rfft_1D_p :: FFTW.rFFTWPlan
+    temp :: Array{ComplexF64}
+    jm_temp :: Array{ComplexF64, 2} #probably 2 dims.
+    jmrfft_1D_p :: FFTW.rFFTWPlan 
+    function FTDataT(aN::Int64, nfft::Int64)
+        #size of arrays in fourier space
+        fft_size = 2 * aN * nfft
+        temp = zeros(fft_size)
+        rfft_1D_p = plan_rfft(temp)
+        #size of arrays after they have been irfft'd.
+        ifft_size = aN * nfft + 1
+        temp = zeros(ComplexF64, ifft_size)
+        irfft_1D_p = plan_irfft(temp, fft_size)
+
+        #size of combined array for efficient fourier transform
+        comb_size = 4 * aN + 2
+        temp = zeros(fft_size, comb_size)
+        jmrfft_1D_p = plan_rfft(temp, [1]) 
+        new(irfft_1D_p, rfft_1D_p, zeros(ifft_size), zeros(ifft_size, comb_size), jmrfft_1D_p)
+    end
+end
+
+"""
+Struct storing the 'rhs' data in each equation, includes the computed value and cos/sin coefficients once fft'd.
+"""
+struct RHST
+    rhs :: Array{Float64}
+    cn :: Array{Float64}
+    sn :: Array{Float64}
+    function RHST(arr_size::Int64, irfft_size::Int64)
+        new(zeros(arr_size), zeros(irfft_size), zeros(irfft_size))
+    end
+end
+
+
+
+"""
+Struct storing the inputs for the function that computes the residuals.
+Allows for preallocation of memory.
+"""
+struct ActionGradFInputsT
+    a :: Int64 #rational pair (a, b)
+    b :: Int64
+    aN :: Int64 #size of fourier expansion in trial function
+    nfft :: Int64
     r :: Array{Float64}
     θ :: Array{Float64}
     ζ :: StepRangeLen{Float64}
@@ -38,191 +122,170 @@ struct ActionGradInputsT
     met :: MetT
     B :: BFieldT
     nlist :: Array{Int64}
-    rdot :: Array{Float64}
-    θdot :: Array{Float64}
-    function ActionGradInputsT(p::Int64, q::Int64, Ntor::Int64, fft_size::Int64, ζ::StepRangeLen{Float64}, prob::ProblemT, met::MetT, B::BFieldT, nlist::UnitRange{Int64})
-        #perhaps the inputs are a bit restrictive...
-        new(p, q, Ntor, zeros(2*fft_size), zeros(2*fft_size), ζ, prob, met, B, nlist, zeros(2*fft_size), zeros(2*fft_size))
-    end
-end
-
-#struct for storing the data needed for efficient fourier transform
-struct FTDataT
-    ift_1D_p :: AbstractFFTs.ScaledPlan
-    rft_1D_p :: FFTW.rFFTWPlan
-    ift_r1D :: Array{ComplexF64}
-    ift_θ1D :: Array{ComplexF64}
-    rdot_fft_cos :: Array{Float64}
-    rdot_fft_sin :: Array{Float64}
-    θdot_fft_cos :: Array{Float64}
-    θdot_fft_sin :: Array{Float64}
-    ft_r1D :: Array{ComplexF64}
-    ft_θ1D :: Array{ComplexF64}
-    function FTDataT(fft_size::Int64)
-        #obvs a bit dumb that we are adding 1 to everything!
-        temp = zeros(2*fft_size)
-        rft_1D_p = plan_rfft(temp)
-        temp = zeros(ComplexF64, fft_size+1)
-        irft_1D_p = plan_irfft(temp, 2*fft_size)
-        new(irft_1D_p, rft_1D_p, zeros(ComplexF64, fft_size+1), zeros(ComplexF64, fft_size+1), zeros(fft_size+1), zeros(fft_size+1), zeros(fft_size+1), zeros(fft_size+1), zeros(ComplexF64, fft_size+1), zeros(ComplexF64, fft_size+1))
+    rdot :: RHST #still not really happy with this rhs notation, guess it will have to do.
+    θdot :: RHST
+    function ActionGradFInputsT(a::Int64, b::Int64, aN::Int64, nfft::Int64, ζ::StepRangeLen{Float64}, prob::ProblemT, met::MetT, B::BFieldT, nlist::UnitRange{Int64})
+        #size of the ifft'd arrays.
+        arr_size = 2 * aN * nfft
+        irfft_size = aN*nfft+1
+        rdot = RHST(arr_size, irfft_size)
+        θdot = RHST(arr_size, irfft_size)
+        new(a, b, aN, nfft, zeros(arr_size), zeros(arr_size), ζ, prob, met, B, nlist, rdot, θdot)
     end
 end
 
 
-#struct to condense the inputs for action grad jm. allowing preallocation of variables.
-#this takes exactly the same args. Don't think it should!
-#still needs work, we will need to fix action_grad_jm first tbh.
-#this is even more of a disaster. Probably want the normal one and an extra one, just so this isn't quite so fkn cooked.
-struct ActionGradInputsJMT
-    ooBζ :: Array{Float64}
-    ooBζcos :: Array{Float64}
-    ooBζsin :: Array{Float64}
-    cosnzq :: Array{Float64, 2}
-    sinnzq :: Array{Float64, 2}
-    rdot_dr :: Array{Float64}
-    rdot_dθ :: Array{Float64}
-    θdot_dr :: Array{Float64}
-    θdot_dθ :: Array{Float64}
-    rdot_drcos :: Array{Float64, 2}
-    rdot_drsin :: Array{Float64, 2}
-    rdot_dθcos :: Array{Float64, 2}
-    rdot_dθsin :: Array{Float64, 2}
-    θdot_drcos :: Array{Float64, 2}
-    θdot_drsin :: Array{Float64, 2}
-    θdot_dθcos :: Array{Float64, 2}
-    θdot_dθsin :: Array{Float64, 2}
-    #rdot :: Array{Float64, 2} #no fkn idea what the shape of this is tbh!
-    #θdot :: Array{Float64, 2} #no fkn idea what the shape of this is tbh!
-    function ActionGradInputsJMT(fft_size::Int64, ip::ActionGradInputsT)
-        nzq = ip.nlist .* ip.ζ' ./ ip.q
-        M = length(ip.nlist)
-        N = 2 * fft_size
+"""
+Struct storing the derivatives of the 'rhs' data in each equation, includes the computed value and cos/sin coefficients once fft'd.
+Used by the jacobian function.
+"""
+struct DRHST
+    drhs :: Array{Float64, 2} 
+    dcn :: Array{Float64, 2}
+    dsn :: Array{Float64, 2}
+    drcn :: Array{Float64, 2}
+    drsn :: Array{Float64, 2}
+    dθcn :: Array{Float64, 2}
+    dθsn :: Array{Float64, 2}
+    function DRHST(arr_size::Int64, comb_size::Int64, irfft_size::Int64, aN::Int64)
+        new(zeros(arr_size, comb_size), zeros(irfft_size, comb_size), zeros(irfft_size, comb_size), zeros(arr_size, aN+1), zeros(arr_size, aN+1), zeros(arr_size, aN+1), zeros(arr_size, aN+1))
+    end
+end
 
-        #fft_size is probably not the best name for this.
-        #note that we don't actually know the size of ooBζcos!
-        new(zeros(N), zeros(fft_size+1), zeros(fft_size+1), cos.(nzq), sin.(nzq), zeros(N), zeros(N), zeros(N), zeros(N), zeros(M, N), zeros(M, N), zeros(M, N), zeros(M, N), zeros(M, N), zeros(M, N), zeros(M, N), zeros(M, N))
+"""
+Struct storing the inputs for the function that computes the jacobian.
+Allows for preallocation of memory.
+"""
+struct ActionGradJInputsT
+    ν_rhs :: Array{Float64} #rhs of equation 3)
+    ν_cn :: Array{Float64}
+    ν_sn :: Array{Float64}
+    cosnza :: Array{Float64, 2}
+    sinnza :: Array{Float64, 2}
+    drdot :: DRHST
+    dθdot :: DRHST
+    function ActionGradJInputsT(ip::ActionGradFInputsT)
+        arr_size = 2 * ip.aN * ip.nfft
+        comb_size = 4*ip.aN+2 #size of array when (most) coefficients are combined for efficent fourier transform.
+        irfft_size = ip.aN*ip.nfft+1
+        nza = ip.ζ * ip.nlist' / ip.a
+        drdot = DRHST(arr_size, comb_size, irfft_size, ip.aN)
+        dθdot = DRHST(arr_size, comb_size, irfft_size, ip.aN)
+        new(zeros(arr_size), zeros(irfft_size), zeros(irfft_size), cos.(nza), sin.(nza), drdot, dθdot)
     end
 end
 
 
-#not sure abot this name tbh. It is more than just the action.
-#may be worth splitting, as the start is more naturally called the action, then we can have a 'wrapping' or something function.
-function action(p::Int64, q::Int64, prob::ProblemT, met::MetT, B::BFieldT, MM::Int64, M::Int64, N::Int64, sguess=0.5::Float64)#, sguess::Float64, MM::Int64, M::Int64, N::Int64)
+"""
+    action(rational::Tuple{Int64, Int64}, prob::ProblemT, met::MetT, B::BFieldT, M::Int64, N::Int64, sguess=0.5::Float64, nfft=2::Int64)
 
-    #we take our r, θ original toroidal coordinates as an arbitrary fourier expansion in terms of zeta to denote our surface
-    #r(ζ) = r_0^c ∑_{n=1}^qN (r_n^c cos(nζ/q) + r_n^s sin(nζ/q))
-    #θ(ζ) = θ_0^c ∑_{n=1}^qN (θ_n^c cos(nζ/q) + θ_n^s sin(nζ/q))
+Extremizes the action for a given rational, returns the fourier coefficients of the solution.
+"""
+function action(rational::Tuple{Int64, Int64}, prob::ProblemT, met::MetT, B::BFieldT, M::Int64, N::Int64, sguess=0.5::Float64, nfft=2::Int64)
+    #a, b is the toroidal, poloidal mode number that defines the rational surfaces a/b
+    #surfaces are defined at q=a/b
+    #not that b≡p and a≡q in original case, as they use iota.
 
-    #M is fourier resolution in poloidal direction
-    #N is the fourier resolution in in toroidal direction.
-    #still pretty unsure exactly what this is.
-    #MM = 4 #this has to be 2 * nfft_multiplier, which is defaulted to 2 in rfft functions.
+    #N is the number of fourier harmonics included in the trial function.
+    #this gets expanded to q*N, as the new field line will have 2πq periodicity
+    #so the domain is expanded, requiring more fourier harmonics.
+    #placeholders until we swap fully.
+    a = rational[1]
+    b = rational[2]
+    aN = a * N
 
-    #number of toroidal modes.
-    qN = q * N
-    fM = MM * N #the number of psuedo fieldlines to be found.
-    #number of poloidal points once the fiedlines are wrapped. Eg this is the extension of the domain from 2π to 2qπ.
-    qfM = q * fM
-    #Number of toroidal points for each action gradient calculation, unsure if this is actually meant to be the same as qfM.
-    Nfft= qfM
+    MM = 2 * nfft #still very unsure what this is.
 
-    Ntor = qN + 1 #actual size of our fft arrays.
+    #number of pseudo field lines to be found
+    fl = MM * N
 
-    #no idea what these are either!
-    dζ = 2π / fM
-    dθ = 2π / qfM
+    afM = fl * a
+    Nfft = afM
 
-    nlist = range(0, qN)
-    #don't think zeta is the toroidal component.
+    dζ = 2π / fl
+    dθ = 2π / afM
+
+    nlist = range(0, aN)
     ζ = range(0, Nfft-1) .* dζ
 
-    #array that stores the all the coefficients for root finding
-    #-2 because we don't include the sin 0 coeffs.
-    x0 = zeros(4*Ntor+1-2)
+
+    #stores the initial guess for all coefficients
+    #+2 for n=0 cos terms, +1 for ν equation
+    x0 = zeros(4*aN + 2 + 1)
 
     #these store the minimised values for the coefficeints at each iteration
-    rcosarr = zeros(fM , Ntor)
-    rsinarr = zeros(fM , Ntor)
-    θcosarr = zeros(fM , Ntor)
-    θsinarr = zeros(fM , Ntor)
-    nvarr = zeros(fM)
-    
-    nfft_mulitplier = 2
-    #qunatity used to define the size of most arrays needed.
-    size_of_fft_array = nfft_mulitplier * (Ntor - 1)
-    #creates a struct with prealocated memory as input
-    ip = ActionGradInputsT(p, q, Ntor, size_of_fft_array, ζ, prob, met, B, nlist)
+    rcosarr = zeros(fl , aN+1)
+    rsinarr = zeros(fl , aN+1) #does not actually need th +1 (n=0) but kept for symmetry.
+    θcosarr = zeros(fl , aN+1)
+    θsinarr = zeros(fl , aN+1)
+    νarr = zeros(fl)
 
-    #creates a struct with preallocated memeory for fourier data.
-    ftd = FTDataT(size_of_fft_array)
+    #struct storing the inputs needed for action grad
+    ipf = ActionGradFInputsT(a, b, aN, nfft, ζ, prob, met, B, nlist)
 
-    ipjm = ActionGradInputsJMT(size_of_fft_array, ip)
+    #creates struct for storing fft plans and temp arrays
+    #for efficient fourier transforming
+    ftd = FTDataT(aN, nfft)
 
-    #struct storing the actual coefficients to be found.
-    coefs = CoefficientsT(qN+1)
+    #struct storing the inputs for jacobian function
+    ipj = ActionGradJInputsT(ipf)
+
+    #struct storing the coefficients
+    coefs = CoefficientsT(aN+1)
 
     #iterates over different poloidal areas, this creates multiple psuedo fieldlines that minamise the action.
     #these are then combined into a surface below.
-    for jpq in 0:fM-1
-        #maybe this is supposed to be alpha?
-        #or area? fk knows.
-        a = jpq * dθ
+    for jpq in 0:fl-1
+        #area constraint.
+        α = jpq * dθ
         if jpq == 0
             #initial guesses for the alg.
             coefs.rcos[1] = sguess
-            #everything else is zero.
-            rcos0 = zeros(qN+1)
-            rsin0 = zeros(qN+1)
-            θcos0 = zeros(qN+1)
-            θsin0 = zeros(qN+1)
-
-            rcos0[1] = sguess
-            θcos0[1] = 0
-
-            nv0 = 0
         else
             #otherwise use the last solution as a starting point.
             coefs.rcos .= rcosarr[jpq, :]
             coefs.rsin .= rsinarr[jpq, :]
             coefs.θcos .= θcosarr[jpq, :]
             coefs.θsin .= θsinarr[jpq, :]
-            coefs.nv[1] = nvarr[jpq]
-            rcos0 = rcosarr[jpq, :]
-            rsin0 = rsinarr[jpq, :]
-            θcos0 = θcosarr[jpq, :]
-            θsin0 = θsinarr[jpq, :]
-            nv0 = nvarr[jpq]
+            coefs.ν[1] = νarr[jpq]
 
-            θcos0[1]  += dθ 
             coefs.θcos[1] += dθ
         end
         #combine the values into a single array for the root findning alg's argument
-        pack_coeffs!(x0, coefs, Ntor)
+        pack_coeffs!(x0, coefs)
+
+        F0 = similar(x0)
 
         #creates a standin function that fits the form needed for NLSolve.
-        ag!(δS, x) = action_grad!(δS, x, a, coefs, ip, ftd)
+        ag_f!(δS, x) = action_grad_f!(δS, x, α, coefs, ipf, ftd)
 
         #creates a standin function that fits the form needed for NLSolve.
         #this function defines the gradient, improving efficiency.
-        ag_JM!(JM, x) = action_grad_jm!(JM, x, a, coefs, ip, ftd, ipjm)
+        ag_j!(JM, x) = action_grad_j!(JM, x, α, coefs, ipf, ftd, ipj)
+
+        #combination of f and j functions, for efficiency
+        ag_fj!(δS, JM, x) = action_grad_fj!(δS, JM, x, α, coefs, ipf, ftd, ipj)
+
+        #combined into single object for NLSolve
+        df = OnceDifferentiable(ag_f!, ag_j!, ag_fj!, x0, F0)
 
         #solve for the psuedo field line.
-        sol = nlsolve(ag!, ag_JM!, x0)
-        #sol = nlsolve(ag!, x0)
+        sol = nlsolve(df, x0)
 
         #unpacks the single array solution into CoefficientsT struct.
-        unpack_coeffs!(sol.zero, coefs, Ntor)
+        unpack_coeffs!(sol.zero, coefs, aN+1)
 
         #stores this field line.
         rcosarr[jpq+1, :] = coefs.rcos
         rsinarr[jpq+1, :] = coefs.rsin
         θcosarr[jpq+1, :] = coefs.θcos
         θsinarr[jpq+1, :] = coefs.θsin
-        nvarr[jpq+1] = coefs.nv[1]
+        νarr[jpq+1] = coefs.ν[1]
         
     end
 
-    return wrap_field_lines(rcosarr, rsinarr, θcosarr, θsinarr, MM, M, N, p, q, qfM, Nfft)
+    #field lines are wrapped into the qfm surface.
+    return wrap_field_lines(rcosarr, rsinarr, θcosarr, θsinarr, MM, M, N, a, b, afM, Nfft)
 end
 
 
@@ -230,46 +293,48 @@ end
 """
 
 Function that turns the Pseudo field lines into a surface. Probably the least clear function in the entire package.
+Names for this are incorrect, will need to be understood one day!
 """
-function wrap_field_lines(rcosarr, rsinarr, θcosarr, θsinarr, MM, M, N, p, q, qfM, Nfft)
+function wrap_field_lines(rcosarr::Array{Float64, 2}, rsinarr::Array{Float64, 2}, θcosarr::Array{Float64, 2}, θsinarr::Array{Float64, 2}, MM::Int64, M::Int64, N::Int64, a::Int64, b::Int64, afM::Int64, Nfft::Int64)
+    #inputes are a bit stupid here, probably dont' need all of these.
 
     #think the params we have here and above would be simpler if we knew what any of them were.
     fM = MM * N 
 
     #converts the fourier coefficients back to the normal values.
     r = irfft1D(rcosarr, rsinarr)
-    ζ = LinRange(0, 2*q*π, size(r)[end]+1)[1:end-1]
+    ζ = LinRange(0, 2*a*π, size(r)[end]+1)[1:end-1]
 
     θcosarr[:, 1] .= 0.0
     θ = irfft1D(θcosarr, θsinarr)
 
 
     #this defines r(α, ζ), extending the domain from 2π to 2qπ.
-    r2D_alpha = zeros((qfM, Nfft))
-    θ2D_alpha = zeros((qfM, Nfft))
+    r2D_alpha = zeros((afM, Nfft))
+    θ2D_alpha = zeros((afM, Nfft))
 
     #this just extends the solution from 2π to 2qπ, as this is the periodicity of the pesudo fieldline.
-    for i in 0:q-1
-        idx = mod(p*i, q)
+    for i in 0:a-1
+        idx = mod(b*i, a)
 
-        r2D_alpha[1+idx * fM : (idx+1)*fM, 1 :(q-i) * N * MM] = r[:, 1+ i * N * MM : end]
+        r2D_alpha[1+idx * fM : (idx+1)*fM, 1 :(a-i) * N * MM] = r[:, 1+ i * N * MM : end]
 
-        r2D_alpha[1+idx * fM : (idx+1)*fM, 1 + (q-i) * N * MM : end] = r[:, 1: i * N * MM]
+        r2D_alpha[1+idx * fM : (idx+1)*fM, 1 + (a-i) * N * MM : end] = r[:, 1: i * N * MM]
 
-        θ2D_alpha[1+idx * fM : (idx+1)*fM, 1 :(q-i) * N * MM] = θ[:, 1+i * N * MM : end]
+        θ2D_alpha[1+idx * fM : (idx+1)*fM, 1 :(a-i) * N * MM] = θ[:, 1+i * N * MM : end]
 
-        θ2D_alpha[1+idx * fM : (idx+1)*fM, 1 + (q-i) * N * MM : end] = θ[:, 1: i * N * MM]
+        θ2D_alpha[1+idx * fM : (idx+1)*fM, 1 + (a-i) * N * MM : end] = θ[:, 1: i * N * MM]
     
     end
 
-    r2D_vartheta = zeros((qfM, MM * N))
-    θ2D_vartheta = zeros((qfM, MM * N))
+    r2D_vartheta = zeros((afM, MM * N))
+    θ2D_vartheta = zeros((afM, MM * N))
 
     #here we actually get r(ϑ, φ), creating the result we want.
     for i in 0:MM * N-1
         #v odd that this is required. but otherwise the mod function removes some of the input???
-        arr = 0:qfM
-        idx = @. mod(arr - i * p, qfM) .+ 1
+        arr = 0:afM
+        idx = @. mod(arr - i * b, afM) .+ 1
 
         idx = idx[1:end-1]
 
@@ -288,238 +353,12 @@ end
 
 
 """
-    action_grad!(δS::Array{Float64}, x::Array{Float64}, p::Int64, q::Int64, a::Float64, qN::Int64, ζ, nlist, prob::ProblemT)
-
-Computes the gradient of the action for pseudo fieldlines.
-"""
-function action_grad!(δS::Array{Float64}, x::Array{Float64}, a::Float64, coefs::CoefficientsT, ip::ActionGradInputsT, ftd::FTDataT)
-
-    unpack_coeffs!(x, coefs, ip.Ntor)
-
-    iota = ip.p/ip.q
-
-    area = coefs.θcos[1]
-
-    get_r_t!(ip.r, ip.θ, coefs, ftd.ift_1D_p, ftd.ift_r1D, ftd.ift_θ1D, ip.Ntor)
-
-    ip.θ .+= iota .* ip.ζ
-
-    for i in 1:1:length(ip.r)
-        #gross amount of nested structs.
-        ip.prob.met(ip.met, ip.r[i], ip.θ[i], ip.ζ[i], ip.prob.geo.R0)
-
-        #alt smaller function, not being used atm
-        #compute_B!(B.B, met.J, prob.q, prob.isl, prob.isl2, r[i], θ[i], ζ[i])
-        compute_B!(ip.B, ip.met, ip.prob.q, ip.prob.isls, ip.r[i], ip.θ[i], ip.ζ[i])
-
-        #unsure if perhaps the jacobian is required in here somewhere.
-        ip.θdot[i] = ip.B.B[2] / ip.B.B[3]
-        #pretty sure the Jacobian is requried here, this will mess up the JM function though!
-        ip.rdot[i] = (ip.B.B[1] - coefs.nv[1]) / ip.B.B[3]
-    end
-    
-
-    rfft1D!(ftd.rdot_fft_cos, ftd.rdot_fft_sin, ip.rdot, ftd.ft_r1D, ftd.rft_1D_p, 2*2*(ip.Ntor-1))
-    rfft1D!(ftd.θdot_fft_cos, ftd.θdot_fft_sin, ip.θdot, ftd.ft_θ1D, ftd.rft_1D_p, 2*2*(ip.Ntor-1))
-
-    
-    #note that thes equations are not clear from the paper.
-    #I think these basically have nothing to do with the equations as written in the paper.
-
-    #we are essentially saying that our current guess of the path is given by 
-    #r(ζ) = r_0^c ∑_{n=1}^qN (r_n^c cos(nζ/q) + r_n^s sin(nζ/q))
-    #this should have a plus ζ term though!
-    #θ(ζ) = θ_0^c ∑_{n=1}^qN (θ_n^c cos(nζ/q) + θ_n^s sin(nζ/q))
-
-    #we then take the difference between the ideal dynamics
-    #∂r/∂ζ = B^r/B^ζ - ν
-    #∂θ/∂ζ = B^θ/B^ζ
-
-    #where ν is the extra area bit that allows approx solutions to be found, true, integrable dynamics would satisfy these two equation without needing the ν
-    #we then find the coeffs that define our initial guess
-    #based on the difference between the current guess and the `ideal' dynamics based on the field.
-    #the equations quoted seem unhelpful.
-
-    #og packing
-    #[[nv]; rcos ; tsin[2:end] ; rsin[2:end] ; tcos]
-    qN = ip.Ntor - 1
-    δS[1] = area - a
-
-    δS[2 : qN + 2] = @. coefs.rsin * ip.nlist / ip.q - ftd.rdot_fft_cos[1: qN + 1]
-
-    δS[qN+3: 2*qN + 2] = @. (-coefs.rcos * ip.nlist / ip.q - ftd.rdot_fft_sin[1:qN+1])[2:end]
-
-    δS[2*qN+3 : 3*qN + 3] = @. (coefs.θsin * ip.nlist / ip.q - ftd.θdot_fft_cos[1 : qN + 1])
-
-    δS[2 * qN + 3] += iota #wot.
-
-    δS[3 * qN + 4 : end] = @. (-coefs.θcos * ip.nlist / ip.q - ftd.θdot_fft_sin[1:qN+1])[2:end]
-    
-    #new packing
-    #[rcos ; rsin[2:end] ; tcos ; tsin[2:end] ; [nv]]
-    #=
-    δS[1:Ntor] = @. CT.rsin * nlist / q - rdot_fft_cos[1: Ntor]
-    δS[Ntor+1:2*Ntor] = @. (CT.θsin * nlist / q - θdot_fft_cos[1 : Ntor])
-    δS[Ntor+1] += iota
-    δS[2*Ntor+1:3*Ntor-1] = @. (-CT.θcos * nlist / q - θdot_fft_sin[1:Ntor])[2:end]
-    δS[3*Ntor+1-1:4*Ntor-2] = @. (-CT.rcos * nlist / q - rdot_fft_sin[1:Ntor])[2:end]
-    δS[end] = area - a
-    =#
-end
-
-#computes the jacobian matrix for the action grad for efficient root finding.
-#fair bit of overlap with this function and the og
-#may be better to combine them
-#but we are probably getting to diminishing returns.
-#this is still an allocating unclear mess. But the inputs have been reduced lol.
-"""
-
-#TODO
-Computes the jacobian matrix of the action gradient, allows for more efficient solving.
-Some allocations have been removed, however, there are still a lot, mostly with arrays that are not clear.
-"""
-function action_grad_jm!(JM::Array{Float64, 2}, x::Array{Float64}, a::Float64, coefs::CoefficientsT, ip::ActionGradInputsT, ftd::FTDataT, ipjm::ActionGradInputsJMT)
-
-
-    iota = ip.p/ip.q
-
-
-    unpack_coeffs!(x, coefs, ip.Ntor)
-
-    area = coefs.θcos[1]
-
-    get_r_t!(ip.r, ip.θ, coefs, ftd.ift_1D_p, ftd.ift_r1D, ftd.ift_θ1D, ip.Ntor)
-    #get_r_t!(r, θ, rcos, tsin, rsin, tcos, ift_1D_p, ft_r1D, ft_θ1D, Ntor)
-    ip.θ .+= iota .* ip.ζ
-
-    
-    for i in 1:1:length(ip.r)
-        
-        ip.prob.met(ip.met, ip.r[i], ip.θ[i], ip.ζ[i], ip.prob.geo.R0)
-
-        #need B.dB now, so we just compute the full thing!
-        compute_B!(ip.B, ip.met, ip.prob.q, ip.prob.isls, ip.r[i], ip.θ[i], ip.ζ[i])
-
-        #unsure how jacobian sits with all of this.
-        #dBrdr/Bζ - (Br - nv) / Bζ^2 * dBζdr
-        ipjm.rdot_dr[i] = ip.B.dB[1, 1] / ip.B.B[3] - (ip.B.B[1] - coefs.nv[1]) / ip.B.B[3] * ip.B.dB[3, 1]
-        #dBrdθ/Bζ - (Br - nv) / Bζ^2 * dBζdθ
-        ipjm.rdot_dθ[i] = ip.B.dB[1, 2] / ip.B.B[3] - (ip.B.B[1] - coefs.nv[1]) / ip.B.B[3] * ip.B.dB[3, 2]
-        #dBθdr/Bζ - Bθ / Bζ^2 * dBζdr
-        ipjm.θdot_dr[i] = ip.B.dB[2, 1] / ip.B.B[3] - ip.B.B[2] / ip.B.B[3] * ip.B.dB[3, 1]
-        #dBθdθ/Bζ - Bθ / Bζ^2 * dBζdθ
-        ipjm.θdot_dθ[i] = ip.B.dB[2, 2] / ip.B.B[3] - ip.B.B[2] / ip.B.B[3] * ip.B.dB[3, 2]
-        
-        ipjm.ooBζ[i] = 1 / ip.B.B[3]
-    end
-
-
-
-    #need to change this!
-    ipjm.ooBζcos[:], ipjm.ooBζsin[:] = rfft1D_simple(ipjm.ooBζ)
-
-    #no idea what these even are tbh.
-    #not actually sure how big these are needed to be yet, but they should be the same shape as nzq.
-
-    M, N = size(ipjm.rdot_drcos)
-    for j in 1:N, i in 1:M
-        #may need to transpose these!
-        #just genuinly have no idea what is going on with the fft step.
-        ipjm.rdot_drcos[i, j] = ipjm.rdot_dr[j] * ipjm.cosnzq[i, j]
-        ipjm.rdot_drsin[i, j] = ipjm.rdot_dr[j] * ipjm.sinnzq[i, j]
-        ipjm.rdot_dθcos[i, j] = ipjm.rdot_dθ[j] * ipjm.cosnzq[i, j]
-        ipjm.rdot_dθsin[i, j] = ipjm.rdot_dθ[j] * ipjm.sinnzq[i, j]
-        ipjm.θdot_drcos[i, j] = ipjm.θdot_dr[j] * ipjm.cosnzq[i, j]
-        ipjm.θdot_drsin[i, j] = ipjm.θdot_dr[j] * ipjm.sinnzq[i, j]
-        ipjm.θdot_dθcos[i, j] = ipjm.θdot_dθ[j] * ipjm.cosnzq[i, j]
-        ipjm.θdot_dθsin[i, j] = ipjm.θdot_dθ[j] * ipjm.sinnzq[i, j]
-    end
-
-
-    #this is the point where Zhisongs code actually makes zero sense whatso ever.
-    dummy_nv = zeros(1, size(ipjm.rdot_drcos)[2])
-    #like what kind of monstrosoty is this creating.
-    #no idea what the shape of this is, so no preallocation yet.
-    drdot = pack_dof2D(dummy_nv, ipjm.rdot_drcos, ipjm.rdot_dθsin, ipjm.rdot_drsin, ipjm.rdot_dθcos) .- 1
-    dθdot = pack_dof2D(dummy_nv, ipjm.θdot_drcos, ipjm.θdot_dθsin, ipjm.θdot_drsin, ipjm.θdot_dθcos) .- 1
-
-    #how can we possibly want whatever the output of this is.
-    #like wot the fek.
-    drdot_cos, drdot_sin = rfft1D_JM(drdot)
-    dθdot_cos, dθdot_sin = rfft1D_JM(dθdot)
-
-    qN = ip.Ntor - 1
-
-    JM .= 0.0 #needed as they are not set to zero by default
-
-    #unsure what any of this even is tbh. Not even sure what the JM is representing here.
-    #now reasnably confident these are working.
-    #genuuinly now way this can be right,
-    #should be JM[coef, deriv]
-    #these are implying that the derivative of the rcos with respect to every coef is the same?
-    #probbaly an indexing issue.
-    #so drdot_cos, is the derivative of rdot^c w.r.t every coefficient, but they have just been smashed together in this ridiculous way
-    #so that the fourier transform can be taken all at once.
-    #still seems surprising that the fourier transform does work tbh
-    #seems like there would be a crazy shift on the edge ones?
-    #fourier transform is taken in the second dim, so each one is getting fourier transformed individually.
-    #don't think we want to do it like this.
-    JM[2:qN+2, 1:end] .= -drdot_cos[1:qN+1, 1:end]
-    JM[qN+3:2*qN+2, 1:end] .= -drdot_sin[2:qN+1, 1:end]
-
-    JM[2*qN+3:3*qN+3, 1:end] .= -dθdot_cos[1:qN+1, 1:end]
-    JM[3*qN+4:end, 1:end] .= -dθdot_sin[2:qN+1, 1:end]
-
-    JM[1, 3*qN+3] += 1  #θcos[0] apparantly
-
-    #unsure about this, python has swapped to using arange for some reason.
-    #given up on trying to get the indexing right for now.
-    #this obvs won't work either lol.
-    #this needs to be tested.
-    #python indexing for this bit is kind of weird
-    #unsure how best to replicate it.
-    #CartesianIndex here creates pairwise indicies from two lists
-    #eg ([1, 2, 3], [2, 3, 4]) -> [1, 2], [2, 3], [3, 4]
-    JM[CartesianIndex.(2:qN+2, 2*qN+2:3*qN+2)] += ip.nlist / ip.q #rsin
-
-    JM[CartesianIndex.(qN+3:2*qN+2, 3:qN+2)] += -(ip.nlist / ip.q)[2:end] #-rsin[2:end]
-
-    JM[CartesianIndex.(2*qN+3:3*qN+3, qN+2:2*qN+2)] += ip.nlist / ip.q #θsin
-
-    JM[CartesianIndex.(3*qN+4:4*qN+3, 3*qN+4:4*qN+3)] += (-ip.nlist / ip.q)[2:end] #-θcos[2:end]
-
-    #[[nv]; rcos ; tsin[2:end] ; rsin[2:end] ; tcos]
-    #then derivative w.r.t nv
-    #srs what even is this.
-    JM[2:qN+2, 1] += ipjm.ooBζcos[1:qN+1]
-    JM[qN+3:2*qN+2, 1] += ipjm.ooBζsin[2:qN+1]
-    
-end
-
-
-
-"""
 
 Function that packs the CoefficientsT struct into a 1d array for solving.
 """
-function pack_coeffs!(x::Array{Float64}, coefs::CoefficientsT, N)
+function pack_coeffs!(x::Array{Float64}, coefs::CoefficientsT)
 
-    #I think we will still want to change the order of this.
-    #just need to be a wee bit careful.
-    #should be easier with this function and the struct.
-    #x[1] = CT.nv[1]
-    #changed the order hopefully not a mistake!
-    #x[1:N] = CT.rcos[:]
-    #x[N+1:2*N-1] = CT.rsin[2:end]
-    #x[2*N-1+1:3*N-1] = CT.θcos[:]
-    #x[3*N-1+1:4*N-1-1] = CT.θsin[2:end]
-    #x[end] = CT.nv[1]
-    #so the plus 1 is extremely important for efficient solving!
-    #why??>>?>
-    #og packing
-    x .= [coefs.nv ; coefs.rcos ; coefs.θsin[2:end] ; coefs.rsin[2:end] ; coefs.θcos] .+ 1
-    #new packing
-    #x .= [CT.rcos ; CT.rsin[2:end] ; CT.θcos ; CT.θsin[2:end] ; CT.nv] .+ 1
+    x .= [coefs.rcos ; coefs.rsin[2:end] ; coefs.θcos ; coefs.θsin[2:end] ; coefs.ν] .+ 1
 
 end
 
@@ -530,72 +369,12 @@ Function that unpacks the 1d list of coefficients into the CoefficientsT struct.
 """
 function unpack_coeffs!(x::Array{Float64}, coefs::CoefficientsT, N::Int64)
 
-    #I think we will still want to change the order of this.
-    #just need to be a wee bit careful.
-    #should be easier with this function and the struct.
-    #x[1] = CT.nv[1]
+    coefs.rcos[:] = x[1:N] .- 1
+    coefs.rsin[2:end] = x[N+1:2*N-1] .- 1
+    coefs.θcos[:] = x[2*N-1+1:3*N-1] .-1
+    coefs.θsin[2:end] = x[3*N-1+1:4*N-1-1] .-1
+    coefs.ν[1] = x[end] - 1
+    coefs.rsin[1] = 0.0
+    coefs.θsin[1] = 0.0
     
-    #changed the order hopefully not a mistake!
-    #=
-    CT.rcos[:] = x[1:N] .- 1
-    CT.rsin[2:end] = x[N+1:2*N-1] .- 1
-    CT.θcos[:] = x[2*N-1+1:3*N-1] .-1
-    CT.θsin[2:end] = x[3*N-1+1:4*N-1-1] .-1
-    CT.nv[1] = x[end] - 1
-    CT.rsin[1] = 0.0
-    CT.θsin[1] = 0.0
-    =#
-
-    #og packing
-    
-    qN = N - 1
-    coefs.nv[1] = x[1] - 1
-    coefs.rcos .= x[2:qN + 2]  .- 1
-
-    coefs.θsin .= [[0] ; x[qN + 3:2 * qN + 2] .- 1]
-    coefs.rsin .= [[0] ; x[2*qN + 3 : 3 * qN + 2] .- 1]
-    coefs.θcos .= x[3 * qN + 3 : end] .- 1
-    
-end
-
-#this needs to be changed/removed
-#so this is still being used!
-#hard to fix this when we don't know why this is being done, or why the result is fourier transformed. Seems like complete madness.
-function pack_dof2D(nv, rcos, tsin, rsin, tcos)
-
-    #nv is just a single value I think.
-
-    #no idea why + 1 is needed.
-    #we have changed this for the 2d case.
-    return [nv; rcos ; tsin[2:end, :] ; rsin[2:end, :] ; tcos] .+ 1
-    #return [nv rcos  tsin[2:end, :]  rsin[2:end, :]  tcos] .+ 1
-
-end
-
-
-
-########################################################
-
-#function for simplified computing of B, easy comparison with Zhisong's python code.
-function test_compute_B!(Br, Bθ, Bζ, r, t, z)
-
-    q = @. 2 / r^2
-
-    #zhisongs names for this are frankly unacceptable, we have 
-    #changed to normal coord names.
-    k = 0.0018 #same as python example notebook
-    #gotta deal with vectors here big rip.
-    #we will need to make this conform to our normal method later!
-    #unsure if this will always have vector inputs.
-    #Br = zeros(length(r), length(t), length(z))
-    #Bt = zeros(length(r), length(t), length(z))
-    #Bz = zeros(length(r), length(t), length(z))
-    #this will cause some problemos later, 
-    #this coord setup is weird,
-    #Br is a 1d array.
-    @. Br = - k * (sin(2 * t - z) + sin(3 * t - 2 * z))
-    @. Bθ = r #/ q
-    @. Bζ = r #ones(length(r))
-    Bζ .= 1.0
-
 end

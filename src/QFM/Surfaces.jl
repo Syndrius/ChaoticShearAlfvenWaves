@@ -2,13 +2,11 @@
 Struct storing the coeffiecients of the qfm surfaces.
 Based on expansion 
 r(ζ) = ∑ r_n^c cos(ζ) + r_n^s sin(ζ)
-θ(ζ) = θ_0 + ∑ θ_n^c cos(ζ) + θ_n^s sin(ζ)
+θ(ζ) = θ_0^c + bζ/a + ∑ θ_n^c cos(ζ) + θ_n^s sin(ζ)
 """
 struct QFMSurfaceT
-    a :: Int64  # q(r) = a/b, so a is ζ mode number, b is θ mode number
-    b :: Int64 #a ≡ q, b ≡ p
-    ρ :: Float64 #rho is a surface label, it could/should be 'r', but we use rho to distinguish
-    #rho is also just set to rcos[1, 1] so we could probably do without it tbh.
+    rational :: Tuple{Int64, Int64} #(a, b)
+    s :: Float64 #surface label
     rcos :: Array{Float64, 2}
     θsin :: Array{Float64, 2}
     rsin :: Array{Float64, 2}
@@ -54,64 +52,26 @@ end
 
 
 """
-    construct_surfaces(plist::Array{Int64}, qlist::Array{Int64}, sguesslist::Array{Float64}, prob::ProblemT, mm=4::Int64, m=24::Int64, n=8::Int64)
+    construct_surfaces(rationals::Array{Tuple}, guesslist::Array{Float64}, prob::ProblemT; nfft=2::Int64, M=24::Int64, N=8::Int64)
 
-Main function for computing the qfm surfaces. Iterates over the p/q rational inputs and creates a surface for each value.
+Main function for computing the qfm surfaces. Iterates over the (a, b) rational inputs and creates a surface for each value.
 """
-function construct_surfaces(plist::Array{Int64}, qlist::Array{Int64}, sguesslist::Array{Float64}, prob::ProblemT; MM=4::Int64, M=24::Int64, N=8::Int64)
+function construct_surfaces(rationals::Array{Tuple{Int64, Int64}}, guesslist::Array{Float64}, prob::ProblemT; nfft=2::Int64, M=24::Int64, N=8::Int64)
 
-    #qlist and plist are assumed to be the same size.
-
-    met = MetT()
-    B = BFieldT()
-    surfaces = QFMSurfaceT[]
-
-    for i in 1:1:length(plist)
-        #obvs will need to pass the other stuff in here somehow.
-        rcos, θsin, rsin, θcos = action(plist[i], qlist[i], prob, met, B, MM, M, N, sguesslist[i])
-
-        ρ = rcos[1, 1] #surface label.
-        push!(surfaces, QFMSurfaceT(qlist[i], plist[i], ρ, rcos, θsin, rsin, θcos))
-        @printf("Found %d of %d surfaces.\n", i, length(plist))
-    end
-
-    #now we add the bounding surfaces, assumed to be at 0, 1
-    #Doesn't work!
-    #push!(surfaces, straighten_boundary(ρ1, MM, M, N, prob))
-    #push!(surfaces, straighten_boundary(ρ2, MM, M, N, prob))
-
-    #unsure if we actually want to do this, 
-    #as I don't think we want the surface objects tbh, just want the interpolant build from them
-    return surfaces
-
-end
-
-function new_construct_surfaces(plist::Array{Int64}, qlist::Array{Int64}, sguesslist::Array{Float64}, prob::ProblemT; nfft=2::Int64, M=24::Int64, N=8::Int64)
-
-    #qlist and plist are assumed to be the same size.
 
     met = MetT()
     B = BFieldT()
     surfaces = QFMSurfaceT[]
 
-    for i in 1:1:length(plist)
-        #obvs will need to pass the other stuff in here somehow.
-        rcos, θsin, rsin, θcos = new_action(plist[i], qlist[i], prob, met, B, M, N, sguesslist[i], nfft)
+    for (i, rational) in enumerate(rationals)
+        rcos, θsin, rsin, θcos = action(rational, prob, met, B, M, N, guesslist[i], nfft)
 
-        ρ = rcos[1, 1] #surface label.
-        push!(surfaces, QFMSurfaceT(qlist[i], plist[i], ρ, rcos, θsin, rsin, θcos))
-        @printf("Found %d of %d surfaces.\n", i, length(plist))
+        s = rcos[1, 1] #surface label.
+        push!(surfaces, QFMSurfaceT(rational, s, rcos, θsin, rsin, θcos))
+        @printf("Found %d of %d surfaces.\n", i, length(rationals))
     end
 
-    #now we add the bounding surfaces, assumed to be at 0, 1
-    #Doesn't work!
-    #push!(surfaces, straighten_boundary(ρ1, MM, M, N, prob))
-    #push!(surfaces, straighten_boundary(ρ2, MM, M, N, prob))
-
-    #unsure if we actually want to do this, 
-    #as I don't think we want the surface objects tbh, just want the interpolant build from them
     return surfaces
-
 end
 
 
@@ -123,7 +83,6 @@ Computes the matrix of interpolations.
 """
 function itp_mat!(surf_itp::SurfaceITPT, sd::TempSurfT, s::Float64)
 
-    #still not sure why it has this shape tbh!
     dim1 = surf_itp.M + 1
     dim2 = 2*surf_itp.N + 1
 
@@ -155,14 +114,14 @@ function create_surf_itp(surfs::Array{QFMSurfaceT})
     θsinn = zeros((length(surfs), dim1, dim2))
 
     #sorts the surfaces by the ρ value, so that interpolation can work properly.
-    ρsurfs_unsort = zeros(length(surfs))
+    s_surfs_unsort = zeros(length(surfs))
 
     for (i, surf) in enumerate(surfs)
-        ρsurfs_unsort[i] = surf.ρ
+        s_surfs_unsort[i] = surf.s
     end
 
-    perm = sortperm(ρsurfs_unsort)
-    ρsurfs = ρsurfs_unsort[perm]
+    perm = sortperm(s_surfs_unsort)
+    s_surfs = s_surfs_unsort[perm]
     surfs = surfs[perm]
 
     for (i, surf) in enumerate(surfs)
@@ -182,8 +141,8 @@ function create_surf_itp(surfs::Array{QFMSurfaceT})
 
     for j in 1:dim2, i in 1:dim1
 
-        rcos = interpolate(ρsurfs, rcosn[:, i, j], BSplineOrder(5))
-        θsin = interpolate(ρsurfs, θsinn[:, i, j], BSplineOrder(5))
+        rcos = interpolate(s_surfs, rcosn[:, i, j], BSplineOrder(5))
+        θsin = interpolate(s_surfs, θsinn[:, i, j], BSplineOrder(5))
         rcos_itp[i, j] = extrapolate(rcos, Smooth())
         θsin_itp[i, j] = extrapolate(θsin, Smooth())
         #unclear exactly how well these will actually work outside the domain.
@@ -205,7 +164,7 @@ Creates a list of rationals, by getting all rationals between min and max, with 
 """
 function lowest_rationals(depth::Int64, min::Float64, max::Float64)
 
-    rats = Tuple[]
+    rats = Tuple{Int64, Int64}[]
     for i in 1:depth
         j = 1
         while (j / i < max)
@@ -268,12 +227,10 @@ function farey_tree_recurs!(N::Int64, q1::Int64, p1::Int64, q2::Int64, p2::Int64
         N = N-1
         pnew = p1 + p2
         qnew = q1 + q2
-        #worried about this tbh.
         push!(qlist, qnew)
         push!(plist, pnew)
         farey_tree_recurs!(N, qnew, pnew, q2, p2, qlist, plist)
         farey_tree_recurs!(N, q1, p1, qnew, pnew, qlist, plist)
-        #return farey_tree_recurs(N, )
     end
 
 
@@ -284,10 +241,8 @@ end
 Converts a surface into r, θ values.
 """
 function convert_surf(surf::QFMSurfaceT)
-    #change this name lol
     #takes the weird output form into a plotable form.
 
-    #hard coded, yes very nice
 
     Nϑ = 100
     ϑgrid = LinRange(0, 2*π, Nϑ)
@@ -340,22 +295,25 @@ function convert_surf(surf::QFMSurfaceT)
 
 end
 
-
+"""
+Guesses the best starting point for finding qfm surfaces based on the q_profile.
+"""
 function surface_guess(rationals::Array{Tuple}, q::Function)
     gl = Float64[]
 
-    for i in rats
-        diff(r) = i[1]/i[2] - q_prof(r)[1]
+    for i in rationals
+        diff(r) = i[1]/i[2] - q(r)[1]
         sol = find_zero(diff, 0.5)
         push!(gl, sol)
     end
     return gl
 end
 
-#perhaps doesn't belong here, but this is a useful function for giving some sense of if the surfaces are good or not.
-#note that this computes the jacobin at the grid points, not at the Gaussing weight points, which is perhaps misleading.
-#this also assumes fff grids for some reason.
-#needs a new name, as this is kind of doing more than just the jacobain now.
+"""
+    compute_jac(prob::ProblemT, grids::FFFGridsT, surfs::Array{QFMSurfaceT})
+
+Computes the Jacobain and Magnetic field in qfm coordinates to test the new values.
+"""
 function compute_jac(prob::ProblemT, grids::FFFGridsT, surfs::Array{QFMSurfaceT})
 
     #instantiate the grids into arrays. 

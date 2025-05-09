@@ -78,52 +78,42 @@ poincare_plot(prob, Nlaps, Ntraj, rlist)
 #%%
 #so (11, 7) does not work!, regardless of res
 rats1 = lowest_rationals(7, q_prof(0.0)[1], q_prof(1.0)[1])
-alist1 = [i[1] for i in rats1]
-blist1 = [i[2] for i in rats1]
 gl1 = surf_guess(rats1, q_prof)
 #changing these numbers doesn't really help remove the spikes
-surfs1 = MID.QFM.new_construct_surfaces(alist1, blist1, gl1, prob, M=32, N=16);
+surfs1 = construct_surfaces(rats1, gl1, prob, M=32, N=16);
 plot_surfs(surfs1)
 #%%
 #now we need more surfs below 0.4
 rats2 = lowest_rationals(25, q_prof(0.0)[1], q_prof(0.25)[1])
-alist2 = [i[1] for i in rats2]
-blist2 = [i[2] for i in rats2]
 gl2 = surf_guess(rats2, q_prof)
-surfs2 = MID.QFM.new_construct_surfaces(alist2, blist2, gl2, prob, M=32, N=16);
+surfs2 = construct_surfaces(rats2, gl2, prob, M=32, N=16);
 plot_surfs(surfs2)
 #%%
 #still need more below 0.2
 #gross
-rats3 = [(53, 44), (11, 7), (13, 9), (14, 9), (13, 8), (13, 10), (14, 11)]
-alist3 = [i[1] for i in rats3]
-blist3 = [i[2] for i in rats3]
+rats3 = [(53, 44), (13, 9), (14, 9), (13, 8), (13, 10), (14, 11)]
 gl3 = surf_guess(rats3, q_prof)
-surfs3 = MID.QFM.new_construct_surfaces(alist3, blist3, gl3, prob, M=32, N=16);
+surfs3 = construct_surfaces(rats3, gl3, prob, M=32, N=16);
 plot_surfs(surfs3)
 #%%
-rats4 = [(11, 8), (14, 11), (26, 17), (22, 15)]
-alist4 = [i[1] for i in rats4]
-blist4 = [i[2] for i in rats4]
+#shouldn't add (14, 11) here
+#rats4 = [(11, 8), (14, 11), (26, 17), (22, 15)]
+rats4 = [(11, 8), (26, 17), (22, 15)]
 gl4 = surf_guess(rats4, q_prof)
-surfs4 = MID.QFM.new_construct_surfaces(alist4, blist4, gl4, prob, M=32, N=16);
+surfs4 = construct_surfaces(rats4, gl4, prob, M=32, N=16);
 plot_surfs(surfs4)
 #%%
 rats5 = [(19, 15), (26, 21), (15, 11), (17, 13)]
-alist5 = [i[1] for i in rats5]
-blist5 = [i[2] for i in rats5]
 gl5 = surf_guess(rats5, q_prof)
-surfs5 = MID.QFM.new_construct_surfaces(alist5, blist5, gl5, prob, M=32, N=16);
+surfs5 = construct_surfaces(rats5, gl5, prob, M=32, N=16);
 plot_surfs(surfs5)
 #%%
 #add more to chaotic region, most likely these will make it worse.
 #these surfs make B^s ~10x larger in chaotic region.
 #somewhat expected
 rats6 = [(18, 11), (17, 10), (16, 9), (20, 11)]
-alist6 = [i[1] for i in rats6]
-blist6 = [i[2] for i in rats6]
-gl6 = surf_guess(rats5, q_prof)
-surfs6 = MID.QFM.new_construct_surfaces(alist6, blist6, gl6, prob, M=32, N=16);
+gl6 = surf_guess(rats6, q_prof)
+surfs6 = construct_surfaces(rats6, gl6, prob, M=32, N=16);
 plot_surfs(surfs6)
 #%%
 curr_surfs = vcat(surfs1, surfs2);
@@ -131,14 +121,15 @@ curr_surfs = vcat(surfs1, surfs2, surfs3);
 #19/7 surface is overlapping with neighbour.
 curr_surfs = vcat(surfs1, surfs2, surfs3, surfs4);
 curr_surfs = vcat(surfs1, surfs2, surfs3, surfs4, surfs5);
+curr_surfs = vcat(surfs1, surfs2, surfs3, surfs4[1:1], surfs4[3:end], surfs5);
 
 #(11, 7) is cooke d for some reason. Bit surprising as it looks pretty fine.
 #just had it twice lol.
-curr_surfs = vcat(surfs1, surfs2, surfs3[1:1], surfs3[3:6]);
-curr_surfs = vcat(surfs1, surfs2, surfs3[1:1], surfs3[3:6], surfs4);
-curr_surfs = vcat(surfs1, surfs2, surfs3[1:1], surfs3[3:6], surfs4, surfs5);
-curr_surfs = vcat(surfs1, surfs2, surfs3[1:1], surfs3[3:6], surfs4, surfs5, surfs6);
-plot_surfs(curr_surfs, legend=false)
+#curr_surfs = vcat(surfs1, surfs2, surfs3[1:1], surfs3[3:6]);
+#curr_surfs = vcat(surfs1, surfs2, surfs3[1:1], surfs3[3:6], surfs4);
+#curr_surfs = vcat(surfs1, surfs2, surfs3[1:1], surfs3[3:6], surfs4, surfs5);
+#curr_surfs = vcat(surfs1, surfs2, surfs3[1:1], surfs3[3:6], surfs4, surfs5, surfs6);
+plot_surfs(curr_surfs)
 
 save_object("low_shear_surfs.jld2", curr_surfs)
 
@@ -147,7 +138,7 @@ rgrid_jac = init_grid(type=:rf, N = 100, start=0.05, stop=0.95)
 θgrid_jac = init_grid(type=:af, N = 20) 
 ζgrid_jac = init_grid(type=:af, N = 4)
 grids_jac = init_grids(rgrid_jac, θgrid_jac, ζgrid_jac)
-B, jac, djac = MID.QFM.compute_jac(prob, grids_jac, curr_surfs);
+B, jac, djac = compute_jac(prob, grids_jac, curr_surfs);
 #%%
 rgrid_plot, θgrid_plot, ζgrid_plot = MID.Structures.inst_grids(grids_jac);
 

@@ -4,12 +4,9 @@
 Quadratic Flux Minimisation. Module for creating approximate flux surfaces in chaotic fields, creating coordinates based on these surfaces and transforming variables into these coordinates.
 """
 
-#this module is in a semi working state now
 #TODO
-#Clarity around Action.jl is terrible, need to understand the alg.
-#Action grad is better but still pretty rough. Still allocating a lot.
-#Rfft is not good.
-
+#wrapping field lines is still a mystery. Few other smaller things to clean up, but otherwise this module is ok now.
+#part of this is the rfft functions used by wrap_field_lines
 
 module QFM
 
@@ -19,6 +16,7 @@ using ..Equilibrium
 
 
 using NLsolve
+using Roots
 using FFTW
 using BSplineKit
 using LinearAlgebra
@@ -26,7 +24,7 @@ using Printf
 
 
 include("Action.jl")
-include("new_action.jl")
+include("GradAction.jl")
 include("Rfft.jl")
 
 
@@ -39,7 +37,9 @@ export TempSurfT #terrible name
 export construct_surfaces
 export farey_tree
 export lowest_rationals
+export surface_guess
 export convert_surf
+export compute_jac
 export create_surf_itp
 
 

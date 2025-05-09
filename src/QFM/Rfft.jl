@@ -1,16 +1,10 @@
-#file for storing the collection of real fft function we use.
-#bit of a disaster, doesn't help that many of the arrays are an unknown size
-#and some of the ft are a complete mystery.
-#probably gotta be a problemo for another day!
-
-
 """
     rfft1D!(cos_coef::Array{Float64}, sin_coef::Array{Float64}, func::Array{Float64}, fft_res::Array{ComplexF64}, plan::FFTW.rFFTWPlan, Nfft::Int64)
 
 Takes the real fft in 1D in place. fft_res is a temporary array to store the rfft, before it is converted sin and cos.
 For func of size N, fft_res, cos_coef and sin_coef must all be size N/2 +1, while the plan is created based on size N array.
 """
-function rfft1D!(cos_coef::Array{Float64}, sin_coef::Array{Float64}, func::Array{Float64}, fft_res::Array{ComplexF64}, plan::FFTW.rFFTWPlan, Nfft::Int64)
+function rfft1D!(cos_coef::Array{Float64, 1}, sin_coef::Array{Float64, 1}, func::Array{Float64, 1}, fft_res::Array{ComplexF64, 1}, plan::FFTW.rFFTWPlan, Nfft::Int64)
 
 
     #takes the rfft.
@@ -20,9 +14,6 @@ function rfft1D!(cos_coef::Array{Float64}, sin_coef::Array{Float64}, func::Array
 
     #gets the cos component, 
     cos_coef .= real.(fft_res) ./ Nfft .* 2
-    #const term does not need the 2 scaling
-    #I am not sure there is any reason to do this.
-    #also think the sin_coef[1] will always be zero for real fft.
     #this is required to reflect the *= 2 in irfft1D.
     cos_coef[1] /= 2
 
@@ -33,7 +24,10 @@ function rfft1D!(cos_coef::Array{Float64}, sin_coef::Array{Float64}, func::Array
 
 end
 
+"""
 
+Computes the 1d rfft for a 2 dimensional input array. Used in action_grad_j!, when coefficients are combined into a single array for efficiency.
+"""
 function rfft1D!(cos_coef::Array{Float64, 2}, sin_coef::Array{Float64, 2}, func::Array{Float64, 2}, fft_res::Array{ComplexF64, 2}, plan::FFTW.rFFTWPlan, Nfft::Int64)
 
 
@@ -44,9 +38,6 @@ function rfft1D!(cos_coef::Array{Float64, 2}, sin_coef::Array{Float64, 2}, func:
 
     #gets the cos component, 
     cos_coef .= real.(fft_res) ./ Nfft .* 2
-    #const term does not need the 2 scaling
-    #I am not sure there is any reason to do this.
-    #also think the sin_coef[1] will always be zero for real fft.
     #this is required to reflect the *= 2 in irfft1D.
     cos_coef[1, :] ./= 2
 
@@ -81,123 +72,56 @@ function irfft1D!(res::Array{Float64}, cos_in::Array{Float64}, sin_in::Array{Flo
 end
 
 
-#old now.
-"""
-    get_r_t!(r::Array{Float64}, θ::Array{Float64}, coefs::CoefficientsT, ift_plan::AbstractFFTs.ScaledPlan, ft_r1D::Array{ComplexF64}, ft_θ1D::Array{ComplexF64}, qN::Int64, nfft::Int64)
+#used by wrap_field_lines, unclear exactly what is happening
+function irfft1D(cos_in::Array{Float64, 2}, sin_in::Array{Float64, 2}, nfft_multiplier=2)
 
-Reconstructs r, θ from the fourier coefficients. This is done with an invert real fft. Fourier coefficients are length qN+1, 
-"""
-function get_r_t!(r::Array{Float64}, θ::Array{Float64}, coefs::CoefficientsT, ift_plan::AbstractFFTs.ScaledPlan, ft_r1D::Array{ComplexF64}, ft_θ1D::Array{ComplexF64}, Ntor::Int64)
-
-    #2 is an optional arg.
-    Nfft = 2*(Ntor-1)
-
-    #+1 is for the cos(n=0) and sin(n=0) terms
-    ft_r1D[1:Ntor] .= @. (coefs.rcos - 1im * coefs.rsin) * Nfft
-    ft_θ1D[1:Ntor] .= @. (coefs.θcos - 1im * coefs.θsin) * Nfft
-
-    #unclear!
-    ft_r1D[1] *= 2
-    ft_θ1D[1] *= 2
-
-    #take the inverse ft.
-    r .= ift_plan * ft_r1D
-    θ .= ift_plan * ft_θ1D
-    
-end
-
-#obvs this should not exist, it is still being used by grad_jm!
-function rfft1D_simple(f)
-
-    Nfft = size(f)[end]
-    res = rfft(f)
-
-    cosout = real.(res) ./ Nfft .* 2
-    sinout = -imag.(res) ./ Nfft .* 2
-
-    cosout[1] /= 2
-    sinout[1] = 0.0
-
-    return cosout, sinout
-end
-
-
-#reconstructs r and t from the combined fourier coefficients.
-#takes in inverse real fourier transform to get r, θ from the coefficients.
-#somewhat inconsistently named tbh. May be worth changing this or the other stuff.
-
-#still being used!
-function rfft1D_JM(f)
-
-
-    Nfft = size(f)[end]
-    ffft = rfft(f, [2]) #for the JM case we need to do the second dim.
-    #unsure why or if we can combine these functions.
-
-    #println(ffft)
-
-    cos_out = real.(ffft) ./ Nfft .* 2
-
-    
-    #1d case
-    cos_out[:, 1] ./= 2
-    
-
-    sin_out = @. -imag(ffft) / Nfft * 2
-
-    sin_out[:, 1] .= 0.0
-
-    #print(sin_out)
-    #probably a bad idea to have this here, but it is needed.
-    return transpose(cos_out), transpose(sin_out)
-
-
-end
-
-function irfft1D(cos_in::Array{Float64, 1}, sin_in::Array{Float64, 1}, nfft_multiplier=2)
-
-
-    Nfft = nfft_multiplier * (size(cos_in)[end] - 1)
+    dim1, dim2 = size(cos_in)
+    Nfft = nfft_multiplier * (dim2 - 1)
+    #display(dim1)
+    #display(dim2)
     #display(Nfft * 2)
     ffft = (cos_in .- 1im .* sin_in) .* Nfft
-
-    
-    #display(Nfft)
-    #display(length(ffft))
 
     
     #may need to change this
     #this is differretn, but I think because this is 1d it is ok.
     #will be a problemo later.
     #also do not understand why this is occuring.
-    ffft[1] *= 2
+    ffft[:, 1] .*= 2
 
     #println(ffft)
     #probbably need to pick the dim properly. Not sure what shape cos_in and sin_in have
 
     #need to pad ffft with zeros as it is not long enough for the inverse fft of the desired length
     #python does this automatically!
-    Npad = floor(Int64,  Nfft / 2 - length(ffft)/2) + 1
+    Npad = floor(Int64,  Nfft / 2 - dim2/2) + 1
     #ft_pad = [zeros(Npad); ffft; zeros(Npad)];
+
+    #display(Npad)
 
     #ok so this matches python, bit odd tbh.
     #so 2*Npad ; ffft with ifftshift makes this match python
     #I am sure there are other combos that would work.
     #so does ffft; 2*Npad, without anyshift.
     #pretty hekin annoying. But atleast we are there now!
-    ft_pad = [ffft; zeros(Npad); zeros(Npad)];
+    #display(size(ffft))
+    ft_pad = zeros(ComplexF64, (dim1, dim2 + 2 * Npad))# + 2 * Npad))
+    #ft_pad = [ffft; zeros(dim1, Npad); zeros(dim1, Npad)];
+
+    ft_pad[1:end, 1:dim2] = ffft
     #may need to shift this!
     #display(length(ft_pad))
     #println(irfft(fftshift(ft_pad), 2 * Nfft) .* (Nfft / length(ffft)))
     #println(irfft(ifftshift(ft_pad), 2 * Nfft))# .* (Nfft / length(ffft)))
     #println(irfft(ft_pad, 2 * Nfft))# .* (Nfft / length
     #perhaps irfft is different in other ways???
-    #display(length(ft_pad))
-    #display(2*Nfft)
-    return irfft(ft_pad, 2 * Nfft)
+    return irfft(ft_pad, 2 * Nfft, [2])
+    #return irfft(ffft, 2 * Nfft, [2])
 
 end
 
+
+#used by wrap_field_lines, bit unclear
 function rfft2D(f, mpol, ntor)
 
     #zhisongs code considers case where mpol and ntor are unspecified.
@@ -257,52 +181,3 @@ function rfft2D(f, mpol, ntor)
 
 
 end
-
-
-function irfft1D(cos_in::Array{Float64, 2}, sin_in::Array{Float64, 2}, nfft_multiplier=2)
-
-    dim1, dim2 = size(cos_in)
-    Nfft = nfft_multiplier * (dim2 - 1)
-    #display(dim1)
-    #display(dim2)
-    #display(Nfft * 2)
-    ffft = (cos_in .- 1im .* sin_in) .* Nfft
-
-    
-    #may need to change this
-    #this is differretn, but I think because this is 1d it is ok.
-    #will be a problemo later.
-    #also do not understand why this is occuring.
-    ffft[:, 1] .*= 2
-
-    #println(ffft)
-    #probbably need to pick the dim properly. Not sure what shape cos_in and sin_in have
-
-    #need to pad ffft with zeros as it is not long enough for the inverse fft of the desired length
-    #python does this automatically!
-    Npad = floor(Int64,  Nfft / 2 - dim2/2) + 1
-    #ft_pad = [zeros(Npad); ffft; zeros(Npad)];
-
-    #display(Npad)
-
-    #ok so this matches python, bit odd tbh.
-    #so 2*Npad ; ffft with ifftshift makes this match python
-    #I am sure there are other combos that would work.
-    #so does ffft; 2*Npad, without anyshift.
-    #pretty hekin annoying. But atleast we are there now!
-    #display(size(ffft))
-    ft_pad = zeros(ComplexF64, (dim1, dim2 + 2 * Npad))# + 2 * Npad))
-    #ft_pad = [ffft; zeros(dim1, Npad); zeros(dim1, Npad)];
-
-    ft_pad[1:end, 1:dim2] = ffft
-    #may need to shift this!
-    #display(length(ft_pad))
-    #println(irfft(fftshift(ft_pad), 2 * Nfft) .* (Nfft / length(ffft)))
-    #println(irfft(ifftshift(ft_pad), 2 * Nfft))# .* (Nfft / length(ffft)))
-    #println(irfft(ft_pad, 2 * Nfft))# .* (Nfft / length
-    #perhaps irfft is different in other ways???
-    return irfft(ft_pad, 2 * Nfft, [2])
-    #return irfft(ffft, 2 * Nfft, [2])
-
-end
-

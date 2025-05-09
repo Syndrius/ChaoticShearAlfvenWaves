@@ -24,6 +24,7 @@ include("qProfiles.jl")
 
 export fu_dam_q
 export low_shear_q
+export low_shear_qfm_q
 export qfm_q
 export qfm_benchmark_q
 
