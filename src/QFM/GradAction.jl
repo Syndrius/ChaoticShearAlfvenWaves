@@ -124,7 +124,7 @@ function action_grad_j!(JM::Array{Float64, 2}, x::Array{Float64}, α::Float64, c
             #derivative w.r.t θ^c
             ipj.drdot.dθcn[i, j] = rdot_rhs_dθ * ipj.cosnza[i, j]
             #derivative w.r.t θ^s
-            ipj.drdot.dθcn[i, j] = rdot_rhs_dθ * ipj.sinnza[i, j]
+            ipj.drdot.dθsn[i, j] = rdot_rhs_dθ * ipj.sinnza[i, j]
 
             #derivative w.r.t r^c
             ipj.dθdot.drcn[i, j] = θdot_rhs_dr * ipj.cosnza[i, j]
@@ -245,7 +245,7 @@ function action_grad_fj!(δS::Array{Float64}, JM::Array{Float64, 2}, x::Array{Fl
             #derivative w.r.t θ^c
             ipj.drdot.dθcn[i, j] = rdot_rhs_dθ * ipj.cosnza[i, j]
             #derivative w.r.t θ^s
-            ipj.drdot.dθcn[i, j] = rdot_rhs_dθ * ipj.sinnza[i, j]
+            ipj.drdot.dθsn[i, j] = rdot_rhs_dθ * ipj.sinnza[i, j]
 
             #derivative w.r.t r^c
             ipj.dθdot.drcn[i, j] = θdot_rhs_dr * ipj.cosnza[i, j]

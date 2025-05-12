@@ -298,7 +298,7 @@ end
 """
 Guesses the best starting point for finding qfm surfaces based on the q_profile.
 """
-function surface_guess(rationals::Array{Tuple}, q::Function)
+function surface_guess(rationals::Array{Tuple{Int64, Int64}}, q::Function)
     gl = Float64[]
 
     for i in rationals

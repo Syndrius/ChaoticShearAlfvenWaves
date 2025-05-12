@@ -53,13 +53,13 @@ Structure that stores the variables to solve for.
 This includes the fourier coefficients for r and θ, and the lagrange multiplier ν.
 """
 struct CoefficientsT
-    ν :: Array{Float64, 1} #this is actually just a float. but we want to mutate it.
     rcos :: Array{Float64, 1}
     θcos :: Array{Float64, 1}
     rsin :: Array{Float64, 1}
     θsin :: Array{Float64, 1}
+    ν :: Array{Float64, 1} #this is actually just a float. but we want to mutate it.
     function CoefficientsT(N::Int64)
-        new(zeros(1), zeros(N), zeros(N), zeros(N), zeros(N))
+        new(zeros(N), zeros(N), zeros(N), zeros(N), zeros(1))
     end
 end
 
