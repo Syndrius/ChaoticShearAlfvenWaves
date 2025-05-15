@@ -79,7 +79,7 @@ function construct(prob::ProblemT, grids::FFFGridsT)
             #and for the test function
             for testr in 1:4, testθ in 1:4, testζ in 1:4
 
-                 #and for the test function. 
+                #and for the test function. 
                 left_ind = grid_to_index(i, j, k, testr, testθ, testζ, grids)
 
                 #only check for boundaries if this is true
@@ -106,8 +106,6 @@ function construct(prob::ProblemT, grids::FFFGridsT)
                     else
                         
                         #integrate the local contribution to our matrices.
-                        #think we actually have this around the wrong way
-                        #should have Φ[:, :, :, :, testr, testθ, testζ] etc.
                         Wsum = @views gauss_integrate(Ψ[testr, testθ, testζ, :, :, :, :], Φ[trialr, trialθ, trialζ, :, :, :, :], W, wgr, wgθ, wgζ, jac, grids.r.gp, grids.θ.gp, grids.ζ.gp)
 
                         Isum = @views gauss_integrate(Ψ[testr, testθ, testζ, :, :, :, :], Φ[trialr, trialθ, trialζ, :, :, :, :], I, wgr, wgθ, wgζ, jac, grids.r.gp, grids.θ.gp, grids.ζ.gp)
@@ -148,15 +146,14 @@ end
 
 
 """
-    construct(prob::ProblemT, grids::FFFGridsT)
+    construct(prob::ProblemT, grids::FFFGridsT, surfs::Array{QFMSurfaceT})
 
-Constructs the two matrices using the WeakForm of the SAW governing equation. Uses Finite elements with cubic Hermite polynomials in r, θ and ζ. Returns two sparse matrices.
-
-### Args
-prob::ProblemT - Struct containing the functions and parameters that define the problem we are solving
-grids::FFFGridT - Grids to solve over.
+Constructs the W and I matrices using qfm surfaces to construct chaotic coordinates.
 """
 function construct(prob::ProblemT, grids::FFFGridsT, surfs::Array{QFMSurfaceT})
+
+    #vars in here really should be (s, ϑ, φ) as the grids are the new coordinates
+    #however this causes issues with the data structures.
 
     #instantiate the grids into arrays. 
     rgrid, θgrid, ζgrid = inst_grids(grids)

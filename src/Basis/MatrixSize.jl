@@ -93,6 +93,7 @@ Initialises the empty structure that contains the trial and test functions.
 """
 function init_basis_function(grids::FSSGridsT)
 
+    #order here is chosen so integration is done on contigeous block
     return zeros(ComplexF64, 4, 9, grids.r.gp)   
 end
 
@@ -106,6 +107,7 @@ Initialises the empty structure that contains the trial and test functions.
 """
 function init_basis_function(grids::FFFGridsT)
 
+    #order here is chosen so integration is done on contigeous block
     return zeros(ComplexF64, 4, 4, 4, 9, grids.r.gp, grids.θ.gp, grids.ζ.gp)
 end
 
@@ -118,6 +120,7 @@ Initialises the empty structure that contains the trial and test functions.
 """
 function init_basis_function(grids::FFSGridsT)
 
+    #order here is chosen so integration is done on contigeous block
     return zeros(ComplexF64, 4, 4, 9, grids.r.gp, grids.θ.gp) 
 end
 

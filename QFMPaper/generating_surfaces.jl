@@ -12,6 +12,7 @@ using Plots; plotlyjs()
 using Plots; gr()
 using Roots
 using Statistics
+using LaTeXStrings
 #%%
 #first we looks at the poincare plot
 
@@ -242,21 +243,53 @@ xfs = 20
 tfs = 16
 ylims = (0.0, 1)
 xlims = (15, 47)
-plot(nsurfs, B2mean, palette=:tol_bright, axis=:left, xlimits=xlims, label=L"(B^s)^2", color=cur_colors[1], legendfontsize=lfs, xlabel="Number of QFM Surfaces", xguidefontsize=xfs, xtickfontsize=tfs, ytickfontsize=tfs-3, dpi=1200, legend=:topleft, margin=5Plots.mm, y_foreground_color_border=cur_colors[1], y_foreground_color_axis=cur_colors[1], y_foreground_color_text=cur_colors[1])
+plot(nsurfs, B2mean, palette=:tol_bright, axis=:left, xlimits=xlims, label=L"(B^s)^2", color=cur_colors[1], legendfontsize=lfs, xlabel="Number of QFM Surfaces", xguidefontsize=xfs, xtickfontsize=tfs, ytickfontsize=tfs-3, dpi=1200, legend=:topleft, margin=5Plots.mm, y_foreground_color_border=cur_colors[1], y_foreground_color_axis=cur_colors[1], y_foreground_color_text=cur_colors[1], yaxis=:log)
 
 #plot!(nsurfs, djacdrmean, axis=:right, palette=:tol_bright, label=L"\partial\mathcal{J}/\partial s")
 plot!(twinx(), nsurfs, djacdrmean, palette=:tol_bright, xlimits=xlims, axis=:right, linestyle=:dot,linewidth=3, legend=:topright, label=L"|\partial\mathcal{J}/\partial s|", color=cur_colors[2], legendfontsize=lfs, xguidefontsize=xfs, tickfontsize=tfs, dpi=1200, y_foreground_color_border=cur_colors[2], y_foreground_color_axis=cur_colors[2], y_foreground_color_text=cur_colors[2], markerstrokewidth=10)#, yticklabelcolor=cur_colors[2])
 
 plot!(twinx(), nsurfs .+ 100, djacdrmean, xlimits=xlims,  palette=:tol_bright, axis=:right, linestyle=:dot,linewidth=1.5, legend=:topright, label=L"|\partial\mathcal{J}/\partial s|", color=cur_colors[2], legendfontsize=lfs, xguidefontsize=xfs, tickfontsize=tfs, dpi=1200, y_foreground_color_border=cur_colors[2], y_foreground_color_axis=cur_colors[2], y_foreground_color_text=cur_colors[2], markerstrokewidth=10)#, yticklabelcolor=cur_colors[2])
 
-savefig("/Users/matt/Dropbox/Apps/Overleaf/Lit Review/pics/QFMPaper/number_of_surfaces.png")
+savefig("/Users/matt/Dropbox/Apps/Overleaf/Lit Review/pics/QFMPaper/number_of_surfaces_log.png")
 #%%
 #plot(nsurfs, djacdθmean)
+#why the fek didn't we save the surf_list!!
+#may want to redo this as a log plot.
 save_object("/Users/matt/phd/QFMPaper/nsurfs.jld2", nsurfs)
+save_object("/Users/matt/phd/QFMPaper/surfs_list.jld2", surfs_list)
 save_object("/Users/matt/phd/QFMPaper/B2mean.jld2", B2mean)
 save_object("/Users/matt/phd/QFMPaper/djacdrmean.jld2", djacdrmean)
 good_rationals = vcat(rats1, rats2, rats3, rats4, rats5, rats6, rats7, rats8);
 save_object("/Users/matt/phd/QFMPaper/rationals.jld2", good_rationasl)
+#%%
+
+nsurfs = load_object("/Users/matt/phd/QFMPaper/nsurfs.jld2")
+surfs_list = load_object("/Users/matt/phd/QFMPaper/surfs_list.jld2");
+B2mean = load_object("/Users/matt/phd/QFMPaper/B2mean.jld2")
+djacdrmean = load_object("/Users/matt/phd/QFMPaper/djacdrmean.jld2")
+#good_rationals = vcat(rats1, rats2, rats3, rats4, rats5, rats6, rats7, rats8);
+#save_object("/Users/matt/phd/QFMPaper/rationals.jld2", good_rationasl)
+#%%
 
 
+#%%
+#replicate the surfaces list form the total surfaces
+
+ssurfs = load_object("/Users/matt/phd/low_shear_surfs.jld2");
+
+sp1 = length(rats1)
+sp2 = sp1+length(rats2)
+sp3 = sp2+length(rats3)
+sp4 = sp3+length(rats4)
+sp5 = sp4+length(rats5)
+sp6 = sp5+length(rats7)
+surfs1 = ssurfs[1:sp1];
+surfs2 = ssurfs[sp1+1:sp2];
+surfs3 = ssurfs[sp2+1:sp3];
+surfs4 = ssurfs[sp3+1:sp4];
+surfs5 = ssurfs[sp4+1:sp5];
+surfs7 = ssurfs[sp5+1:sp6];
+
+length(ssurfs)
+display(length(surfs5)+length(rats7))
 
