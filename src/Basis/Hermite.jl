@@ -66,32 +66,32 @@ end
 
 """
 Struct for the hermite basis functions, for 2d finite elements.
-Each field has size [4, 4, rgp, θgp], dHr denotes derivative with respect to r, ddHrθ denotes ∂_r ∂_θ H.
+Each field has size [4, 4, x1gp, x2gp], dHx1 denotes derivative with respect to x1, ddHx1x2 denotes ∂_x1 ∂_x2 H.
 """
 struct HB2d
     H :: Array{Float64, 4}
-    dHr :: Array{Float64, 4}
-    dHθ :: Array{Float64, 4}
-    ddHrr :: Array{Float64, 4}
-    ddHrθ :: Array{Float64, 4}
-    ddHθθ :: Array{Float64, 4}
+    dHx1 :: Array{Float64, 4}
+    dHx2 :: Array{Float64, 4}
+    ddHx1x1 :: Array{Float64, 4}
+    ddHx1x2 :: Array{Float64, 4}
+    ddHx2x2 :: Array{Float64, 4}
 end
 
 
 
 """
-    hermite_basis(rgp::Array{Float64}, θgp::Array{Float64})
+    hermite_basis(x1gp::Array{Float64}, x2gp::Array{Float64})
 
 Creates the 16 Hermite basis functions used in 2d. Creates a 1d hermite_basis for each dimension, then combines them.
 """
-function hermite_basis(rgp::Array{Float64}, θgp::Array{Float64})
+function hermite_basis(x1gp::Array{Float64}, x2gp::Array{Float64})
 
     #create two 1d basis'
-    Sr = hermite_basis(rgp)
-    Sθ = hermite_basis(θgp)
+    Sx1 = hermite_basis(x1gp)
+    Sx2 = hermite_basis(x2gp)
    
     #then take a tensor product to get the 2d basis
-    S = combine_basis(Sr, Sθ, rgp, θgp)
+    S = combine_basis(Sx1, Sx2, x1gp, x2gp)
 
     return S
 
@@ -99,14 +99,14 @@ end
 
 
 """
-    combine_basis(Hr::Array{Float64, 2}, Hθ::Array{Float64, 2}, rgp::Array{Float64}, θgp::Array{Float64})
+    combine_basis(Hx1::Array{Float64, 2}, Hx2::Array{Float64, 2}, x1gp::Array{Float64}, x2gp::Array{Float64})
 
 Combines two 1d Hermite basis' into a 2d basis.
 """
-function combine_basis(Sr::HB1d, Sθ::HB1d, rgp::Array{Float64}, θgp::Array{Float64})
+function combine_basis(Sx1::HB1d, Sx2::HB1d, x1gp::Array{Float64}, x2gp::Array{Float64})
 
     #the size of each array.
-    as = (4, 4, length(rgp), length(θgp))
+    as = (4, 4, length(x1gp), length(x2gp))
     #define the struct to store the basis functions.
     S = HB2d(zeros(as), zeros(as), zeros(as), zeros(as), zeros(as), zeros(as))
 
@@ -134,17 +134,17 @@ function combine_basis(Sr::HB1d, Sθ::HB1d, rgp::Array{Float64}, θgp::Array{Flo
 
     #The order of this doesn't really matter tbh.
 
-    for i in 1:length(rgp), j in 1:length(θgp)
+    for i in 1:length(x1gp), j in 1:length(x2gp)
 
         #loop through the 4 nodes to consider.
         for y in 1:4, x in 1:4
 
-            S.H[x, y, i, j] = Sr.H[x, i] * Sθ.H[y, j]
-            S.dHr[x, y, i, j] = Sr.dH[x, i] * Sθ.H[y, j]
-            S.dHθ[x, y, i, j] = Sr.H[x, i] * Sθ.dH[y, j]
-            S.ddHrr[x, y, i, j] = Sr.ddH[x, i] * Sθ.H[y, j]
-            S.ddHrθ[x, y, i, j] = Sr.dH[x, i] * Sθ.dH[y, j]
-            S.ddHθθ[x, y, i, j] = Sr.H[x, i] * Sθ.ddH[y, j]
+            S.H[x, y, i, j] = Sx1.H[x, i] * Sx2.H[y, j]
+            S.dHx1[x, y, i, j] = Sx1.dH[x, i] * Sx2.H[y, j]
+            S.dHx2[x, y, i, j] = Sx1.H[x, i] * Sx2.dH[y, j]
+            S.ddHx1x1[x, y, i, j] = Sx1.ddH[x, i] * Sx2.H[y, j]
+            S.ddHx1x2[x, y, i, j] = Sx1.dH[x, i] * Sx2.dH[y, j]
+            S.ddHx2x2[x, y, i, j] = Sx1.H[x, i] * Sx2.ddH[y, j]
         end
     end
 
@@ -155,37 +155,37 @@ end
 
 """
 Struct for the hermite basis functions, for 3d finite elements.
-Each field has size [4, 4, 4, rgp, θgp, ζgp], dHr denotes derivative with respect to r, ddHrθ denotes ∂_r ∂_θ H.
+Each field has size [4, 4, 4, x1gp, x2gp, x3gp], dHx1 denotes derivative with respect to x1, ddHx1x2 denotes ∂_x1 ∂_x2 H.
 """
 struct HB3d
     H :: Array{Float64, 6}
-    dHr :: Array{Float64, 6}
-    dHθ :: Array{Float64, 6}
-    dHζ :: Array{Float64, 6}
-    ddHrr :: Array{Float64, 6}
-    ddHrθ :: Array{Float64, 6}
-    ddHrζ :: Array{Float64, 6}
-    ddHθθ :: Array{Float64, 6}
-    ddHθζ :: Array{Float64, 6}
-    ddHζζ :: Array{Float64, 6}
+    dHx1 :: Array{Float64, 6}
+    dHx2 :: Array{Float64, 6}
+    dHx3 :: Array{Float64, 6}
+    ddHx1x1 :: Array{Float64, 6}
+    ddHx1x2 :: Array{Float64, 6}
+    ddHx1x3 :: Array{Float64, 6}
+    ddHx2x2 :: Array{Float64, 6}
+    ddHx2x3 :: Array{Float64, 6}
+    ddHx3x3 :: Array{Float64, 6}
 end
 
 
 
 """
-    hermite_basis(rgp::Array{Float64}, θgp::Array{Float64}, ζgp::Array{Float64})
+    hermite_basis(x1gp::Array{Float64}, x2gp::Array{Float64}, x3gp::Array{Float64})
 
 Creates the 64 Hermite basis functions used in 3d. Creates a 1d hermite_basis for each dimension, then combines them.
 """
-function hermite_basis(rgp::Array{Float64}, θgp::Array{Float64}, ζgp::Array{Float64})
+function hermite_basis(x1gp::Array{Float64}, x2gp::Array{Float64}, x3gp::Array{Float64})
 
     #create 3 1d basis'
-    Sr = hermite_basis(rgp)
-    Sθ = hermite_basis(θgp)
-    Sζ = hermite_basis(ζgp)
+    Sx1 = hermite_basis(x1gp)
+    Sx2 = hermite_basis(x2gp)
+    Sx3 = hermite_basis(x3gp)
 
     #tensory product to combine 1d basis' into 3d.
-    S = combine_basis(Sr, Sθ, Sζ, rgp, θgp, ζgp)
+    S = combine_basis(Sx1, Sx2, Sx3, x1gp, x2gp, x3gp)
    
     return S
 
@@ -193,14 +193,14 @@ end
 
 
 """
-    combine_basis(Hr::Array{Float64, 2}, Hθ::Array{Float64, 2}, Hζ::Array{Float64, 2}, rgp::Array{Float64}, θgp::Array{Float64}, ζgp::Array{Float64})
+    combine_basis(Hx1::Array{Float64, 2}, Hx2::Array{Float64, 2}, Hx3::Array{Float64, 2}, x1gp::Array{Float64}, x2gp::Array{Float64}, x3gp::Array{Float64})
 
 Combines three 1d Hermite basis' into a 3d basis.
 """
-function combine_basis(Sr::HB1d, Sθ::HB1d, Sζ::HB1d, rgp::Array{Float64}, θgp::Array{Float64}, ζgp::Array{Float64})
+function combine_basis(Sx1::HB1d, Sx2::HB1d, Sx3::HB1d, x1gp::Array{Float64}, x2gp::Array{Float64}, x3gp::Array{Float64})
 
     #size of the arrays to create.
-    as = (4, 4, 4, length(rgp), length(θgp), length(ζgp))
+    as = (4, 4, 4, length(x1gp), length(x2gp), length(x3gp))
 
     #creates the struct to store the functions.
     S = HB3d(zeros(as), zeros(as), zeros(as), zeros(as), zeros(as), zeros(as), zeros(as), zeros(as), zeros(as), zeros(as))
@@ -227,23 +227,23 @@ function combine_basis(Sr::HB1d, Sθ::HB1d, Sζ::HB1d, rgp::Array{Float64}, θgp
     # (0, 0) -------- (1, 0)
 
 
-    for i in 1:length(rgp), j in 1:length(θgp), k in 1:length(ζgp)
+    for i in 1:length(x1gp), j in 1:length(x2gp), k in 1:length(x3gp)
 
         #loops over the sixteen relevant nodes, ie (0, 0, 0), (1, 0, 0) etc
         #we increment in 2's to account for derivative terms in H.
         #incrementing x,y and z will take us to the derivative at the appropriate node.
         for z in 1:4, y in 1:4, x in 1:4
 
-            S.H[x, y, z, i, j, k] = Sr.H[x, i] * Sθ.H[y, j] * Sζ.H[z, k]
-            S.dHr[x, y, z, i, j, k] = Sr.dH[x, i] * Sθ.H[y, j] * Sζ.H[z, k]
-            S.dHθ[x, y, z, i, j, k] = Sr.H[x, i] * Sθ.dH[y, j] * Sζ.H[z, k]
-            S.dHζ[x, y, z, i, j, k] = Sr.H[x, i] * Sθ.H[y, j] * Sζ.dH[z, k]
-            S.ddHrr[x, y, z, i, j, k] = Sr.ddH[x, i] * Sθ.H[y, j] * Sζ.H[z, k]
-            S.ddHrθ[x, y, z, i, j, k] = Sr.dH[x, i] * Sθ.dH[y, j] * Sζ.H[z, k]
-            S.ddHrζ[x, y, z, i, j, k] = Sr.dH[x, i] * Sθ.H[y, j] * Sζ.dH[z, k]
-            S.ddHθθ[x, y, z, i, j, k] = Sr.H[x, i] * Sθ.ddH[y, j] * Sζ.H[z, k]
-            S.ddHθζ[x, y, z, i, j, k] = Sr.H[x, i] * Sθ.dH[y, j] * Sζ.dH[z, k]
-            S.ddHζζ[x, y, z, i, j, k] = Sr.H[x, i] * Sθ.H[y, j] * Sζ.ddH[z, k]
+            S.H[x, y, z, i, j, k] = Sx1.H[x, i] * Sx2.H[y, j] * Sx3.H[z, k]
+            S.dHx1[x, y, z, i, j, k] = Sx1.dH[x, i] * Sx2.H[y, j] * Sx3.H[z, k]
+            S.dHx2[x, y, z, i, j, k] = Sx1.H[x, i] * Sx2.dH[y, j] * Sx3.H[z, k]
+            S.dHx3[x, y, z, i, j, k] = Sx1.H[x, i] * Sx2.H[y, j] * Sx3.dH[z, k]
+            S.ddHx1x1[x, y, z, i, j, k] = Sx1.ddH[x, i] * Sx2.H[y, j] * Sx3.H[z, k]
+            S.ddHx1x2[x, y, z, i, j, k] = Sx1.dH[x, i] * Sx2.dH[y, j] * Sx3.H[z, k]
+            S.ddHx1x3[x, y, z, i, j, k] = Sx1.dH[x, i] * Sx2.H[y, j] * Sx3.dH[z, k]
+            S.ddHx2x2[x, y, z, i, j, k] = Sx1.H[x, i] * Sx2.ddH[y, j] * Sx3.H[z, k]
+            S.ddHx2x3[x, y, z, i, j, k] = Sx1.H[x, i] * Sx2.dH[y, j] * Sx3.dH[z, k]
+            S.ddHx3x3[x, y, z, i, j, k] = Sx1.H[x, i] * Sx2.H[y, j] * Sx3.ddH[z, k]
 
         end
     end

@@ -1,3 +1,5 @@
+#TODO
+#this needs to go!
 
 #interface with the parallel implementation written in fortran.
 #this will allow us to read the fortran results easily.

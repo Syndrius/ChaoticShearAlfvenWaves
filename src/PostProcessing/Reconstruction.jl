@@ -9,8 +9,8 @@ function reconstruct_phi!(efunc::Array{ComplexF64}, grids::FSSGridsT, ϕ::Array{
     for i in 1:2:matrix_size(grids)
 
         #note these are the indicies.
-        r, θ, ζ, hs = index_to_grid(i, grids)
-        ϕft[r, θ, ζ] = efunc[i]
+        x1, x2, x3, hs = index_to_grid(i, grids)
+        ϕft[x1, x2, x3] = efunc[i]
 
     end
 
@@ -27,15 +27,15 @@ Reconstructs the 1d eigenfunction output back to the 3d grid. This case for a si
 function reconstruct_phi!(efunc::Array{ComplexF64}, grids::FFSGridsT, ϕ::Array{ComplexF64, 3}, ϕft::Array{ComplexF64, 3}, plan::FFTW.FFTWPlan)
 
 
-    m = grids.θ.pf
+    m = grids.x2.pf
 
-    θgrid = periodic_grid(grids.θ)
+    x2grid = periodic_grid(grids.x2)
 
     for i in 1:4:matrix_size(grids)
 
         #note these are the indicies.
-        r, θ, ζ, hs = index_to_grid(i, grids)
-        ϕft[r, θ, ζ] = efunc[i] * exp(1im * m * θgrid[θ])
+        x1, x2, x3, hs = index_to_grid(i, grids)
+        ϕft[x1, x2, x3] = efunc[i] * exp(1im * m * x2grid[x2])
 
     end
     ft_phi!(ϕ, ϕft, grids, plan)
@@ -52,16 +52,16 @@ Reconstructs the 1d eigenfunction output back to the 3d grid. Only a single efun
 function reconstruct_phi!(efunc::Array{ComplexF64}, grids::FFFGridsT, ϕ::Array{ComplexF64, 3}, ϕft::Array{ComplexF64, 3}, plan::FFTW.FFTWPlan)
 
 
-    m = grids.θ.pf
-    n = grids.ζ.pf
+    m = grids.x2.pf
+    n = grids.x3.pf
 
-    _, θgrid, ζgrid = inst_grids(grids)
+    _, x2grid, x3grid = inst_grids(grids)
 
     for i in 1:8:matrix_size(grids)
 
         #note these are the indicies.
-        r, θ, ζ, hs = index_to_grid(i, grids)
-        ϕ[r, θ, ζ] = efunc[i] * exp(1im * (m * θgrid[θ] + n * ζgrid[ζ]))
+        x1, x2, x3, hs = index_to_grid(i, grids)
+        ϕ[x1, x2, x3] = efunc[i] * exp(1im * (m * x2grid[x2] + n * x3grid[x3]))
 
     end
     ft_phi!(ϕ, ϕft, grids, plan)
@@ -78,17 +78,17 @@ end
 Reconstructs the 1d eigenfunction output back to the 3d grid.
 """
 function reconstruct_phi!(efunc::Array{ComplexF64}, grids::FFFGridsT, ϕ::Array{ComplexF64, 4})
-    #phi = zeros(ComplexF64, grids.r.N, grids.θ.N, grids.ζ.N, 8)
-    #phi = Array{ComplexF64}(undef, grids.r.N, grids.θ.N, grids.ζ.N, 8)
+    #phi = zeros(ComplexF64, grids.r.N, grids.x2.N, grids.x3.N, 8)
+    #phi = Array{ComplexF64}(undef, grids.r.N, grids.x2.N, grids.x3.N, 8)
     #maybe one day we will want dphidr???
     #note that this is the same for both!
 
     #TODO
 
-    m = grids.θ.pf
-    n = grids.ζ.pf
+    m = grids.x2.pf
+    n = grids.x3.pf
 
-    _, θgrid, ζgrid = inst_grids(grids)
+    _, x2grid, x3grid = inst_grids(grids)
 
     #should skip over derivative inds.
     for i in 1:1:matrix_dim(grids)
@@ -96,16 +96,16 @@ function reconstruct_phi!(efunc::Array{ComplexF64}, grids::FFFGridsT, ϕ::Array{
         
 
         #note these are the indicies.
-        r, θ, ζ, hs = index_to_grid(i, grids)
+        r, x2, x3, hs = index_to_grid(i, grids)
 
         
         #the 8 should fix this
-        ϕ[r, θ, ζ, hs] = efunc[i] * exp(1im * (m * θgrid[θ] + n * ζgrid[ζ]))
+        ϕ[r, x2, x3, hs] = efunc[i] * exp(1im * (m * x2grid[x2] + n * x3grid[x3]))
 
         #
             #may be the wrong way around!
             #this doesn't seem to have worked as expected tbh!
-            #phi[:, r, θ, ζ] = efuncs[i, :] #.* exp(1im * (m * θgrid[θ] + n * ζgrid[ζ]))
+            #phi[:, r, x2, x3] = efuncs[i, :] #.* exp(1im * (m * x2grid[x2] + n * x3grid[x3]))
         #end
     end
 
@@ -122,25 +122,25 @@ Reconstructs the 1d eigenfunction output back to the 3d grid. This case for a si
 """
 function reconstruct_phi!(efunc::Array{ComplexF64}, grids::FFSGridsT)
 
-    phi = zeros(ComplexF64, grids.r.N, grids.θ.N, grids.ζ.count, 4)
+    phi = zeros(ComplexF64, grids.r.N, grids.x2.N, grids.x3.count, 4)
     #maybe one day we will want dphidr???
     #note that this is the same for both!
 
-    m = grids.θ.pf
+    m = grids.x2.pf
 
-    _, θgrid, _, _, _ = instantiate_grids(grids)
+    _, x2grid, _, _, _ = instantiate_grids(grids)
 
     for i in 1:1:matrix_dim(grids)
 
         #note these are the indicies.
-        r, θ, ζ, hs = index_to_grid(i, grids)
-        phi[r, θ, ζ, hs] = efunc[i] * exp(1im * m * θgrid[θ])
+        x1, x2, x3, hs = index_to_grid(i, grids)
+        phi[x1, x2, x3, hs] = efunc[i] * exp(1im * m * x2grid[x2])
 
         #if hs == 1
             #may be the wrong way around!
             #this doesn't seem to have worked as expected tbh!
             #hard to tell what is needed here!
-            #phi[:, r, θ, ζ] = efuncs[i, :] .* exp(1im * m * θgrid[θ])
+            #phi[:, r, x2, x3] = efuncs[i, :] .* exp(1im * m * x2grid[x2])
         #end
     end
     return phi

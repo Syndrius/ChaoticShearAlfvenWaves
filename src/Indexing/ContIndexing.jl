@@ -1,13 +1,13 @@
 """
-    grid_to_index(θind::Int64, ζind::Int64, grids::ContGridsT)
+    grid_to_index(x2ind::Int64, x3ind::Int64, grids::ContGridsT)
 
 Converts the index of the 2d grid into the proper place in the matrix.
 """
-function grid_to_index(θind::Int64, ζind::Int64, grids::ContGridsT)
+function grid_to_index(x2ind::Int64, x3ind::Int64, grids::ContGridsT)
 
-    Nn = grids.ζ.N
+    Nn = grids.x3.N
 
-    return 1 + (ζind - 1) + (θind-1) * Nn
+    return 1 + (x3ind - 1) + (x2ind-1) * Nn
 
 end
 
@@ -17,10 +17,10 @@ end
 function index_to_grid(i::Int64, grids::ContGridsT)
 
     #guess!
-    θ = mod(div(i-1, grids.ζ.N), grids.θ.N) + 1
-    ζ = mod(i-1, grids.ζ.N) + 1
+    x2 = mod(div(i-1, grids.x3.N), grids.x2.N) + 1
+    x3 = mod(i-1, grids.x3.N) + 1
 
-    return θ, ζ
+    return x2, x3
 
 end
 

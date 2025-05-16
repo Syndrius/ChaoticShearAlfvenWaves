@@ -13,6 +13,7 @@ Current term is back on, it is working fine, may need higher res for best result
 
 
 - Based on fft stuff in qfm, we may need to double check fft in the spectral method to make sure the scaling is actually correct
+- Changing to x1,x2,x3 is better long term, but we probably want some functions to still be written in terms of r, θ, ζ, or even ψ, θ, ζ as unique labels
 
 
 #Long Term fixes

@@ -31,13 +31,6 @@ continuum_plot(evals)
 
 
 ind = find_ind(evals, 0.33)
-ind = 348
+#ind = 348
 potential_plot(ϕft, grids, ind)
 
-#%%
-
-ar1 = [[1, 2], [3, 4]]
-ar2 = [[5, 6], [7, 8]]
-ar3 = Vector{Int64}[]
-
-vcat(ar1, ar3)

@@ -5,7 +5,7 @@ Computes the dimension of the matrix.
 """
 function matrix_size(grids::ContGridsT)
 
-    return grids.θ.N * grids.ζ.N
+    return grids.x2.N * grids.x3.N
 end
 
 
@@ -16,7 +16,7 @@ Computes the dimension of the matrix.
 """
 function matrix_size(grids::FSSGridsT)
 
-    return 2 * grids.r.N * grids.θ.N * grids.ζ.N
+    return 2 * grids.x1.N * grids.x2.N * grids.x3.N
 end
 
 
@@ -27,7 +27,7 @@ Computes the dimension of the matrix.
 """
 function matrix_size(grids::FFSGridsT)
 
-    return 4 * grids.r.N * grids.θ.N * grids.ζ.N
+    return 4 * grids.x1.N * grids.x2.N * grids.x3.N
 end
 
 
@@ -38,7 +38,7 @@ Computes the dimension of the matrix.
 """
 function matrix_size(grids::FFFGridsT)
 
-    return 8 * grids.r.N * grids.θ.N * grids.ζ.N
+    return 8 * grids.x1.N * grids.x2.N * grids.x3.N
 end
 
 """
@@ -48,7 +48,7 @@ Computes the size of the local I, W matrices needed at each grid point.
 """
 function local_matrix_size(grids::ContGridsT)
 
-    return zeros(ComplexF64, 9, 9, 1, grids.θ.N * grids.θ.f_quad, grids.ζ.N * grids.ζ.f_quad)
+    return zeros(ComplexF64, 9, 9, 1, grids.x2.N * grids.x2.f_quad, grids.x3.N * grids.x3.f_quad)
 end
 
 
@@ -59,7 +59,7 @@ Computes the size of the local I, W matrices needed at each grid point.
 """
 function local_matrix_size(grids::FSSGridsT)
 
-    return zeros(ComplexF64, 9, 9, grids.r.gp, grids.θ.N * grids.θ.f_quad, grids.ζ.N * grids.ζ.f_quad)
+    return zeros(ComplexF64, 9, 9, grids.x1.gp, grids.x2.N * grids.x2.f_quad, grids.x3.N * grids.x3.f_quad)
 end
 
 
@@ -70,7 +70,7 @@ Computes the size of the local I, W matrices needed at each grid point.
 """
 function local_matrix_size(grids::FFSGridsT)
 
-    return zeros(ComplexF64, 9, 9, grids.r.gp, grids.θ.gp, grids.ζ.N * grids.ζ.f_quad)
+    return zeros(ComplexF64, 9, 9, grids.x1.gp, grids.x2.gp, grids.x3.N * grids.x3.f_quad)
 end
 
 """
@@ -80,7 +80,7 @@ Computes the size of the local I, W matrices needed at each grid point.
 """
 function local_matrix_size(grids::FFFGridsT)
 
-    return zeros(ComplexF64, 9, 9, grids.r.gp, grids.θ.gp, grids.ζ.gp)
+    return zeros(ComplexF64, 9, 9, grids.x1.gp, grids.x2.gp, grids.x3.gp)
 end
 
 
@@ -94,7 +94,7 @@ Initialises the empty structure that contains the trial and test functions.
 function init_basis_function(grids::FSSGridsT)
 
     #order here is chosen so integration is done on contigeous block
-    return zeros(ComplexF64, 4, 9, grids.r.gp)   
+    return zeros(ComplexF64, 4, 9, grids.x1.gp)   
 end
 
 
@@ -108,7 +108,7 @@ Initialises the empty structure that contains the trial and test functions.
 function init_basis_function(grids::FFFGridsT)
 
     #order here is chosen so integration is done on contigeous block
-    return zeros(ComplexF64, 4, 4, 4, 9, grids.r.gp, grids.θ.gp, grids.ζ.gp)
+    return zeros(ComplexF64, 4, 4, 4, 9, grids.x1.gp, grids.x2.gp, grids.x3.gp)
 end
 
 
@@ -121,6 +121,6 @@ Initialises the empty structure that contains the trial and test functions.
 function init_basis_function(grids::FFSGridsT)
 
     #order here is chosen so integration is done on contigeous block
-    return zeros(ComplexF64, 4, 4, 9, grids.r.gp, grids.θ.gp) 
+    return zeros(ComplexF64, 4, 4, 9, grids.x1.gp, grids.x2.gp) 
 end
 

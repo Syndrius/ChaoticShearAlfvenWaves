@@ -26,16 +26,16 @@ end
 
 
 """
-    gauss_integrate(Ψ::SubArray{ComplexF64, 3, Array{ComplexF64, 5}}, Φ::SubArray{ComplexF64, 3, Array{ComplexF64, 5}}, mat::SubArray{ComplexF64, 4, Array{ComplexF64, 5}}, wgr::Array{Float64}, wgθ::Array{Float64}, jac::Float64, rgp::Int64, θgp::Int64)
+    gauss_integrate(Ψ::SubArray{ComplexF64, 3, Array{ComplexF64, 5}}, Φ::SubArray{ComplexF64, 3, Array{ComplexF64, 5}}, mat::SubArray{ComplexF64, 4, Array{ComplexF64, 5}}, wgx1::Array{Float64}, wgx2::Array{Float64}, jac::Float64, x1gp::Int64, x2gp::Int64)
     
 Computes the numerical integration required for finite elements via ∫f(x)dx ≈ ∑w_i f(x_i) in 2d.
 """
-function gauss_integrate(Ψ::SubArray{ComplexF64, 3, Array{ComplexF64, 5}}, Φ::SubArray{ComplexF64, 3, Array{ComplexF64, 5}}, mat::SubArray{ComplexF64, 4, Array{ComplexF64, 5}}, wgr::Array{Float64}, wgθ::Array{Float64}, jac::Float64, rgp::Int64, θgp::Int64)
+function gauss_integrate(Ψ::SubArray{ComplexF64, 3, Array{ComplexF64, 5}}, Φ::SubArray{ComplexF64, 3, Array{ComplexF64, 5}}, mat::SubArray{ComplexF64, 4, Array{ComplexF64, 5}}, wgx1::Array{Float64}, wgx2::Array{Float64}, jac::Float64, x1gp::Int64, x2gp::Int64)
 
     res = 0.0 + 0.0im
-    for l in 1:θgp, k in 1:rgp
+    for l in 1:x2gp, k in 1:x1gp
 
-        scale = wgr[k] * wgθ[l] * jac
+        scale = wgx1[k] * wgx2[l] * jac
 
         for j in 1:9, i in 1:9
             res += @inbounds Ψ[i, k, l] * mat[i, j, k, l] * Φ[j, k, l] * scale
@@ -48,19 +48,19 @@ end
 
 
 """
-    gauss_integrate(Ψ::SubArray{ComplexF64, 3, Array{ComplexF64, 5}}, Φ::SubArray{ComplexF64, 3, Array{ComplexF64, 5}}, mat::SubArray{ComplexF64, 4, Array{ComplexF64, 5}}, wgr::Array{Float64}, wgθ::Array{Float64}, jac::Float64, rgp::Int64, θgp::Int64)
+    gauss_integrate(Ψ::SubArray{ComplexF64, 3, Array{ComplexF64, 5}}, Φ::SubArray{ComplexF64, 3, Array{ComplexF64, 5}}, mat::SubArray{ComplexF64, 4, Array{ComplexF64, 5}}, wgx1::Array{Float64}, wgx2::Array{Float64}, jac::Float64, x1gp::Int64, x2gp::Int64)
     
-Computes the numerical integration required for finite elements via ∫f(x)dx ≈ ∑w_i f(x_i) in 2d.
+Computes the numerical integration required for finite elements via ∫f(x)dx ≈ ∑w_i f(x_i) in 3d.
 """
-function gauss_integrate(Ψ::SubArray{ComplexF64, 4, Array{ComplexF64, 7}}, Φ::SubArray{ComplexF64, 4, Array{ComplexF64, 7}}, mat::Array{ComplexF64, 5}, wgr::Array{Float64}, wgθ::Array{Float64}, wgζ::Array{Float64}, jac::Float64, rgp::Int64, θgp::Int64, ζgp::Int64)
+function gauss_integrate(Ψ::SubArray{ComplexF64, 4, Array{ComplexF64, 7}}, Φ::SubArray{ComplexF64, 4, Array{ComplexF64, 7}}, mat::Array{ComplexF64, 5}, wgx1::Array{Float64}, wgx2::Array{Float64}, wgx3::Array{Float64}, jac::Float64, x1gp::Int64, x2gp::Int64, x3gp::Int64)
 
     res = 0.0 + 0.0im
-    for ζ in 1:ζgp, θ in 1:θgp, r in 1:rgp
+    for x3 in 1:x3gp, x2 in 1:x2gp, x1 in 1:x1gp
 
-        scale = wgr[r] * wgθ[θ] * wgζ[ζ] * jac
+        scale = wgx1[x1] * wgx2[x2] * wgx3[x3] * jac
 
         for j in 1:9, i in 1:9
-            res += @inbounds Ψ[i, r, θ, ζ] * mat[i, j, r, θ, ζ] * Φ[j, r, θ, ζ] * scale
+            res += @inbounds Ψ[i, x1, x2, x3] * mat[i, j, x1, x2, x3] * Φ[j, x1, x2, x3] * scale
         end
     end
 

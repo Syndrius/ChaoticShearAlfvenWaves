@@ -25,24 +25,24 @@ end
 
 
 """
-    compute_B!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, r::Float64, θ::Float64, ζ::Float64)
+    compute_B!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, x1::Float64, x2::Float64, x3::Float64)
 
 Function the fills the BFieldT struct based on an q-profile and and island for a given coordinate.
-B is assumed to be in the form (B^r, B^θ, B^ζ) with 
- - B^r = [A1(r) sin(m1_0 θ + n1_0 ζ) + A2(r) sin(m2_0 θ + n2_0 ζ)] / J
- - B^θ = r/(J q) 
- - B^ζ = r / J
+B is assumed to be in the form (B^r, B^x2, B^x3) with 
+ - B^r = [A1(r) sin(m1_0 x2 + n1_0 x3) + A2(r) sin(m2_0 x2 + n2_0 x3)] / J
+ - B^x2 = r/(J q) 
+ - B^x3 = r / J
 
 This version does not take a quadratic form, this means the behaviour near r=0 will be cooked, requires a restricted grid.
 """
-function compute_B!(B::BFieldT, met::MetT, q_prof::Function, isls::Array{IslandT}, r::Float64, θ::Float64, ζ::Float64)
+function compute_B!(B::BFieldT, met::MetT, q_prof::Function, isls::Array{IslandT}, x1::Float64, x2::Float64, x3::Float64)
 
-    q, dq = q_prof(r)
+    q, dq = q_prof(x1)
 
 
     #I think it is fine to just modify the B^r component, but we may want to confirm.
     #perhaps d amp is not a great name for the derivative.
-    amp, damp = island_amplitude(r)
+    amp, damp = island_amplitude(x1)
     #amplitude seems to be a problem that will need to be fixed another time.
     #amp = 1.0
     #damp = 0.0 
@@ -50,10 +50,10 @@ function compute_B!(B::BFieldT, met::MetT, q_prof::Function, isls::Array{IslandT
     B.B[1] = 0.0
     B.dB[1, :] .= 0.0
     for isl in isls
-        B.B[1] += isl.A * amp * isl.m0 * sin(isl.m0 * θ + isl.n0 * ζ)
-        B.dB[1, 1] += isl.A * damp * isl.m0 * sin(isl.m0 * θ + isl.n0 * ζ)
-        B.dB[1, 2] += isl.A * amp * isl.m0^2 * cos(isl.m0 * θ + isl.n0 * ζ)
-        B.dB[1, 3] += isl.A * amp * isl.m0 * isl.n0 * cos(isl.m0 * θ + isl.n0 * ζ)
+        B.B[1] += isl.A * amp * isl.m0 * sin(isl.m0 * x2 + isl.n0 * x3)
+        B.dB[1, 1] += isl.A * damp * isl.m0 * sin(isl.m0 * x2 + isl.n0 * x3)
+        B.dB[1, 2] += isl.A * amp * isl.m0^2 * cos(isl.m0 * x2 + isl.n0 * x3)
+        B.dB[1, 3] += isl.A * amp * isl.m0 * isl.n0 * cos(isl.m0 * x2 + isl.n0 * x3)
     end
 
     B.B[1] /= met.J[1]
@@ -65,13 +65,13 @@ function compute_B!(B::BFieldT, met::MetT, q_prof::Function, isls::Array{IslandT
     B.dB[1, 2] -= B.B[1] * met.dJ[2] / met.J[1]
 
     B.dB[1, 3] /= met.J[1]
-    B.dB[1, 3] -= B.B[1] * met.dJ[3] / met.J[1] #typically dJ/dζ = 0.
+    B.dB[1, 3] -= B.B[1] * met.dJ[3] / met.J[1] #typically dJ/dx3 = 0.
 
     #assumes B0=1
     #B.B[1] = 1 / (met.J[1]) * (isl.A * amp * isl.m0 * sin(arg) + isl2.A * amp * isl2.m0 * sin(arg2))
                 
-    B.B[2] = r / (met.J[1] * q) 
-    B.B[3] = r / (met.J[1])
+    B.B[2] = x1 / (met.J[1] * q) 
+    B.B[3] = x1 / (met.J[1])
 
     #ignoring amp/damp for now
     #added it back in now!
@@ -92,17 +92,17 @@ function compute_B!(B::BFieldT, met::MetT, q_prof::Function, isls::Array{IslandT
 
 
     B.dB[2, 1] = (1 / (met.J[1] * q) 
-                    - (r / q) * met.dJ[1] / met.J[1]^2
-                    - r * dq /(met.J[1] * q^2) )
+                    - (x1 / q) * met.dJ[1] / met.J[1]^2
+                    - x1 * dq /(met.J[1] * q^2) )
                     
-    B.dB[2, 2] = - (r / q ) * met.dJ[2] / met.J[1]^2
+    B.dB[2, 2] = - (x1 / q ) * met.dJ[2] / met.J[1]^2
     
 
-    B.dB[2, 3] = - (r / q ) * met.dJ[3] / met.J[1]^2 #typically dJ/dζ = 0.
+    B.dB[2, 3] = - (x1 / q ) * met.dJ[3] / met.J[1]^2 #typically dJ/dx3 = 0.
 
-    B.dB[3, 1] = (met.J[1] - r * met.dJ[1]) / met.J[1]^2
-    B.dB[3, 2] = -r*met.dJ[2]/met.J[1]^2
-    B.dB[3, 3] = -r*met.dJ[3]/met.J[1]^2 #typically dJ/dζ = 0.
+    B.dB[3, 1] = (met.J[1] - x1 * met.dJ[1]) / met.J[1]^2
+    B.dB[3, 2] = -x1*met.dJ[2]/met.J[1]^2
+    B.dB[3, 3] = -x1*met.dJ[3]/met.J[1]^2 #typically dJ/dx3 = 0.
     
 
     #note this also does B.db
@@ -163,7 +163,7 @@ end
 
 Function to determine the island amplitude. Needs work
 """
-function island_amplitude(r::Float64)
+function island_amplitude(x1::Float64)
 
     #doesn't actually use the island at the moment, but probably will one day.
     #currently will only work for islands at r0=0.5.
@@ -171,40 +171,11 @@ function island_amplitude(r::Float64)
     #ideally, this would be an input like q or density tbh
 
     #returns value and derivative.
-    return 4*r*(1-r), 4 - 8 * r
+    return 4*x1*(1-x1), 4 - 8 * x1
 
     #case where this function is not included
     #useful to distinguish problemo's between GAM and between axis.
     return 1, 0
-
-    if r > 0.3 #this will assume the island is at r=0.5
-        return 1, 0
-    elseif r > 0.2
-        #function chosen to be zero at r=0.2, 1 at r=0.3, and gradient of 0 at r=0.3.
-        #subject to change obvs.
-        return -100*r^2 + 60*r - 8, -200*r + 60
-    else
-
-        return 0, 0
-    end
-
-end
-
-#simplified function that only computes the contravarient components
-#useful for QFM surfaces.
-function compute_B!(B::Array{Float64}, J::Float64, q_prof::Function, isl::IslandT, isl2::IslandT, r::Float64, θ::Float64, ζ::Float64)
-    
-    q, _ = q_prof(r)
-
-    arg = isl.m0 * θ + isl.n0 * ζ
-
-    arg2 = isl2.m0 * θ + isl2.n0 * ζ
-
-    #assumes B0=1
-    B[1] = 1 / J * (isl.A * isl.m0 * sin(arg) + isl2.A  * isl2.m0 * sin(arg2))
-                
-    B[2] = r / (J * q) 
-    B[3] = r / (J)
 
 end
 
@@ -266,22 +237,22 @@ end
 
 
 """
-    compute_B!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, r::Float64, θ::Float64, ζ::Float64)
+    compute_B!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, x1::Float64, x2::Float64, x3::Float64)
 
 Function the fills the BFieldT struct based on an q-profile and and island for a given coordinate.
-B is assumed to be in the form (B^r, B^θ, B^ζ) with 
- - B^r = A m_0 r^2 (1-r) sin(m_0 θ - n_0 ζ) / J
- - B^θ = r/(J q) + A (1-2r) cos(m_0 θ - n_0 ζ) / J
- - B^ζ = r / J
+B is assumed to be in the form (B^r, B^x2, B^x3) with 
+ - B^r = A m_0 r^2 (1-r) sin(m_0 x2 - n_0 x3) / J
+ - B^x2 = r/(J q) + A (1-2r) cos(m_0 x2 - n_0 x3) / J
+ - B^x3 = r / J
 
 This version does not take a quadratic form, this means the behaviour near r=0 will be cooked, requires a restricted grid.
 This has been changed to ψ, needs verification.
 """
-function flux_compute_B!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, ψ::Float64, θ::Float64, ζ::Float64)
+function flux_compute_B!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, ψ::Float64, x2::Float64, x3::Float64)
 
     q, dq = q_prof(ψ)
 
-    arg = isl.m0 * θ + isl.n0 * ζ
+    arg = isl.m0 * x2 + isl.n0 * x3
 
     #assumes B0=1
     B.B[1] = 1 / (met.J[1]) * isl.A * isl.m0 * sin(arg)

@@ -1,7 +1,7 @@
 """
     construct(prob::ProblemT, grids::FFFGridsT)
 
-Constructs the two matrices using the WeakForm of the SAW governing equation. Uses Finite elements with cubic Hermite polynomials in r, θ and ζ. Returns two sparse matrices.
+Constructs the two matrices using the WeakForm of the SAW governing equation. Uses Finite elements with cubic Hermite polynomials in r, x2 and x3. Returns two sparse matrices.
 
 ### Args
 prob::ProblemT - Struct containing the functions and parameters that define the problem we are solving
@@ -10,7 +10,7 @@ grids::FFFGridT - Grids to solve over.
 function construct(prob::ProblemT, grids::FFFGridsT)
 
     #instantiate the grids into arrays. 
-    rgrid, θgrid, ζgrid = inst_grids(grids)
+    x1grid, x2grid, x3grid = inst_grids(grids)
 
 
     #initialise the two structs to store the metric and the magnetic field.
@@ -18,12 +18,12 @@ function construct(prob::ProblemT, grids::FFFGridsT)
     B = BFieldT()
 
     #compute the gaussian qudrature points for finite elements.
-    ξr, wgr = gausslegendre(grids.r.gp) #same as python!
-    ξθ, wgθ = gausslegendre(grids.θ.gp)
-    ξζ, wgζ = gausslegendre(grids.ζ.gp)
+    ξx1, wgx1 = gausslegendre(grids.x1.gp) #same as python!
+    ξx2, wgx2 = gausslegendre(grids.x2.gp)
+    ξx3, wgx3 = gausslegendre(grids.x3.gp)
 
     #Gets the Hermite basis for the grids
-    S = hermite_basis(ξr, ξθ, ξζ)
+    S = hermite_basis(ξx1, ξx2, ξx3)
 
 
     #creates the trial and test function arrays.
@@ -52,39 +52,39 @@ function construct(prob::ProblemT, grids::FFFGridsT)
     tm = TM()
 
 
-    #main loop, θ, ζ go to N for periodicity.
-    for i in 1:grids.r.N-1, j in 1:grids.θ.N, k in 1:grids.ζ.N 
+    #main loop, x2, x3 go to N for periodicity.
+    for i in 1:grids.x1.N-1, j in 1:grids.x2.N, k in 1:grids.x3.N 
 
         #takes the local ξ arrays to a global arrays around the grid point.
-        r, θ, ζ, dr, dθ, dζ = local_to_global(i, j, k, ξr, ξθ, ξζ, rgrid, θgrid, ζgrid) 
+        x1, x2, x3, dx1, dx2, dx3 = local_to_global(i, j, k, ξx1, ξx2, ξx3, x1grid, x2grid, x3grid) 
 
         #jacobian of the local to global transformation.
-        jac = dr * dθ * dζ / 8 
+        jac = dx1 * dx2 * dx3 / 8 
 
         #computes the contribution to the W and I matrices.
-        W_and_I!(W, I, B, met, prob, r, θ, ζ, tm)
+        W_and_I!(W, I, B, met, prob, x1, x2, x3, tm)
         
         #adjust the basis functions to the current coordinates/mode numbers considered.
-        create_local_basis!(Φ, S, grids.θ.pf, grids.ζ.pf, dr, dθ, dζ)
+        create_local_basis!(Φ, S, grids.x2.pf, grids.x3.pf, dx1, dx2, dx3)
         #negatives for conjugate of test function
-        create_local_basis!(Ψ, S, -grids.θ.pf, -grids.ζ.pf, dr, dθ, dζ)
+        create_local_basis!(Ψ, S, -grids.x2.pf, -grids.x3.pf, dx1, dx2, dx3)
 
 
         #loop over the Hermite elements for the trial function
-        for trialr in 1:4, trialθ in 1:4, trialζ in 1:4
+        for trialx1 in 1:4, trialx2 in 1:4, trialx3 in 1:4
 
             #determines the matrix index for the trial function
-            right_ind = grid_to_index(i, j, k, trialr, trialθ, trialζ, grids)
+            right_ind = grid_to_index(i, j, k, trialx1, trialx2, trialx3, grids)
 
             #and for the test function
-            for testr in 1:4, testθ in 1:4, testζ in 1:4
+            for testx1 in 1:4, testx2 in 1:4, testx3 in 1:4
 
                 #and for the test function. 
-                left_ind = grid_to_index(i, j, k, testr, testθ, testζ, grids)
+                left_ind = grid_to_index(i, j, k, testx1, testx2, testx3, grids)
 
                 #only check for boundaries if this is true
                 #no other i's can possibly give boundaries
-                if i==1 || i==grids.r.N-1
+                if i==1 || i==grids.x1.N-1
 
 
                     if left_ind == right_ind && left_ind in boundary_inds
@@ -106,9 +106,9 @@ function construct(prob::ProblemT, grids::FFFGridsT)
                     else
                         
                         #integrate the local contribution to our matrices.
-                        Wsum = @views gauss_integrate(Ψ[testr, testθ, testζ, :, :, :, :], Φ[trialr, trialθ, trialζ, :, :, :, :], W, wgr, wgθ, wgζ, jac, grids.r.gp, grids.θ.gp, grids.ζ.gp)
+                        Wsum = @views gauss_integrate(Ψ[testx1, testx2, testx3, :, :, :, :], Φ[trialx1, trialx2, trialx3, :, :, :, :], W, wgx1, wgx2, wgx3, jac, grids.x1.gp, grids.x2.gp, grids.x3.gp)
 
-                        Isum = @views gauss_integrate(Ψ[testr, testθ, testζ, :, :, :, :], Φ[trialr, trialθ, trialζ, :, :, :, :], I, wgr, wgθ, wgζ, jac, grids.r.gp, grids.θ.gp, grids.ζ.gp)
+                        Isum = @views gauss_integrate(Ψ[testx1, testx2, testx3, :, :, :, :], Φ[trialx1, trialx2, trialx3, :, :, :, :], I, wgx1, wgx2, wgx3, jac, grids.x1.gp, grids.x2.gp, grids.x3.gp)
 
 
                         #adds the local contribution to the global structure
@@ -120,9 +120,9 @@ function construct(prob::ProblemT, grids::FFFGridsT)
                 else
                     
                     #integrate the local contribution to our matrices.
-                    Wsum = @views gauss_integrate(Ψ[testr, testθ, testζ, :, :, :, :], Φ[trialr, trialθ, trialζ, :, :, :, :], W, wgr, wgθ, wgζ, jac, grids.r.gp, grids.θ.gp, grids.ζ.gp)
+                    Wsum = @views gauss_integrate(Ψ[testx1, testx2, testx3, :, :, :, :], Φ[trialx1, trialx2, trialx3, :, :, :, :], W, wgx1, wgx2, wgx3, jac, grids.x1.gp, grids.x2.gp, grids.x3.gp)
 
-                    Isum = @views gauss_integrate(Ψ[testr, testθ, testζ, :, :, :, :], Φ[trialr, trialθ, trialζ, :, :, :, :], I, wgr, wgθ, wgζ, jac, grids.r.gp, grids.θ.gp, grids.ζ.gp)
+                    Isum = @views gauss_integrate(Ψ[testx1, testx2, testx3, :, :, :, :], Φ[trialx1, trialx2, trialx3, :, :, :, :], I, wgx1, wgx2, wgx3, jac, grids.x1.gp, grids.x2.gp, grids.x3.gp)
 
                     #adds the local contribution to the global structure
                     push!(Wdata, Wsum)
@@ -156,7 +156,7 @@ function construct(prob::ProblemT, grids::FFFGridsT, surfs::Array{QFMSurfaceT})
     #however this causes issues with the data structures.
 
     #instantiate the grids into arrays. 
-    rgrid, θgrid, ζgrid = inst_grids(grids)
+    x1grid, x2grid, x3grid = inst_grids(grids)
 
     #initialise the two structs to store the metric and the magnetic field.
     tor_met = MetT()
@@ -168,12 +168,12 @@ function construct(prob::ProblemT, grids::FFFGridsT, surfs::Array{QFMSurfaceT})
     surf_itp, sd = create_surf_itp(surfs)
 
     #compute the gaussian qudrature points for finite elements.
-    ξr, wgr = gausslegendre(grids.r.gp) #same as python!
-    ξθ, wgθ = gausslegendre(grids.θ.gp)
-    ξζ, wgζ = gausslegendre(grids.ζ.gp)
+    ξx1, wgx1 = gausslegendre(grids.x1.gp) #same as python!
+    ξx2, wgx2 = gausslegendre(grids.x2.gp)
+    ξx3, wgx3 = gausslegendre(grids.x3.gp)
 
     #Gets the Hermite basis for the grids
-    S = hermite_basis(ξr, ξθ, ξζ)
+    S = hermite_basis(ξx1, ξx2, ξx3)
 
 
     #creates the trial and test function arrays.
@@ -204,40 +204,40 @@ function construct(prob::ProblemT, grids::FFFGridsT, surfs::Array{QFMSurfaceT})
     #struct for storing the intermediate data for the coordinate transform
     CT = CoordTsfmT()
 
-    #main loop, θ, ζ go to N for periodicity.
-    for i in 1:grids.r.N-1, j in 1:grids.θ.N, k in 1:grids.ζ.N 
+    #main loop, x2, x3 go to N for periodicity.
+    for i in 1:grids.x1.N-1, j in 1:grids.x2.N, k in 1:grids.x3.N 
 
 
         #takes the local ξ arrays to a global arrays around the grid point.
-        r, θ, ζ, dr, dθ, dζ = local_to_global(i, j, k, ξr, ξθ, ξζ, rgrid, θgrid, ζgrid) 
+        x1, x2, x3, dx1, dx2, dx3 = local_to_global(i, j, k, ξx1, ξx2, ξx3, x1grid, x2grid, x3grid) 
 
         #jacobian of the local to global transformation.
-        jac = dr * dθ * dζ / 8 
+        jac = dx1 * dx2 * dx3 / 8 
 
         #computes the contribution to the W and I matrices.
-        W_and_I!(W, I, tor_B, tor_met, qfm_B, qfm_met, prob, r, θ, ζ, tm, surf_itp, CT, sd)
+        W_and_I!(W, I, tor_B, tor_met, qfm_B, qfm_met, prob, x1, x2, x3, tm, surf_itp, CT, sd)
         
         #adjust the basis functions to the current coordinates/mode numbers considered.
-        create_local_basis!(Φ, S, grids.θ.pf, grids.ζ.pf, dr, dθ, dζ)
+        create_local_basis!(Φ, S, grids.x2.pf, grids.x3.pf, dx1, dx2, dx3)
         #negatives for conjugate of test function
-        create_local_basis!(Ψ, S, -grids.θ.pf, -grids.ζ.pf, dr, dθ, dζ)
+        create_local_basis!(Ψ, S, -grids.x2.pf, -grids.x3.pf, dx1, dx2, dx3)
 
 
         #loop over the Hermite elements for the trial function
-        for trialr in 1:4, trialθ in 1:4, trialζ in 1:4
+        for trialx1 in 1:4, trialx2 in 1:4, trialx3 in 1:4
 
             #determines the matrix index for the trial function
-            right_ind = grid_to_index(i, j, k, trialr, trialθ, trialζ, grids)
+            right_ind = grid_to_index(i, j, k, trialx1, trialx2, trialx3, grids)
 
             #and for the test function
-            for testr in 1:4, testθ in 1:4, testζ in 1:4
+            for testx1 in 1:4, testx2 in 1:4, testx3 in 1:4
 
                  #and for the test function. 
-                left_ind = grid_to_index(i, j, k, testr, testθ, testζ, grids)
+                left_ind = grid_to_index(i, j, k, testx1, testx2, testx3, grids)
 
                 #only check for boundaries if this is true
                 #no other i's can possibly give boundaries
-                if i==1 || i==grids.r.N-1
+                if i==1 || i==grids.x1.N-1
 
 
                     if left_ind == right_ind && left_ind in boundary_inds
@@ -258,9 +258,9 @@ function construct(prob::ProblemT, grids::FFFGridsT, surfs::Array{QFMSurfaceT})
                     else
                         
                         #integrate the local contribution to our matrices.
-                        Wsum = @views gauss_integrate(Ψ[testr, testθ, testζ, :, :, :, :], Φ[trialr, trialθ, trialζ, :, :, :, :], W, wgr, wgθ, wgζ, jac, grids.r.gp, grids.θ.gp, grids.ζ.gp)
+                        Wsum = @views gauss_integrate(Ψ[testx1, testx2, testx3, :, :, :, :], Φ[trialx1, trialx2, trialx3, :, :, :, :], W, wgx1, wgx2, wgx3, jac, grids.x1.gp, grids.x2.gp, grids.x3.gp)
 
-                        Isum = @views gauss_integrate(Ψ[testr, testθ, testζ, :, :, :, :], Φ[trialr, trialθ, trialζ, :, :, :, :], I, wgr, wgθ, wgζ, jac, grids.r.gp, grids.θ.gp, grids.ζ.gp)
+                        Isum = @views gauss_integrate(Ψ[testx1, testx2, testx3, :, :, :, :], Φ[trialx1, trialx2, trialx3, :, :, :, :], I, wgx1, wgx2, wgx3, jac, grids.x1.gp, grids.x2.gp, grids.x3.gp)
 
 
                         #adds the local contribution to the global structure
@@ -272,9 +272,9 @@ function construct(prob::ProblemT, grids::FFFGridsT, surfs::Array{QFMSurfaceT})
                 else
                     
                     #integrate the local contribution to our matrices.
-                    Wsum = @views gauss_integrate(Ψ[testr, testθ, testζ, :, :, :, :], Φ[trialr, trialθ, trialζ, :, :, :, :], W, wgr, wgθ, wgζ, jac, grids.r.gp, grids.θ.gp, grids.ζ.gp)
+                    Wsum = @views gauss_integrate(Ψ[testx1, testx2, testx3, :, :, :, :], Φ[trialx1, trialx2, trialx3, :, :, :, :], W, wgx1, wgx2, wgx3, jac, grids.x1.gp, grids.x2.gp, grids.x3.gp)
 
-                    Isum = @views gauss_integrate(Ψ[testr, testθ, testζ, :, :, :, :], Φ[trialr, trialθ, trialζ, :, :, :, :], I, wgr, wgθ, wgζ, jac, grids.r.gp, grids.θ.gp, grids.ζ.gp)
+                    Isum = @views gauss_integrate(Ψ[testx1, testx2, testx3, :, :, :, :], Φ[trialx1, trialx2, trialx3, :, :, :, :], I, wgx1, wgx2, wgx3, jac, grids.x1.gp, grids.x2.gp, grids.x3.gp)
 
                     #adds the local contribution to the global structure
                     push!(Wdata, Wsum)

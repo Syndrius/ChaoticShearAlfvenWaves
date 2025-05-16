@@ -2,14 +2,14 @@
 Struct storing the grids in the FSS case.
 
 ### Fields
-- r::RFEMGridDataT - Struct storing the finite elements radial grid information.
-- θ::SMGridDataT - Struct storing the spectral method poloidal grid information.
-- ζ::SMGridDataT - Struct storing the spectral method toroidal grid information.
+- x1::RadFEMGridDataT - Struct storing the finite elements radial grid information.
+- x2::SMGridDataT - Struct storing the spectral method poloidal grid information.
+- x3::SMGridDataT - Struct storing the spectral method toroidal grid information.
 """
 @kwdef struct FSSGridsT <: GridsT
-    r :: RFEMGridDataT
-    θ :: SMGridDataT
-    ζ :: SMGridDataT
+    x1 :: RadFEMGridDataT
+    x2 :: SMGridDataT
+    x3 :: SMGridDataT
 end
 
 
@@ -17,14 +17,14 @@ end
 Struct storing the grids in the FFS case.
 
 ### Fields
-- r::RFEMGridDataT - Struct storing the finite elements radial grid information.
-- θ::AFEMGridDataT - Struct storing the finite element grid.
-- ζ::SMGridDataT - Struct storing the spectral method toroidal grid information.
+- x1::RadFEMGridDataT - Struct storing the finite elements radial grid information.
+- x2::AngFEMGridDataT - Struct storing the finite element grid.
+- x3::SMGridDataT - Struct storing the spectral method toroidal grid information.
 """
 @kwdef struct FFSGridsT <: GridsT
-    r :: RFEMGridDataT
-    θ :: AFEMGridDataT
-    ζ :: SMGridDataT
+    x1 :: RadFEMGridDataT
+    x2 :: AngFEMGridDataT
+    x3 :: SMGridDataT
 end
 
 
@@ -32,14 +32,14 @@ end
 Struct storing the grids in the FFS case.
 
 ### Fields
-- r::RFEMGridDataT - Struct storing the finite elements radial grid information.
-- θ::AEMGridDataT - Struct storing the finite element grid.
-- ζ::AFEMGridDataT - Struct storing the finite element grid information.
+- x1::RadFEMGridDataT - Struct storing the finite elements radial grid information.
+- x2::AEMGridDataT - Struct storing the finite element grid.
+- x3::AngFEMGridDataT - Struct storing the finite element grid information.
 """
 @kwdef struct FFFGridsT <: GridsT
-    r :: RFEMGridDataT
-    θ :: AFEMGridDataT
-    ζ :: AFEMGridDataT
+    x1 :: RadFEMGridDataT
+    x2 :: AngFEMGridDataT
+    x3 :: AngFEMGridDataT
 end
 
 
@@ -47,14 +47,14 @@ end
 Struct storing the grids in the FFS case.
 
 ### Fields
-- r::RFEMGridDataT - Struct storing the finite elements radial grid information.
-- θ::AEMGridDataT - Struct storing the finite element grid.
-- ζ::AFEMGridDataT - Struct storing the finite element grid information.
+- x1::RadFEMGridDataT - Struct storing the finite elements radial grid information.
+- x2::AEMGridDataT - Struct storing the finite element grid.
+- x3::AngFEMGridDataT - Struct storing the finite element grid information.
 """
 @kwdef struct ContGridsT <: GridsT
-    r :: ContGridDataT
-    θ :: SMGridDataT
-    ζ :: SMGridDataT
+    x1 :: ContGridDataT
+    x2 :: SMGridDataT
+    x3 :: SMGridDataT
 end
 
 
@@ -68,18 +68,18 @@ function init_grid(; type::Symbol=:empty, method::Symbol=:empty, bcs::Symbol=:em
         if isnan(stop)
             stop = 1.0
         end
-        return rfem_grid(N=N, start=start, stop=stop, sep1=sep1, sep2=sep2, frac=frac, gp=gp, left_bc=left_bc)
+        return radial_fem_grid(N=N, start=start, stop=stop, sep1=sep1, sep2=sep2, frac=frac, gp=gp, left_bc=left_bc)
     end
     #angular finite element grid
     if type==:af
         if isnan(stop)
             stop = 2π
         end
-        return afem_grid(N=N, start=start, stop=stop, gp=gp, pf=pf)
+        return angular_fem_grid(N=N, start=start, stop=stop, gp=gp, pf=pf)
     end
     #angular spectral method grid
     if type==:as
-        return asm_grid(N=N, start=start, stop=stop, incr=incr, f_quad=f_quad)
+        return angular_sm_grid(N=N, start=start, stop=stop, incr=incr, f_quad=f_quad)
     end
 
     if type==:rc
@@ -88,7 +88,6 @@ function init_grid(; type::Symbol=:empty, method::Symbol=:empty, bcs::Symbol=:em
         end
         return ContGridDataT(N=N, start=start, stop=stop)
     end
-
 
     if method == :FEM
         if bcs == :dirichlet
@@ -114,27 +113,27 @@ end
 
 
 """
-    init_grids(rgrid::GridDataT, θgrid::GridDataT, ζgrid::GridDataT)
+    init_grids(x1grid::GridDataT, x2grid::GridDataT, x3grid::GridDataT)
 
 Initialises the grid structure from the three individual grids.
 """
-function init_grids(rgrid::GridDataT, θgrid::GridDataT, ζgrid::GridDataT)
+function init_grids(x1grid::GridDataT, x2grid::GridDataT, x3grid::GridDataT)
 
     
-    if rgrid isa ContGridDataT
-        return ContGridsT(rgrid, θgrid, ζgrid)
+    if x1grid isa ContGridDataT
+        return ContGridsT(x1grid, x2grid, x3grid)
     end
 
-    if ζgrid isa SMGridDataT
+    if x3grid isa SMGridDataT
 
-        if θgrid isa SMGridDataT
+        if x2grid isa SMGridDataT
 
-            return FSSGridsT(rgrid, θgrid, ζgrid)
+            return FSSGridsT(x1grid, x2grid, x3grid)
         else
-            return FFSGridsT(rgrid, θgrid, ζgrid)
+            return FFSGridsT(x1grid, x2grid, x3grid)
         end
-    elseif ζgrid isa AFEMGridDataT && θgrid isa AFEMGridDataT
-        return FFFGridsT(rgrid, θgrid, ζgrid)
+    elseif x3grid isa AngFEMGridDataT && x2grid isa AngFEMGridDataT
+        return FFFGridsT(x1grid, x2grid, x3grid)
     end
 
     #perhaps make a new radial grid for continuum...
@@ -151,7 +150,7 @@ Creates the grids used in the computation from the GridDataT structures.
 """
 function inst_grids(grids::GridsT)
 
-    return inst_grid(grids.r), inst_grid(grids.θ), inst_grid(grids.ζ)
+    return inst_grid(grids.x1), inst_grid(grids.x2), inst_grid(grids.x3)
 
 end
 
@@ -163,6 +162,6 @@ Creates the grids used in the computation from the GridDataT structures.
 """
 function inst_grids(grids::ContGridsT)
 
-    return inst_grid(grids.r), inst_grid(grids.θ), inst_grid(grids.ζ)
+    return inst_grid(grids.x1), inst_grid(grids.x2), inst_grid(grids.x3)
 end
 

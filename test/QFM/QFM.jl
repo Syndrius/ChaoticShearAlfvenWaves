@@ -11,11 +11,12 @@ geo = init_geo(R0=R0)
 
 prob = init_problem(q=fu_dam_q, geo=geo, isl=isl)
 
-qlist, plist = farey_tree(3, 2, 1, 3, 1)
+#qlist, plist = farey_tree(3, 2, 1, 3, 1)
+rationals = lowest_rationals(6, prob.q(0.0)[1], prob.q(1.0)[1])
 
-guess_list = 0.5 .* ones(length(qlist));
+guess_list = surface_guess(rationals, prob.q)
 
-surfs = construct_surfaces(plist, qlist, guess_list, prob);
+surfs = construct_surfaces(rationals, guess_list, prob);
 
 display("Running Continuum Test")
 include("Continuum.jl")

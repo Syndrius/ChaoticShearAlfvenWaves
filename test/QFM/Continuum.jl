@@ -1,10 +1,10 @@
 
-ϑgrid = MID.Structures.asm_grid(start=1, N=2)#, f_quad=1)
-φgrid = MID.Structures.asm_grid(start=-1, N=1)#, f_quad=1)#, incr=2)
+ϑgrid = init_grid(type=:as, N=2, start=1)
+φgrid = init_grid(type=:as, N=1, start=-1)
 #grids = init_grids(N=N, mstart=1, mcount=2, nstart=-1, ncount=1);
 
 #bounds chosen to not go outside the bounding surfaces
-sgrid = MID.Structures.ContGridDataT(N=50, start=0.2, stop=0.8)
+sgrid = init_grid(type=:rc, N=50, start=0.2, stop=0.8)
 grids = init_grids(sgrid, ϑgrid, φgrid)
 
 

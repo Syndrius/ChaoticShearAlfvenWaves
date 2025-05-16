@@ -1,18 +1,18 @@
 """ 
     continuum(prob::ProblemT, grids::ContGridsT)
 
-Finds the continuum by solving the second order derivatives on each flux surface individually. Much faster than reconstructing the continuum from the full solver, but cannot handle islands, resistivity and won't find any global modes. This function assumes the spectral method is used in θ and ζ.
+Finds the continuum by solving the second order derivatives on each flux surface individually. Much faster than reconstructing the continuum from the full solver, but cannot handle islands, resistivity and won't find any global modes. This function assumes the spectral method is used in x2 and x3.
 """
 function continuum(prob::ProblemT, grids::ContGridsT)
 
 
-    rgrid, θgrid, ζgrid = inst_grids(grids)
+    x1grid, x2grid, x3grid = inst_grids(grids)
 
-    Nθ = length(θgrid)
-    Nζ = length(ζgrid)
+    Nx2 = length(x2grid)
+    Nx3 = length(x3grid)
 
-    mlist = mode_list(grids.θ)
-    nlist = mode_list(grids.ζ)
+    mlist = mode_list(grids.x2)
+    nlist = mode_list(grids.x3)
 
 
     #this condition no longer works with the new setup.
@@ -37,7 +37,7 @@ function continuum(prob::ProblemT, grids::ContGridsT)
     mat_size = matrix_size(grids)
 
     #array to store the eigenvalues
-    ωlist = zeros(grids.r.N, mat_size)
+    ωlist = zeros(grids.x1.N, mat_size)
 
     #matrices for the local contribution to the global matrices.#
     I = local_matrix_size(grids)
@@ -47,8 +47,8 @@ function continuum(prob::ProblemT, grids::ContGridsT)
     Wmat = zeros(ComplexF64, mat_size, mat_size)
 
     #sub matrices storing the relavant parts for continuum computation.
-    Icont = zeros(1, 1, 1, Nθ, Nζ)
-    Wcont = zeros(3, 3, 1, Nθ, Nζ)
+    Icont = zeros(1, 1, 1, Nx2, Nx3)
+    Wcont = zeros(3, 3, 1, Nx2, Nx3)
 
     #Plans for efficient fourier transform
     pI = plan_fft(Icont, [4, 5])
@@ -59,10 +59,10 @@ function continuum(prob::ProblemT, grids::ContGridsT)
     tm = TM()
 
     #now we loop through the grid
-    for (i, r) in enumerate(rgrid) 
+    for (i, x1) in enumerate(x1grid) 
 
         #computes the full weakform
-        W_and_I!(W, I, B, met, prob, [r], θgrid, ζgrid, tm)
+        W_and_I!(W, I, B, met, prob, [x1], x2grid, x3grid, tm)
 
         #For the continuum we extract the relevant second derivative parts
         Icont = pI * I[[1], [1], :, :, :]
@@ -85,8 +85,8 @@ function continuum(prob::ProblemT, grids::ContGridsT)
                 
                 Ψ = [1, -m2*1im, -n2*1im]
 
-                mind = mod(k1-k2 + Nθ, Nθ) + 1
-                nind = mod(l1-l2 + Nζ, Nζ) + 1
+                mind = mod(k1-k2 + Nx2, Nx2) + 1
+                nind = mod(l1-l2 + Nx3, Nx3) + 1
 
                 #silly matrix dims, but keeps it consistent.
                 Imat[left_ind, right_ind] += Icont[1, 1, 1, mind, nind]
@@ -111,6 +111,8 @@ function continuum(prob::ProblemT, grids::ContGridsT)
     end
 
     #ideally this would return an evals like structure instead of this
+    #TODO, either make this return evalsT, or create postprocessing step that does this
+    #would help with making the plotting less shit, maybe trickier than thought though
     return ωlist
 end
 
@@ -121,19 +123,19 @@ end
     qfm_continuum(prob::ProblemT, grids::ContGridsT, surfs::Array{QFMSurfaceT})
 
 Computes the continuum 
-Finds the continuum by solving the second order derivatives on each flux surface individually using qfm surface. This function assumes the spectral method is used in θ and ζ.
+Finds the continuum by solving the second order derivatives on each flux surface individually using qfm surface. This function assumes the spectral method is used in x2 and x3.
 """
 function continuum(prob::ProblemT, grids::ContGridsT, surfs::Array{QFMSurfaceT})
     
-    #note that this should be in terms of (s, ϑ, φ) which is converted to (r, θ, ζ) during the qfm process.
+    #note that this should be in terms of (s, ϑ, φ) which is converted to (r, x2, x3) during the qfm process.
 
-    rgrid, θgrid, ζgrid = inst_grids(grids)
+    x1grid, x2grid, x3grid = inst_grids(grids)
 
-    Nθ = length(θgrid)
-    Nζ = length(ζgrid)
+    Nx2 = length(x2grid)
+    Nx3 = length(x3grid)
 
-    mlist = mode_list(grids.θ)
-    nlist = mode_list(grids.ζ)
+    mlist = mode_list(grids.x2)
+    nlist = mode_list(grids.x3)
 
     #creates the interpolation from the surfaces
     surf_itp, sd = create_surf_itp(surfs);
@@ -147,7 +149,7 @@ function continuum(prob::ProblemT, grids::ContGridsT, surfs::Array{QFMSurfaceT})
     mat_size = matrix_size(grids)
 
     #array to store the results
-    ωlist = zeros(grids.r.N, mat_size)
+    ωlist = zeros(grids.x1.N, mat_size)
 
     #pretty sure we have functions to do a bunch of this shite.
     I = local_matrix_size(grids)
@@ -157,9 +159,9 @@ function continuum(prob::ProblemT, grids::ContGridsT, surfs::Array{QFMSurfaceT})
     Wmat = zeros(ComplexF64, mat_size, mat_size)
 
     #so turns out our original continuum funciton is garbage.
-    Icont = zeros(1, 1, 1, Nθ, Nζ)
+    Icont = zeros(1, 1, 1, Nx2, Nx3)
 
-    Wcont = zeros(3, 3, 1, Nθ, Nζ)
+    Wcont = zeros(3, 3, 1, Nx2, Nx3)
 
     #probably not how this works.
     pI = plan_fft(Icont, [4, 5])
@@ -169,11 +171,11 @@ function continuum(prob::ProblemT, grids::ContGridsT, surfs::Array{QFMSurfaceT})
     CT = CoordTsfmT()
     tm = TM()
 
-    for (i, r) in enumerate(rgrid)
+    for (i, s) in enumerate(x1grid)
 
 
         #computes the weakform and coordinate transform
-        W_and_I!(W, I, tor_B, tor_met, qfm_B, qfm_met, prob, [r], θgrid, ζgrid, tm, surf_itp, CT, sd)
+        W_and_I!(W, I, tor_B, tor_met, qfm_B, qfm_met, prob, [s], x2grid, x3grid, tm, surf_itp, CT, sd)
 
 
         Icont = pI * I[[1], [1], :, :, :]
@@ -196,8 +198,8 @@ function continuum(prob::ProblemT, grids::ContGridsT, surfs::Array{QFMSurfaceT})
                 
                 Ψ = [1, -m2*1im, -n2*1im]
 
-                mind = mod(k1-k2 + Nθ, Nθ) + 1
-                nind = mod(l1-l2 + Nζ, Nζ) + 1
+                mind = mod(k1-k2 + Nx2, Nx2) + 1
+                nind = mod(l1-l2 + Nx3, Nx3) + 1
 
                 #silly matrix dims, but keeps it consistent.
                 Imat[left_ind, right_ind] += Icont[1, 1, 1, mind, nind]

@@ -116,13 +116,13 @@ function compute_continuum(prob::ProblemT, grids::ContGridsT, surfs::Array{QFMSu
     #so we can compute the continuum for each n individually
     if perN
         #_, _, _, _, _, nlist, _ = instantiate_grids(grids)
-        nlist = mode_list(grids.ζ)
+        nlist = mode_list(grids.x3)
 
-        ωlist = zeros(grids.r.N, grids.θ.N, grids.ζ.N)
+        ωlist = zeros(grids.x1.N, grids.x2.N, grids.x3.N)
 
         for (i, n) in enumerate(nlist)
-            temp_ζgrid = init_grid(type=:as, start=n, N=1)
-            temp_grids = init_grids(grids.r, grids.θ, temp_ζgrid)
+            temp_x3grid = init_grid(type=:as, start=n, N=1)
+            temp_grids = init_grids(grids.x1, grids.x2, temp_x3grid)
 
             ωlist[:, :, i] = continuum(prob, temp_grids, surfs)
         end
@@ -147,13 +147,13 @@ function compute_continuum(prob::ProblemT, grids::ContGridsT, perN=true::Bool)
     #so we can compute the continuum for each n individually
     if perN
         #_, _, _, _, _, nlist, _ = instantiate_grids(grids)
-        nlist = mode_list(grids.ζ)
+        nlist = mode_list(grids.x3)
 
-        ωlist = zeros(grids.r.N, grids.θ.N, grids.ζ.N)
+        ωlist = zeros(grids.x1.N, grids.x2.N, grids.x3.N)
 
         for (i, n) in enumerate(nlist)
-            temp_ζgrid = init_grid(type=:as, start=n, N=1)
-            temp_grids = init_grids(grids.r, grids.θ, temp_ζgrid)
+            temp_x3grid = init_grid(type=:as, start=n, N=1)
+            temp_grids = init_grids(grids.x1, grids.x2, temp_x3grid)
 
             ωlist[:, :, i] = continuum(prob, temp_grids)
         end
@@ -176,18 +176,18 @@ Computes the continuum analytically, assuming cylindrical geometry and no pertur
 function analytical_continuum(prob::ProblemT, grids::ContGridsT)
 
 
-    rgrid = inst_grid(grids.r)
-    mlist = mode_list(grids.θ)
-    nlist = mode_list(grids.ζ)
+    rgrid = inst_grid(grids.x1)
+    mlist = mode_list(grids.x2)
+    nlist = mode_list(grids.x3)
 
     ω = []
     mode_labs = Tuple{Int, Int}[] 
-    rms = []
+    x1ms = []
 
-    for r in rgrid
-        q, _ = prob.q(r)
+    for x1 in x1grid
+        q, _ = prob.q(x1)
 
-        dens = prob.dens(r)
+        dens = prob.dens(x1)
 
         for m in mlist, n in nlist
 
@@ -195,12 +195,12 @@ function analytical_continuum(prob::ProblemT, grids::ContGridsT)
 
             push!(ω, abs(m/q + n) / sqrt(dens)) #already normalised!
 
-            push!(rms, r)
+            push!(x1ms, x1)
         end
 
     end
 
-    return EvalsT(ω, rms, mode_labs)
+    return EvalsT(ω, x1ms, mode_labs)
 
 end
 

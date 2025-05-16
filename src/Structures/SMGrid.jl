@@ -18,11 +18,11 @@ end
 
 
 """
-    init_sm_grid(;start::Int64, count::Int64, incr::Int64=1, f_quad=3)
+    angular_sm_grid(; N::Int64, start::Int64, stop::Real=NaN, incr::Int64=1, f_quad::Int64=3)
 
 Creates the grid needed for the spectral method.
 """
-function asm_grid(; N::Int64, start::Int64, stop::Real=NaN, incr::Int64=1, f_quad::Int64=3)
+function angular_sm_grid(; N::Int64, start::Int64, stop::Real=NaN, incr::Int64=1, f_quad::Int64=3)
 
     #perhaps we should be able to define a start and a stop and N is computed?
     if isnan(stop)

@@ -55,22 +55,22 @@ function compute_K!(met::MetT, Γ::Array{Float64}, K::Array{Float64}, n::Int64)
     #double terms occur due to the symmetry in double derivatives
     #single terms when derivatives are with respect to the same variable twice.
     for i in 1:3, k in 1:3
-        #drdr
+        #dx1dx1
         K[1] += Γ[i, n] * lct[i, 1, k] * Γ[k, 1] / met.J[1] 
 
-        #drdθ, dθdr
+        #dx1dx2, dx2dx1
         K[2] += Γ[i, n] * (lct[i, 1, k] * Γ[k, 2] + lct[i, 2, k] * Γ[k, 1]) / met.J[1]
 
-        #drdζ, dζdr
+        #dx1dx3, dx3dx1
         K[3] += Γ[i, n] * (lct[i, 1, k] * Γ[k, 3] + lct[i, 3, k] * Γ[k, 1]) / met.J[1]
 
-        #dθdθ
+        #dx2dx2
         K[4] += Γ[i, n] * lct[i, 2, k] * Γ[k, 2] / met.J[1]
 
-        #dθdζ, dζdθ
+        #dx2dx3, dx3dx2
         K[5] += Γ[i, n] * (lct[i, 2, k] * Γ[k, 3] + lct[i, 3, k] * Γ[k, 2]) / met.J[1]
 
-        #dζdζ
+        #dx3dx3
         K[6] += Γ[i, n] * lct[i, 3, k] * Γ[k, 3] / met.J[1]
     end
 end

@@ -78,15 +78,16 @@ end
 
 
 """
-    W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, B::BFieldT, met::MetT, prob::ProblemT, r:: Array{Float64}, θ, ζ::AbstractRange)
+    W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, B::BFieldT, met::MetT, prob::IslProblemT, κ::Array{Float64}, ᾱ::AbstractArray, ζ::AbstractArray, tm::TM)
 
 Computes the two matrices W and I based on the weak form of the SAW governing equation for the case with island coordinates.
 In this case a specific metric and q-profile are used and the current nerm is not included.
 """
-function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, B::BFieldT, met::MetT, prob::IslProblemT, r::Array{Float64}, θ::AbstractArray, ζ::AbstractArray, tm::TM)
+function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, B::BFieldT, met::MetT, prob::IslProblemT, κ::Array{Float64}, ᾱ::AbstractArray, ζ::AbstractArray, tm::TM)
     
     #TODO, no longer working with island as an array
     #compute the density.
+    #density is probably assumed to be flat over the island
     n = prob.dens.(r) :: Array{Float64}
     #wcap is unused in this case, perhaps density as well.
 
@@ -115,6 +116,7 @@ end
 
 """
     W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, tor_B::BFieldT, tor_met::MetT, qfm_B::BFieldT, qfm_met::MetT, prob::ProblemT, s::Array{Float64}, ϑ::AbstractArray, φ::AbstractArray, tm::TM, surfs::SurfaceITPT, CT::CoordTsfmT, sd::TempSurfT)
+
 Computes the two matrices W and I based on the weak form of the SAW governing equation for the case with qfm surfaces.
 The surfaces are used to convert the (s, ϑ, φ) grid into (r, θ, ζ) values, then the original metric and B are computed.
 These are then transformed into the B and metric in (s, ϑ, φ) coordinates so that the weakform is computed in terms of (s, ϑ, φ).

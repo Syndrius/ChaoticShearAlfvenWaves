@@ -17,55 +17,55 @@ function create_local_basis!(Φ::Array{ComplexF64, 3}, S::HB1d, m::Int64, n::Int
 
     #the middle index is chosen to increase efficiency with numerical integration.
 
-    #Φ_s
+    #Φ_x1
     @. Φ[:, 1, :] = S.dH / jac
-    #Φ_θ
+    #Φ_x2
     @. Φ[:, 2, :] = S.H * m * 1im
-    #Φ_ζ
+    #Φ_x3
     @. Φ[:, 3, :] = S.H * n * 1im
-    #Φ_ss
+    #Φ_x1x1
     @. Φ[:, 4, :] = S.ddH / jac^2
-    #Φ_sθ
+    #Φ_x1x2
     @. Φ[:, 5, :] = S.dH * m * 1im / jac
-    #Φ_sζ   
+    #Φ_x1x3   
     @. Φ[:, 6, :] = S.dH * n * 1im / jac
-    #Φ_θθ
+    #Φ_x2x2
     @. Φ[:, 7, :] = S.H * (-m^2)
-    #Φ_θζ
+    #Φ_x2x3
     @. Φ[:, 8, :] = S.H * (-m*n)
-    #Φ_ζζ
+    #Φ_x3x3
     @. Φ[:, 9, :] = S.H * (-n^2)
 
 end
 
 
 """
-    create_local_basis!(Φ::Array{ComplexF64, 5}, S::Array{Float64, 4}, dSr::Array{Float64, 4}, dSθ::Array{Float64, 4}, ddSrr::Array{Float64, 4}, ddSrθ::Array{Float64, 4}, ddSθθ::Array{Float64, 4}, m::Int64, n::Int64, dr::Float64, dθ::Float64)
+    create_local_basis!(Φ::Array{ComplexF64, 5}, S::Array{Float64, 4}, dSr::Array{Float64, 4}, dSx2::Array{Float64, 4}, ddSrr::Array{Float64, 4}, ddSrx2::Array{Float64, 4}, ddSx2x2::Array{Float64, 4}, m::Int64, n::Int64, dx1::Float64, dx2::Float64)
 
-Modifies the matrix storing the basis functions, Φ, to reflect the local derivatives being taken. Includes a phase factor modification for θ.
+Modifies the matrix storing the basis functions, Φ, to reflect the local derivatives being taken. Includes a phase factor modification for x2.
 """
-function create_local_basis!(Φ::Array{ComplexF64, 5}, S::HB2d, m::Int64, n::Int64, dr::Float64, dθ::Float64)
+function create_local_basis!(Φ::Array{ComplexF64, 5}, S::HB2d, m::Int64, n::Int64, dx1::Float64, dx2::Float64)
 
-    rjac = dr / 2
-    θjac = dθ / 2
+    x1jac = dx1 / 2
+    x2jac = dx2 / 2
     
-    #Φ_s
-    @. Φ[:, :, 1, :, :] = S.dHr / rjac 
-    #Φ_θ
-    @. Φ[:, :, 2, :, :] = S.dHθ / θjac + S.H * 1im * m
-    #Φ_ζ
+    #Φ_x1
+    @. Φ[:, :, 1, :, :] = S.dHx1 / x1jac 
+    #Φ_x2
+    @. Φ[:, :, 2, :, :] = S.dHx2 / x2jac + S.H * 1im * m
+    #Φ_x3
     @. Φ[:, :, 3, :, :] = S.H * n * 1im 
-    #Φ_ss
-    @. Φ[:, :, 4, :, :] = S.ddHrr / rjac^2 
-    #Φ_sθ
-    @. Φ[:, :, 5, :, :] = S.ddHrθ / (rjac * θjac) + S.dHr * 1im * m / rjac
-    #Φ_sζ   
-    @. Φ[:, :, 6, :, :] = S.dHr * n * 1im / rjac 
-    #Φ_θθ
-    @. Φ[:, :, 7, :, :] = S.ddHθθ / θjac^2 + 2 * S.dHθ * 1im * m / θjac - m^2 * S.H
-    #Φ_θζ
-    @. Φ[:, :, 8, :, :] = 1im * n * (S.dHθ / θjac + S.H * 1im * m)
-    #Φ_ζζ
+    #Φ_x1x1
+    @. Φ[:, :, 4, :, :] = S.ddHx1x1 / x1jac^2 
+    #Φ_x1x2
+    @. Φ[:, :, 5, :, :] = S.ddHx1x2 / (x1jac * x2jac) + S.dHx1 * 1im * m / x1jac
+    #Φ_x1x3   
+    @. Φ[:, :, 6, :, :] = S.dHx1 * n * 1im / x1jac 
+    #Φ_x2x2
+    @. Φ[:, :, 7, :, :] = S.ddHx2x2 / x2jac^2 + 2 * S.dHx2 * 1im * m / x2jac - m^2 * S.H
+    #Φ_x2x3
+    @. Φ[:, :, 8, :, :] = 1im * n * (S.dHx2 / x2jac + S.H * 1im * m)
+    #Φ_x3x3
     @. Φ[:, :, 9, :, :] = S.H * (-n^2) 
 
 end
@@ -74,35 +74,35 @@ end
 
 
 """
-    create_local_basis!(Φ::Array{ComplexF64, 7}, S::Array{Float64, 6}, dSr::Array{Float64, 6}, dSθ::Array{Float64, 6}, dSζ::Array{Float64, 6}, ddSrr::Array{Float64, 6}, ddSrθ::Array{Float64, 6}, ddSrζ::Array{Float64, 6}, ddSθθ::Array{Float64, 6}, ddSθζ::Array{Float64, 6}, ddSζζ::Array{Float64, 6}, m::Int64, n::Int64, dr::Float64, dθ::Float64, dζ::Float64)
+    create_local_basis!(Φ::Array{ComplexF64, 7}, S::Array{Float64, 6}, dSr::Array{Float64, 6}, dSx2::Array{Float64, 6}, dSx3::Array{Float64, 6}, ddSrr::Array{Float64, 6}, ddSrx2::Array{Float64, 6}, ddSrx3::Array{Float64, 6}, ddSx2x2::Array{Float64, 6}, ddSx2x3::Array{Float64, 6}, ddSx3x3::Array{Float64, 6}, m::Int64, n::Int64, dx1::Float64, dx2::Float64, dx3::Float64)
 
-Modifies the matrix storing the basis functions, Φ, to reflect the local derivatives being taken. Includes a phase factor modification for θ and ζ.
+Modifies the matrix storing the basis functions, Φ, to reflect the local derivatives being taken. Includes a phase factor modification for x2 and x3.
 """
-function create_local_basis!(Φ::Array{ComplexF64, 7}, S::HB3d, m::Int64, n::Int64, dr::Float64, dθ::Float64, dζ::Float64)
+function create_local_basis!(Φ::Array{ComplexF64, 7}, S::HB3d, m::Int64, n::Int64, dx1::Float64, dx2::Float64, dx3::Float64)
 
 
-    rjac = dr / 2
-    θjac = dθ / 2
-    ζjac = dζ / 2
+    x1jac = dx1 / 2
+    x2jac = dx2 / 2
+    x3jac = dx3 / 2
     
-    #Φ_s
-    @. Φ[:, :, :, 1, :, :, :] = S.dHr / rjac 
-    #Φ_θ
-    @. Φ[:, :, :, 2, :, :, :] = S.dHθ / θjac + S.H * 1im * m
-    #Φ_ζ
-    @. Φ[:, :, :, 3, :, :, :] = S.dHζ / ζjac + S.H * 1im * n
-    #Φ_ss
-    @. Φ[:, :, :, 4, :, :, :] = S.ddHrr / rjac^2 
-    #Φ_sθ
-    @. Φ[:, :, :, 5, :, :, :] = S.ddHrθ / (rjac * θjac) + S.dHr * 1im * m / rjac
-    #Φ_sζ   
-    @. Φ[:, :, :, 6, :, :, :] = S.ddHrζ / (rjac * ζjac) + S.dHr * 1im * n / rjac 
-    #Φ_θθ
-    @. Φ[:, :, :, 7, :, :, :] = S.ddHθθ / θjac^2 + 2 * S.dHθ * 1im * m / θjac - m^2 * S.H
-    #Φ_θζ
-    @. Φ[:, :, :, 8, :, :, :] = S.ddHθζ / (θjac * ζjac) + S.dHζ * 1im * m / ζjac + S.dHθ * 1im * n / θjac - m * n * S.H
-    #Φ_ζζ
-    @. Φ[:, :, :, 9, :, :, :] = S.ddHζζ / ζjac^2 + 2 * S.dHζ * 1im * n / ζjac - n^2 * S.H
+    #Φ_x1
+    @. Φ[:, :, :, 1, :, :, :] = S.dHx1 / x1jac 
+    #Φ_x2
+    @. Φ[:, :, :, 2, :, :, :] = S.dHx2 / x2jac + S.H * 1im * m
+    #Φ_x3
+    @. Φ[:, :, :, 3, :, :, :] = S.dHx3 / x3jac + S.H * 1im * n
+    #Φ_x1x1
+    @. Φ[:, :, :, 4, :, :, :] = S.ddHx1x1 / x1jac^2 
+    #Φ_x1x2
+    @. Φ[:, :, :, 5, :, :, :] = S.ddHx1x2 / (x1jac * x2jac) + S.dHx1 * 1im * m / x1jac
+    #Φ_x1x3   
+    @. Φ[:, :, :, 6, :, :, :] = S.ddHx1x3 / (x1jac * x3jac) + S.dHx1 * 1im * n / x1jac 
+    #Φ_x2x2
+    @. Φ[:, :, :, 7, :, :, :] = S.ddHx2x2 / x2jac^2 + 2 * S.dHx2 * 1im * m / x2jac - m^2 * S.H
+    #Φ_x2x3
+    @. Φ[:, :, :, 8, :, :, :] = S.ddHx2x3 / (x2jac * x3jac) + S.dHx3 * 1im * m / x3jac + S.dHx2 * 1im * n / x2jac - m * n * S.H
+    #Φ_x3x3
+    @. Φ[:, :, :, 9, :, :, :] = S.ddHx3x3 / x3jac^2 + 2 * S.dHx3 * 1im * n / x3jac - n^2 * S.H
 
 end
 
@@ -115,96 +115,96 @@ Converts the local grid where the finite elements are defined to the global coor
 function local_to_global(node::Int64, ξ::Array{Float64}, grid::Array{Float64})
 
     #should this be in basis??
-    dr = grid[node+1] - grid[node]
+    dx1 = grid[node+1] - grid[node]
 
     #first we map the (-1, 1) local coords to (0, 1)
     mp = @. (ξ+1) / 2
 
     #then we sale by the width of grid points
-    mp = mp .* dr
+    mp = mp .* dx1
 
     #finally we add this to our grid, so this gives us go points between our global grid point i and i+1
-    rglobal = mp .+ grid[node]
+    x1global = mp .+ grid[node]
 
     
-    return rglobal, dr
+    return x1global, dx1
 end 
 
 
 
 
 """
-    function local_to_global(rnode::Int64, θnode::Int64, ξr::Array{Float64}, ξθ::Array{Float64}, rgrid::Array{Float64}, θgrid::StepRangeLen)
+    function local_to_global(x1node::Int64, x2node::Int64, ξx1::Array{Float64}, ξx2::Array{Float64}, x1grid::Array{Float64}, x2grid::StepRangeLen)
 
 Converts the local grid where the finite elements are defined to the global coordinates.
 """
-function local_to_global(rnode::Int64, θnode::Int64, ξr::Array{Float64}, ξθ::Array{Float64}, rgrid::Array{Float64}, θgrid::StepRangeLen)
+function local_to_global(x1node::Int64, x2node::Int64, ξx1::Array{Float64}, ξx2::Array{Float64}, x1grid::Array{Float64}, x2grid::StepRangeLen)
 
     #handles periodicity
-    if θnode == length(θgrid)
-        dθ = 2π + θgrid[1] - θgrid[θnode]
+    if x2node == length(x2grid)
+        dx2 = 2π + x2grid[1] - x2grid[x2node]
     else
-        dθ = θgrid[θnode+1] - θgrid[θnode]
+        dx2 = x2grid[x2node+1] - x2grid[x2node]
     end
 
 
-    dr = rgrid[rnode+1] - rgrid[rnode]
+    dx1 = x1grid[x1node+1] - x1grid[x1node]
     
 
     #first we map the (-1, 1) local coords to (0, 1)
-    mpr = @. (ξr+1) / 2
-    mpθ = @. (ξθ+1) / 2
+    mpx1 = @. (ξx1+1) / 2
+    mpx2 = @. (ξx2+1) / 2
 
     #then we sale by the width of grid points
-    mpr = mpr .* dr
-    mpθ = mpθ .* dθ
+    mpx1 = mpx1 .* dx1
+    mpx2 = mpx2 .* dx2
 
     #finally we add this to our grid, so this gives us go points between our global grid point i and i+1
-    rglobal = mpr .+ rgrid[rnode]
-    θglobal = mpθ .+ θgrid[θnode]
+    x1global = mpx1 .+ x1grid[x1node]
+    x2global = mpx2 .+ x2grid[x2node]
 
     
-    return rglobal, θglobal, dr, dθ
+    return x1global, x2global, dx1, dx2
 end 
 
 
 """
-    local_to_global(rnode::Int64, θnode::Int64, ζnode::Int64, ξr::Array{Float64}, ξθ::Array{Float64}, ξζ::Array{Float64}, rgrid::Array{Float64}, θgrid::StepRangeLen, ζgrid::StepRangeLen)
+    local_to_global(x1node::Int64, x2node::Int64, x3node::Int64, ξx1::Array{Float64}, ξx2::Array{Float64}, ξx3::Array{Float64}, x1grid::Array{Float64}, x2grid::StepRangeLen, x3grid::StepRangeLen)
 
 Converts the local grid where the finite elements are defined to the global coordinates.
 """
-function local_to_global(rnode::Int64, θnode::Int64, ζnode::Int64, ξr::Array{Float64}, ξθ::Array{Float64}, ξζ::Array{Float64}, rgrid::Array{Float64}, θgrid::StepRangeLen, ζgrid::StepRangeLen)
+function local_to_global(x1node::Int64, x2node::Int64, x3node::Int64, ξx1::Array{Float64}, ξx2::Array{Float64}, ξx3::Array{Float64}, x1grid::Array{Float64}, x2grid::StepRangeLen, x3grid::StepRangeLen)
 
     #handles periodicity
-    if θnode == length(θgrid)
-        dθ = 2π + θgrid[1] - θgrid[θnode]
+    if x2node == length(x2grid)
+        dx2 = 2π + x2grid[1] - x2grid[x2node]
     else
-        dθ = θgrid[θnode+1] - θgrid[θnode]
+        dx2 = x2grid[x2node+1] - x2grid[x2node]
     end
 
-    if ζnode == length(ζgrid)
-        dζ = 2π + ζgrid[1] - ζgrid[ζnode]
+    if x3node == length(x3grid)
+        dx3 = 2π + x3grid[1] - x3grid[x3node]
     else
-        dζ = ζgrid[ζnode+1] - ζgrid[ζnode]
+        dx3 = x3grid[x3node+1] - x3grid[x3node]
     end
 
-    dr = rgrid[rnode+1] - rgrid[rnode]
+    dx1 = x1grid[x1node+1] - x1grid[x1node]
     
     #first we map the (-1, 1) local coords to (0, 1)
-    mpr = @. (ξr+1) / 2
-    mpθ = @. (ξθ+1) / 2
-    mpζ = @. (ξζ+1) / 2
+    mpx1 = @. (ξx1+1) / 2
+    mpx2 = @. (ξx2+1) / 2
+    mpx3 = @. (ξx3+1) / 2
 
     #then we sale by the width of grid points
-    mpr = mpr .* dr
-    mpθ = mpθ .* dθ
-    mpζ = mpζ .* dζ
+    mpx1 = mpx1 .* dx1
+    mpx2 = mpx2 .* dx2
+    mpx3 = mpx3 .* dx3
 
     #finally we add this to our grid, so this gives us go points between our global grid point i and i+1
-    rglobal = mpr .+ rgrid[rnode]
-    θglobal = mpθ .+ θgrid[θnode]
-    ζglobal = mpζ .+ ζgrid[ζnode]
+    x1global = mpx1 .+ x1grid[x1node]
+    x2global = mpx2 .+ x2grid[x2node]
+    x3global = mpx3 .+ x3grid[x3node]
 
     
-    return rglobal, θglobal, ζglobal, dr, dθ, dζ
+    return x1global, x2global, x3global, dx1, dx2, dx3
 end 

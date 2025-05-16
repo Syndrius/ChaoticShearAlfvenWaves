@@ -110,7 +110,7 @@ function init_problem(; q::Function, met::Symbol=:torus, dens::Function=uniform_
     if length(methods(q)[1].sig.parameters) == 3
         #this q -profile uses island parameters as input, this creates an appropriate q-profile
         #we should probably be asserting some stuff about the ol island first
-        q_prof(r) = q(r, isl)
+        q_prof(x1) = q(x1, isl)
         #not sure if this actually works
         return ProblemT(q=q_prof, met=met_func, dens=dens, isls=isls, flr=flr, geo=geo)
     else
