@@ -88,17 +88,18 @@ function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, B::BFieldT, 
     #TODO, no longer working with island as an array
     #compute the density.
     #density is probably assumed to be flat over the island
-    n = prob.dens.(r) :: Array{Float64}
+    #unsure if we want this to be an option
+    n = prob.dens.(κ) :: Array{Float64}
     #wcap is unused in this case, perhaps density as well.
 
 
-    for k=1:1:length(ζ), j=1:1:length(θ), i=1:1:length(r)
+    for k=1:1:length(ζ), j=1:1:length(ᾱ), i=1:1:length(κ)
 
         #compute the metric
-        island_metric!(met, r[i], θ[j], ζ[k], prob.geo.R0, prob.isl)
+        island_metric!(met, κ[i], ᾱ[j], ζ[k], prob.geo.R0, prob.isl)
 
         #compute the magnetic field.
-        compute_B_isl!(B, met, prob.isl, r[i], θ[j], ζ[k])
+        compute_B_isl!(B, met, prob.isl, κ[i], ᾱ[j], ζ[k])
 
         #computes the matrix D.
         compute_D!(B, met, tm.D)

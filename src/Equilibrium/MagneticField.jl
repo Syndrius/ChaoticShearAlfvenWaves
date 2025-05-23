@@ -177,6 +177,9 @@ function island_amplitude(x1::Float64)
     #useful to distinguish problemo's between GAM and between axis.
     return 1, 0
 
+    #we may want to try this for a flatter profile over the island
+    return 1-16*(x1-1/2)^4
+
 end
 
 
@@ -188,7 +191,7 @@ Computes the magnetic field for the island case. This requires a specific q-prof
 function compute_B_isl!(B::BFieldT, met::MetT, isl::IslandT, κ::Float64, ᾱ::Float64, φ::Float64)
 
     #q, dq = q_prof(r)
-
+    K, E = Elliptic.ellipke(κ)
 
     #this is from our case, this will not match Axel, but jopefully close enough...
     #A = 0.00015625000000000003
@@ -199,13 +202,15 @@ function compute_B_isl!(B::BFieldT, met::MetT, isl::IslandT, κ::Float64, ᾱ::
     #n0 = -1
     #q = -w/(2*A*π*m0) * Elliptic.K(κ)
     #in built q-profile for island coordinates.
-    q = -isl.w/(2*isl.A*π*isl.m0) * Elliptic.K(κ)
+    q = -isl.w/(2*isl.A*π*isl.m0) * K
 
     #this was a key peice!!!
-    dψ̄dκ = isl.w * Elliptic.K(κ) / (isl.m0*π)
+    dψ̄dκ = isl.w * K / (isl.m0*π)
+    d2ψ̄dκ2 = isl.w / (isl.m0*π) * (E - (1-κ)*K) / (2*(1-κ)*κ)
 
     #dq = -w/(2*A*π*m0) * (Elliptic.E(κ) - (1-κ)*Elliptic.K(κ)) / (2*(1-κ)*κ)
-    dq = 0
+    #dq = 0
+    dq = -isl.w/(2*isl.A*π*isl.m0) * (E - (1-κ)*K) / (2*(1-κ)*κ)
     
     B.B[1] = 0
     #Axel just has R0 here, which doesn't make anysense!
@@ -214,19 +219,19 @@ function compute_B_isl!(B::BFieldT, met::MetT, isl::IslandT, κ::Float64, ᾱ::
     B.B[3] = 1 / met.J[1] * dψ̄dκ
 
 
-    B.dB[2, 1] = -dq / (q^2*met.J[1]) - met.dJ[1] / (q*met.J[1]^2)
-    B.db[2, 2] = - met.dJ[2] / (q*met.J[1]^2)
+    B.dB[2, 1] = d2ψ̄dκ2 / (q * met.J[1]) - dq * dψ̄dκ / (q^2*met.J[1]) - met.dJ[1] * dψ̄dκ / (q*met.J[1]^2)
+    B.dB[2, 2] = - met.dJ[2] * dψ̄dκ / (q*met.J[1]^2)
 
 
-    B.dB[3, 1] = - met.dJ[1] / (met.J[1]^2)
-    B.dB[3, 2] = - met.dJ[2] / (met.J[1]^2)
+    B.db[3, 1] = d2ψ̄dκ2 / (met.J[1]) - met.dJ[2] * dψ̄dκ / (met.J[1]^2)
+    B.dB[3, 2] = - met.dJ[2] * dψ̄dκ / (met.J[1]^2)
 
 
     magnitude_B!(B, met)
     
-    B.b[1] = B.B[1]/B.mag_B
-    B.b[2] = B.B[2]/B.mag_B
-    B.b[3] = B.B[3]/B.mag_B
+    B.b[1] = B.B[1]/B.mag_B[1]
+    B.b[2] = B.B[2]/B.mag_B[1]
+    B.b[3] = B.B[3]/B.mag_B[1]
 
 
 

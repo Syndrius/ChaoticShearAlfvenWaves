@@ -1,10 +1,9 @@
-#this will hopefully be a more organised way of picking the surfaces
-#note the we probably need to fix qfm density!
-#ok so trying to use a q-profile that would work for tae and islands with the same n
-#is not going to work, even with a density profile
-#so, either we create a chaotic region with a variety of islands, 
-#or we use a rapidly increasing q-profile, and accepts that the tae will look shit.
+#same set up as before but we will make each island chain larger to hoepfully remove any part of the islands
+#with enough chaos for islands to be completly destroyed, looks like the surfaces are too cooked
+#paritucalr example is the (13, 8) surfaces which is the mediant of two of the island chains
+#may need a different set up for this to work properly.
 
+#even mucking around with fourier resolution doesn't work
 using MID
 using MIDViz
 using JLD2
@@ -16,9 +15,9 @@ using LaTeXStrings
 #%%
 #first we looks at the poincare plot
 
-k1 = 0.0019
-k2 = 0.0007
-k3 = 0.0013
+k1 = 0.003
+k2 = 0.0025
+k3 = 0.003
 geo = init_geo(R0=4.0)
 isl1 = init_island(m0=7, n0=-4, A=k1/7)
 isl2 = init_island(m0=5, n0=-3, A=k2/5)
@@ -31,66 +30,70 @@ prob = init_problem(geo=geo, q=low_shear_qfm_q, isls=isls)
 #%%
 
 Ntraj = 150;
-rlist = collect(LinRange(0.7, 0.95, Ntraj));
+rlist = collect(LinRange(0.6, 0.95, Ntraj));
 #rlist = collect(LinRange(0.1, 1.0, Ntraj));
 Nlaps = 500;
-
 poincare_plot(prob, Nlaps, Ntraj, rlist)
 #%%
-#so (11, 7) does not work!, regardless of res
 rats1 = lowest_rationals(7, prob.q(0.0)[1], prob.q(1.0)[1])
 gl1 = surface_guess(rats1, prob.q)
 #changing these numbers doesn't really help remove the spikes
-surfs1 = construct_surfaces(rats1, gl1, prob, M=32, N=16);
+surfs1 = construct_surfaces(rats1, gl1, prob, M=32, N=12);
 plot_surfs(surfs1)
 #%%
-#now we need more surfs below 0.4
+#now we need more surfs below 0.25
 rats2 = lowest_rationals(25, prob.q(0.0)[1], prob.q(0.25)[1])
 gl2 = surface_guess(rats2, prob.q)
-surfs2 = construct_surfaces(rats2, gl2, prob, M=32, N=16);
+surfs2 = construct_surfaces(rats2, gl2, prob, M=32, N=12);
 plot_surfs(surfs2)
 #%%
-#still need more below 0.2
 #gross
+#(13, 8) is super cooked, contains spirals.
 rats3 = [(53, 44), (13, 9), (14, 9), (13, 8), (13, 10), (14, 11)]
+#rats3 = [(13, 8)]
 gl3 = surface_guess(rats3, prob.q)
-surfs3 = construct_surfaces(rats3, gl3, prob, M=32, N=16);
+#maybe N=12 will work lol.
+surfs3 = construct_surfaces(rats3, gl3, prob, M=32, N=12);
 plot_surfs(surfs3)
 #%%
 #shouldn't add (14, 11) here
 #rats4 = [(11, 8), (14, 11), (26, 17), (22, 15)]
 rats4 = [(11, 8), (26, 17), (22, 15)]
 gl4 = surface_guess(rats4, prob.q)
-surfs4 = construct_surfaces(rats4, gl4, prob, M=32, N=16);
+surfs4 = construct_surfaces(rats4, gl4, prob, M=32, N=12);
 plot_surfs(surfs4)
 #%%
 rats5 = [(19, 15), (26, 21), (15, 11), (17, 13)]
 gl5 = surface_guess(rats5, prob.q)
-surfs5 = construct_surfaces(rats5, gl5, prob, M=32, N=16);
+surfs5 = construct_surfaces(rats5, gl5, prob, M=32, N=12);
 plot_surfs(surfs5)
 #%%
 #add more to chaotic region, most likely these will make it worse.
 #these surfs make B^s ~10x larger in chaotic region.
 #somewhat expected
+#(18, 11) was not able to be found. even with N=12. think this one is also cooked.
+#(17, 10) has a loop, v cooked.
 rats6 = [(18, 11), (17, 10), (16, 9), (20, 11)]
+rats6 = [(17, 10), (16, 9), (20, 11)]
 gl6 = surface_guess(rats6, prob.q)
-surfs6 = construct_surfaces(rats6, gl6, prob, M=32, N=16);
+surfs6 = construct_surfaces(rats6, gl6, prob, M=32, N=12);
 plot_surfs(surfs6)
 #%%
-rats7 = lowest_rationals(60, prob.q(0.0)[1], prob.q(0.1)[1])
+#rats7 = lowest_rationals(60, prob.q(0.0)[1], prob.q(0.1)[1])
 #these are a bit stupid but might fix the axis problemos.
 #otherwise we can just got from 0.05
 rats7 = [(41, 34), (71, 59)]
 gl7 = surface_guess(rats7, prob.q)
 #changing these numbers doesn't really help remove the spikes
-@time surfs7 = construct_surfaces(rats7, gl7, prob, M=32, N=16);
+@time surfs7 = construct_surfaces(rats7, gl7, prob, M=32, N=12);
 plot_surfs(surfs7)
 #%%
 #chosen as example of bad extra surfaces
+#these may be a bit cooked for this!
 rats8 = [(19, 12), (21, 13), (23, 14), (22, 13), (19, 11), (23, 13)]
 gl8 = surface_guess(rats8, prob.q)
 #changing these numbers doesn't really help remove the spikes
-@time surfs8 = construct_surfaces(rats8, gl8, prob, M=32, N=16);
+@time surfs8 = construct_surfaces(rats8, gl8, prob, M=32, N=12);
 plot_surfs(surfs8)
 #%%
 curr_surfs = vcat(surfs1, surfs2);
@@ -102,6 +105,8 @@ curr_surfs = vcat(surfs1, surfs2, surfs3, surfs4[1:1], surfs4[3:end], surfs5);
 curr_surfs = vcat(surfs1, surfs2, surfs3, surfs4, surfs5, surfs6, surfs7);
 curr_surfs = vcat(surfs1, surfs2, surfs3, surfs4, surfs5, surfs7);
 
+#remove the two cooked ones.
+curr_surfs = vcat(surfs1, surfs2, surfs3[1:3], surfs3[5:end], surfs4, surfs5, surfs6[2:3], surfs7);
 #(11, 7) is cooke d for some reason. Bit surprising as it looks pretty fine.
 #just had it twice lol.
 #curr_surfs = vcat(surfs1, surfs2, surfs3[1:1], surfs3[3:6]);
@@ -110,11 +115,10 @@ curr_surfs = vcat(surfs1, surfs2, surfs3, surfs4, surfs5, surfs7);
 #curr_surfs = vcat(surfs1, surfs2, surfs3[1:1], surfs3[3:6], surfs4, surfs5, surfs6);
 plot_surfs(curr_surfs)
 
-#save_object("low_shear_surfs.jld2", curr_surfs)
-curr_surfs = load_object("low_shear_surfs.jld2");
+save_object("low_shear_surfs.jld2", curr_surfs)
 
 #%%
-rgrid_jac = init_grid(type=:rf, N = 100, start=0.03, stop=0.45)
+rgrid_jac = init_grid(type=:rf, N = 100, start=0.03, stop=0.97)
 θgrid_jac = init_grid(type=:af, N = 20) 
 ζgrid_jac = init_grid(type=:af, N = 4)
 grids_jac = init_grids(rgrid_jac, θgrid_jac, ζgrid_jac)
@@ -263,13 +267,7 @@ save_object("/Users/matt/phd/QFMPaper/djacdrmean.jld2", djacdrmean)
 good_rationals = vcat(rats1, rats2, rats3, rats4, rats5, rats6, rats7, rats8);
 save_object("/Users/matt/phd/QFMPaper/rationals.jld2", good_rationasl)
 #%%
-nsurfs = load_object("/Users/matt/phd/QFMPaper/nsurfs.jld2");
-surfs_list = load_object("/Users/matt/phd/QFMPaper/surfs_list.jld2");
-B2mean = load_object("/Users/matt/phd/QFMPaper/B2mean.jld2");
-djacdrmean = load_object("/Users/matt/phd/QFMPaper/djacdrmean.jld2");
-#good_rationals = vcat(rats1, rats2, rats3, rats4, rats5, rats6, rats7, rats8);
-good_rationals = load_object("/Users/matt/phd/QFMPaper/rationals.jld2");
-#%%
+
 nsurfs = load_object("/Users/matt/phd/QFMPaper/nsurfs.jld2")
 surfs_list = load_object("/Users/matt/phd/QFMPaper/surfs_list.jld2");
 B2mean = load_object("/Users/matt/phd/QFMPaper/B2mean.jld2")

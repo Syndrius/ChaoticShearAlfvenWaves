@@ -319,7 +319,7 @@ function compute_jac(prob::ProblemT, grids::FFFGridsT, surfs::Array{QFMSurfaceT}
     #instantiate the grids into arrays. 
     #note that these grids are not actually the points used in construct, as we either use fourier exansion or gaussian weight points
     #but this should still give us a good idea, but care must be taken for r=0.
-    rgrid, θgrid, ζgrid = inst_grids(grids)
+    x1grid, x2grid, x3grid = inst_grids(grids)
 
     #initialise the two structs to store the metric and the magnetic field.
     tor_met = MetT()
@@ -338,17 +338,17 @@ function compute_jac(prob::ProblemT, grids::FFFGridsT, surfs::Array{QFMSurfaceT}
     #struct for storing the intermediate data for the coordinate transform
     CT = CoordTsfmT()
 
-    jac = zeros(grids.r.N, grids.θ.N, grids.ζ.N)
-    djac = zeros(3, grids.r.N, grids.θ.N, grids.ζ.N)
-    B = zeros(3, grids.r.N, grids.θ.N, grids.ζ.N)
+    jac = zeros(grids.x1.N, grids.x2.N, grids.x3.N)
+    djac = zeros(3, grids.x1.N, grids.x2.N, grids.x3.N)
+    B = zeros(3, grids.x1.N, grids.x2.N, grids.x3.N)
     #for comparisons.
-    #jac_tor = zeros(grids.r.N, grids.θ.N, grids.ζ.N)
-    #djac_tor = zeros(3, grids.r.N, grids.θ.N, grids.ζ.N)
-    #coords = zeros(3, grids.r.N, grids.θ.N, grids.ζ.N)
+    #jac_tor = zeros(grids.x1.N, grids.x2.N, grids.x3.N)
+    #djac_tor = zeros(3, grids.x1.N, grids.x2.N, grids.x3.N)
+    #coords = zeros(3, grids.x1.N, grids.x2.N, grids.x3.N)
 
-    #for (i, r) in enumerate(rvals), (j, θ) in enumerate(θvals), (k, ζ) in enumerate(ζvals)
-    for (i, r) in enumerate(rgrid), (j, θ) in enumerate(θgrid), (k, ζ) in enumerate(ζgrid)
-        coord_transform!(r, θ, ζ, CT, surf_itp, sd)
+    #for (i, r) in enumerate(rvals), (j, x2) in enumerate(x2vals), (k, x3) in enumerate(x3vals)
+    for (i, x1) in enumerate(x1grid), (j, x2) in enumerate(x2grid), (k, x3) in enumerate(x3grid)
+        coord_transform!(x1, x2, x3, CT, surf_itp, sd)
         toroidal_metric!(tor_met, CT.coords[1], CT.coords[2], CT.coords[3], prob.geo.R0)
         compute_B!(tor_B, tor_met, prob.q, prob.isls, CT.coords[1], CT.coords[2], CT.coords[3])
         met_transform!(tor_met, qfm_met, CT)

@@ -94,6 +94,8 @@ function init_problem(; q::Function, met::Symbol=:torus, dens::Function=uniform_
         met_func = cylindrical_metric!
     elseif met == :island #this may not be possible tbh!
         met_func = island_metric!
+    elseif met == :slab #this may not be possible tbh!
+        met_func = slab_metric!
     else
         display("Metric not available")
         return

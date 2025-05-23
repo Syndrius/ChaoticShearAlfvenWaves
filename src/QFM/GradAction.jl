@@ -29,6 +29,8 @@ function action_grad_f!(δS::Array{Float64}, x::Array{Float64}, α::Float64, coe
         ipf.θdot.rhs[i] = ipf.B.B[2] / ipf.B.B[3]
 
         ipf.rdot.rhs[i] = ipf.B.B[1] / ipf.B.B[3] - coefs.ν[1] / (2*ipf.a*π*ipf.B.B[3] * ipf.met.J[1])
+        #ipf.rdot.rhs[i] = ipf.B.B[1] / ipf.B.B[3] - coefs.ν[1] / ipf.B.B[3]
+        
     end
 
     #fourier transform them for integration.
@@ -105,7 +107,7 @@ function action_grad_j!(JM::Array{Float64, 2}, x::Array{Float64}, α::Float64, c
         rdot_rhs_dθ = (ipf.B.dB[1, 2]/ipf.B.B[3] - ipf.B.B[1] * ipf.B.dB[3, 2] / ipf.B.B[3]^2 
                        + coefs.ν[1] * (ipf.B.dB[3, 2] / (2*ipf.a*π*ipf.B.B[3]^2*ipf.met.J[1]) 
                                         + ipf.met.dJ[2] / (2*ipf.a*π*ipf.B.B[3] * ipf.met.J[1]^2)))
-
+        
         θdot_rhs_dr = ipf.B.dB[2, 1]/ipf.B.B[3] - ipf.B.B[2] * ipf.B.dB[3, 1] / ipf.B.B[3]^2
 
         θdot_rhs_dθ = ipf.B.dB[2, 2]/ipf.B.B[3] - ipf.B.B[2] * ipf.B.dB[3, 2] / ipf.B.B[3]^2

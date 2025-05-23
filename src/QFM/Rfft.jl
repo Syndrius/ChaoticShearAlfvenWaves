@@ -106,6 +106,7 @@ function irfft1D(cos_in::Array{Float64, 2}, sin_in::Array{Float64, 2}, nfft_mult
     #pretty hekin annoying. But atleast we are there now!
     #display(size(ffft))
     ft_pad = zeros(ComplexF64, (dim1, dim2 + 2 * Npad))# + 2 * Npad))
+    #display(size(ft_pad))
     #ft_pad = [ffft; zeros(dim1, Npad); zeros(dim1, Npad)];
 
     ft_pad[1:end, 1:dim2] = ffft
@@ -125,6 +126,10 @@ end
 function rfft2D(f, mpol, ntor)
 
     #zhisongs code considers case where mpol and ntor are unspecified.
+    #variable M is only used here, and it seems like it won't work half the time anyway
+    #think it should be removed tbh!
+    #perhaps it is just specifiying how many poloidal points we want in our final surfaces?
+    #seems like that should be dictated by something other than a random af input?
 
     Nfft1, Nfft2 = size(f)
 

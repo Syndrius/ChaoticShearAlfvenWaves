@@ -46,7 +46,6 @@ Final note on the size of the arrays used,
 
 """
 
-#these extra structs may have made this much slower unfort.
 
 """
 Structure that stores the variables to solve for.
@@ -284,6 +283,8 @@ function action(rational::Tuple{Int64, Int64}, prob::ProblemT, met::MetT, B::BFi
         
     end
 
+    #return rcosarr, rsinarr, θcosarr, θsinarr, νarr
+
     #field lines are wrapped into the qfm surface.
     return wrap_field_lines(rcosarr, rsinarr, θcosarr, θsinarr, MM, M, N, a, b, afM, Nfft)
 end
@@ -299,17 +300,23 @@ function wrap_field_lines(rcosarr::Array{Float64, 2}, rsinarr::Array{Float64, 2}
     #inputes are a bit stupid here, probably dont' need all of these.
 
     #think the params we have here and above would be simpler if we knew what any of them were.
+    #this is the number of field lines.
     fM = MM * N 
 
     #converts the fourier coefficients back to the normal values.
-    r = irfft1D(rcosarr, rsinarr)
+    #this has dimns [number of field lines, whatever the ζarray is, (i think fl*a)!]
+    #nfft is hard codes as 2 atm, this whole function needs to be cleaned up.
+    r = irfft1D(rcosarr, rsinarr, 2)
     ζ = LinRange(0, 2*a*π, size(r)[end]+1)[1:end-1]
 
     θcosarr[:, 1] .= 0.0
-    θ = irfft1D(θcosarr, θsinarr)
+    θ = irfft1D(θcosarr, θsinarr, 2)
 
 
-    #this defines r(α, ζ), extending the domain from 2π to 2qπ.
+    #these are the same fkn value
+    #by golly this is cooked.
+    #no idea what this is, or what this is supposed to be a function of
+    #quite literally could be anything!
     r2D_alpha = zeros((afM, Nfft))
     θ2D_alpha = zeros((afM, Nfft))
 
@@ -343,6 +350,8 @@ function wrap_field_lines(rcosarr::Array{Float64, 2}, rsinarr::Array{Float64, 2}
     end
 
     #converts the final results back to fourier coefficients, I guess for easier interpolation.
+    #this is the only place in the entire method that uses M.
+    #very wild, seems like M should be automatically chosen? Given how many conditions there are on it?
     scos_surf, ssin_surf = rfft2D(r2D_vartheta, M, N)
     tcos_surf, tsin_surf = rfft2D(θ2D_vartheta, M, N)
 
