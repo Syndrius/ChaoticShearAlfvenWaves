@@ -19,6 +19,16 @@ function tor_spectrum_to_isl(dir_base::String, isl_grids::GridsT)
 
     prob, tor_grids, _ = inputs_from_file(dir=dir_base)
 
+    #display(prob)
+
+    #pretty stupid that we have to do this
+    isl = inst_island(prob.isls[1])
+    #so the island was not instantiated properly.
+    #note that island mode 21 q is hard coded. pretty shite tbh.
+
+    #temp solution, we may need to make our island creation a bit more robust if we are going to keep doing this
+    isl = inst_island(init_island(m0=2, n0=-1, A=0.001, qp=2.0, r0=0.5))
+
     evals = evals_from_file(dir=dir_base)
 
     rgrid, θgrid, ζgrid = inst_grids(tor_grids)
@@ -54,11 +64,12 @@ function tor_spectrum_to_isl(dir_base::String, isl_grids::GridsT)
 
     #0.0 is the widest part of the island.
     #islands as an array is cooked af here.
-    sep_min, sep_max = sepratrix(0.0, prob.isls[1])
+    sep_min, sep_max = sepratrix(0.0, isl)
 
     mode_count = 1
 
     for i in 1:length(evals.ω)
+    #for i in 1:3
 
         #this eigenfunction is not an island mode, so we ignore.
         #this is not a good enough check tbh.
@@ -89,12 +100,18 @@ function tor_spectrum_to_isl(dir_base::String, isl_grids::GridsT)
         ϕ_tor[:, 1:end-1, 1:end-1] .= load_object(dir_base*"/efuncs/"*efunc_read)
         ϕ_tor[:, :, end] = ϕ_tor[:, :, 1]
         ϕ_tor[:, end, :] = ϕ_tor[:, 1, :]
+
+        #display(ϕ_tor[1:5, 1:5, 1])
         #is this enough? don't think so!
         ϕ_tor[:, end, end] = ϕ_tor[:, 1, 1]
         #we unfort have to add the periodicity back in, because interpolations.jl is kinda shit.
         amax = argmax(abs.(real.(ϕ_tor[:, :, 1, 1])))
 
-        rmin, rmax = sepratrix(θgrid[amax[2]], prob.isls[1])
+        rmin, rmax = sepratrix(θgrid[amax[2]], isl)
+
+        #display((rmin, rmax))
+        #display(isl)
+        #display((θgridp[amax[2]], rgrid[amax[1]]))
 
         #now a stronger restriction can be placed
 
@@ -104,7 +121,7 @@ function tor_spectrum_to_isl(dir_base::String, isl_grids::GridsT)
         
         #this is actually a bit of a disaster for islands, for now I think we will just do the inside and ignore the outside
         #so we have to assume the island_grids haev κ <= 1.
-        map_tor_to_isl!(ϕ_isl, κgrid, ᾱgrid, τgrid, ϕ_tor, rgrid, θgridp, ζgridp, prob.isls[1])
+        map_tor_to_isl!(ϕ_isl, κgrid, ᾱgrid, τgrid, ϕ_tor, rgrid, θgridp, ζgridp, isl)
 
         #may need to check the plan is not in place or anything stupid.
         #i.e. maybe we write ϕ_isl to file, then fft in place and do the other stuff

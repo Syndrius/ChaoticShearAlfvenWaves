@@ -22,6 +22,7 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 [compat]
 Arpack = "=0.5.3"
 Interpolations = "0.16.1"
+JLD2 = "0.5.13"
 julia = "1.10.3"
 
 [extras]
