@@ -90,17 +90,18 @@ function reconstruct_phi!(efunc::Array{ComplexF64}, grids::FFFGridsT, ϕ::Array{
 
     _, x2grid, x3grid = inst_grids(grids)
 
-    #should skip over derivative inds.
-    for i in 1:1:matrix_dim(grids)
+    #Is this still working? lol looks pretty good.
+    #this exact form is needed for interpolation.
+    for i in 1:1:matrix_size(grids)
 
         
 
         #note these are the indicies.
-        r, x2, x3, hs = index_to_grid(i, grids)
+        x1, x2, x3, hs = index_to_grid(i, grids)
 
         
         #the 8 should fix this
-        ϕ[r, x2, x3, hs] = efunc[i] * exp(1im * (m * x2grid[x2] + n * x3grid[x3]))
+        ϕ[x1, x2, x3, hs] = efunc[i] * exp(1im * (m * x2grid[x2] + n * x3grid[x3]))
 
         #
             #may be the wrong way around!

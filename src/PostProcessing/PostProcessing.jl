@@ -6,10 +6,15 @@ module PostProcessing
 
 using FFTW
 using EllipsisNotation
+using JLD2
+using Printf
 
 using ..Structures
 using ..Indexing
 using ..Basis
+using ..Mapping
+using ..Geometry #for the islandT, thought it was in structures lol!
+using ..Io # also needed for mapping, think this one actually makes sense to be in here though! Ideally, there should be the option of post-processing straight to file.
 
 
 export post_process
@@ -24,6 +29,7 @@ include("FT.jl")
 include("Continuum.jl")
 
 
+include("MapSpectrum.jl")
 
 """
     post_process(evals::AbstractArray, efuncs::Array{ComplexF64}, grids::GridsT, geo::GeoParamsT, deriv=false::Bool)

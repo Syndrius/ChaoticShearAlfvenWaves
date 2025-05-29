@@ -10,7 +10,7 @@ module Io
 using MID.Structures
 using MID.Geometry
 using MID.Equilibrium
-using MID.PostProcessing
+#using MID.PostProcessing
 
 using JLD2
 using Printf
@@ -30,8 +30,8 @@ export evals_to_file
 export efuncs_to_file
 
 
-include("Fortran.jl")
+#include("Fortran.jl")
 
-export fortran_process
+#export fortran_process
 
 end

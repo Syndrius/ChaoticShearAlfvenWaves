@@ -79,7 +79,8 @@ include("Integration/Integration.jl")
 
 
 
-include("PostProcessing/PostProcessing.jl")
+include("Mapping/Mapping.jl") #hopefully not a mistake
+
 
 
 
@@ -93,6 +94,10 @@ using ..Io; export efunc_from_file
 
 
 
+include("PostProcessing/PostProcessing.jl")
+
+
+
 include("QFM/QFM.jl")
 
 using ..QFM; export construct_surfaces
@@ -100,6 +105,7 @@ using ..QFM; export farey_tree
 using ..QFM; export lowest_rationals
 using ..QFM; export surface_guess
 using ..QFM; export compute_jac #perhaps shouldn't be exported
+
 
 
 
