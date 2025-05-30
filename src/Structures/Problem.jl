@@ -60,10 +60,12 @@ Struct for problems using island coordinates, defined for multiple dispatch. Les
 - isl::IslandT - Struct storing the island parameters, defaults to no island.
 """
 @kwdef struct IslProblemT <: ProblemT
+    q :: Function # This will automatically be the island q
+    met :: Function = island_metric!
     dens :: Function = uniform_dens
     geo :: GeoParamsT
     flr :: FLRT = no_flr
-    isl :: IslandT #need at least m,n, r0 and A/w.
+    isls :: Array{IslandT} #need at least m,n, r0 and A/w., should always be a single island.
 end
 
 
@@ -88,12 +90,32 @@ Main input for matrix construction functions.
 """
 function init_problem(; q::Function, met::Symbol=:torus, dens::Function=uniform_dens, isl::IslandT=no_isl, isls::Array{IslandT}=IslandT[], geo::GeoParamsT, flr::FLRT=no_flr)
 
+    #puts island into array for consistent usage throughout code.
+    if isempty(isls)
+        isls = [isl]
+    end
+
+    #ideally we will do a better job with qfm in the future. Ideally, there would only be a single construct
+    #for each grid type.
+    #I think in the long term future, different compute B functions would be specified in the metric
+    #it is somewhat restrictive atm, assumes certain properties of the coordinates which may not always be true
     if met == :torus
         met_func = toroidal_metric!
     elseif met == :cylinder
         met_func = cylindrical_metric!
-    elseif met == :island #this may not be possible tbh!
-        met_func = island_metric!
+        #bit annoying that we have to specify the q-profile, we may want to put a default one of fu-dam.
+    elseif met == :island || q == island_coords_q
+        if length(isls) > 1
+            display("Island metric only supports a single island.")
+            return
+        end
+        isl = inst_island(isls[1])
+        if isnan(isl.w) || isnan(isl.A)
+            display("Please specify m0, n0, r0 and either w or A.")
+            return
+        end
+        isl_q_prof(κ::Float64) = island_coords_q(κ, isl)
+        return IslProblemT(q=isl_q_prof, met=island_metric!, dens=dens, isls=[isl], flr=flr, geo=geo)
     elseif met == :slab #this may not be possible tbh!
         met_func = slab_metric!
     else
@@ -101,26 +123,46 @@ function init_problem(; q::Function, met::Symbol=:torus, dens::Function=uniform_
         return
     end
 
-    #puts island into array for consistent usage throughout code.
-    if isempty(isls)
-        isls = [isl]
-    end
-
     #may want to indroduce symbold into here
     #for the metric :toroidal etc may be clearer.
     #TODO, no longer works now that islands are done via array.
-    if length(methods(q)[1].sig.parameters) == 3
-        #this q -profile uses island parameters as input, this creates an appropriate q-profile
-        #we should probably be asserting some stuff about the ol island first
-        q_prof(x1) = q(x1, isl)
-        #not sure if this actually works
-        return ProblemT(q=q_prof, met=met_func, dens=dens, isls=isls, flr=flr, geo=geo)
-    else
-        if isl != no_isl
-            #ignoreing this for now! 
-            #isl = inst_island(isl, q)
+    #no idea what the fek is going on here tbh!
+    if length(methods(q)[1].sig.parameters) == 3 || q == island_equiv_q #not sure the first check actually works.
+        if length(isls) > 1
+            display("Constructing island q-profile only supports a single island.")
+            return
         end
-        return TorProblemT(q=q, met=met_func, dens=dens, isls=isls, flr=flr, geo=geo)
+        #this is the case where we are using a q-profile that depends on the island
+        #here it is converted to the standard input.
+        #this is wrong tho!
+        isl = inst_island(isls[1])
+        if isnan(isl.w) || isnan(isl.A)
+            display("Please specify m0, n0, r0 and either w or A.")
+            return
+        end
+        display("are we here")
+        q_prof(r::Float64) = island_equiv_q(r, isl)
+        #not sure if this actually works
+        return TorProblemT(q=q_prof, met=met_func, dens=dens, isls=[isl], flr=flr, geo=geo)
+    else
+        if isls[1] != no_isl || length(isls) > 1
+            #arguably don't wont to do this for everycase
+            #see qfm benchmark for example when this is annoying af.
+            #may need a try catch or something
+            new_isls = []
+            try
+                for i in 1:length(isls)
+                    #isls[i] = inst_island(isls[i], q)
+                    push!(new_isls, inst_island[i], q)
+                end
+            catch e
+                new_isls = isls
+                display(new_isls)
+                display("Unable to instantiate islands.")
+            end
+
+        end
+        return TorProblemT(q=q, met=met_func, dens=dens, isls=new_isls, flr=flr, geo=geo)
     end 
 
 end

@@ -45,7 +45,7 @@ export create_surf_itp
 
 include("Transform.jl")
 
-export CoordTsfmT
+export CoordTransformT
 export coord_transform!
 export B_transform!
 export met_transform!

@@ -7,6 +7,7 @@ using ..Geometry
 using ..Indexing #needed for grid_id and basis_id, seems like they should be in basis, also makes this module a bit awkward
 #we may actually want to move interpolation into post-processing, as it is theoretically possible that we want to interpolate in the future
 #that will cook the dependencies though!
+using ..QFM #probably going to cause problemos
 
 
 using Elliptic
@@ -15,6 +16,7 @@ using Elliptic
 using Interpolations #pretty fkn stupid that we need multiple interpolations packages.
 #using JLD2
 #using Printf
+using NLsolve #unfor that this is needed
 
 
 
@@ -25,9 +27,53 @@ export map_tor_to_isl!
 
 include("CoordTransform.jl")
 include("HermiteInterpolation.jl") 
-#include("Spectrum.jl") 
-#don't need the structures anymore, will just use a normal grid rather than a MapGrid.
 
+function map_qfm_to_isl(ϕ_isl::Array{ComplexF64, 3}, κgrid::AbstractArray{Float64}, ᾱgrid::AbstractArray{Float64}, τgrid::AbstractArray{Float64}, ϕ_qfm::Array{ComplexF64, 3}, sgrid::AbstractArray{Float64}, ϑgrid::AbstractArray{Float64}, φgrid::AbstractArray{Float64}, CT::CoordTransformT, surf_itp::SurfaceITPT, sd::TempSurfT) 
+
+
+    qfm_itp = interpolate((sgrid, ϑgrid, φgrid), ϕ_qfm, (Gridded(Linear()), Gridded(Linear(Periodic())), Gridded(Linear(Periodic()))));
+
+    qfm_ext = extrapolate(qfm_itp, Periodic());
+
+    #This will be slow af unfort
+    #imagine if we still used Hermite interpolation!
+    for (i, κ) in enumerate(κgrid), (j, ᾱ) in enumerate(ᾱgrid), (k, τ) in enumerate(τgrid)
+
+        #first change to tor coords
+        r, θ, ζ = isl_coords_to_tor(κ, ᾱ, τ)
+        #then change to qfm
+        s, ϑ, φ = tor_coords_to_qfm(r, θ, ζ, CT, surf_itp, sd)
+
+        ϕ_isl[i, j, k] = qfm_ext(s, ϑ, φ)
+
+    end
+
+
+end
+
+
+
+function map_qfm_to_tor(ϕ_tor::Array{ComplexF64, 3}, rgrid::AbstractArray{Float64}, θgrid::AbstractArray{Float64}, ζgrid::AbstractArray{Float64}, ϕ_qfm::Array{ComplexF64, 3}, sgrid::AbstractArray{Float64}, ϑgrid::AbstractArray{Float64}, φgrid::AbstractArray{Float64}, CT::CoordTransformT, surf_itp::SurfaceITPT, sd::TempSurfT) 
+
+
+    qfm_itp = interpolate((sgrid, ϑgrid, φgrid), ϕ_qfm, (Gridded(Linear()), Gridded(Linear(Periodic())), Gridded(Linear(Periodic()))));
+
+    qfm_ext = extrapolate(qfm_itp, Periodic());
+
+    #we may be able to optimise this by noting that ζ=φ, so we can kind of skip that loop
+    #same for the island case.
+    #although, in both cases, the new poloidal angle is a function of the toroidal angle.
+    for (i, r) in enumerate(rgrid), (j, θ) in enumerate(θgrid), (k, ζ) in enumerate(ζgrid)
+        #this is unfort a bit fked.
+        #assuming this work ok though, this should be fine.
+        s, ϑ, φ = tor_coords_to_qfm(r, θ, ζ, CT, surf_itp, sd)
+
+        ϕ_tor[i, j, k] = qfm_ext(s, ϑ, φ)
+
+    end
+
+
+end
 
 #grids probbaly need to be fff for now, mainly because the fft extends the grids.
 #island also needs to be instantiated!

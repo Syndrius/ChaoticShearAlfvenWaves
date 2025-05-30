@@ -235,7 +235,7 @@ function construct(prob::ProblemT, grids::FSSGridsT, surfs::Array{QFMSurfaceT})
     tm = TM()
 
     #struct for storing the intermediate data for the coordinate transform
-    CT = CoordTsfmT()
+    CT = CoordTransformT()
    
     #main loop
     for i in 1:grids.x1.N-1

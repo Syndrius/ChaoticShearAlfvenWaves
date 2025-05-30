@@ -8,13 +8,13 @@ Struct storing the quantities needed to transform the toroidal metric and magnet
 - dJM::Array{Float64, 3} - Derivative with respect to qfm variables of Jacobian matrix.
 - dJM_inv::Array{Float64, 3} - Derivative with respect to qfm variables of inverse Jacobian matrix.
 """
-struct CoordTsfmT
+struct CoordTransformT
     coords :: Array{Float64, 1} 
     JM :: Array{Float64, 2} 
     JM_inv :: Array{Float64, 2} 
     dJM :: Array{Float64, 3}
     dJM_inv :: Array{Float64, 3}
-    function CoordTsfmT()
+    function CoordTransformT()
         new(zeros(3), zeros(3, 3), zeros(3, 3), zeros(3, 3, 3), zeros(3, 3, 3))
     end
 end
@@ -22,11 +22,11 @@ end
 
 
 """
-    coord_transform!(s::Float64, ϑ::Float64, φ::Float64, CT::CoordTsfmT, surf_itp::SurfaceITPT)
+    coord_transform!(s::Float64, ϑ::Float64, φ::Float64, CT::CoordTransformT, surf_itp::SurfaceITPT)
 
 Function that computes the transformation from (s, ϑ, φ) (qfm coords) into standard toroidal coordinates (r, θ, ζ). This includes determining the Jacobian Matrix and associated derivatives, stored in the CT struct. This allows us to full convert required data between coordinates.
 """
-function coord_transform!(s::Float64, ϑ::Float64, φ::Float64, CT::CoordTsfmT, surf_itp::SurfaceITPT, sd::TempSurfT)
+function coord_transform!(s::Float64, ϑ::Float64, φ::Float64, CT::CoordTransformT, surf_itp::SurfaceITPT, sd::TempSurfT)
 
     #the sd (surface data) struct is not very clear! probably needs a new name.
     pqMpol = surf_itp.M
@@ -118,11 +118,11 @@ end
 
 
 """
-    B_transform!(tor_B::BFieldT, qfm_B::BFieldT, qfm_met::MetT, CT::CoordTsfmT)
+    B_transform!(tor_B::BFieldT, qfm_B::BFieldT, qfm_met::MetT, CT::CoordTransformT)
 
 Function that fill out the BFieldT struct for qfm coordinates given the original BFieldT in toroidal coordinaets.
 """
-function met_transform!(tor_met::MetT, qfm_met::MetT, CT::CoordTsfmT)
+function met_transform!(tor_met::MetT, qfm_met::MetT, CT::CoordTransformT)
 
    
     #reset the matrices.
@@ -176,11 +176,11 @@ end
 
 
 """
-    B_transform!(tor_B::BFieldT, qfm_B::BFieldT, qfm_met::MetT, CT::CoordTsfmT)
+    B_transform!(tor_B::BFieldT, qfm_B::BFieldT, qfm_met::MetT, CT::CoordTransformT)
 
 Function that fill out the BFieldT struct for qfm coordinates given the original BFieldT in toroidal coordinaets.
 """
-function B_transform!(tor_B::BFieldT, qfm_B::BFieldT, qfm_met::MetT, CT::CoordTsfmT)
+function B_transform!(tor_B::BFieldT, qfm_B::BFieldT, qfm_met::MetT, CT::CoordTransformT)
 
     #B^μ = JM^μ_i B^i
     #Note that JM^μ_i is the inverse

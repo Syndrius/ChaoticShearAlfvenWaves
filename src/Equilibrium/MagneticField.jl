@@ -171,14 +171,14 @@ function island_amplitude(x1::Float64)
     #ideally, this would be an input like q or density tbh
 
     #returns value and derivative.
-    return 4*x1*(1-x1), 4 - 8 * x1
+    #return 4*x1*(1-x1), 4 - 8 * x1
 
     #case where this function is not included
     #useful to distinguish problemo's between GAM and between axis.
-    return 1, 0
+    #return 1, 0
 
     #we may want to try this for a flatter profile over the island
-    return 1-16*(x1-1/2)^4
+    return 1-16*(x1-1/2)^4, -64*(x1-1/2)^3
 
 end
 
@@ -188,11 +188,24 @@ end
 
 Computes the magnetic field for the island case. This requires a specific q-profile and a conversion between r and flux ψ.
 """
-function compute_B_isl!(B::BFieldT, met::MetT, isl::IslandT, κ::Float64, ᾱ::Float64, φ::Float64)
+function compute_B_isl!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, κ::Float64, ᾱ::Float64, τ::Float64)
 
-    #q, dq = q_prof(r)
-    K, E = Elliptic.ellipke(κ)
 
+    #I think to remove this function, we would have to swap from κ to either r̄ or χ
+    #both are v annoying, these would also require a weird new q-profile.
+    #and would make the metric extra cooked.
+    #I think the way we do B is just a bit cooked, i.e. the normal case assumes Bθ has B_0 r or whatever.
+    #think we have been assuming compute_B is a locked in function that can't be any different
+    #but there is many a reason why this would want to change
+
+    #should probably be q̄ and dq̄
+    #note that this q profile is the same as toroidal case, but appears different in the magnetic field due to coordinates
+    #this is the same as q appearing in other component if poloidal not toroidal flux is chosen as radial coordinate.
+    q, dq = q_prof(κ)
+    #K, E = Elliptic.ellipke(κ)
+
+    #wot even is this function???
+    #holy moly how did this ever work even a little bit.
     #this is from our case, this will not match Axel, but jopefully close enough...
     #A = 0.00015625000000000003
     #w = 0.05
@@ -202,29 +215,38 @@ function compute_B_isl!(B::BFieldT, met::MetT, isl::IslandT, κ::Float64, ᾱ::
     #n0 = -1
     #q = -w/(2*A*π*m0) * Elliptic.K(κ)
     #in built q-profile for island coordinates.
-    q = -isl.w/(2*isl.A*π*isl.m0) * K
+    #q = -isl.w/(2*isl.A*π*isl.m0) * K
 
     #this was a key peice!!!
-    dψ̄dκ = isl.w * K / (isl.m0*π)
-    d2ψ̄dκ2 = isl.w / (isl.m0*π) * (E - (1-κ)*K) / (2*(1-κ)*κ)
+    #this is just q for fuck sake, difference is the qprofile is at a different place!
+    #maybe calling it the q-profile is perhaps a bit misleading then.
+    #I guess this is the difference of using toroidal vs poloidal flux.
+    #dψ̄dκ = isl.w * K / (isl.m0*π)
+    #d2ψ̄dκ2 = isl.w / (isl.m0*π) * (E - (1-κ)*K) / (2*(1-κ)*κ)
 
     #dq = -w/(2*A*π*m0) * (Elliptic.E(κ) - (1-κ)*Elliptic.K(κ)) / (2*(1-κ)*κ)
     #dq = 0
-    dq = -isl.w/(2*isl.A*π*isl.m0) * (E - (1-κ)*K) / (2*(1-κ)*κ)
+    #dq = -isl.w/(2*isl.A*π*isl.m0) * (E - (1-κ)*K) / (2*(1-κ)*κ)
+
+    #B = q̄ ∇κ×∇ᾱ + 2A ∇κ×∇τ
+    #awkward units give this expression
+    #but this is mainly so we can define our metric in terms of κ, instead of r̄ or χ, both of which would have nicer B expressions.
+    #much simpler expressions now we understand our damn coordinates
+    #it may be worth considering what the metric would look like in χ or r̄
+    #would be a disaster nevermind.
     
     B.B[1] = 0
-    #Axel just has R0 here, which doesn't make anysense!
-    B.B[2] = 1/(q * met.J[1]) * dψ̄dκ
+    B.B[2] = 2*isl.A/ met.J[1]
 
-    B.B[3] = 1 / met.J[1] * dψ̄dκ
-
-
-    B.dB[2, 1] = d2ψ̄dκ2 / (q * met.J[1]) - dq * dψ̄dκ / (q^2*met.J[1]) - met.dJ[1] * dψ̄dκ / (q*met.J[1]^2)
-    B.dB[2, 2] = - met.dJ[2] * dψ̄dκ / (q*met.J[1]^2)
+    B.B[3] = q / met.J[1] 
 
 
-    B.db[3, 1] = d2ψ̄dκ2 / (met.J[1]) - met.dJ[2] * dψ̄dκ / (met.J[1]^2)
-    B.dB[3, 2] = - met.dJ[2] * dψ̄dκ / (met.J[1]^2)
+    B.dB[2, 1] = - met.dJ[1] * 2 * isl.A / met.J[1]^2
+    B.dB[2, 2] = - met.dJ[2] * 2 * isl.A / met.J[1]^2
+
+
+    B.db[3, 1] = dq / met.J[1] - q * met.dJ[1] / met.J[1]^2
+    B.dB[3, 2] = - met.dJ[2] * q / (met.J[1]^2)
 
 
     magnitude_B!(B, met)

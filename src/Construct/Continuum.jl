@@ -168,7 +168,7 @@ function continuum(prob::ProblemT, grids::ContGridsT, surfs::Array{QFMSurfaceT})
     pW = plan_fft(Wcont, [4, 5])
 
     #structs storing temporary arrays.
-    CT = CoordTsfmT()
+    CT = CoordTransformT()
     tm = TM()
 
     for (i, s) in enumerate(x1grid)

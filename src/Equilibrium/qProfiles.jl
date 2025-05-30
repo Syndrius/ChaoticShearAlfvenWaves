@@ -1,5 +1,30 @@
 #TODO -> should change these names and probably provide the function in the doc.@
 
+#q profile required to use island coordinates
+function island_coords_q(κ::Float64, isl::IslandT)
+
+    K, E = Elliptic.ellipke(κ)
+
+    q = isl.w / (isl.m0*π) * K
+
+    dq = isl.w / (isl.m0*π) * (E - (1-κ) * K) / (2*(1-κ)*κ)
+
+    return q, dq
+end
+
+#Toroidal equivalent ot eh island coords q, allows for direct comparison.
+function island_equiv_q(r::Float64, isl::IslandT)
+
+    q0 = isl.q0
+    qp = isl.qp #chosen pretty arbitrarily based on vibes of continuum.
+    r0 = isl.r0
+    #this form is to allows analytical integration in the construction of island coordinates.
+    q = 1 / (1 / q0 - qp / (2*q0^2*r0) * (r^2-r0^2))
+    dq = 4*qp*q0^2*r*r0 / (2*q0*r0 - qp * (r^2-r0^2))^2
+    return q, dq
+end
+
+
 #
 #desgined for chaotic region between ~0.77-0.9
 #with (7, -4), (5, -3), (8, -5) islands

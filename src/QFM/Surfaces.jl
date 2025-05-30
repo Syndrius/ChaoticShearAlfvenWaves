@@ -336,7 +336,7 @@ function compute_jac(prob::ProblemT, grids::FFFGridsT, surfs::Array{QFMSurfaceT}
     #ξζ, wgζ = MID.Construct.FastGaussQuadrature.gausslegendre(grids.ζ.gp)
 
     #struct for storing the intermediate data for the coordinate transform
-    CT = CoordTsfmT()
+    CT = CoordTransformT()
 
     jac = zeros(grids.x1.N, grids.x2.N, grids.x3.N)
     djac = zeros(3, grids.x1.N, grids.x2.N, grids.x3.N)

@@ -1,5 +1,46 @@
 #ideally this will one day have a qfm transform in here as well, although the inverse qfm transform may be cooked af.
 
+function tor_to_qfm_f!(F::Array{Float64}, qfm_coords::Array{Float64}, tor_coords::Array{Float64}, CT::CoordTransformT, surf_itp::SurfaceITPT, sd::TempSurfT)
+
+    coord_transform!(qfm_coords..., CT, surf_itp, sd)
+
+    F .= CT.coords .- tor_coords
+end
+
+function tor_to_qfm_j!(J::Array{Float64}, qfm_coords::Array{Float64}, tor_coords::Array{Float64}, CT::CoordTransformT, surf_itp::SurfaceITPT, sd::TempSurfT)
+
+    coord_transform!(qfm_coords..., CT, surf_itp, sd)
+
+    J .= CT.JM
+end
+
+function tor_to_qfm_fj!(F::Array{Float64}, J::Array{Float64, 2}, qfm_coords::Array{Float64}, tor_coords::Array{Float64}, CT::CoordTransformT, surf_itp::SurfaceITPT, sd::TempSurfT)
+
+    coord_transform!(qfm_coords..., CT, surf_itp, sd)
+
+    F .= CT.coords .- tor_coords
+    J .= CT.JM
+end
+
+#there is no way this won't take a billion years
+function tor_coords_to_qfm(r::Float64, θ::Float64, ζ::Float64, CT::CoordTransformT, surf_itp::SurfaceITPT, sd::TempSurfT)    
+
+    f!(F, x) = tor_to_qfm_f!(F, x, [r, θ, ζ], CT, surf_itp, sd)
+    j!(J, x) = tor_to_qfm_j!(J, x, [r, θ, ζ], CT, surf_itp, sd)
+    fj!(F, J, x) = tor_to_qfm_fj!(F, J, x, [r, θ, ζ], CT, surf_itp, sd)
+
+    #perhaps this should be defined earlier?
+    x0 = [0.0, 0.0, 0.0]
+    F0 = similar(x0)
+
+
+    #is 0.0 a terrible guess? seems to cause issues in the other case.
+    df = OnceDifferentiable(f!, j!, fj!, x0, F0)
+
+    sol = nlsolve(df, x0)
+
+    return sol.zero
+end
 
 
 #TODO
@@ -114,6 +155,8 @@ end
 
 #unsure where this belongs tbh
 #computes the sepratrix in toroidal coodinates.
+#note that we have a version of this in post-processing which just gives the min and max of the sepratrix.
+#pretty stupid tbh
 function compute_sepratrix(grids, isl)
 
     sep1 = zeros(grids.θ.N)

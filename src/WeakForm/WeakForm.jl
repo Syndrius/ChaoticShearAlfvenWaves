@@ -96,10 +96,10 @@ function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, B::BFieldT, 
     for k=1:1:length(ζ), j=1:1:length(ᾱ), i=1:1:length(κ)
 
         #compute the metric
-        island_metric!(met, κ[i], ᾱ[j], ζ[k], prob.geo.R0, prob.isl)
+        island_metric!(met, κ[i], ᾱ[j], ζ[k], prob.geo.R0, prob.isls[1])
 
         #compute the magnetic field.
-        compute_B_isl!(B, met, prob.isl, κ[i], ᾱ[j], ζ[k])
+        compute_B_isl!(B, met, prob.q, prob.isls[1], κ[i], ᾱ[j], ζ[k])
 
         #computes the matrix D.
         compute_D!(B, met, tm.D)
@@ -116,13 +116,13 @@ end
 
 
 """
-    W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, tor_B::BFieldT, tor_met::MetT, qfm_B::BFieldT, qfm_met::MetT, prob::ProblemT, s::Array{Float64}, ϑ::AbstractArray, φ::AbstractArray, tm::TM, surfs::SurfaceITPT, CT::CoordTsfmT, sd::TempSurfT)
+    W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, tor_B::BFieldT, tor_met::MetT, qfm_B::BFieldT, qfm_met::MetT, prob::ProblemT, s::Array{Float64}, ϑ::AbstractArray, φ::AbstractArray, tm::TM, surfs::SurfaceITPT, CT::CoordTransformT, sd::TempSurfT)
 
 Computes the two matrices W and I based on the weak form of the SAW governing equation for the case with qfm surfaces.
 The surfaces are used to convert the (s, ϑ, φ) grid into (r, θ, ζ) values, then the original metric and B are computed.
 These are then transformed into the B and metric in (s, ϑ, φ) coordinates so that the weakform is computed in terms of (s, ϑ, φ).
 """
-function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, tor_B::BFieldT, tor_met::MetT, qfm_B::BFieldT, qfm_met::MetT, prob::ProblemT, s::Array{Float64}, ϑ::AbstractArray, φ::AbstractArray, tm::TM, surfs::SurfaceITPT, CT::CoordTsfmT, sd::TempSurfT)
+function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, tor_B::BFieldT, tor_met::MetT, qfm_B::BFieldT, qfm_met::MetT, prob::ProblemT, s::Array{Float64}, ϑ::AbstractArray, φ::AbstractArray, tm::TM, surfs::SurfaceITPT, CT::CoordTransformT, sd::TempSurfT)
 
     #compute the density.
     n = prob.dens.(s) :: Array{Float64}

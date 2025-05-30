@@ -27,6 +27,8 @@ export low_shear_q
 export low_shear_qfm_q
 export qfm_q
 export qfm_benchmark_q
+export island_equiv_q
+export island_coords_q
 
 
 
