@@ -24,7 +24,26 @@ function island_equiv_q(r::Float64, isl::IslandT)
     return q, dq
 end
 
+#JLD2 cannot save anonymouse functions, so we probably need to hard code them unfort
+function island_21_q(r::Float64)
+    q0 = 2/1
+    qp = 2.0
+    r0 = 0.5
+    #this form is to allows analytical integration in the construction of island coordinates.
+    q = 1 / (1 / q0 - qp / (2*q0^2*r0) * (r^2-r0^2))
+    dq = 4*qp*q0^2*r*r0 / (2*q0*r0 - qp * (r^2-r0^2))^2
+    return q, dq
+end
 
+function island_32_q(r::Float64)
+    q0 = 3/2
+    qp = 2.0
+    r0 = 0.5
+    #this form is to allows analytical integration in the construction of island coordinates.
+    q = 1 / (1 / q0 - qp / (2*q0^2*r0) * (r^2-r0^2))
+    dq = 4*qp*q0^2*r*r0 / (2*q0*r0 - qp * (r^2-r0^2))^2
+    return q, dq
+end
 #
 #desgined for chaotic region between ~0.77-0.9
 #with (7, -4), (5, -3), (8, -5) islands

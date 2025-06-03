@@ -28,7 +28,7 @@ export map_tor_to_isl!
 include("CoordTransform.jl")
 include("HermiteInterpolation.jl") 
 
-function map_qfm_to_isl(ϕ_isl::Array{ComplexF64, 3}, κgrid::AbstractArray{Float64}, ᾱgrid::AbstractArray{Float64}, τgrid::AbstractArray{Float64}, ϕ_qfm::Array{ComplexF64, 3}, sgrid::AbstractArray{Float64}, ϑgrid::AbstractArray{Float64}, φgrid::AbstractArray{Float64}, CT::CoordTransformT, surf_itp::SurfaceITPT, sd::TempSurfT) 
+function map_qfm_to_isl!(ϕ_isl::Array{ComplexF64, 3}, κgrid::AbstractArray{Float64}, ᾱgrid::AbstractArray{Float64}, τgrid::AbstractArray{Float64}, ϕ_qfm::Array{ComplexF64, 3}, sgrid::AbstractArray{Float64}, ϑgrid::AbstractArray{Float64}, φgrid::AbstractArray{Float64}, isl::IslandT, CT::CoordTransformT, surf_itp::SurfaceITPT, sd::TempSurfT) 
 
 
     qfm_itp = interpolate((sgrid, ϑgrid, φgrid), ϕ_qfm, (Gridded(Linear()), Gridded(Linear(Periodic())), Gridded(Linear(Periodic()))));
@@ -40,7 +40,7 @@ function map_qfm_to_isl(ϕ_isl::Array{ComplexF64, 3}, κgrid::AbstractArray{Floa
     for (i, κ) in enumerate(κgrid), (j, ᾱ) in enumerate(ᾱgrid), (k, τ) in enumerate(τgrid)
 
         #first change to tor coords
-        r, θ, ζ = isl_coords_to_tor(κ, ᾱ, τ)
+        r, θ, ζ = isl_in_coords_to_tor(κ, ᾱ, τ, isl)
         #then change to qfm
         s, ϑ, φ = tor_coords_to_qfm(r, θ, ζ, CT, surf_itp, sd)
 

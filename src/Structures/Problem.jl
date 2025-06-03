@@ -153,7 +153,7 @@ function init_problem(; q::Function, met::Symbol=:torus, dens::Function=uniform_
             try
                 for i in 1:length(isls)
                     #isls[i] = inst_island(isls[i], q)
-                    push!(new_isls, inst_island[i], q)
+                    push!(new_isls, inst_island(isls[i], q))
                 end
             catch e
                 new_isls = isls

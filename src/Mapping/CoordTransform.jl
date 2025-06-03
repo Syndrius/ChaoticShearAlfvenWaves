@@ -30,7 +30,7 @@ function tor_coords_to_qfm(r::Float64, θ::Float64, ζ::Float64, CT::CoordTransf
     fj!(F, J, x) = tor_to_qfm_fj!(F, J, x, [r, θ, ζ], CT, surf_itp, sd)
 
     #perhaps this should be defined earlier?
-    x0 = [0.0, 0.0, 0.0]
+    x0 = [r, θ, ζ]
     F0 = similar(x0)
 
 
