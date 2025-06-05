@@ -15,7 +15,7 @@ function hermite_interpolation(x1::Float64, x2::Float64, x3::Float64, ϕ::Array{
 
     #going to assume the grid_id/basis_id is already defined. May need a more solid import from basis or whatever.
 
-    ϕ_int = 0.0
+    ϕ_int = 0.0+0.0im
     gid = Indexing.grid_id
     bid = Indexing.basis_id
     for h1 in 1:4, h2 in 1:4, h3 in 1:4
@@ -48,6 +48,9 @@ function global_to_local(ind::Int64, grid::AbstractArray{Float64}, x::Float64)
         dx = grid[ind+1] - grid[ind]
         ξ = (x - grid[ind]) / dx
     else
+        #may need to add some other edge cases 
+        #in particular, the qfm grid not being maximal can cause problemos
+        #typically this is easily fixed by making the mapped grid smaller.
         inds = [ind-1, ind]
         dx = grid[ind] - grid[ind-1]
         ξ = (x - grid[ind-1]) / dx

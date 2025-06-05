@@ -68,6 +68,9 @@ function tor_spectrum_to_isl(dir_base::String, isl_grids::GridsT)
 
     mode_count = 1
 
+    #maps the coordinates first to efficiently compute the interpolation
+    coord_map = tor_to_isl_coord_map(κgrid, ᾱgrid, τgrid, isl)
+
     for i in 1:length(evals.ω)
     #for i in 1:3
 
@@ -97,13 +100,14 @@ function tor_spectrum_to_isl(dir_base::String, isl_grids::GridsT)
         #reconstruct_phi!(efunc, tor_grids, ϕ_tor)
 
         efunc_read = @sprintf("efunc%05d.jld2", i)
-        ϕ_tor[:, 1:end-1, 1:end-1] .= load_object(dir_base*"/efuncs/"*efunc_read)
-        ϕ_tor[:, :, end] = ϕ_tor[:, :, 1]
-        ϕ_tor[:, end, :] = ϕ_tor[:, 1, :]
+        #ϕ_tor[:, 1:end-1, 1:end-1] .= load_object(dir_base*"/efuncs/"*efunc_read)
+        #ϕ_tor[:, :, end] = ϕ_tor[:, :, 1]
+        #ϕ_tor[:, end, :] = ϕ_tor[:, 1, :]
+        ϕ_tor .= load_object(dir_base*"efuncs/"*efunc_read)
 
         #display(ϕ_tor[1:5, 1:5, 1])
         #is this enough? don't think so!
-        ϕ_tor[:, end, end] = ϕ_tor[:, 1, 1]
+        #ϕ_tor[:, end, end] = ϕ_tor[:, 1, 1]
         #we unfort have to add the periodicity back in, because interpolations.jl is kinda shit.
         #choosing ζ=1 here is probably ok, but not really sure why we did that.
         #amax = argmax(abs.(real.(ϕ_tor[:, :, 1, 1])))
@@ -125,7 +129,10 @@ function tor_spectrum_to_isl(dir_base::String, isl_grids::GridsT)
         
         #this is actually a bit of a disaster for islands, for now I think we will just do the inside and ignore the outside
         #so we have to assume the island_grids haev κ <= 1.
-        map_tor_to_isl!(ϕ_isl, κgrid, ᾱgrid, τgrid, ϕ_tor, rgrid, θgridp, ζgridp, isl)
+        #map_tor_to_isl!(ϕ_isl, κgrid, ᾱgrid, τgrid, ϕ_tor, rgrid, θgridp, ζgridp, isl)
+
+        efunc_map!(ϕ_isl, isl_grids.x1.N, isl_grids.x2.N, isl_grids.x3.N, ϕ_tor, rgrid, θgrid, ζgrid, coord_map)
+
 
         #may need to check the plan is not in place or anything stupid.
         #i.e. maybe we write ϕ_isl to file, then fft in place and do the other stuff

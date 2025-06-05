@@ -95,7 +95,7 @@ function compute_spectrum_qfm(; prob::ProblemT, grids::GridsT, solver::SolverT, 
     @printf("Solving complete, %d eigenvalues found.\n", length(evals))
 
     display("Post Processing...")
-    deriv = false # not ideal, not sure if we will ever bother with this again
+    deriv = true # not ideal, not sure if we will ever bother with this again
     @allocated evals, ϕ, ϕft = post_process(evals, efuncs, grids, prob.geo, deriv)
     display("Finished.")
 

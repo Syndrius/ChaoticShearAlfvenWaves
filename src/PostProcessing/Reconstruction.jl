@@ -60,7 +60,7 @@ function reconstruct_phi!(efunc::Array{ComplexF64}, grids::FFFGridsT, ϕ::Array{
     for i in 1:8:matrix_size(grids)
 
         #note these are the indicies.
-        x1, x2, x3, hs = index_to_grid(i, grids)
+        x1, x2, x3, _ = index_to_grid(i, grids)
         ϕ[x1, x2, x3] = efunc[i] * exp(1im * (m * x2grid[x2] + n * x3grid[x3]))
 
     end
@@ -77,7 +77,7 @@ end
 
 Reconstructs the 1d eigenfunction output back to the 3d grid.
 """
-function reconstruct_phi!(efunc::Array{ComplexF64}, grids::FFFGridsT, ϕ::Array{ComplexF64, 4})
+function reconstruct_phi!(efunc::Array{ComplexF64}, grids::FFFGridsT, ϕ::Array{ComplexF64, 4}, ϕft::Array{ComplexF64, 4}, plan::FFTW.FFTWPlan)    
     #phi = zeros(ComplexF64, grids.r.N, grids.x2.N, grids.x3.N, 8)
     #phi = Array{ComplexF64}(undef, grids.r.N, grids.x2.N, grids.x3.N, 8)
     #maybe one day we will want dphidr???
@@ -99,16 +99,11 @@ function reconstruct_phi!(efunc::Array{ComplexF64}, grids::FFFGridsT, ϕ::Array{
         #note these are the indicies.
         x1, x2, x3, hs = index_to_grid(i, grids)
 
-        
-        #the 8 should fix this
         ϕ[x1, x2, x3, hs] = efunc[i] * exp(1im * (m * x2grid[x2] + n * x3grid[x3]))
 
-        #
-            #may be the wrong way around!
-            #this doesn't seem to have worked as expected tbh!
-            #phi[:, r, x2, x3] = efuncs[i, :] #.* exp(1im * (m * x2grid[x2] + n * x3grid[x3]))
-        #end
     end
+
+    ft_phi!(ϕ, ϕft, grids, plan)
 
 end
 

@@ -88,10 +88,6 @@ using ..QFM; export compute_jac #perhaps shouldn't be exported
 
 
 
-include("Mapping/Mapping.jl") #hopefully not a mistake
-
-
-
 
 include("Io/Io.jl")
 
@@ -122,6 +118,9 @@ using ..Solve; export compute_spectrum
 using ..Solve; export compute_spectrum_qfm
 using ..Solve; export compute_continuum
 
+
+
+include("Mapping/Mapping.jl") #hopefully not a mistake
 
 
 end

@@ -95,10 +95,12 @@ end
 
 Computes the fourier and non-fourier representation of phi once it has been reconstructed.
 """
-function ft_phi!(ϕ::Array{ComplexF64, 3}, ϕft::Array{ComplexF64, 3}, grids::FFFGridsT, plan)
+function ft_phi!(ϕ::Array{ComplexF64}, ϕft::Array{ComplexF64}, grids::FFFGridsT, plan)
     
     #FFF case is simply a direct ft of x2 and x3
     ϕft .= plan * ϕ
+
+    #this is the same for deriv or non-deriv I hope!
 
 end
 
