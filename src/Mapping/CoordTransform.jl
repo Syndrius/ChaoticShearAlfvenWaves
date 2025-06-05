@@ -43,7 +43,7 @@ function tor_coords_to_qfm(r::Float64, θ::Float64, ζ::Float64, CT::CoordTransf
 
     #think this is only needed for small grids but who knows
     #written in vector form to match sol.zero form.
-    return [s, mod(ϑ, 2π), mod(φ, 2π)]
+    return (s, mod(ϑ, 2π), mod(φ, 2π))
 end
 
 

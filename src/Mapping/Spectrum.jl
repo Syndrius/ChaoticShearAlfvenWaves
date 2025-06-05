@@ -44,19 +44,19 @@ function tor_spectrum_to_isl(dir_base::String, isl_grids::GridsT)
     #this will be the original eigenfunction used.
     #the hermite version is slow af. May want to come back to this
     #it should be more accurate, but who knows tbh.
-    #ϕ_tor = zeros(ComplexF64, tor_grids.x1.N, tor_grids.x2.N, tor_grids.x3.N, 8)
+    ϕ_tor = zeros(ComplexF64, tor_grids.x1.N, tor_grids.x2.N, tor_grids.x3.N, 8)
 
-    ϕ_tor = zeros(ComplexF64, tor_grids.x1.N, tor_grids.x2.N+1, tor_grids.x3.N+1)
+    #ϕ_tor = zeros(ComplexF64, tor_grids.x1.N, tor_grids.x2.N, tor_grids.x3.N)
 
-    θgridp = LinRange(0, 2π, tor_grids.x2.N+1)
-    ζgridp = LinRange(0, 2π, tor_grids.x3.N+1)
+    #θgridp = LinRange(0, 2π, tor_grids.x2.N+1)
+    #ζgridp = LinRange(0, 2π, tor_grids.x3.N+1)
 
     #not going to store the derivative info of the mapping, maybe we will want to someday.
     #this is probably only a good idea if we assume the island grids are entirely inside or entirely outside.
     #which I think we are doing.
-    ϕ_isl, ϕ_islft = allocate_phi_arrays(isl_grids, deriv=false)
+    ϕ_isl, ϕ_islft = PostProcessing.allocate_phi_arrays(isl_grids, deriv=false)
 
-    plan = create_ft_plan(ϕ_islft, isl_grids)
+    plan = PostProcessing.create_ft_plan(ϕ_islft, isl_grids)
 
     #arrays to store the maximum value of ϕft and the correspondning κ value.
     κmarray = Array{Int64}(undef, isl_grids.x2.N, isl_grids.x3.N)
@@ -84,12 +84,12 @@ function tor_spectrum_to_isl(dir_base::String, isl_grids::GridsT)
         end
 
 
-        #efunc_read = @sprintf("efunc%05d.hdf5", i)
+        efunc_read = @sprintf("efunc%05d.hdf5", i)
         #unfort doesn't handle complex numbers v well
-        #efunc_split = load_object(dir_base*"/efuncs_raw/"*efunc_read)
+        efunc_split = load_object(dir_base*"/efuncs_raw/"*efunc_read)
 
         #ideally this would be preallocated in some way
-        #efunc = efunc_split[1, :] .+ efunc_split[2, :] * 1im
+        efunc = efunc_split[1, :] .+ efunc_split[2, :] * 1im
         #raw_dat = @sprintf(dir_base*"/efuncs_raw/efunc%05d.hdf5", i)
 
         #not sure how best to do this.
@@ -97,13 +97,13 @@ function tor_spectrum_to_isl(dir_base::String, isl_grids::GridsT)
 
         #this could be odd, as we want to the full thing, but we don't care about the fft.
         #already got it implemented bby
-        #reconstruct_phi!(efunc, tor_grids, ϕ_tor)
+        PostProcessing.reconstruct_phi!(efunc, tor_grids, ϕ_tor)
 
-        efunc_read = @sprintf("efunc%05d.jld2", i)
+        #efunc_read = @sprintf("efunc%05d.jld2", i)
         #ϕ_tor[:, 1:end-1, 1:end-1] .= load_object(dir_base*"/efuncs/"*efunc_read)
         #ϕ_tor[:, :, end] = ϕ_tor[:, :, 1]
         #ϕ_tor[:, end, :] = ϕ_tor[:, 1, :]
-        ϕ_tor .= load_object(dir_base*"efuncs/"*efunc_read)
+        #ϕ_tor .= load_object(dir_base*"efuncs/"*efunc_read)
 
         #display(ϕ_tor[1:5, 1:5, 1])
         #is this enough? don't think so!
@@ -138,7 +138,7 @@ function tor_spectrum_to_isl(dir_base::String, isl_grids::GridsT)
         #i.e. maybe we write ϕ_isl to file, then fft in place and do the other stuff
         ϕ_islft .= plan * ϕ_isl
 
-        κind, mode_lab = label_mode(ϕ_islft, isl_grids, κmarray, ϕ_islmarray)
+        κind, mode_lab = PostProcessing.label_mode(ϕ_islft, isl_grids, κmarray, ϕ_islmarray)
 
         push!(κms, κgrid[κind])
         push!(mode_labs, mode_lab)
@@ -195,19 +195,19 @@ function qfm_spectrum_to_isl(dir_base::String, isl_grids::GridsT, surfs_dir::Str
     #this will be the original eigenfunction used.
     #the hermite version is slow af. May want to come back to this
     #it should be more accurate, but who knows tbh.
-    #ϕ_tor = zeros(ComplexF64, tor_grids.x1.N, tor_grids.x2.N, tor_grids.x3.N, 8)
+    ϕ_qfm = zeros(ComplexF64, qfm_grids.x1.N, qfm_grids.x2.N, qfm_grids.x3.N, 8)
 
-    ϕ_qfm = zeros(ComplexF64, qfm_grids.x1.N, qfm_grids.x2.N+1, qfm_grids.x3.N+1)
+    #ϕ_qfm = zeros(ComplexF64, qfm_grids.x1.N, qfm_grids.x2.N+1, qfm_grids.x3.N+1)
 
-    ϑgridp = LinRange(0, 2π, qfm_grids.x2.N+1)
-    φgridp = LinRange(0, 2π, qfm_grids.x3.N+1)
+    #ϑgridp = LinRange(0, 2π, qfm_grids.x2.N+1)
+    #φgridp = LinRange(0, 2π, qfm_grids.x3.N+1)
 
     #not going to store the derivative info of the mapping, maybe we will want to someday.
     #this is probably only a good idea if we assume the island grids are entirely inside or entirely outside.
     #which I think we are doing.
-    ϕ_isl, ϕ_islft = allocate_phi_arrays(isl_grids, deriv=false)
+    ϕ_isl, ϕ_islft = PostProcessing.allocate_phi_arrays(isl_grids, deriv=false)
 
-    plan = create_ft_plan(ϕ_islft, isl_grids)
+    plan = PostProcessing.create_ft_plan(ϕ_islft, isl_grids)
 
     #arrays to store the maximum value of ϕft and the correspondning κ value.
     κmarray = Array{Int64}(undef, isl_grids.x2.N, isl_grids.x3.N)
@@ -250,8 +250,9 @@ function qfm_spectrum_to_isl(dir_base::String, isl_grids::GridsT, surfs_dir::Str
 
     mode_count = 1
 
-    #for i in 1:length(evals.ω)
-    for i in 80:100
+    coord_map = qfm_to_isl_coord_map(κgrid, ᾱgrid, τgrid, isl, CT, surf_itp, sd)
+    for i in 1:length(evals.ω)
+    #for i in 80:100
 
 
         #this eigenfunction is not an island mode, so we ignore.
@@ -262,15 +263,14 @@ function qfm_spectrum_to_isl(dir_base::String, isl_grids::GridsT, surfs_dir::Str
         if evals.x1[i] < sep_min || evals.x1[i] > sep_max
             continue
         end
-        display("Passed the first check")
 
 
-        #efunc_read = @sprintf("efunc%05d.hdf5", i)
+        efunc_read = @sprintf("efunc%05d.hdf5", i)
         #unfort doesn't handle complex numbers v well
-        #efunc_split = load_object(dir_base*"/efuncs_raw/"*efunc_read)
+        efunc_split = load_object(dir_base*"/efuncs_raw/"*efunc_read)
 
         #ideally this would be preallocated in some way
-        #efunc = efunc_split[1, :] .+ efunc_split[2, :] * 1im
+        efunc = efunc_split[1, :] .+ efunc_split[2, :] * 1im
         #raw_dat = @sprintf(dir_base*"/efuncs_raw/efunc%05d.hdf5", i)
 
         #not sure how best to do this.
@@ -278,16 +278,16 @@ function qfm_spectrum_to_isl(dir_base::String, isl_grids::GridsT, surfs_dir::Str
 
         #this could be odd, as we want to the full thing, but we don't care about the fft.
         #already got it implemented bby
-        #reconstruct_phi!(efunc, tor_grids, ϕ_tor)
+        PostProcessing.reconstruct_phi!(efunc, qfm_grids, ϕ_qfm)
 
-        efunc_read = @sprintf("efunc%05d.jld2", i)
-        ϕ_qfm[:, 1:end-1, 1:end-1] .= load_object(dir_base*"/efuncs/"*efunc_read)
-        ϕ_qfm[:, :, end] = ϕ_qfm[:, :, 1]
-        ϕ_qfm[:, end, :] = ϕ_qfm[:, 1, :]
+        #efunc_read = @sprintf("efunc%05d.jld2", i)
+        #ϕ_qfm[:, 1:end-1, 1:end-1] .= load_object(dir_base*"/efuncs/"*efunc_read)
+        #ϕ_qfm[:, :, end] = ϕ_qfm[:, :, 1]
+        #ϕ_qfm[:, end, :] = ϕ_qfm[:, 1, :]
 
         #display(ϕ_tor[1:5, 1:5, 1])
         #is this enough? don't think so!
-        ϕ_qfm[:, end, end] = ϕ_qfm[:, 1, 1]
+        #ϕ_qfm[:, end, end] = ϕ_qfm[:, 1, 1]
         #we unfort have to add the periodicity back in, because interpolations.jl is kinda shit.
         amax = argmax(abs.(real.(ϕ_qfm[:, :, 1, 1])))
 
@@ -308,13 +308,14 @@ function qfm_spectrum_to_isl(dir_base::String, isl_grids::GridsT, surfs_dir::Str
         
         #this is actually a bit of a disaster for islands, for now I think we will just do the inside and ignore the outside
         #so we have to assume the island_grids haev κ <= 1.
-        Mapping.map_qfm_to_isl!(ϕ_isl, κgrid, ᾱgrid, τgrid, ϕ_qfm, sgrid, ϑgridp, φgridp, isl, CT, surf_itp, sd)
+        #Mapping.map_qfm_to_isl!(ϕ_isl, κgrid, ᾱgrid, τgrid, ϕ_qfm, sgrid, ϑgridp, φgridp, isl, CT, surf_itp, sd)
 
+        efunc_map!(ϕ_isl, isl_grids.x1.N, isl_grids.x2.N, isl_grids.x3.N, ϕ_qfm, sgrid, ϑgrid, φgrid, coord_map)
         #may need to check the plan is not in place or anything stupid.
         #i.e. maybe we write ϕ_isl to file, then fft in place and do the other stuff
         ϕ_islft .= plan * ϕ_isl
 
-        κind, mode_lab = label_mode(ϕ_islft, isl_grids, κmarray, ϕ_islmarray)
+        κind, mode_lab = PostProcessing.label_mode(ϕ_islft, isl_grids, κmarray, ϕ_islmarray)
 
         push!(κms, κgrid[κind])
         push!(mode_labs, mode_lab)

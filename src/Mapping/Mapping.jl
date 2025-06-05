@@ -37,7 +37,7 @@ include("Spectrum.jl")
 #maybe there is a way to combine them, but I am not sure
 
 #this should only be called once, so will be allocating
-function qfm_to_tor_coord_map(rgrid::AbsractArray{Float64}, θgrid::AbstractArray{Float64}, ζgrid::AbstractArray{Float64}, CT::CoordTransformT, surf_itp::SurfaceITPT, sd::TempSurfT)
+function qfm_to_tor_coord_map(rgrid::AbstractArray{Float64}, θgrid::AbstractArray{Float64}, ζgrid::AbstractArray{Float64}, CT::CoordTransformT, surf_itp::SurfaceITPT, sd::TempSurfT)
 
     coord_map = Array{Tuple{Float64, Float64, Float64}}(undef, length(rgrid), length(θgrid), length(ζgrid))
 
@@ -49,12 +49,12 @@ function qfm_to_tor_coord_map(rgrid::AbsractArray{Float64}, θgrid::AbstractArra
                                                         
 end
 
-function qfm_to_isl_coord_map(κgrid::AbsractArray{Float64}, ᾱgrid::AbstractArray{Float64}, τgrid::AbstractArray{Float64}, isl::IslandT, CT::CoordTransformT, surf_itp::SurfaceITPT, sd::TempSurfT)
+function qfm_to_isl_coord_map(κgrid::AbstractArray{Float64}, ᾱgrid::AbstractArray{Float64}, τgrid::AbstractArray{Float64}, isl::IslandT, CT::CoordTransformT, surf_itp::SurfaceITPT, sd::TempSurfT)
 
     coord_map = Array{Tuple{Float64, Float64, Float64}}(undef, length(κgrid), length(ᾱgrid), length(τgrid))
 
     for (i, κ) in enumerate(κgrid), (j, ᾱ) in enumerate(ᾱgrid), (k, τ) in enumerate(τgrid)
-        r, θ, ζ = isl_coords_to_tor(κ, ᾱ, τ, isl)
+        r, θ, ζ = isl_in_coords_to_tor(κ, ᾱ, τ, isl)
         coord_map[i, j, k] = tor_coords_to_qfm(r, θ, ζ, CT, surf_itp, sd)
     end
 
@@ -63,12 +63,12 @@ function qfm_to_isl_coord_map(κgrid::AbsractArray{Float64}, ᾱgrid::AbstractA
 end
 
 
-function tor_to_isl_coord_map(κgrid::AbsractArray{Float64}, ᾱgrid::AbstractArray{Float64}, τgrid::AbstractArray{Float64}, isl::IslandT)
+function tor_to_isl_coord_map(κgrid::AbstractArray{Float64}, ᾱgrid::AbstractArray{Float64}, τgrid::AbstractArray{Float64}, isl::IslandT)
 
     coord_map = Array{Tuple{Float64, Float64, Float64}}(undef, length(κgrid), length(ᾱgrid), length(τgrid))
 
     for (i, κ) in enumerate(κgrid), (j, ᾱ) in enumerate(ᾱgrid), (k, τ) in enumerate(τgrid)
-        coord_map[i, j, k] = isl_coords_to_tor(κ, ᾱ, τ, isl)
+        coord_map[i, j, k] = isl_in_coords_to_tor(κ, ᾱ, τ, isl)
     end
 
     return coord_map

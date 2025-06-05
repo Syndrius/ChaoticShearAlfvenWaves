@@ -108,6 +108,36 @@ function reconstruct_phi!(efunc::Array{ComplexF64}, grids::FFFGridsT, ϕ::Array{
 end
 
 
+#this case is for mapping, where we don't need the fft of the eigenfunction
+#perhaps the fft should be done outside this function so that we don't need duplicates of this
+function reconstruct_phi!(efunc::Array{ComplexF64}, grids::FFFGridsT, ϕ::Array{ComplexF64, 4})
+    #phi = zeros(ComplexF64, grids.r.N, grids.x2.N, grids.x3.N, 8)
+    #phi = Array{ComplexF64}(undef, grids.r.N, grids.x2.N, grids.x3.N, 8)
+    #maybe one day we will want dphidr???
+    #note that this is the same for both!
+
+    #TODO
+
+    m = grids.x2.pf
+    n = grids.x3.pf
+
+    _, x2grid, x3grid = inst_grids(grids)
+
+    #Is this still working? lol looks pretty good.
+    #this exact form is needed for interpolation.
+    for i in 1:1:matrix_size(grids)
+
+        
+
+        #note these are the indicies.
+        x1, x2, x3, hs = index_to_grid(i, grids)
+
+        ϕ[x1, x2, x3, hs] = efunc[i] * exp(1im * (m * x2grid[x2] + n * x3grid[x3]))
+
+    end
+
+
+end
 
 
 
