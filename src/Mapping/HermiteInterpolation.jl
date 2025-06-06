@@ -1,19 +1,19 @@
+"""
+    hermite_interpolation(x1::Float64, x2::Float64, x3::Float64, ϕ::Array{ComplexF64, 4}, x1grid::Array{Float64}, x2grid::AbstractArray{Float64}, x3grid::AbstractArray{Float64})
 
-
-#currently using in build interpolation instead.
-#this should be more accurate though!
+Interpolates the eigenfunction ϕ at (x1, x2, x3) based on the Hermite basis functions.
+"""
 function hermite_interpolation(x1::Float64, x2::Float64, x3::Float64, ϕ::Array{ComplexF64, 4}, x1grid::Array{Float64}, x2grid::AbstractArray{Float64}, x3grid::AbstractArray{Float64})
     #first find the index of the grid point closest to the target point
     x1ind = find_ind(x1grid, x1)
     x2ind = find_ind(x2grid, x2)
     x3ind = find_ind(x3grid, x3)
 
-    #using theis point, we find the two indices left and right of the point, the distance from the left point (ξ) and the disatnce between the two points.
+    #using this point, we find the two indices left and right of the point, the distance from the left point (ξ) and the disatnce between the two points.
     ξ1, inds1, dx1 = global_to_local(x1ind, x1grid, x1)
     ξ2, inds2, dx2 = global_to_local(x2ind, x2grid, x2)
     ξ3, inds3, dx3 = global_to_local(x3ind, x3grid, x3)
 
-    #going to assume the grid_id/basis_id is already defined. May need a more solid import from basis or whatever.
 
     ϕ_int = 0.0+0.0im
     gid = Indexing.grid_id
@@ -27,10 +27,12 @@ function hermite_interpolation(x1::Float64, x2::Float64, x3::Float64, ϕ::Array{
 
 end
 
-#forces periodicity, assumes the grids have the usual structure.
-#for r/κ chosen interpoaltion grid should never go beyond real grid. If so, it will be treated as periodic.
-#may cause a problemo for mapping island to outside.
-#but this should just be set to zero elsewhere.
+
+"""
+    global_to_local(ind::Int64, grid::AbstractArray{Float64}, x::Float64)
+
+Maps the global grid into t alocal grid defined between 0 and 1.
+"""
 function global_to_local(ind::Int64, grid::AbstractArray{Float64}, x::Float64)
 
     #guard in case point is exactly on grid
@@ -63,7 +65,6 @@ end
 function h00(t::Float64)
 
     return 2*t^3 - 3*t^2 + 1
-    #return (1+2*t)*(1-t)^2
 end
 
 function h10(t::Float64)
@@ -81,6 +82,11 @@ function h11(t::Float64)
     return t^2*(t-1)
 end
 
+"""
+    hb(t::Float64, h::Int64, dt::Float64)
+
+Function that returns the appropriate hermite basis function based on h.
+"""
 function hb(t::Float64, h::Int64, dt::Float64)
     #additional jacobian term is very awkward.
 

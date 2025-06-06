@@ -145,11 +145,11 @@ function init_problem(; q::Function, met::Symbol=:torus, dens::Function=uniform_
         #not sure if this actually works
         return TorProblemT(q=q_prof, met=met_func, dens=dens, isls=[isl], flr=flr, geo=geo)
     else
+        new_isls = []
         if isls[1] != no_isl || length(isls) > 1
             #arguably don't wont to do this for everycase
             #see qfm benchmark for example when this is annoying af.
             #may need a try catch or something
-            new_isls = []
             try
                 for i in 1:length(isls)
                     #isls[i] = inst_island(isls[i], q)

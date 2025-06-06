@@ -43,6 +43,41 @@ function init_island(; w::Float64=NaN, m0::Int64, n0::Int64, qp::Float64=NaN, r0
 end
 
 
+"""
+    sepratrix(α::Float64, isl::IslandT)
+
+Computes the two radial values of the sepratrix for an input α.
+"""
+function sepratrix(α::Float64, isl::IslandT)
+
+    r2diff = sqrt(isl.w^2*(1-sin(isl.m0*α/2)^2))
+
+    return sqrt(-r2diff + isl.r0^2), sqrt(r2diff+isl.r0^2)
+end
+
+
+"""
+    compute_sepratrix(θgrid::AbstractArray{Float64}, isl::IslandT, ζval::Float64=0.0)
+
+Computes the radial values for of the sepratrix for each point in the θgrid.
+"""
+function compute_sepratrix(θgrid::AbstractArray{Float64}, isl::IslandT, ζval::Float64=0.0)
+
+    sep1 = zeros(length(θgrid))
+    sep2 = zeros(length(θgrid))
+
+
+    for i in 1:length(θgrid)
+
+        α = θgrid[i] + isl.n0/isl.m0 * ζval
+        sep_min, sep_max = sepratrix(α, isl)
+
+        sep1[i] = sep_min
+        sep2[i] = sep_max
+    end
+    return sep1, sep2
+end
+
 
 """
     inst_island(isl::IslandT, q::Functions)

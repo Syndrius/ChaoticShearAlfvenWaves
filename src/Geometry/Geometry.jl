@@ -20,6 +20,8 @@ export IslandT
 export ContIslandT
 export inst_island
 export init_island
+export sepratrix
+export compute_sepratrix
 
 
 

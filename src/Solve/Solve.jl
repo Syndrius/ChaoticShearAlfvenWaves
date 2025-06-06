@@ -47,7 +47,7 @@ Constructs the two matrices, solves for the eigenvalues and eigenfunctions then 
 - grids::GridT - grids to solve over.
 - solver::SolverT - struct storing the parameters for solving.
 """
-function compute_spectrum(; prob::ProblemT, grids::GridsT, solver::SolverT)
+function compute_spectrum(; prob::ProblemT, grids::GridsT, solver::SolverT, deriv=false::Bool)
 
     t1 = time()
 
@@ -61,7 +61,6 @@ function compute_spectrum(; prob::ProblemT, grids::GridsT, solver::SolverT)
     @printf("Solving complete, %d eigenvalues found.\n", length(evals))
     display("Post processing...")
 
-    deriv = false # not ideal, not sure if we will ever bother with this again
     evals, ϕ, ϕft = post_process(evals, efuncs, grids, prob.geo, deriv)
 
     display("Finished.")
@@ -81,7 +80,7 @@ Same as compute_spectrum, but uses qfm surfaces.
 - solver::SolverT - struct storing the parameters for solving.
 - surfs::Array{QFMSurfaceT} - array of the qfm surfaces.
 """
-function compute_spectrum_qfm(; prob::ProblemT, grids::GridsT, solver::SolverT, surfs::Array{QFMSurfaceT})
+function compute_spectrum_qfm(; prob::ProblemT, grids::GridsT, solver::SolverT, surfs::Array{QFMSurfaceT}, deriv=false::Bool)
 
     t1 = time()
 
@@ -95,7 +94,6 @@ function compute_spectrum_qfm(; prob::ProblemT, grids::GridsT, solver::SolverT, 
     @printf("Solving complete, %d eigenvalues found.\n", length(evals))
 
     display("Post Processing...")
-    deriv = true # not ideal, not sure if we will ever bother with this again
     @allocated evals, ϕ, ϕft = post_process(evals, efuncs, grids, prob.geo, deriv)
     display("Finished.")
 

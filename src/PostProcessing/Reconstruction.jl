@@ -1,7 +1,7 @@
 """
-    reconstruct_phi(efuncs::Array{ComplexF64, 2}, nevals::Int64, grids::FSSGridsT)
+    reconstruct_phi!(efunc::Array{ComplexF64}, grids::FSSGridsT, ϕ::Array{ComplexF64, 3}, ϕft::Array{ComplexF64, 3}, plan::FFTW.FFTWPlan)
 
-Reconstructs the 1d eigenfunction output back to the 3d grid. Single efunc case.
+Reconstructs the 1d eigenfunction output back to the 3d grid.
 """
 function reconstruct_phi!(efunc::Array{ComplexF64}, grids::FSSGridsT, ϕ::Array{ComplexF64, 3}, ϕft::Array{ComplexF64, 3}, plan::FFTW.FFTWPlan)
 
@@ -9,20 +9,18 @@ function reconstruct_phi!(efunc::Array{ComplexF64}, grids::FSSGridsT, ϕ::Array{
     for i in 1:2:matrix_size(grids)
 
         #note these are the indicies.
-        x1, x2, x3, hs = index_to_grid(i, grids)
+        x1, x2, x3, _ = index_to_grid(i, grids)
         ϕft[x1, x2, x3] = efunc[i]
 
     end
-
     ft_phi!(ϕ, ϕft, grids, plan)
 end
 
 
-
 """
-    reconstruct_phi(efuncs::Array{ComplexF64, 2}, nevals::Int64, grids::FFSGridsT)
+    reconstruct_phi!(efunc::Array{ComplexF64}, grids::FFSGridsT, ϕ::Array{ComplexF64, 3}, ϕft::Array{ComplexF64, 3}, plan::FFTW.FFTWPlan)
 
-Reconstructs the 1d eigenfunction output back to the 3d grid. This case for a single eigenfunction.
+Reconstructs the 1d eigenfunction output back to the 3d grid.
 """
 function reconstruct_phi!(efunc::Array{ComplexF64}, grids::FFSGridsT, ϕ::Array{ComplexF64, 3}, ϕft::Array{ComplexF64, 3}, plan::FFTW.FFTWPlan)
 
@@ -34,20 +32,20 @@ function reconstruct_phi!(efunc::Array{ComplexF64}, grids::FFSGridsT, ϕ::Array{
     for i in 1:4:matrix_size(grids)
 
         #note these are the indicies.
-        x1, x2, x3, hs = index_to_grid(i, grids)
+        x1, x2, x3, _ = index_to_grid(i, grids)
         ϕft[x1, x2, x3] = efunc[i] * exp(1im * m * x2grid[x2])
 
     end
+
     ft_phi!(ϕ, ϕft, grids, plan)
 end
 
 
 
-
 """
-    reconstruct_phi(efuncs::Array{ComplexF64}, grids::FFFGridsT)
+    reconstruct_phi!(efunc::Array{ComplexF64}, grids::FFFGridsT, ϕ::Array{ComplexF64, 3}, ϕft::Array{ComplexF64, 3}, plan::FFTW.FFTWPlan)
 
-Reconstructs the 1d eigenfunction output back to the 3d grid. Only a single efunc.
+Reconstructs the 1d eigenfunction output back to the 3d grid.
 """
 function reconstruct_phi!(efunc::Array{ComplexF64}, grids::FFFGridsT, ϕ::Array{ComplexF64, 3}, ϕft::Array{ComplexF64, 3}, plan::FFTW.FFTWPlan)
 
@@ -68,109 +66,69 @@ function reconstruct_phi!(efunc::Array{ComplexF64}, grids::FFFGridsT, ϕ::Array{
 end
 
 
-
-#######################################################
-#TODO other cases including the derivatives 
-
 """
-    reconstruct_phi(efuncs::Array{ComplexF64, 2}, nevals::Int64, grids::FFFGridsT)
+    reconstruct_phi!(efunc::Array{ComplexF64}, grids::FSSGridsT, ϕ::Array{ComplexF64, 4}, ϕft::Array{ComplexF64, 4}, plan::FFTW.FFTWPlan)
 
 Reconstructs the 1d eigenfunction output back to the 3d grid.
 """
-function reconstruct_phi!(efunc::Array{ComplexF64}, grids::FFFGridsT, ϕ::Array{ComplexF64, 4}, ϕft::Array{ComplexF64, 4}, plan::FFTW.FFTWPlan)    
-    #phi = zeros(ComplexF64, grids.r.N, grids.x2.N, grids.x3.N, 8)
-    #phi = Array{ComplexF64}(undef, grids.r.N, grids.x2.N, grids.x3.N, 8)
-    #maybe one day we will want dphidr???
-    #note that this is the same for both!
+function reconstruct_phi!(efunc::Array{ComplexF64}, grids::FSSGridsT, ϕ::Array{ComplexF64, 4}, ϕft::Array{ComplexF64, 4}, plan::FFTW.FFTWPlan)
 
-    #TODO
 
-    m = grids.x2.pf
-    n = grids.x3.pf
-
-    _, x2grid, x3grid = inst_grids(grids)
-
-    #Is this still working? lol looks pretty good.
-    #this exact form is needed for interpolation.
     for i in 1:1:matrix_size(grids)
-
-        
 
         #note these are the indicies.
         x1, x2, x3, hs = index_to_grid(i, grids)
+        ϕft[x1, x2, x3, hs] = efunc[i]
 
-        ϕ[x1, x2, x3, hs] = efunc[i] * exp(1im * (m * x2grid[x2] + n * x3grid[x3]))
+    end
+    ft_phi!(ϕ, ϕft, grids, plan)
+end
+
+
+"""
+    reconstruct_phi!(efunc::Array{ComplexF64}, grids::FFSGridsT, ϕ::Array{ComplexF64, 4}, ϕft::Array{ComplexF64, 4}, plan::FFTW.FFTWPlan)
+
+Reconstructs the 1d eigenfunction output back to the 3d grid.
+"""
+function reconstruct_phi!(efunc::Array{ComplexF64}, grids::FFSGridsT, ϕ::Array{ComplexF64, 4}, ϕft::Array{ComplexF64, 4}, plan::FFTW.FFTWPlan)
+
+
+    m = grids.x2.pf
+
+    x2grid = periodic_grid(grids.x2)
+
+    for i in 1:matrix_size(grids)
+
+        #note these are the indicies.
+        x1, x2, x3, hs = index_to_grid(i, grids)
+        ϕft[x1, x2, x3, hs] = efunc[i] * exp(1im * m * x2grid[x2])
 
     end
 
     ft_phi!(ϕ, ϕft, grids, plan)
-
 end
 
 
-#this case is for mapping, where we don't need the fft of the eigenfunction
-#perhaps the fft should be done outside this function so that we don't need duplicates of this
-function reconstruct_phi!(efunc::Array{ComplexF64}, grids::FFFGridsT, ϕ::Array{ComplexF64, 4})
-    #phi = zeros(ComplexF64, grids.r.N, grids.x2.N, grids.x3.N, 8)
-    #phi = Array{ComplexF64}(undef, grids.r.N, grids.x2.N, grids.x3.N, 8)
-    #maybe one day we will want dphidr???
-    #note that this is the same for both!
 
-    #TODO
+"""
+    reconstruct_phi!(efunc::Array{ComplexF64}, grids::FFFGridsT, ϕ::Array{ComplexF64, 4}, ϕft::Array{ComplexF64, 4}, plan::FFTW.FFTWPlan)
+
+Reconstructs the 1d eigenfunction output back to the 3d grid.
+"""
+function reconstruct_phi!(efunc::Array{ComplexF64}, grids::FFFGridsT, ϕ::Array{ComplexF64, 4}, ϕft::Array{ComplexF64, 4}, plan::FFTW.FFTWPlan)
+
 
     m = grids.x2.pf
     n = grids.x3.pf
 
     _, x2grid, x3grid = inst_grids(grids)
 
-    #Is this still working? lol looks pretty good.
-    #this exact form is needed for interpolation.
-    for i in 1:1:matrix_size(grids)
-
-        
+    for i in 1:matrix_size(grids)
 
         #note these are the indicies.
         x1, x2, x3, hs = index_to_grid(i, grids)
-
         ϕ[x1, x2, x3, hs] = efunc[i] * exp(1im * (m * x2grid[x2] + n * x3grid[x3]))
 
     end
-
-
+    ft_phi!(ϕ, ϕft, grids, plan)
 end
-
-
-
-"""
-    reconstruct_phi(efuncs::Array{ComplexF64, 2}, nevals::Int64, grids::FFSGridsT)
-
-Reconstructs the 1d eigenfunction output back to the 3d grid. This case for a single eigenfunction.
-"""
-function reconstruct_phi!(efunc::Array{ComplexF64}, grids::FFSGridsT)
-
-    phi = zeros(ComplexF64, grids.r.N, grids.x2.N, grids.x3.count, 4)
-    #maybe one day we will want dphidr???
-    #note that this is the same for both!
-
-    m = grids.x2.pf
-
-    _, x2grid, _, _, _ = instantiate_grids(grids)
-
-    for i in 1:1:matrix_dim(grids)
-
-        #note these are the indicies.
-        x1, x2, x3, hs = index_to_grid(i, grids)
-        phi[x1, x2, x3, hs] = efunc[i] * exp(1im * m * x2grid[x2])
-
-        #if hs == 1
-            #may be the wrong way around!
-            #this doesn't seem to have worked as expected tbh!
-            #hard to tell what is needed here!
-            #phi[:, r, x2, x3] = efuncs[i, :] .* exp(1im * m * x2grid[x2])
-        #end
-    end
-    return phi
-end
-
-
-

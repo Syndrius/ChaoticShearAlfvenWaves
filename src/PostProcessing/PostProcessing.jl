@@ -65,6 +65,8 @@ function post_process(evals::AbstractArray, efuncs::Array{ComplexF64}, grids::Gr
         #converts the eigenfunction back into the 3d ϕ, including its fourier transformation in x2 and x3
         reconstruct_phi!(efuncs[:, i], grids, ϕp, ϕpft, plan)
 
+        #ft_phi!(ϕp, ϕft, grids, plan)
+
         #finds the dominant mode and its radial location for continuum reconstruction.
         x1ind, mode_lab = label_mode(ϕpft, grids, x1marray, ϕmarray)
 
