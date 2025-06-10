@@ -12,6 +12,22 @@ function island_coords_q(κ::Float64, isl::IslandT)
     return q, dq
 end
 
+#this is a terrible solution but oh wel
+function island_coords_21a_q(κ::Float64)
+
+    w = 0.03
+    m0 = 2
+    
+    K, E = Elliptic.ellipke(κ)
+
+    q = w / (m0*π) * K
+
+    dq = w / (m0*π) * (E - (1-κ) * K) / (2*(1-κ)*κ)
+
+    return q, dq
+end
+
+
 #Toroidal equivalent ot eh island coords q, allows for direct comparison.
 function island_equiv_q(r::Float64, isl::IslandT)
 

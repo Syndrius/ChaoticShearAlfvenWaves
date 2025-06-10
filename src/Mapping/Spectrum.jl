@@ -144,20 +144,20 @@ function qfm_spectrum_to_isl(dir_base::String, isl_grids::GridsT, surfs_dir::Str
 
     for (i, θ) in enumerate(θgrid)
         #assumes ζ=0, probbaly ok
-        sep_min, sep_max = sepratrix(θ, isl)
+        sep_min, sep_max = sepratrix(θ, prob.isls[1])
         rmin[i] = sep_min
         rmax[i] = sep_max
     end
 
     CT = CoordTransformT()
-    smin, smax, ϑsep = map_sepratrix(rmin, rmax, θgrid, isl, CT, surf_itp, sd)
+    smin, smax, ϑsep = map_sepratrix(rmin, rmax, θgrid, prob.isls[1], CT, surf_itp, sd)
 
     sep_min = minimum(smin)
     sep_max = maximum(smax)
 
     mode_count = 1
 
-    coord_map = qfm_to_isl_coord_map(κgrid, ᾱgrid, τgrid, isl, CT, surf_itp, sd)
+    coord_map = qfm_to_isl_coord_map(κgrid, ᾱgrid, τgrid, prob.isls[1], CT, surf_itp, sd)
     for i in 1:length(evals.ω)
 
         #first remove evals far from island
@@ -187,7 +187,7 @@ function qfm_spectrum_to_isl(dir_base::String, isl_grids::GridsT, surfs_dir::Str
         
         efunc_map!(ϕ_isl, isl_grids.x1.N, isl_grids.x2.N, isl_grids.x3.N, ϕ_qfm, sgrid, ϑgrid, φgrid, coord_map)
         
-        PostProcessing.ft_phi!(ϕ_is, ϕ_islft, isl_grids, plan_isl)
+        PostProcessing.ft_phi!(ϕ_isl, ϕ_islft, isl_grids, plan_isl)
 
         κind, mode_lab = PostProcessing.label_mode(ϕ_islft, isl_grids, κmarray, ϕ_islmarray)
 

@@ -114,8 +114,14 @@ function init_problem(; q::Function, met::Symbol=:torus, dens::Function=uniform_
             display("Please specify m0, n0, r0 and either w or A.")
             return
         end
+        #this is beyond useless now, JLD2 cannot save anon functions.
         isl_q_prof(κ::Float64) = island_coords_q(κ, isl)
-        return IslProblemT(q=isl_q_prof, met=island_metric!, dens=dens, isls=[isl], flr=flr, geo=geo)
+        #return IslProblemT(q=isl_q_prof, met=island_metric!, dens=dens, isls=[isl], flr=flr, geo=geo)
+        #we have now just hardcoded the island q-profile for specific islands,
+        #as jld2 cannot write the anon-function
+        #this is an awful solution 
+        #TODO
+        return IslProblemT(q=q, met=island_metric!, dens=dens, isls=[isl], flr=flr, geo=geo)
     elseif met == :slab #this may not be possible tbh!
         met_func = slab_metric!
     else
