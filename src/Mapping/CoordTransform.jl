@@ -5,7 +5,7 @@
 Maps island coordinates (κ, ᾱ, τ) into the equivalent toroidal coordinates (r, θ, ζ).
 Assumes that κ < 1.
 """
-function isl_in_coords_to_tor(κ::Float64, ᾱ::Float64, τ::Float64, isl::IslandT)
+function rad_isl_in_coords_to_tor(κ::Float64, ᾱ::Float64, τ::Float64, isl::IslandT)
 
     #assumes κ < 1, throughout!
     sinβ = Elliptic.Jacobi.sn(2*Elliptic.K(κ) * ᾱ / π, κ)
@@ -39,6 +39,45 @@ function isl_in_coords_to_tor(κ::Float64, ᾱ::Float64, τ::Float64, isl::Isla
     return r, θ, ζ
 end
 
+
+function isl_in_coords_to_tor(κ::Float64, ᾱ::Float64, τ::Float64, isl::IslandT)
+
+    #assumes κ < 1, throughout!
+    sinβ = Elliptic.Jacobi.sn(2*Elliptic.K(κ) * ᾱ / π, κ)
+    #may need to make sure the domain of ᾱ is correct
+    α = mod(2/isl.m0 * asin(sqrt(κ)*sinβ), 2π)
+    #α = 2/isl.m0 * asin(sqrt(κ)*sinβ)
+
+    #α = 2/isl.m0 * asin(sqrt(κ)*Elliptic.Jacobi.sn(2*Elliptic.K(κ) * ᾱ / π, κ))
+
+    θ = mod(α + τ/isl.q0, 2π)
+
+    ζ = mod(τ, 2π)
+
+
+    #abs herre prevents cases with ~-e-20
+    r2diff = sqrt(abs(isl.w^2 * (κ - sin(isl.m0*α/2)^2)))
+
+    Δψ = sqrt(abs(isl.w^2/4 * (κ - sin(isl.m0*α/2)^2)))
+
+    #r2diff = sqrt(isl.w^2*(κ - sin(isl.m0*α /2)^2))
+
+    #split the solution into the different α quadrants
+    if α < π/2
+        #first quad, r>r0
+        #r = sqrt(+r2diff + isl.r0^2)
+        ψ = Δψ + isl.ψ0
+    elseif α < 3π/2
+        #second or third quad r<r0
+        #r = sqrt(-r2diff+isl.r0^2)
+        ψ = -Δψ + isl.ψ0
+    else 
+        #fourth quad, r > r0
+        #r = sqrt(+r2diff+isl.r0^2)
+        ψ = Δψ + isl.ψ0
+    end
+    return ψ, θ, ζ
+end
 
 """
     tor_coords_to_qfm(r::Float64, θ::Float64, ζ::Float64, CT::CoordTransformT, surf_itp::SurfaceITPT, sd::TempSurfT) 

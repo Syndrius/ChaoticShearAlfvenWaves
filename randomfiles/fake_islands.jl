@@ -12,12 +12,19 @@ function inside_island_mode(κ, ᾱ, φ)
     if κ > 1
         return 0
     end
-    #return exp(-(κ-0.7)^2/0.01) * exp(1im * m * ᾱ)
-    return (-4*(κ-0.5)^2+1)*exp(1im * m * ᾱ)
-    #return (-4*(κ-0.5)^2+1)*cos(m * ᾱ)
+    f = (-4*(κ-0.5)^2+1)*exp(1im * m * ᾱ)
+    dfdκ = -8 * (κ - 0.5) * exp(1im*m*ᾱ)
+    dfdᾱ = 1im*m*(-4*(κ-0.5)^2+1)*exp(1im * m * ᾱ)
+    dfdφ = 0.0
+    dfdκdᾱ = -8*1im*m* (κ - 0.5) * exp(1im*m*ᾱ)
+    dfdκdφ = 0.0
+    dfdᾱdφ = 0.0
+    dfdκdᾱdφ = 0.0
+
+    return [f, dfdκ, dfdᾱ, dfdφ, dfdκdᾱ, dfdκdφ, dfdᾱdφ, dfdκdᾱdφ]
+
 end
-
-
+#%%
 function outside_island_mode(κ, ᾱ, φ)
     m=2
     if κ < 1
@@ -30,12 +37,12 @@ end
 
 function create_island_mode(κgrid, ᾱgrid, φgrid, inside)
 
-    ϕ_isl = zeros(ComplexF64, length(κgrid), length(ᾱgrid), length(φgrid))
+    ϕ_isl = zeros(ComplexF64, length(κgrid), length(ᾱgrid), length(φgrid), 8)
 
     if inside
 
         for (i, κ) in enumerate(κgrid), (j, ᾱ) in enumerate(ᾱgrid), (k, φ) in enumerate(φgrid)
-            ϕ_isl[i, j, k] = inside_island_mode(κ, ᾱ, φ)
+            ϕ_isl[i, j, k, :] .= inside_island_mode(κ, ᾱ, φ)
         end
     else
         #κgrid = LinRange(0, 5, Nκ)
@@ -67,23 +74,23 @@ function map_contour(ϕ, mapgrids)
 end
 #%%
 
-isl = init_island(m0=2, n0=-1, w=0.03, r0=0.5, qp=2.0)
+isl = init_island(m0=2, n0=-1, w=0.03, ψ0=0.5, qp=2.0)
 isl = MID.Geometry.inst_island(isl)
 #%%
 Nκ = 500
 Nᾱ = 100
 Nφ = 10
-κf = LinRange(0, 0.999, Nκ)
+κf = collect(LinRange(0, 0.999, Nκ))
 ᾱf = LinRange(0, 2π, Nᾱ+1)[1:end-1]
 φf = LinRange(0, 2π, Nφ+1)[1:end-1]
 
 #idealised island mode, created in island geometry.
 ϕf = create_island_mode(κf, ᾱf, φf, true);
-contourf(ᾱf, κf, real.(ϕf[:, :, 1]))
+size(ϕf)
+contourf(ᾱf, κf, real.(ϕf[:, :, 1, 1]))
 #%%
 
 #now we transform into toroidal coordinates
-#this being a mapped grid is going to cause problemos
 κgrid = init_grid(type=:rf, N=Nκ, stop=0.999)
 ᾱgrid = init_grid(type=:af, N=Nᾱ) #probs no pf for now, shouldn't matter
 φgrid = init_grid(type=:af, N=Nφ) #probs no pf for now, shouldn't matter
@@ -96,10 +103,18 @@ rgrid = init_grid(type=:rf, N=Nr)
 ζgrid = init_grid(type=:af, N=Nζ)
 tor_grids = init_grids(rgrid, θgrid, ζgrid)
 #tor_mgrids = MIDIslands.Mapping.MapGridsT(Nx1=Nr, x1max=1.0, Nx2=Nθ, Nx3=Nζ)
-
-
-ϕtor = map_isl_to_tor(tor_grids, ϕf, isl_grids, isl);
 #%%
+#this is backwards.
+#need to reimplement the other one for this to work.
+#however, 
+#hermite makes this difficult so probabably not worth the effort
+tor_to_isl_cm = MID.Mapping.tor_to_isl_coord_map(κf, ᾱf, φf, isl);
+#%%
+#should be using ψ now.
+ϕtor = zeros(ComplexF64, Nr, Nθ, Nζ); #fkn rip, cannot make this one have the 8. -> wont be able to go the other way. Unless we interpolate the deriv?
+MID.Mapping.efunc_map!(ϕtor, Nr, Nθ, Nζ, ϕf, κf, ᾱf, φf, tor_to_isl_cm)
+#%%
+
 
 #seems to be ok, not convinced tbh
 potential_plot(ϕtor, tor_grids)
