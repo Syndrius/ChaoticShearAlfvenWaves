@@ -35,7 +35,7 @@ B is assumed to be in the form (B^r, B^x2, B^x3) with
 
 This version does not take a quadratic form, this means the behaviour near r=0 will be cooked, requires a restricted grid.
 """
-function compute_B!(B::BFieldT, met::MetT, q_prof::Function, isls::Array{IslandT}, x1::Float64, x2::Float64, x3::Float64)
+function rad_compute_B!(B::BFieldT, met::MetT, q_prof::Function, isls::Array{IslandT}, x1::Float64, x2::Float64, x3::Float64)
 
     q, dq = q_prof(x1)
 
@@ -175,10 +175,12 @@ function island_amplitude(x1::Float64)
 
     #case where this function is not included
     #useful to distinguish problemo's between GAM and between axis.
-    #return 1, 0
+    #with flux this will take some more thought, unless we just take ψ to be between (0, 1)
+    #not unreasnable tbh
+    return 1, 0
 
     #we may want to try this for a flatter profile over the island
-    return 1-16*(x1-1/2)^4, -64*(x1-1/2)^3
+    #return 1-16*(x1-1/2)^4, -64*(x1-1/2)^3
 
 end
 
@@ -189,6 +191,8 @@ end
 Computes the magnetic field for the island case. This requires a specific q-profile and a conversion between r and flux ψ.
 """
 function compute_B_isl!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, κ::Float64, ᾱ::Float64, τ::Float64)
+
+    #no longer used
 
 
     #I think to remove this function, we would have to swap from κ to either r̄ or χ
@@ -275,24 +279,43 @@ B is assumed to be in the form (B^r, B^x2, B^x3) with
 This version does not take a quadratic form, this means the behaviour near r=0 will be cooked, requires a restricted grid.
 This has been changed to ψ, needs verification.
 """
-function flux_compute_B!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, ψ::Float64, x2::Float64, x3::Float64)
+function compute_B!(B::BFieldT, met::MetT, q_prof::Function, isls::Array{IslandT}, ψ::Float64, x2::Float64, x3::Float64)
 
     q, dq = q_prof(ψ)
 
-    arg = isl.m0 * x2 + isl.n0 * x3
+    #arg = isl.m0 * x2 + isl.n0 * x3
+    amp, damp = island_amplitude(ψ)
+
+    B.B[1] = 0.0
+    B.dB[1, :] .= 0.0
+    for isl in isls
+        B.B[1] += isl.A * amp * isl.m0 * sin(isl.m0 * x2 + isl.n0 * x3)
+        B.dB[1, 1] += isl.A * damp * isl.m0 * sin(isl.m0 * x2 + isl.n0 * x3)
+        B.dB[1, 2] += isl.A * amp * isl.m0^2 * cos(isl.m0 * x2 + isl.n0 * x3)
+        B.dB[1, 3] += isl.A * amp * isl.m0 * isl.n0 * cos(isl.m0 * x2 + isl.n0 * x3)
+    end
+
 
     #assumes B0=1
-    B.B[1] = 1 / (met.J[1]) * isl.A * isl.m0 * sin(arg)
+    B.B[1] /= met.J[1]
+    B.dB[1, 1] -= B.B[1] * met.dJ[1] / met.J[1]
+
+    B.dB[1, 2] /= met.J[1]
+    B.dB[1, 2] -= B.B[1] * met.dJ[2] / met.J[1]
+
+    B.dB[1, 3] /= met.J[1]
+    B.dB[1, 3] -= B.B[1] * met.dJ[3] / met.J[1] #typically dJ/dx3 = 0.
+
                 
     B.B[2] = 1 / (met.J[1] * q) 
     B.B[3] = 1 / (met.J[1])
 
-    B.dB[1, 1] = ( - isl.A * isl.m0 * sin(arg) * met.dJ[1] / met.J[1]^2)
+    #B.dB[1, 1] = ( - isl.A * isl.m0 * sin(arg) * met.dJ[1] / met.J[1]^2)
 
-    B.dB[1, 2] = (1 / (met.J[1]) * isl.A * isl.m0^2 * cos(arg)
-                    - isl.A * isl.m0 * sin(arg) * met.dJ[2] / met.J[1]^2)
+    #B.dB[1, 2] = (1 / (met.J[1]) * isl.A * isl.m0^2 * cos(arg)
+                    #- isl.A * isl.m0 * sin(arg) * met.dJ[2] / met.J[1]^2)
 
-    B.dB[1, 3] = isl.n0 / (met.J[1]) * isl.A * isl.m0 * cos(arg)
+    #B.dB[1, 3] = isl.n0 / (met.J[1]) * isl.A * isl.m0 * cos(arg)
 
 
 
@@ -311,9 +334,9 @@ function flux_compute_B!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, 
     magnitude_B!(B, met)
     
     #unsure if there should be extra approximation here as Br is a pert and therefore small?
-    B.b[1] = B.B[1]/B.mag_B
-    B.b[2] = B.B[2]/B.mag_B
-    B.b[3] = B.B[3]/B.mag_B
+    B.b[1] = B.B[1]/B.mag_B[1]
+    B.b[2] = B.B[2]/B.mag_B[1]
+    B.b[3] = B.B[3]/B.mag_B[1]
 end
 
 

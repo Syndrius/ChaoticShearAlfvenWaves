@@ -30,6 +30,7 @@ Current term is back on, it is working fine, may need higher res for best result
  - Change q-profiles to just accept a polynomial coefficeints, that way we don't need a billion, -> provided our island q thing works, this shouldn't be to bad.
  - The order of includes in this file has become very precarious, purpose of some modules is perhaps not clear enough
  - we may benefit from more, but smaller modules one day. This has become especially apparent with Mapping, especially given that the main mapping functions are in post-processing, which could be a mistake.
+ - Ideally the way inputs are done would be changed, this is mainly an issue with writing anon functions to file with JLD2
  
  
 

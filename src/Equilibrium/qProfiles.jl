@@ -40,6 +40,30 @@ function island_equiv_q(r::Float64, isl::IslandT)
     return q, dq
 end
 
+#this is a disaster
+function flux_island_equiv_q(ψ::Float64, isl::IslandT)
+
+    q0 = isl.q0
+    qp = isl.qp #chosen pretty arbitrarily based on vibes of continuum.
+    ψ0 = isl.r0
+    #this form is to allows analytical integration in the construction of island coordinates.
+    q = 1 / (1 / q0 - qp / (2*q0^2*r0) * (r^2-r0^2))
+    dq = 4*qp*q0^2*r*r0 / (2*q0*r0 - qp * (r^2-r0^2))^2
+    return q, dq
+end
+
+function flux_island_21_q(ψ::Float64)
+    #this will try to match he case of the toroidal 21a island.
+    r0 = 0.5
+    q0 = 2/1
+    qp = 2.0
+    ψ0 = 0.5
+    #this form is to allows analytical integration in the construction of island coordinates.
+    q = 1 / (1/q0 - qp/q0^2*(ψ - ψ0))
+    dq = qp/q0^2 * 1 / (1/q0 - qp/q0^2 * (ψ - ψ0))^2
+    return q, dq
+end
+
 #JLD2 cannot save anonymouse functions, so we probably need to hard code them unfort
 function island_21_q(r::Float64)
     q0 = 2/1

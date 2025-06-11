@@ -17,6 +17,12 @@
 #think that should probably be our next go.
 #this will obviously be a complete fkn nightmare with qfm
 #but we are really grasping at straws.
+#flux surfaces do seem to behave better, specifically they are symetric and become flat at r=0
+#when we use flux coordinates.
+#perhaps this is enough to make this work?
+#trying this with flux will cause fkn heaps of problemos though
+#in particular the coordinate transformation to islands.
+#%%
 using MID
 using MIDViz
 using Plots; plotlyjs()
@@ -49,11 +55,11 @@ continuum_plot(evals, grids)
 
 isl1 = init_island(m0=3, n0=-2, A=0.000)
 isl2 = init_island(m0=7, n0=-5, A=0.003)
-isl3 =  init_island(m0=8, n0=-5, A=0.002)
-isl4 =  init_island(m0=6, n0=-5, A=0.001)
+isl3 =  init_island(m0=8, n0=-5, A=0.000)
+isl4 =  init_island(m0=6, n0=-5, A=0.000)
 
 isls = [isl1, isl2, isl3, isl4]
-prob = init_problem(q = cyl_qfm_q, geo=geo, met=:slab, isls=isls)
+prob = init_problem(q = cyl_qfm_q, geo=geo, met=:cylinder, isls=isls)
 #%%
 
 Ntraj = 100;
