@@ -2,7 +2,7 @@
 #using qfm surfaces for a single island to see what happens
 using MID
 using MIDViz
-using Statisitcs
+using Statistics
 using JLD2
 using Plots; gr()
 using Plots; plotlyjs()
@@ -139,3 +139,6 @@ ind = find_ind(evals, 0.190136)
 potential_plot(ϕft, grids, ind)
 
 contour_plot(ϕ, grids, ind=ind)
+
+
+#%%
