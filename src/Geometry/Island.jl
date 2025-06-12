@@ -70,13 +70,20 @@ end
 
 Computes the two radial values of the sepratrix for an input α.
 """
-function sepratrix(α::Float64, isl::IslandT)
+function rad_sepratrix(α::Float64, isl::IslandT)
 
     r2diff = sqrt(isl.w^2*(1-sin(isl.m0*α/2)^2))
 
     return sqrt(-r2diff + isl.r0^2), sqrt(r2diff+isl.r0^2)
 end
 
+
+function sepratrix(α::Float64, isl::IslandT)
+
+    Δψ = sqrt(isl.w^2/4*(1-sin(isl.m0*α/2)^2))
+
+    return isl.ψ0-Δψ, isl.ψ0+Δψ
+end
 
 """
     compute_sepratrix(θgrid::AbstractArray{Float64}, isl::IslandT, ζval::Float64=0.0)

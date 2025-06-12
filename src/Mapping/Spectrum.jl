@@ -18,6 +18,8 @@ function tor_spectrum_to_isl(dir_base::String, isl_grids::GridsT)
 
     prob, tor_grids, _ = inputs_from_file(dir=dir_base)
 
+    isl = prob.isls[1]
+
     evals = evals_from_file(dir=dir_base)
 
     rgrid, θgrid, ζgrid = inst_grids(tor_grids)
@@ -28,7 +30,7 @@ function tor_spectrum_to_isl(dir_base::String, isl_grids::GridsT)
     mode_labs = Tuple{Int64, Int64}[]
 
     #mostly use fff so ft is not needed, but this keeps the process general.
-    ϕ_tor, ϕ_torft = PostProcessing.allocate_phi_arrays(tor_grids, derov=true)
+    ϕ_tor, ϕ_torft = PostProcessing.allocate_phi_arrays(tor_grids, deriv=true)
 
     ϕ_isl, ϕ_islft = PostProcessing.allocate_phi_arrays(isl_grids, deriv=false)
 
@@ -82,7 +84,7 @@ function tor_spectrum_to_isl(dir_base::String, isl_grids::GridsT)
 
         #may need to check the plan is not in place or anything stupid.
         #i.e. maybe we write ϕ_isl to file, then fft in place and do the other stuff
-        PostProcessing.ft_phi!(ϕ_is, ϕ_islft, isl_grids, plan_isl)
+        PostProcessing.ft_phi!(ϕ_isl, ϕ_islft, isl_grids, plan_isl)
 
         κind, mode_lab = PostProcessing.label_mode(ϕ_islft, isl_grids, κmarray, ϕ_islmarray)
 
