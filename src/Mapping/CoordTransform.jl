@@ -56,7 +56,7 @@ function isl_in_coords_to_tor(κ::Float64, ᾱ::Float64, τ::Float64, isl::Isla
 
 
     #abs herre prevents cases with ~-e-20
-    r2diff = sqrt(abs(isl.w^2 * (κ - sin(isl.m0*α/2)^2)))
+    #r2diff = sqrt(abs(isl.w^2 * (κ - sin(isl.m0*α/2)^2)))
 
     Δψ = sqrt(abs(isl.w^2/4 * (κ - sin(isl.m0*α/2)^2)))
 
