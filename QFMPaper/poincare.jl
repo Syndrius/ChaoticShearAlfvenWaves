@@ -2,27 +2,28 @@
 
 using MID
 using MIDViz
-using LaTeXStrings
+#using LaTeXStrings
 using JLD2
 using Plots; gr()
 #%%
+function cyl_qfm_q(ψ::Float64)
 
-k1 = 0.0019
-k2 = 0.0007
-k3 = 0.0013
-geo = init_geo(R0=4.0)
-isl1 = init_island(m0=7, n0=-4, A=k1/7)
-isl2 = init_island(m0=5, n0=-3, A=k2/5)
-isl3 = init_island(m0=8, n0=-5, A=k3/8) #unsure if we will want this one as well
+    return 1.0 + ψ, 1.0
+end
+#%%
+geo = init_geo(R0=10.0)
+isl1 = init_island(m0=7, n0=-5, A=0.006/7)
+isl2 = init_island(m0=3, n0=-2, A=0.004/3)
+isl3 = init_island(m0=8, n0=-5, A=0.006/8)
 
 isls = [isl1, isl2, isl3]
 
-prob = init_problem(geo=geo, q=low_shear_qfm_q, isls=isls)
+prob = init_problem(geo=geo, q=cyl_qfm_q, isls=isls, met=:cylinder)
 #%%
 Ntraj = 100
-rlist = collect(LinRange(0.67, 0.97, Ntraj));
+rlist = collect(LinRange(0.2, 0.8, Ntraj));
 #rlist = collect(LinRange(0.1, 1.0, Ntraj));
-Nlaps = 500;
+Nlaps = 800;
 
 x, z = poincare_plot(prob, Nlaps, Ntraj, rlist)#, color=:black)
 
