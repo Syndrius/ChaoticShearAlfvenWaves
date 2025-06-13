@@ -135,13 +135,13 @@ function met_transform!(tor_met::MetT, qfm_met::MetT, CT::CoordTransformT)
     for i in 1:3, j in 1:3, μ in 1:3, ν in 1:3
         #JM[i, μ] = J^i_μ
         #g_{μν} = JM^i_μ g_{ij} JM^j_ν
-        qfm_met.gl[μ, ν] += CT.JM[i, μ] * tor_met.gl[i, j] * CT.JM[j, ν] 
+        qfm_met.gl[μ, ν] += CT.JM[i, μ] * CT.JM[j, ν] * tor_met.gl[i, j] 
 
         #note that for inverse JM_inv[μ, i] = (J^i_μ)^{-1} = (J^{-1})^μ_i
         #explaination above is not clear, but we have to swap the indicies here...
         #index flipping here is for the inverse.
         #g^{μν} = JM_i^μ g_{ij} JM_j^ν
-        qfm_met.gu[μ, ν] += CT.JM_inv[μ, i] * tor_met.gu[i, j] * CT.JM_inv[ν, j]
+        qfm_met.gu[μ, ν] += CT.JM_inv[μ, i] * CT.JM_inv[ν, j] * tor_met.gu[i, j]
 
         for σ in 1:3
 

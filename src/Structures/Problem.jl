@@ -42,8 +42,9 @@ One of the main inputs for matrix construction functions.
 """
 @kwdef struct TorProblemT <: ProblemT
     q :: Function 
-    met :: Function = toroidal_metric!
+    met :: Function = rad_toroidal_metric!
     dens :: Function = uniform_dens
+    B :: Function = rad_compute_B!
     isls :: Array{IslandT} = IslandT[]
     geo :: GeoParamsT
     flr :: FLRT = no_flr
@@ -63,6 +64,7 @@ Struct for problems using island coordinates, defined for multiple dispatch. Les
     q :: Function # This will automatically be the island q
     met :: Function = island_metric!
     dens :: Function = uniform_dens
+    B :: Function = isl_compute_B!
     geo :: GeoParamsT
     flr :: FLRT = no_flr
     isls :: Array{IslandT} #need at least m,n, r0 and A/w., should always be a single island.
@@ -71,7 +73,7 @@ end
 
 
 #constant island storing the case without an island.
-const no_isl = IslandT(m0=1.0, n0=1.0, A=0.0)
+const no_isl = RadIslandT(m0=1.0, n0=1.0, A=0.0)
 #constant flr for cases without any flr corrections.
 const no_flr = FLRT(δ=0.0, ρ_i=0.0, δ_e=0.0)
 
@@ -88,8 +90,11 @@ Main input for matrix construction functions.
 - geo::GeoParamsT - Struct storing geometrical parameters.
 - flr::FLRT=no_flr - Struct storing finite larmor effects, defaults to no corrections.. 
 """
-function init_problem(; q::Function, met::Symbol=:torus, dens::Function=uniform_dens, isl::IslandT=no_isl, isls::Array{IslandT}=IslandT[], geo::GeoParamsT, flr::FLRT=no_flr)
+function init_problem(; q::Function, met::Symbol=:torus, B::Function=rad_compute_B!, dens::Function=uniform_dens, isl::IslandT=no_isl, isls::Array{IslandT}=IslandT[], geo::GeoParamsT, flr::FLRT=no_flr)
 
+    #this function is a fkn disaster again. need to have a flux boolean I think!
+    #need to actually just change how this works, ideally so we can instantiate the problem later!
+    #in particular the islands and the q-profiles.
     #puts island into array for consistent usage throughout code.
     if isempty(isls)
         isls = [isl]
@@ -100,7 +105,7 @@ function init_problem(; q::Function, met::Symbol=:torus, dens::Function=uniform_
     #I think in the long term future, different compute B functions would be specified in the metric
     #it is somewhat restrictive atm, assumes certain properties of the coordinates which may not always be true
     if met == :torus
-        met_func = toroidal_metric!
+        met_func = rad_toroidal_metric!
     elseif met == :cylinder
         met_func = cylindrical_metric!
         #bit annoying that we have to specify the q-profile, we may want to put a default one of fu-dam.
@@ -121,7 +126,7 @@ function init_problem(; q::Function, met::Symbol=:torus, dens::Function=uniform_
         #as jld2 cannot write the anon-function
         #this is an awful solution 
         #TODO
-        return IslProblemT(q=q, met=island_metric!, dens=dens, isls=[isl], flr=flr, geo=geo)
+        return IslProblemT(q=q, met=island_metric!, dens=dens, isls=[isl], flr=flr, geo=geo, B=isl_compute_B!)
     elseif met == :slab #this may not be possible tbh!
         met_func = slab_metric!
     else
@@ -149,7 +154,7 @@ function init_problem(; q::Function, met::Symbol=:torus, dens::Function=uniform_
         display("are we here")
         q_prof(r::Float64) = island_equiv_q(r, isl)
         #not sure if this actually works
-        return TorProblemT(q=q_prof, met=met_func, dens=dens, isls=[isl], flr=flr, geo=geo)
+        return TorProblemT(q=q_prof, met=met_func, dens=dens, isls=[isl], flr=flr, geo=geo, B=B)
     else
         new_isls = []
         if isls[1] != no_isl || length(isls) > 1
@@ -168,7 +173,7 @@ function init_problem(; q::Function, met::Symbol=:torus, dens::Function=uniform_
             end
 
         end
-        return TorProblemT(q=q, met=met_func, dens=dens, isls=new_isls, flr=flr, geo=geo)
+        return TorProblemT(q=q, met=met_func, dens=dens, isls=new_isls, flr=flr, geo=geo, B = B)
     end 
 
 end

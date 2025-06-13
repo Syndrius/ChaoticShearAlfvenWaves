@@ -17,6 +17,8 @@ using LinearAlgebra
 include("Island.jl")
 
 export IslandT
+export RadIslandT
+export FluxIslandT
 export ContIslandT
 export inst_island
 export init_island
@@ -28,7 +30,8 @@ export compute_sepratrix
 include("Metric.jl")
 
 export MetT
-export toroidal_metric!
+export rad_toroidal_metric!
+export flux_toroidal_metric!
 export no_delta_metric!
 export diagonal_toroidal_metric!
 export flux_toroidal_metric!
@@ -38,10 +41,11 @@ export island_metric!
 
 
 
-include("Flux.jl")
+include("FluxConversion.jl")
 
 export f2r
 export r2f
+export convert_island
 
 
 end

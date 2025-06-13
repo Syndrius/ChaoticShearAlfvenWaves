@@ -28,7 +28,7 @@ end
 
 Function that fills out the MetT struct for toroidal geometry. Metric elements taken from Energetic Particles in Tokamak Plasmas by Sergai Sharapov. Straight field line coordinates are radius (r), generalised poloidal angle (θ) and generalised toroidal angle (ζ), equal to negative of true toroidal angle. Additionally we assume low shear and approximate Δ' ≈ r/(4*R0).
 """
-function toroidal_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
+function rad_toroidal_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
     
     #now lets try without the manual entries fk me. 
     Δp = r/(4*R0)
@@ -157,7 +157,7 @@ end
 
 Function that fills out the MetT structure for magnetic island striaght field line geometry. Based on Konies et al 2024. κ is the radial variable, measure from island center, ᾱ is the striaghtened helical angle and φ is a typical toroidal angle. This assumed the original geometry was cylindrical.
 """
-function island_metric!(met::MetT, κ::Float64, ᾱ::Float64, φ::Float64, R0::Float64, isl::IslandT)
+function island_metric!(met::MetT, κ::Float64, ᾱ::Float64, φ::Float64, R0::Float64, isl::RadIslandT)
 
     #derivs have all been checked
     #assuming original expressions are correct
@@ -587,7 +587,7 @@ end
 
 Cylindrical limit of toroidal metric, equivalent to taking R0→∞.
 """
-function cylindrical_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
+function rad_cylindrical_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
     #this is regular old cylindrical for comparing our weak form
 
     met.J[1] = r * R0
@@ -614,6 +614,38 @@ function cylindrical_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0
 
 end
 
+function flux_cylindrical_metric!(met::MetT, ψ::Float64, θ::Float64, ζ::Float64, R0::Float64)
+        #this is regular old cylindrical for comparing our weak form
+
+    r = sqrt(2*ψ)
+
+    met.J[1] = R0
+
+    met.gl[1, 1] = 1/r^2
+
+    met.gl[2, 2] = r^2
+
+    met.gl[3, 3] = R0^2
+
+
+    met.gu[1, 1] = r^2
+
+    met.gu[2, 2] = 1/r^2
+
+    met.gu[3, 3] = 1/R0^2
+
+
+    met.dgl[1, 1, 1] = -2 / r^3
+    met.dgl[2, 2, 1] = 2*r
+
+    met.dJ[1] = R0
+
+    met.dgu[1, 1, 1] = 2*r
+    met.dgu[2, 2, 1] = -2 / r^3
+
+end
+
+
 
 """
     flux_toroidal_metric!(met::MetT, ψ::Float64, θ::Float64, ζ::Float64, R0::Float64)
@@ -625,6 +657,7 @@ function flux_toroidal_metric!(met::MetT, ψ::Float64, θ::Float64, ζ::Float64,
 
     #this may not actually fill in every part of the metric yet.
     #just the parts needed for island_cont.
+    #TODO
 
     r = sqrt(2*ψ) #B0=1
     dψdr = r 

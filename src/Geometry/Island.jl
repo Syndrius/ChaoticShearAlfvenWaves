@@ -1,4 +1,6 @@
 
+#maybe better if this was the default island case with m0, n0 and A. and the others are only used if needed.
+abstract type IslandT end
 
 """
 Struct storing the island parameters. Only m0, n0 and one of A or w are required.
@@ -13,7 +15,18 @@ Island takes form A*sin(m0*θ + n0*ζ) so m0 and n0 should have different sign.
 - r0::Float64=NaN - Radial location of island.
 - w::Float64=NaN - Island width in units of r^2/2.
 """
-@kwdef struct IslandT
+@kwdef struct RadIslandT <: IslandT
+    m0 :: Int64 
+    n0 :: Int64
+    A :: Float64 = NaN
+    q0 :: Float64 = NaN
+    qp :: Float64 = NaN
+    r0 :: Float64 = NaN
+    w :: Float64 = NaN
+end
+
+
+@kwdef struct FluxIslandT <: IslandT
     m0 :: Int64 
     n0 :: Int64
     A :: Float64 = NaN
@@ -29,14 +42,19 @@ end
 
 Initialises the island structure. Many of the extra parameters are filled in once the problem is fully defined.
 """
-function init_island(; w::Float64=NaN, m0::Int64, n0::Int64, qp::Float64=NaN, r0::Float64=NaN, A::Float64=NaN)  
+function init_island(; w::Float64=NaN, m0::Int64, n0::Int64, qp::Float64=NaN, r0::Float64=NaN, A::Float64=NaN, flux::Bool=false, ψ0::Float64=NaN)
 
     if isnan(w) && isnan(A)
         display("Please define the island width or amplitude")
         return 0
     end
     
-    isl = IslandT(m0=m0, n0=n0, A=A, q0 = -m0/n0, qp=qp, r0 = r0, w=w)
+    
+    if flux
+        isl = FluxIslandT(m0=m0, n0=n0, A=A, q0 = -m0/n0, qp=qp, ψ0 = ψ0, w=w)
+    else 
+        isl = RadIslandT(m0=m0, n0=n0, A=A, q0 = -m0/n0, qp=qp, r0 = r0, w=w)
+    end
 
     return isl
 
@@ -44,15 +62,27 @@ end
 
 
 """
-    sepratrix(α::Float64, isl::IslandT)
+    sepratrix(α::Float64, isl::RadIslandT)
 
 Computes the two radial values of the sepratrix for an input α.
 """
-function sepratrix(α::Float64, isl::IslandT)
+function sepratrix(α::Float64, isl::RadIslandT)
 
     r2diff = sqrt(isl.w^2*(1-sin(isl.m0*α/2)^2))
 
     return sqrt(-r2diff + isl.r0^2), sqrt(r2diff+isl.r0^2)
+end
+
+"""
+    sepratrix(α::Float64, isl::FluxIslandT)
+
+Computes the two radial values of the sepratrix for an input α.
+"""
+function sepratrix(α::Float64, isl::FluxIslandT)
+
+    Δψ = sqrt(isl.w^2/4*(1-sin(isl.m0*α/2)^2))
+
+    return -Δψ + isl.ψ0, Δψ + isl.ψ0
 end
 
 
@@ -61,7 +91,7 @@ end
 
 Computes the radial values for of the sepratrix for each point in the θgrid.
 """
-function compute_sepratrix(θgrid::AbstractArray{Float64}, isl::IslandT, ζval::Float64=0.0)
+function compute_sepratrix(θgrid::AbstractArray{Float64}, isl::RadIslandT, ζval::Float64=0.0)
 
     sep1 = zeros(length(θgrid))
     sep2 = zeros(length(θgrid))

@@ -15,7 +15,7 @@ function gauss_integrate(Ψ::SubArray{ComplexF64, 2, Array{ComplexF64, 3}}, Φ::
         scale = wg[k] * jac
         for j in 1:9, i in 1:9
             #significantly faster to have * jac here not later!
-            res += @inbounds Ψ[i, k] * mat[i, j, k] * Φ[j, k] * scale
+            res += @inbounds Ψ[i, k] * Φ[j, k] * mat[i, j, k] * scale
 
         end
     end
@@ -60,7 +60,7 @@ function gauss_integrate(Ψ::SubArray{ComplexF64, 4, Array{ComplexF64, 7}}, Φ::
         scale = wgx1[x1] * wgx2[x2] * wgx3[x3] * jac
 
         for j in 1:9, i in 1:9
-            res += @inbounds Ψ[i, x1, x2, x3] * mat[i, j, x1, x2, x3] * Φ[j, x1, x2, x3] * scale
+            res += @inbounds mat[i, j, x1, x2, x3] * scale * Ψ[i, x1, x2, x3] * Φ[j, x1, x2, x3]
         end
     end
 

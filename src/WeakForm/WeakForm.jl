@@ -60,7 +60,7 @@ function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, B::BFieldT, 
         prob.met(met, r[i], θ[j], ζ[k], prob.geo.R0)
 
         #compute the magnetic field.
-        compute_B!(B, met, prob.q, prob.isls, r[i], θ[j], ζ[k])
+        prob.B(B, met, prob.q, prob.isls, r[i], θ[j], ζ[k])
 
         #computes the matrix D.
         compute_D!(B, met, tm.D)
@@ -99,7 +99,7 @@ function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, B::BFieldT, 
         island_metric!(met, κ[i], ᾱ[j], ζ[k], prob.geo.R0, prob.isls[1])
 
         #compute the magnetic field.
-        compute_B_isl!(B, met, prob.q, prob.isls[1], κ[i], ᾱ[j], ζ[k])
+        prob.B(B, met, prob.q, prob.isls[1], κ[i], ᾱ[j], ζ[k])
 
         #computes the matrix D.
         compute_D!(B, met, tm.D)
@@ -140,7 +140,7 @@ function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, tor_B::BFiel
         prob.met(tor_met, CT.coords[1], CT.coords[2], CT.coords[3], prob.geo.R0)
 
         #and original B field.
-        compute_B!(tor_B, tor_met, prob.q, prob.isls, CT.coords[1], CT.coords[2], CT.coords[3]) 
+        prob.B(tor_B, tor_met, prob.q, prob.isls, CT.coords[1], CT.coords[2], CT.coords[3]) 
 
         #transform the metric
         met_transform!(tor_met, qfm_met, CT)
@@ -152,6 +152,9 @@ function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, tor_B::BFiel
 
         #computes the matrix D.
         compute_D!(qfm_B, qfm_met, tm.D)
+
+        #this could be a non-negligible problemo
+        display(maximum(abs.(qfm_met.gu .- qfm_met.gu')))
 
         #compute the W matrix
         @views WeakForm.compute_W!(W[:, :, i, j, k], qfm_B, qfm_met, n[i], ωcap2[i], tm)

@@ -15,7 +15,8 @@ using Elliptic
 include("MagneticField.jl")
 
 export BFieldT
-export compute_B!
+export rad_compute_B!
+export flux_compute_B!
 export compute_B_isl!
 
 
