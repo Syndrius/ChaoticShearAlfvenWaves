@@ -298,7 +298,7 @@ end
 """
 Guesses the best starting point for finding qfm surfaces based on the q_profile.
 """
-function surface_guess(rationals::Array{Tuple{Int64, Int64}}, q::Function)
+function surface_guess(rationals::Array{Tuple{Int64, Int64}}, q) #q is now a weird function wrapper thing
     gl = Float64[]
 
     for i in rationals
@@ -349,8 +349,8 @@ function compute_jac(prob::ProblemT, grids::FFFGridsT, surfs::Array{QFMSurfaceT}
     #for (i, r) in enumerate(rvals), (j, x2) in enumerate(x2vals), (k, x3) in enumerate(x3vals)
     for (i, x1) in enumerate(x1grid), (j, x2) in enumerate(x2grid), (k, x3) in enumerate(x3grid)
         coord_transform!(x1, x2, x3, CT, surf_itp, sd)
-        toroidal_metric!(tor_met, CT.coords[1], CT.coords[2], CT.coords[3], prob.geo.R0)
-        compute_B!(tor_B, tor_met, prob.q, prob.isls, CT.coords[1], CT.coords[2], CT.coords[3])
+        prob.met(tor_met, CT.coords[1], CT.coords[2], CT.coords[3], prob.geo.R0)
+        prob.B(tor_B, tor_met, prob.q, prob.isls, CT.coords[1], CT.coords[2], CT.coords[3])
         met_transform!(tor_met, qfm_met, CT)
         B_transform!(tor_B, qfm_B, qfm_met, CT)
 

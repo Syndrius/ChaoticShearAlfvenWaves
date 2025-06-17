@@ -20,6 +20,7 @@ using ..Construct
 using ..Basis
 using ..PostProcessing
 using ..QFM
+using ..Io
 
 
 
@@ -202,5 +203,16 @@ function analytical_continuum(prob::ProblemT, grids::ContGridsT)
 
 end
 
+#basic functionality works here, need more serious testing with actual anon-functions
+function spectrum_from_file(dir::String)
+    uninst_prob, grids, solver = inputs_from_file(dir=dir)
+
+    prob = Structures.inst_problem(uninst_prob)
+
+    #TODO, writing the eigenvalues in the same way as parallel is needed here
+    evals, _, _ = compute_spectrum(prob=prob, grids=grids, solver=solver)
+
+    evals_to_file(evals, dir)
+end
 
 end

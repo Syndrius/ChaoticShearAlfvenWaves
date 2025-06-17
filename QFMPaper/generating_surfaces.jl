@@ -1,3 +1,4 @@
+#we will do this in flux coordinates as well.
 
 #testing the cylindrical stuff in radial coordinates
 #im sure it will def work now 
@@ -24,26 +25,26 @@ function cyl_qfm_q(r::Float64)
     return 1.0 + r, 1.0
 end
 #%%
-k1 = 0.0010
-k2 = 0.0003
-k3 = 0.0005
+k1 = 0.00025
+#k2 = 0.0003
+#k3 = 0.0000
 geo = init_geo(R0=4.0)
-isl1 = init_island(m0=7, n0=-4, A=k1/7)
-isl2 = init_island(m0=5, n0=-3, A=k2/5)
-isl3 = init_island(m0=8, n0=-5, A=k3/8) #unsure if we will want this one as well
+isl1 = init_island(m0=3, n0=-2, A=k1)
+isl2 = init_island(m0=5, n0=-3, A=k1)
+#isl3 = init_island(m0=8, n0=-5, A=k3/8) #unsure if we will want this one as well
 
-isls = [isl1, isl2, isl3]
+isls = MID.Geometry.IslandT[isl1, isl2]
 
 prob = init_problem(geo=geo, q=cyl_qfm_q, isls=isls, met=:cylinder)
 
 #%%
 
-Ntraj = 150;
+Ntraj = 300;
 #rlist = collect(LinRange(0.7, 0.95, Ntraj));
-rlist = collect(LinRange(0.1, 1.0, Ntraj));
+rlist = collect(LinRange(0.4, 0.8, Ntraj));
 Nlaps = 500;
 
-poincare_plot(prob, Nlaps, Ntraj, rlist)
+poincare_plot(prob, Nlaps, Ntraj, rlist, ylimits=(0.5, 0.7))
 #%%
 #so (11, 7) does not work!, regardless of res
 rats1 = lowest_rationals(11, prob.q(0.0)[1], prob.q(1.0)[1])
@@ -52,55 +53,22 @@ gl1 = surface_guess(rats1, prob.q)
 surfs1 = construct_surfaces(rats1, gl1, prob, M=32, N=16);
 plot_surfs(surfs1)
 #%%
-#now we need more surfs below 0.4
-rats2 = lowest_rationals(25, prob.q(0.0)[1], prob.q(0.25)[1])
+#now we need more surfs below 0.05 and above 0.9 ish
+#seems to be taking years for some reason
+#ok so maybe we just dont worry about these.
+#so 20, 19 is just a bit cooked for some reason!
+#30 29 is also not findable..
+#surfaces seem to get a bit mroe cooked at r=0...
+#probs because we don't have any island amp modification.
+rats2 = [(16, 15), (29, 15), (39, 20)]
+#rats2 = [(30, 29), (23, 12), (39, 20)]
+#rats2 = [(23, 12), (16, 15), (29, 15)]
+#rats2 = [(39, 20)]
 gl2 = surface_guess(rats2, prob.q)
 surfs2 = construct_surfaces(rats2, gl2, prob, M=32, N=16);
 plot_surfs(surfs2)
 #%%
-#still need more below 0.2
-#gross
-rats3 = [(53, 44), (13, 9), (14, 9), (13, 8), (13, 10), (14, 11)]
-gl3 = surface_guess(rats3, prob.q)
-surfs3 = construct_surfaces(rats3, gl3, prob, M=32, N=16);
-plot_surfs(surfs3)
-#%%
-#shouldn't add (14, 11) here
-#rats4 = [(11, 8), (14, 11), (26, 17), (22, 15)]
-rats4 = [(11, 8), (26, 17), (22, 15)]
-gl4 = surface_guess(rats4, prob.q)
-surfs4 = construct_surfaces(rats4, gl4, prob, M=32, N=16);
-plot_surfs(surfs4)
-#%%
-rats5 = [(19, 15), (26, 21), (15, 11), (17, 13)]
-gl5 = surface_guess(rats5, prob.q)
-surfs5 = construct_surfaces(rats5, gl5, prob, M=32, N=16);
-plot_surfs(surfs5)
-#%%
-#add more to chaotic region, most likely these will make it worse.
-#these surfs make B^s ~10x larger in chaotic region.
-#somewhat expected
-rats6 = [(18, 11), (17, 10), (16, 9), (20, 11)]
-gl6 = surface_guess(rats6, prob.q)
-surfs6 = construct_surfaces(rats6, gl6, prob, M=32, N=16);
-plot_surfs(surfs6)
-#%%
-rats7 = lowest_rationals(60, prob.q(0.0)[1], prob.q(0.1)[1])
-#these are a bit stupid but might fix the axis problemos.
-#otherwise we can just got from 0.05
-rats7 = [(41, 34), (71, 59)]
-gl7 = surface_guess(rats7, prob.q)
-#changing these numbers doesn't really help remove the spikes
-@time surfs7 = construct_surfaces(rats7, gl7, prob, M=32, N=16);
-plot_surfs(surfs7)
-#%%
-#chosen as example of bad extra surfaces
-rats8 = [(19, 12), (21, 13), (23, 14), (22, 13), (19, 11), (23, 13)]
-gl8 = surface_guess(rats8, prob.q)
-#changing these numbers doesn't really help remove the spikes
-@time surfs8 = construct_surfaces(rats8, gl8, prob, M=32, N=16);
-plot_surfs(surfs8)
-#%%
+rats2 = lowest_rationals(16, prob.q(0.91)[1], prob.q(1.0)[1])
 curr_surfs = surfs1;
 curr_surfs = vcat(surfs1, surfs2);
 curr_surfs = vcat(surfs1, surfs2, surfs3);
@@ -121,6 +89,7 @@ plot_surfs(curr_surfs)
 
 #save_object("low_shear_surfs.jld2", curr_surfs)
 curr_surfs = load_object("low_shear_surfs.jld2");
+save_object("/Users/matt/phd/MID/data/cyl_qfm_surfaces/rad_surfaces.jld2", curr_surfs)
 
 #%%
 rgrid_jac = init_grid(type=:rf, N = 100, start=0.1, stop=0.9)
@@ -179,8 +148,42 @@ evals, ϕ, ϕft = compute_spectrum_qfm(prob=prob, grids=grids, solver=solver, su
 
 #%%
 
+#this probably already shows adequate results.
+#we will just have to ignore the islands etc.
+#but if we zoom in very closely to the chaotic region
+#we get normal continuum modes.
 continuum_plot(evals, legend=false)#, n=-2)
-ind = find_ind(evals, 0.24076)
+ind = find_ind(evals, 0.2756605)
 potential_plot(ϕft, grids, ind, label_max=0.05)
 contour_plot(ϕ, grids, ind=ind, label_max=0.05)
 #%%
+
+unprob = init_problem(geo=geo, q=cyl_qfm_q, met=:cylinder)
+unevals, unϕ, unϕft = compute_spectrum(prob=unprob, grids=grids, solver=solver);
+continuum_plot(unevals, legend=false)#, n=-2)
+
+#%%
+using Plots; gr()
+
+Ntraj = 200;
+#rlist = collect(LinRange(0.7, 0.95, Ntraj));
+rlist = collect(LinRange(0.4, 0.8, Ntraj));
+Nlaps = 500;
+
+x, z = poincare_plot(prob, Nlaps, Ntraj, rlist, ylimits=(0.5, 0.7))
+
+MIDViz.plot_surface_poincare(x, z, curr_surfs, ylimits=(0.5, 0.66))
+
+#%%
+plot_font = "Computer Modern"
+default(fontfamily=plot_font, grid=false, framestyle=:semi, palette=:tol_bright)
+cur_colors = palette(:tol_bright);
+lfs = 18
+xfs = 22
+yfs = 22
+tfs = 16
+ylim= (0.48, 0.7)
+MIDViz.plot_poincare(x, z, color=:black, xguidefontsize=xfs, yguidefontsize=yfs, xtickfontsize=tfs, ytickfontsize=tfs-2, dpi=1200, ylimits=ylim)
+MIDViz.Plotting.overlay_surfs(curr_surfs, color=cur_colors[2], linewidth=2.5)
+
+savefig("aapps_abstract_poincare.png")

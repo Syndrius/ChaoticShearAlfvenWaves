@@ -18,9 +18,14 @@ display("Running Basic Tests")
 display("Running QFM Tests")
 @time @testset "QFM" begin include("QFM/QFM.jl") end
 
-#TODO
-#Island coordinates
+#TODO -> need to be able to find a basic case that works reliably for a test
+#display("Running Island Coordinate Tests")
+#@time @testset "Island Coordinates" begin include("Island/Island.jl") end
 
+display("Running IO Tests")
+@time @testset "IO" begin include("IO/IO.jl") end
+
+#TODO
 #Damping
 
 

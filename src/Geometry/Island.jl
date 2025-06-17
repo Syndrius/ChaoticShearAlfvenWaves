@@ -32,17 +32,31 @@ end
     A :: Float64 = NaN
     q0 :: Float64 = NaN
     qp :: Float64 = NaN
-    r0 :: Float64 = NaN
+    ψ0 :: Float64 = NaN
     w :: Float64 = NaN
 end
 
+
+#this is perhaps the only one that actually needs all of this info
+#this is also not a very good name!
+#we could also uniquely define this by r0?
+#but I think our island equiv q actually uses all of this info
+@kwdef struct CoordIslandT <: IslandT
+    m0 :: Int64 
+    n0 :: Int64
+    A :: Float64 = NaN
+    q0 :: Float64 = NaN
+    qp :: Float64 = NaN
+    r0 :: Float64 = NaN
+    w :: Float64 = NaN
+end
 
 """
     init_island(; w::Float64=NaN, m0::Int64, n0::Int64, qp::Float64=NaN, r0::Float64=NaN, A::Float64=NaN)
 
 Initialises the island structure. Many of the extra parameters are filled in once the problem is fully defined.
 """
-function init_island(; w::Float64=NaN, m0::Int64, n0::Int64, qp::Float64=NaN, r0::Float64=NaN, A::Float64=NaN, flux::Bool=false, ψ0::Float64=NaN)
+function init_island(; w::Float64=NaN, m0::Int64, n0::Int64, qp::Float64=NaN, r0::Float64=NaN, A::Float64=NaN, flux::Bool=false, ψ0::Float64=NaN, coords::Bool=false)
 
     if isnan(w) && isnan(A)
         display("Please define the island width or amplitude")
@@ -52,7 +66,9 @@ function init_island(; w::Float64=NaN, m0::Int64, n0::Int64, qp::Float64=NaN, r0
     
     if flux
         isl = FluxIslandT(m0=m0, n0=n0, A=A, q0 = -m0/n0, qp=qp, ψ0 = ψ0, w=w)
-    else 
+    elseif coords 
+        isl = CoordIslandT(m0=m0, n0=n0, A=A, q0 = -m0/n0, qp=qp, r0 = r0, w=w)
+    else
         isl = RadIslandT(m0=m0, n0=n0, A=A, q0 = -m0/n0, qp=qp, r0 = r0, w=w)
     end
 
@@ -177,7 +193,7 @@ end
 
 Case for island coords where most information must be predefined.
 """
-function inst_island(isl::IslandT)
+function inst_island(isl::RadIslandT)
 
     q0 = -isl.m0/isl.n0
 
@@ -195,7 +211,34 @@ function inst_island(isl::IslandT)
         w = isl.w
     end
 
-    return IslandT(m0=isl.m0, n0=isl.n0, A=A, q0=q0, qp=qp, r0=r0, w=w)
+    return RadIslandT(m0=isl.m0, n0=isl.n0, A=A, q0=q0, qp=qp, r0=r0, w=w)
 end
     
+    
+function inst_island(isl::CoordIslandT)
+
+    q0 = -isl.m0/isl.n0
+
+    qp = isl.qp
+
+    r0 = isl.r0
+    
+    if isnan(isl.w)
+
+        w = 4 * sqrt(q0^2*r0*isl.A / qp)
+        A = isl.A
+    else
+        #A = (isl.w / 4)^2 * qp / isl.q0^2
+        A = isl.w^2 / 16 * qp / (q0^2 * r0)
+        w = isl.w
+    end
+
+    return CoordIslandT(m0=isl.m0, n0=isl.n0, A=A, q0=q0, qp=qp, r0=r0, w=w)
+end
+
+#TODO -> placeholder for the no_island case!
+function convert_isl(isl::RadIslandT)
+    return FluxIslandT(m0=1.0, n0=1.0, A=0.0)
+end
+
     

@@ -1,6 +1,11 @@
 
 #TODO change to flux!
 
+#template density profile
+function density_profile(x1::Float64)
+    return 1.0
+end
+
 function gae_isl_dens(x1::Float64)
     κ = -1 #paper just says less than 0?
     p = 1

@@ -35,7 +35,7 @@ B is assumed to be in the form (B^r, B^x2, B^x3) with
 
 This version does not take a quadratic form, this means the behaviour near r=0 will be cooked, requires a restricted grid.
 """
-function rad_compute_B!(B::BFieldT, met::MetT, q_prof::Function, isls::Array{IslandT}, x1::Float64, x2::Float64, x3::Float64)
+function compute_B!(B::BFieldT, met::MetT, q_prof::FunctionWrapper{Tuple{Float64, Float64}, Tuple{Float64}}, isls::Array{RadIslandT}, x1::Float64, x2::Float64, x3::Float64)
 
     q, dq = q_prof(x1)
 
@@ -175,10 +175,12 @@ function island_amplitude(x1::Float64)
 
     #case where this function is not included
     #useful to distinguish problemo's between GAM and between axis.
-    #return 1, 0
+    #TODO, the way this function works is not acceptable.
+    return 1, 0
 
     #we may want to try this for a flatter profile over the island
     return 1-16*(x1-1/2)^4, -64*(x1-1/2)^3
+    #
 
 end
 
@@ -188,7 +190,7 @@ end
 
 Computes the magnetic field for the island case. This requires a specific q-profile and a conversion between r and flux ψ.
 """
-function compute_B_isl!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, κ::Float64, ᾱ::Float64, τ::Float64)
+function compute_B!(B::BFieldT, met::MetT, q_prof::FunctionWrapper{Tuple{Float64, Float64}}, isls::Array{CoordIslandT}, κ::Float64, ᾱ::Float64, τ::Float64)
 
 
     #I think to remove this function, we would have to swap from κ to either r̄ or χ
@@ -197,6 +199,8 @@ function compute_B_isl!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, �
     #I think the way we do B is just a bit cooked, i.e. the normal case assumes Bθ has B_0 r or whatever.
     #think we have been assuming compute_B is a locked in function that can't be any different
     #but there is many a reason why this would want to change
+
+    isl = isls[1] #only a single island is cosnidered for this case.
 
     #should probably be q̄ and dq̄
     #note that this q profile is the same as toroidal case, but appears different in the magnetic field due to coordinates
@@ -275,45 +279,60 @@ B is assumed to be in the form (B^r, B^x2, B^x3) with
 This version does not take a quadratic form, this means the behaviour near r=0 will be cooked, requires a restricted grid.
 This has been changed to ψ, needs verification.
 """
-function flux_compute_B!(B::BFieldT, met::MetT, q_prof::Function, isl::IslandT, ψ::Float64, x2::Float64, x3::Float64)
+function compute_B!(B::BFieldT, met::MetT, q_prof::FunctionWrapper{Tuple{Float64, Float64}}, isls::Array{FluxIslandT}, ψ::Float64, x2::Float64, x3::Float64)
 
     q, dq = q_prof(ψ)
 
-    arg = isl.m0 * x2 + isl.n0 * x3
 
-    #assumes B0=1
-    B.B[1] = 1 / (met.J[1]) * isl.A * isl.m0 * sin(arg)
+    amp, damp = island_amplitude(ψ)
+
+    B.B[1] = 0.0
+    B.dB[1, :] .= 0.0
+    for isl in isls
+        B.B[1] += isl.A * amp * isl.m0 * sin(isl.m0 * x2 + isl.n0 * x3)
+        B.dB[1, 1] += isl.A * damp * isl.m0 * sin(isl.m0 * x2 + isl.n0 * x3)
+        B.dB[1, 2] += isl.A * amp * isl.m0^2 * cos(isl.m0 * x2 + isl.n0 * x3)
+        B.dB[1, 3] += isl.A * amp * isl.m0 * isl.n0 * cos(isl.m0 * x2 + isl.n0 * x3)
+    end
+
+    B.B[1] /= met.J[1]
+
+    B.dB[1, 1] /= met.J[1]
+    B.dB[1, 1] -= B.B[1] * met.dJ[1] / met.J[1]
+
+    B.dB[1, 2] /= met.J[1]
+    B.dB[1, 2] -= B.B[1] * met.dJ[2] / met.J[1]
+
+    B.dB[1, 3] /= met.J[1]
+    B.dB[1, 3] -= B.B[1] * met.dJ[3] / met.J[1] #typically dJ/dx3 = 0.
                 
+
+
     B.B[2] = 1 / (met.J[1] * q) 
     B.B[3] = 1 / (met.J[1])
 
-    B.dB[1, 1] = ( - isl.A * isl.m0 * sin(arg) * met.dJ[1] / met.J[1]^2)
-
-    B.dB[1, 2] = (1 / (met.J[1]) * isl.A * isl.m0^2 * cos(arg)
-                    - isl.A * isl.m0 * sin(arg) * met.dJ[2] / met.J[1]^2)
-
-    B.dB[1, 3] = isl.n0 / (met.J[1]) * isl.A * isl.m0 * cos(arg)
-
-
-
+    #should probably include the d
     B.dB[2, 1] = ( - (1 / q) * met.dJ[1] / met.J[1]^2
                     - 1 * dq /(met.J[1] * q^2) )
                     
     B.dB[2, 2] = - (1 / q ) * met.dJ[2] / met.J[1]^2
+
+    B.dB[3, 2] = - (1 / q ) * met.dJ[3] / met.J[1]^2
     
 
 
     B.dB[3, 1] = ( - met.dJ[1]) / met.J[1]^2
     B.dB[3, 2] = - met.dJ[2] / met.J[1]^2
+    B.dB[3, 3] = - met.dJ[3] / met.J[1]^2
     
 
     #note this also does B.db
     magnitude_B!(B, met)
     
     #unsure if there should be extra approximation here as Br is a pert and therefore small?
-    B.b[1] = B.B[1]/B.mag_B
-    B.b[2] = B.B[2]/B.mag_B
-    B.b[3] = B.B[3]/B.mag_B
+    B.b[1] = B.B[1]/B.mag_B[1]
+    B.b[2] = B.B[2]/B.mag_B[1]
+    B.b[3] = B.B[3]/B.mag_B[1]
 end
 
 

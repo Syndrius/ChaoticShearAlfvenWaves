@@ -17,6 +17,7 @@ function compute_I!(I::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, B::BFieldT
         #ρ_i is ion gyro radius
         #δ_e is electron resistivity
         I[i, j] = -F[i] * F[j] * met.J[1] * n / B.mag_B[1]^2*(1.0im * flr.δ + 3/4 * flr.ρ_i^2 + (1-flr.δ_e*1im) * flr.ρ_i^2)
+        I[i, j] = 0.0
     end
     
     #this is the ideal term, it is computed second to ensure I is zero everywhere first.

@@ -1,4 +1,7 @@
 
+#seems like this is not working anymore
+#bit odd.
+#unsure why!
 
 #this works now (well enough! will need some serious cleaning, also unsure how this will be put into MID. Should be possible,
 #but we may need to consider a separate package.
@@ -10,41 +13,55 @@
 
 using MID
 using MIDViz
-using Plots; plotlyjs()
+#using Plots; plotlyjs()
 #%%
 #fss seems to be incapable of finding any gap modes???
 #bit odd.
 
 
 geo = init_geo(R0 = 10.0)
-rgrid = init_grid(type=:rf, N=80, start=0.0, stop=0.999, left_bc=false)
+rgrid = init_grid(type=:rf, N=60, start=0.0, stop=0.999, left_bc=false)
 #θgrid = asm_grid(start=-4, N=9)
-θgrid = init_grid(type=:as, N=6, start=-2)
+θgrid = init_grid(type=:as, N=4, start=0)
 ζgrid = init_grid(type=:as, start=-1, N=2)
 
 grids = init_grids(rgrid, θgrid, ζgrid)
 #%%
 k = 0.002
 #think this matches the island_mode_21, we will need further verification.
-isl = init_island(m0=2, n0=-1, A=k/2, r0=0.5, qp=2.0)
+isl = init_island(m0=2, n0=-1, A=k/2, r0=0.5, qp=2.0, coords=true)
 #prob = init_problem(q = inside_island_q, geo=geo, met=MID.Geometry.Axel_island_metric!)
 #prob = init_problem(q = inside_island_q, geo=geo, met=island_metric!)
 
-prob = MID.Structures.init_isl_problem(geo=geo, isl=isl)
-display(prob.isl)
+prob = init_problem(type=:island, q=MID.island_coords_q, geo=geo, isl=isl);
+display(prob.met)
 
-MID.Structures.inst_island(isl)
+
 #%%
 
 solver = init_solver(prob=prob, full_spectrum=true)
 #%%
 
-#so ϕ for fss is not working... gee wiz.
+#looks a lil weird, but ok.
+#(0, 0) seems to be abit odd, almost matching our mapped versions?
+#bit surprising!
+#ffs seems to be a bit better
 evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, solver=solver);#, target_freq=10);
 #%%
 continuum_plot(evals, ymax=0.3, ymin=-0.01)#, ymax=10)#, n=-2)
 #%%
-#obvs not working, check equivalence between ours and Axel, by considering coord transformation from κ to κ^2
+rgrid = init_grid(type=:rc, N=60, start=0.0, stop=0.999)#, left_bc=false)
+#θgrid = asm_grid(start=-4, N=9)
+θgrid = init_grid(type=:as, N=4, start=0)
+ζgrid = init_grid(type=:as, start=-1, N=2)
+
+grids = init_grids(rgrid, θgrid, ζgrid)
+evals_cont = compute_continuum(prob, grids)
+#%%
+
+#well at least this works well.
+continuum_plot(evals_cont, grids)
+#%%
 #also may need to check elliptic functions are doing what we want...
 
 #(-1, 1) modes seem to be perfectly coupled, bit of a problemo..

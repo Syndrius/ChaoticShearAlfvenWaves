@@ -51,8 +51,6 @@ function construct(prob::ProblemT, grids::FFFGridsT)
     #initialises a struct storing temporary matrices used in the weak form.
     tm = TM()
 
-    arr = []
-
     #main loop, x2, x3 go to N for periodicity.
     for i in 1:grids.x1.N-1, j in 1:grids.x2.N, k in 1:grids.x3.N 
 
@@ -65,26 +63,11 @@ function construct(prob::ProblemT, grids::FFFGridsT)
         #computes the contribution to the W and I matrices.
         W_and_I!(W, I, B, met, prob, x1, x2, x3, tm)
 
-        #display(W[1:5, 1:5, 1, 1, 1])
-        #println(W[:, :, 1, 1, 1] .- W[:, :, 1, 1, 1]')
-        #display(W[5:9, 5:9, 1, 1, 1])
-        #display(real.(W[:, :, 1, 1, 1]))
-        #display(real.(W[:, :, 1, 1, 1]) .- real.(W[:, :, 1, 1, 1]'))
-        #for i in 1:length(x1), j in 1:length(x2), k=1:length(x3)
-        #    display(ishermitian(W[:, :, i, j, k])) 
-        #end
-
-
-        #Φ .= 0.0
-        #Ψ .= 0.0
         
         #adjust the basis functions to the current coordinates/mode numbers considered.
         create_local_basis!(Φ, S, grids.x2.pf, grids.x3.pf, dx1, dx2, dx3)
         #negatives for conjugate of test function
         create_local_basis!(Ψ, S, -grids.x2.pf, -grids.x3.pf, dx1, dx2, dx3)
-
-        #Φ .*= 1e5
-        #Ψ .*= 1e5
 
 
         #loop over the Hermite elements for the trial function
@@ -98,14 +81,6 @@ function construct(prob::ProblemT, grids::FFFGridsT)
 
                 #and for the test function. 
                 left_ind = grid_to_index(i, j, k, testx1, testx2, testx3, grids)
-
-                #condition to enforce symmetry.
-                #this may end up being a fkn nightmare in parallel!
-                #we may want to check more into the Hermitian property in slepc before 
-                #we extend this to parallel
-                if left_ind < right_ind 
-                    continue
-                end
 
                 #only check for boundaries if this is true
                 #no other i's can possibly give boundaries
@@ -135,11 +110,6 @@ function construct(prob::ProblemT, grids::FFFGridsT)
 
                         Isum = @views gauss_integrate(Ψ[testx1, testx2, testx3, :, :, :, :], Φ[trialx1, trialx2, trialx3, :, :, :, :], I, wgx1, wgx2, wgx3, jac, grids.x1.gp, grids.x2.gp, grids.x3.gp)
 
-
-                        if left_ind == 5 && right_ind == 6
-                            push!(arr, Isum)
-                        end
-
                         #adds the local contribution to the global structure
                         push!(Wdata, Wsum)
                         push!(Idata, Isum)
@@ -152,10 +122,6 @@ function construct(prob::ProblemT, grids::FFFGridsT)
                     Wsum = @views gauss_integrate(Ψ[testx1, testx2, testx3, :, :, :, :], Φ[trialx1, trialx2, trialx3, :, :, :, :], W, wgx1, wgx2, wgx3, jac, grids.x1.gp, grids.x2.gp, grids.x3.gp)
 
                     Isum = @views gauss_integrate(Ψ[testx1, testx2, testx3, :, :, :, :], Φ[trialx1, trialx2, trialx3, :, :, :, :], I, wgx1, wgx2, wgx3, jac, grids.x1.gp, grids.x2.gp, grids.x3.gp)
-
-                    if left_ind == 5 && right_ind == 6
-                        push!(arr, Isum)
-                    end
 
                     #adds the local contribution to the global structure
                     push!(Wdata, Wsum)
@@ -170,25 +136,12 @@ function construct(prob::ProblemT, grids::FFFGridsT)
 
     end
 
-    ndata = length(rows)
-
-    for i in 1:ndata
-        if rows[i] != cols[i]
-            push!(rows, cols[i])
-            push!(cols, rows[i])
-            push!(Wdata, conj(Wdata[i]))
-            push!(Idata, conj(Idata[i]))
-        end
-    end
-            
-
-
 
     #construct the sparse matrix.
     Wmat = sparse(rows, cols, Wdata)
     Imat = sparse(rows, cols, Idata)
 
-    return Wmat, Imat, arr
+    return Wmat, Imat
 end
 
 
@@ -264,11 +217,7 @@ function construct(prob::ProblemT, grids::FFFGridsT, surfs::Array{QFMSurfaceT})
         #computes the contribution to the W and I matrices.
         W_and_I!(W, I, tor_B, tor_met, qfm_B, qfm_met, prob, x1, x2, x3, tm, surf_itp, CT, sd)
 
-        display(I[:, :, 1, 1, 1] .- I[:, :, 1, 1, 1]')
-        #for i in 1:length(x1), j in 1:length(x2), k=1:length(x3)
-            #display(ishermitian(I[:, :, i, j, k])) 
-        #end
-        
+
         #adjust the basis functions to the current coordinates/mode numbers considered.
         create_local_basis!(Φ, S, grids.x2.pf, grids.x3.pf, dx1, dx2, dx3)
         #negatives for conjugate of test function

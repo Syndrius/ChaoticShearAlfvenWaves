@@ -22,6 +22,9 @@ struct MetT
     end
 end
 
+#template metric function
+function metric!(met::MetT, x1::Float64, x2::Float64, x3::Float64, R0::Float64)
+end
 
 """
     toroidal_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
@@ -157,7 +160,7 @@ end
 
 Function that fills out the MetT structure for magnetic island striaght field line geometry. Based on Konies et al 2024. κ is the radial variable, measure from island center, ᾱ is the striaghtened helical angle and φ is a typical toroidal angle. This assumed the original geometry was cylindrical.
 """
-function island_metric!(met::MetT, κ::Float64, ᾱ::Float64, φ::Float64, R0::Float64, isl::RadIslandT)
+function island_metric!(met::MetT, κ::Float64, ᾱ::Float64, φ::Float64, R0::Float64, isl::CoordIslandT)
 
     #derivs have all been checked
     #assuming original expressions are correct
@@ -347,6 +350,7 @@ function island_metric!(met::MetT, κ::Float64, ᾱ::Float64, φ::Float64, R0::
 
     #J only function of κ
     met.dJ[1] = w * R0/(m0*π) * (E - (1-κ) * K) / (2*(1-κ)*κ)
+
 
 end
 

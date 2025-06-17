@@ -1,6 +1,7 @@
 
 using MID
 using MIDViz
+using Plots; plotlyjs()
 #%%
 #Integration has been massivly sped up, but this is still slow af, probbaly requires multiproc.
 #~90% of the time is spent numerically integrating. Wonder if there is anything we can do???
@@ -24,9 +25,10 @@ solver = init_solver(prob=prob, targets=[0.2, 0.3, 0.4, 0.5])
 evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, solver=solver);
 #%%
 #scatter(cr.r, real.(cr.ω), ylimits=(-0.05, 1.05))
-continuum_plot(evals, n=-2)
+
+continuum_plot(evals, n=-1)
 
 
-ind = find_ind(evals, 0.33)
+ind = find_ind(evals, 0.300)
 #ind = 348
 potential_plot(ϕft, grids, ind)

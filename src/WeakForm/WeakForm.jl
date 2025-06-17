@@ -56,11 +56,14 @@ function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, B::BFieldT, 
 
     for k=1:1:length(ζ), j=1:1:length(θ), i=1:1:length(r)
 
+        #display("here")
         #compute the metric
         prob.met(met, r[i], θ[j], ζ[k], prob.geo.R0)
+        #display("or here")
 
         #compute the magnetic field.
-        prob.B(B, met, prob.q, prob.isls, r[i], θ[j], ζ[k])
+        compute_B!(B, met, prob.q, prob.isls, r[i], θ[j], ζ[k])
+        #display("even here")
 
         #computes the matrix D.
         compute_D!(B, met, tm.D)
@@ -77,12 +80,14 @@ end
 
 
 
+#in theory this should no longer be needed, who the fek knows though!
 """
     W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, B::BFieldT, met::MetT, prob::IslProblemT, κ::Array{Float64}, ᾱ::AbstractArray, ζ::AbstractArray, tm::TM)
 
 Computes the two matrices W and I based on the weak form of the SAW governing equation for the case with island coordinates.
 In this case a specific metric and q-profile are used and the current nerm is not included.
 """
+#=
 function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, B::BFieldT, met::MetT, prob::IslProblemT, κ::Array{Float64}, ᾱ::AbstractArray, ζ::AbstractArray, tm::TM)
     
     #TODO, no longer working with island as an array
@@ -113,6 +118,7 @@ function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, B::BFieldT, 
     end
 
 end
+=#
 
 
 """
@@ -140,7 +146,7 @@ function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, tor_B::BFiel
         prob.met(tor_met, CT.coords[1], CT.coords[2], CT.coords[3], prob.geo.R0)
 
         #and original B field.
-        prob.B(tor_B, tor_met, prob.q, prob.isls, CT.coords[1], CT.coords[2], CT.coords[3]) 
+        compute_B!(tor_B, tor_met, prob.q, prob.isls, CT.coords[1], CT.coords[2], CT.coords[3]) 
 
         #transform the metric
         met_transform!(tor_met, qfm_met, CT)
@@ -152,9 +158,6 @@ function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, tor_B::BFiel
 
         #computes the matrix D.
         compute_D!(qfm_B, qfm_met, tm.D)
-
-        #this could be a non-negligible problemo
-        display(maximum(abs.(qfm_met.gu .- qfm_met.gu')))
 
         #compute the W matrix
         @views WeakForm.compute_W!(W[:, :, i, j, k], qfm_B, qfm_met, n[i], ωcap2[i], tm)

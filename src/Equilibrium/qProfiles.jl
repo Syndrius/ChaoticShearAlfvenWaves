@@ -1,5 +1,11 @@
 #TODO -> should change these names and probably provide the function in the doc.@
 
+#template q-profile
+#used as a placeholder
+function q_profile(x1::Float64)
+    return 1.0, 1.0
+end
+
 #q profile required to use island coordinates
 function island_coords_q(κ::Float64, isl::IslandT)
 
@@ -202,8 +208,8 @@ function Axel_island_q(x1::Float64)
 end
 
 function flux_fu_dam_q(ψ::Float64)
-    q = @. 1 + ψ * 2
-    dq = @. 2
+    q = 1 + ψ * 2
+    dq = 2
     return q, dq
 end
 

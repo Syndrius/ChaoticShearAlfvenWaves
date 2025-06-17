@@ -9,20 +9,22 @@ using ..Geometry
 
 
 using Elliptic
+using FunctionWrappers
+import FunctionWrappers: FunctionWrapper
 
 
 
 include("MagneticField.jl")
 
 export BFieldT
-export rad_compute_B!
-export flux_compute_B!
-export compute_B_isl!
+export compute_B!
+#export compute_B_isl!
 
 
 
-include("qProfiles.jl")
+include("qProfiles.jl") #once again, this has become a disaster. Ideally, we should just have a few q-profile written, and then perhaps we read a file for extras or something
 
+export q_profile
 export fu_dam_q
 export low_shear_q
 export low_shear_qfm_q
@@ -35,6 +37,7 @@ export island_coords_q
 
 include("DensityProfiles.jl")
 
+export density_profile
 export uniform_dens
 
 

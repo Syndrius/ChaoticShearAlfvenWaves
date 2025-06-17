@@ -17,8 +17,11 @@ function Tl!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, B::BFieldT, met::
     #display(C)
     #display(D)
     #old matrix multiplication way was not perfectly symmetric
+    #any assumptions about Hermitian nature are not actually fixed here.
+    #ok so this is still a bit better, but not always Hermitian exactly
+    W .= 0.0
     for i in 1:9, j in 1:9, k in 1:3, l in 1:3
-        W[i, j] = C[k, i] * C[l, j] * D[l, k]
+        W[i, j] += C[k, i] * C[l, j] * D[l, k]
     end
 
     W .*= met.J[1] * B.mag_B[1]^2

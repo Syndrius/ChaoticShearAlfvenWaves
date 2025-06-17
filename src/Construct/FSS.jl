@@ -73,6 +73,7 @@ function construct(prob::ProblemT, grids::FSSGridsT)
         #computes the contribution to the W and I matrices.
         W_and_I!(W, I, B, met, prob, x1, x2grid, x3grid, tm)
         
+
         #fft the two matrices.
         p * W
         p * I

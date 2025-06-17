@@ -13,6 +13,9 @@ module Structures
 using ..Geometry
 using ..Equilibrium
 
+using FunctionWrappers
+import FunctionWrappers: FunctionWrapper
+
 
 """
 Abstract type for each grid.
@@ -66,11 +69,21 @@ export inst_grids
 
 
 
+include("FLR.jl")
+
+export FLRT
+
+
+
+include("Geometry.jl")
+
+export GeoParamsT
+
+
+
 include("Problem.jl")
 
 export ProblemT
-export GeoParamsT
-export FLRT
 export init_problem
 export IslProblemT
 export TorProblemT #this is a bad name for this, given this can work with any metric....
