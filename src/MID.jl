@@ -18,11 +18,11 @@ Current term is back on, it is working fine, may need higher res for best result
 
 #Long Term fixes
  - Perhaps https://github.com/fredrikekre/Literate.jl if we ever want to share this garbage.
- - Re do all the example cases, include proper benchmarks and tests.
+ - Re do all the example cases, include proper benchmarks and tests. -> tests are better now, but still not ideal!
  - Add try catch to sqrt in solve, most of the time it is just because of ~0 numbers, but it owuld be good to have a warning rather than just always take abs. -> Maybe in this case we dont return the normalised ones? Or should we always have a normalise flag??? -> cka does this better, below some tolerance they are just set to zero.
  - Use of kwargs is inconsistent and sometimes annoying.
  - May want to change the way the q-profile is done. May be better to precompute the values, and just pass in q and dq and floats so that there is no uncertainty, will need to profile.
- - Throughout code, we have have assumed axissymmetry, this is probably a bad idea, axissymmetry should just be implemented via metric, not in B etc.
+ - Throughout code, we have have assumed axissymmetry, this is probably a bad idea, axissymmetry should just be implemented via metric, not in B etc. -> mostly fixed now, but worth checking properly -> this is important for qfm, where, for example, dJ[3] can be non-zero, which is often assumed, as it is zero for most cases.
  - May want to add compute_B to problem, our is actually very restrictive based on the form in terms of r etc. Especially noticable with island case, where q profile is in a different location.
  - Maybe we should start removing the modes far from the centre as they tend to be garbage. -> unsure if this should be done automatically, or they should be kept and we just have an option in plotting?
  - Maybe we should have surfs as part of prob? dealing with parallel surfs is going to be a bit of a disaster! Although having surfs inside prob is a lot of bloat! Perhaps just a string that stores the location? As we only need to create the interpolant, don't actually need the surfaces themselves? Think this could be ok. seems kind of silly for everything else to be stored as is though!
@@ -30,6 +30,7 @@ Current term is back on, it is working fine, may need higher res for best result
  - Change q-profiles to just accept a polynomial coefficeints, that way we don't need a billion, -> provided our island q thing works, this shouldn't be to bad.
  - The order of includes in this file has become very precarious, purpose of some modules is perhaps not clear enough
  - we may benefit from more, but smaller modules one day. This has become especially apparent with Mapping, especially given that the main mapping functions are in post-processing, which could be a mistake.
+ - Perhaps move Island.jl into its own module
  
  
 

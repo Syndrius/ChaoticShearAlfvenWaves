@@ -210,3 +210,86 @@ end
 
 
 
+function qfm_spectrum_to_tor(dir_base::String, tor_grids::GridsT, surfs_dir::String)
+
+    mkpath(dir_base*"/tor_map/efuncs")
+    mkpath(dir_base*"/tor_map/efuncs_ft")
+
+    prob, qfm_grids, _ = inputs_from_file(dir=dir_base)
+
+    surfs = load_object(surfs_dir)
+
+    evals = evals_from_file(dir=dir_base)
+
+    sgrid, ϑgrid, φgrid = inst_grids(qfm_grids)
+
+    #think this process is indep of flux vs rad, just depends how the surfaces where generated
+    rgrid, θgrid, ζgrid = inst_grids(tor_grids)
+
+    κms = [] #note that we don't know the size of this yet
+    tor_ω = []
+    mode_labs = Tuple{Int64, Int64}[]
+
+
+    ϕ_qfm, ϕ_qfmft = PostProcessing.allocate_phi_arrays(tor_grids, deriv=true)
+
+    ϕ_tor, ϕ_torft = PostProcessing.allocate_phi_arrays(tor_grids, deriv=false)
+
+    plan_qfm = PostProcessing.create_ft_plan(ϕ_qfmft, qfm_grids)
+    plan_tor = PostProcessing.create_ft_plan(ϕ_torft, tor_grids)
+
+    κmarray = Array{Int64}(undef, isl_grids.x2.N, isl_grids.x3.N)
+    ϕ_tormarray = Array{Float64}(undef, tor_grids.x2.N, tor_grids.x3.N)
+
+    surf_itp, sd = create_surf_itp(surfs)
+
+    CT = CoordTransformT()
+
+    mode_count = 1
+
+    coord_map = qfm_to_tor_coord_map(κgrid, ᾱgrid, τgrid, CT, surf_itp, sd)
+    for i in 1:length(evals.ω)
+
+        #Not impossible we would only want to map over the chaotic region or something!
+        #if evals.x1[i] < sep_min || evals.x1[i] > sep_max
+        #    continue
+        #end
+
+        #we could generalise this process by creating a get efunc function or something
+        #unsure how usefull that would ever be though!
+        efunc_read = @sprintf("efunc%05d.hdf5", i)
+        #unfort doesn't handle complex numbers v well
+        efunc_split = load_object(dir_base*"/efuncs_raw/"*efunc_read)
+
+        #ideally this would be preallocated in some way
+        efunc = efunc_split[1, :] .+ efunc_split[2, :] * 1im
+
+        PostProcessing.reconstruct_phi!(efunc, qfm_grids, ϕ_qfm, ϕ_qfmft, plan_qfm)
+
+        #dont care about maximum in this case
+        #amax = argmax(abs.(real.(ϕ_qfm[:, :, 1, 1])))
+
+        
+        #bit stupid to pass in the array size here but whatever.
+        efunc_map!(ϕ_tor, tor_grids.x1.N, tor_grids.x2.N, tor_grids.x3.N, ϕ_qfm, sgrid, ϑgrid, φgrid, coord_map)
+        
+        PostProcessing.ft_phi!(ϕ_tor, ϕ_torft, tor_grids, plan_tor)
+
+        κind, mode_lab = PostProcessing.label_mode(ϕ_torft, tor_grids, κmarray, ϕ_tormarray)
+
+        push!(κms, κgrid[κind])
+        push!(mode_labs, mode_lab)
+        push!(tor_ω, evals.ω[i])
+
+        efunc_write = @sprintf("efunc%05d.jld2", mode_count)
+
+        save_object(dir_base*"/tor_map/efuncs/"*efunc_write, ϕ_tor)
+        save_object(dir_base*"/tor_map/efuncs_ft/"*efunc_write, ϕ_torft)
+        mode_count += 1
+    end
+
+    tor_evals = EvalsT(tor_ω, κms, mode_labs)
+    save_object(dir_base*"/tor_map/evals.jld2", tor_evals)
+    #so we have a record of the grids used in the mapping
+    save_object(dir_base*"/tor_map/grids.jld2", tor_grids)
+end

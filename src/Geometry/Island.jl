@@ -108,8 +108,9 @@ end
 
 Computes the radial values for of the sepratrix for each point in the θgrid.
 """
-function compute_sepratrix(θgrid::AbstractArray{Float64}, isl::RadIslandT, ζval::Float64=0.0)
+function compute_sepratrix(θgrid::AbstractArray{Float64}, isl::IslandT, ζval::Float64=0.0)
 
+    #this function should be hte same for r or ψ
     sep1 = zeros(length(θgrid))
     sep2 = zeros(length(θgrid))
 
@@ -260,7 +261,7 @@ function inst_island(isl::CoordIslandT)
     return CoordIslandT(m0=isl.m0, n0=isl.n0, A=A, q0=q0, qp=qp, r0=r0, w=w)
 end
 
-#TODO -> placeholder for the no_island case!
+
 function convert_isl(isl::RadIslandT)
 
     qp = isl.qp / isl.r0

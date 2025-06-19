@@ -21,6 +21,8 @@ Creates a Array that maps qfm coordinates to toroidal coordinates. Allows for ef
 """
 function qfm_to_tor_coord_map(rgrid::AbstractArray{Float64}, θgrid::AbstractArray{Float64}, ζgrid::AbstractArray{Float64}, CT::CoordTransformT, surf_itp::SurfaceITPT, sd::TempSurfT)
 
+    #note that there is nothing in here to distinguish radius from flux, just comes down to surfaces made I guess
+
     coord_map = Array{Tuple{Float64, Float64, Float64}}(undef, length(rgrid), length(θgrid), length(ζgrid))
 
     for (i, r) in enumerate(rgrid), (j, θ) in enumerate(θgrid), (k, ζ) in enumerate(ζgrid)
@@ -67,5 +69,16 @@ function tor_to_isl_coord_map(κgrid::AbstractArray{Float64}, ᾱgrid::Abstract
                                                         
 end
 
-#TODO, other cases! i.e. island backwards. Tor to qfm? probbaly not very useful
+
+function isl_to_tor_coord_map(rgrid::AbstractArray{Float64}, θgrid::AbstractArray{Float64}, ζgrid::AbstractArray{Float64}, isl::IslandT)
+
+    coord_map = Array{Tuple{Float64, Float64, Float64}}(undef, length(rgrid), length(θgrid), length(ζgrid))
+
+    for (i, r) in enumerate(rgrid), (j, θ) in enumerate(θgrid), (k, ζ) in enumerate(ζgrid)
+        coord_map[i, j, k] = tor_coords_to_isl(r, θ, ζ, isl)
+    end
+
+    return coord_map
+                                                        
+end
 

@@ -5,7 +5,7 @@
 Maps island coordinates (κ, ᾱ, τ) into the equivalent toroidal coordinates (r, θ, ζ).
 Assumes that κ < 1.
 """
-function isl_in_coords_to_tor(κ::Float64, ᾱ::Float64, τ::Float64, isl::IslandT)
+function isl_in_coords_to_tor(κ::Float64, ᾱ::Float64, τ::Float64, isl::RadIslandT)
 
     #assumes κ < 1, throughout!
     sinβ = Elliptic.Jacobi.sn(2*Elliptic.K(κ) * ᾱ / π, κ)
@@ -39,6 +39,44 @@ function isl_in_coords_to_tor(κ::Float64, ᾱ::Float64, τ::Float64, isl::Isla
     return r, θ, ζ
 end
 
+#case for flux
+function isl_in_coords_to_tor(κ::Float64, ᾱ::Float64, τ::Float64, isl::FluxIslandT)
+
+    #assumes κ < 1, throughout!
+    sinβ = Elliptic.Jacobi.sn(2*Elliptic.K(κ) * ᾱ / π, κ)
+    #may need to make sure the domain of ᾱ is correct
+    α = mod(2/isl.m0 * asin(sqrt(κ)*sinβ), 2π)
+    #α = 2/isl.m0 * asin(sqrt(κ)*sinβ)
+
+    #α = 2/isl.m0 * asin(sqrt(κ)*Elliptic.Jacobi.sn(2*Elliptic.K(κ) * ᾱ / π, κ))
+
+    θ = mod(α + τ/isl.q0, 2π)
+
+    ζ = mod(τ, 2π)
+
+
+    #abs herre prevents cases with ~-e-20
+    #r2diff = sqrt(abs(isl.w^2 * (κ - sin(isl.m0*α/2)^2)))
+    Δψ = sqrt(abs(isl.w^2/4*(κ - sin(isl.m0*α/2)^2)))
+
+    #r2diff = sqrt(isl.w^2*(κ - sin(isl.m0*α /2)^2))
+
+    #split the solution into the different α quadrants
+    if α < π/2
+        #first quad, r>r0
+        #r = sqrt(+r2diff + isl.r0^2)
+        ψ = isl.ψ0 + Δψ 
+    elseif α < 3π/2
+        #second or third quad r<r0
+        #r = sqrt(-r2diff+isl.r0^2)
+        ψ = isl.ψ0 - Δψ 
+    else 
+        #fourth quad, r > r0
+        #r = sqrt(+r2diff+isl.r0^2)
+        ψ = isl.ψ0 + Δψ 
+    end
+    return ψ, θ, ζ
+end
 
 """
     tor_coords_to_qfm(r::Float64, θ::Float64, ζ::Float64, CT::CoordTransformT, surf_itp::SurfaceITPT, sd::TempSurfT) 
@@ -65,10 +103,8 @@ function tor_coords_to_qfm(r::Float64, θ::Float64, ζ::Float64, CT::CoordTransf
 end
 
 
-#TODO
-#not as interested in this mapping, but ideally we would get this to work.
-#the outside stuff is going to be v tricky!
-function tor_coords_to_isl(r::Float64, θ::Float64, ζ::Float64, isl::IslandT)
+#we are just going to ignore outside the island for now!
+function tor_coords_to_isl(r::Float64, θ::Float64, ζ::Float64, isl::RadIslandT)
 
     #unsure on the domain of this, may be 2πm_0? or 2π/m0
     α = θ - ζ / isl.q0
@@ -119,6 +155,57 @@ function tor_coords_to_isl(r::Float64, θ::Float64, ζ::Float64, isl::IslandT)
 
 end
 
+
+function tor_coords_to_isl(ψ::Float64, θ::Float64, ζ::Float64, isl::FluxIslandT)
+
+    #unsure on the domain of this, may be 2πm_0? or 2π/m0
+    α = θ - ζ / isl.q0
+
+    κ = 4/isl.w^2 * (ψ - isl.ψ0)^2 + sin(isl.m0 * α / 2)^2
+
+    if κ < 1
+        #so this is at least partially wrong...
+        τ = asin(1/sqrt(κ) * abs(sin(isl.m0 * α / 2)))
+
+        sinβ = 1/sqrt(κ) * sin(isl.m0 * α / 2)
+
+        if ψ > isl.ψ0
+            #i.e. top right qudrant.
+            #exact expressions need more explaining.
+            #taken from restricted_mapping.jl, which uses abs to certify the correct quadrant,
+            #may need to do that here as the 1/2 in the sin will probbaly cook things...
+            if mod(α * isl.m0, 2π) < π
+
+                ᾱ = π/ (2 * Elliptic.K(κ)) * Elliptic.F(τ, κ)
+
+            else
+                #top left quadrant, 4th by our clockwise notation.
+                ᾱ = π/ (2 * Elliptic.K(κ)) * Elliptic.F(-τ + 2π, κ)
+            end
+        else
+
+            if mod(α * isl.m0, 2π) < π
+                #bottom right quadrant.
+                ᾱ = π/ (2 * Elliptic.K(κ)) * Elliptic.F(-τ + π, κ)
+
+            else
+                #bottom left quadrant, 
+                ᾱ = π/ (2 * Elliptic.K(κ)) * Elliptic.F(τ + π, κ)
+            end
+        end
+
+
+        #ᾱ = π/ (2 * Elliptic.K(κ)) * Elliptic.F(τ, κ)
+    else
+        #this is still a work in progress.
+        ᾱ = 0
+        #without this we get some very surprising results, in that they match our real results pretty fkn well.
+        return 0, 0, 0
+    end
+
+    return κ, ᾱ, ζ
+
+end
 
 
 
@@ -183,10 +270,40 @@ end
 
 Maps the sepratrix from toroidal coordinates to qfm coordinates. Used to determine island modes.
 """
-function map_sepratrix(rmin::Array{Float64}, rmax::Array{Float64}, θgrid::AbstractArray{Float64}, isl::IslandT, CT::CoordTransformT, surf_itp::QFM.SurfaceITPT, sd::TempSurfT)
+function map_sepratrix(rmin::Array{Float64}, rmax::Array{Float64}, θgrid::AbstractArray{Float64}, isl::RadIslandT, CT::CoordTransformT, surf_itp::QFM.SurfaceITPT, sd::TempSurfT)
 
 
     #TODO, Probably actually want to plot this for hek sake.
+    #this one may be ok ish
+    #should all be the same length
+    smin = zeros(length(rmin))
+    smax = zeros(length(rmax))
+    ϑsep = zeros(length(θgrid))
+
+    for i in 1:length(θgrid)
+        #this is probbaly a wildy inefficient way of doing this
+        #but it is only done ones so who cares.
+        s, ϑ, _ =  Mapping.tor_coords_to_qfm(rmin[i], θgrid[i], 0.0, CT, surf_itp, sd)
+        smin[i] = s
+        ϑsep[i] = ϑ #will this be the same in both cases? probably...
+        s, ϑ, _ = Mapping.tor_coords_to_qfm(rmax[i], θgrid[i], 0.0, CT, surf_itp, sd)
+        smax[i] = s
+    end
+
+
+    return smin, smax, ϑsep
+
+end
+
+function map_sepratrix(rmin::Array{Float64}, rmax::Array{Float64}, θgrid::AbstractArray{Float64}, isl::FluxIslandT, CT::CoordTransformT, surf_itp::QFM.SurfaceITPT, sd::TempSurfT)
+
+    #what even is this function? doesn't actually use the island?
+    #just maps an array from qfm to tor?
+    #won't need one for each island then!
+
+
+    #TODO, Probably actually want to plot this for hek sake.
+    #this is wrong!
     #should all be the same length
     smin = zeros(length(rmin))
     smax = zeros(length(rmax))
