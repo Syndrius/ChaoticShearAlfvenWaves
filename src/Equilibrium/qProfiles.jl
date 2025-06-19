@@ -6,6 +6,43 @@ function q_profile(x1::Float64)
     return 1.0, 1.0
 end
 
+function cyl_qfm_q(r::Float64)
+    return 1.0 + r, 1.0
+end
+
+
+#think this is a better shorhand for all of this, given they are all the same just in a different context.
+function island_q(κ::Float64, isl::CoordIslandT)
+    K, E = Elliptic.ellipke(κ)
+
+    q = isl.w / (isl.m0*π) * K
+
+    dq = isl.w / (isl.m0*π) * (E - (1-κ) * K) / (2*(1-κ)*κ)
+
+    return q, dq
+end
+
+
+function island_q(r::Float64, isl::RadIslandT)
+    q0 = isl.q0
+    qp = isl.qp 
+    r0 = isl.r0
+    #this form is to allows analytical integration in the construction of island coordinates.
+    q = 1 / (1 / q0 - qp / (2*q0^2*r0) * (r^2-r0^2))
+    dq = 4*qp*q0^2*r*r0 / (2*q0*r0 - qp * (r^2-r0^2))^2
+    return q, dq
+end
+
+function island_q(ψ::Float64, isl::FluxIslandT)
+    q0 = isl.q0
+    qp = isl.qp 
+    ψ0 = isl.ψ0
+    #this form is to allows analytical integration in the construction of island coordinates.
+    q = 1 / (1/q0 - qp/q0^2*(ψ-ψ0))
+    dq = qp/q0^2 * q^2
+    return q, dq
+end
+
 #q profile required to use island coordinates
 function island_coords_q(κ::Float64, isl::IslandT)
 
@@ -33,9 +70,19 @@ function island_coords_21a_q(κ::Float64)
     return q, dq
 end
 
+function island_equiv_q(r::Float64, isl::FluxIslandT)
+
+    q0 = isl.q0
+    qp = isl.qp #chosen pretty arbitrarily based on vibes of continuum.
+    r0 = isl.r0
+    #this form is to allows analytical integration in the construction of island coordinates.
+    q = 1 / (1 / q0 - qp / (2*q0^2*r0) * (r^2-r0^2))
+    dq = 4*qp*q0^2*r*r0 / (2*q0*r0 - qp * (r^2-r0^2))^2
+    return q, dq
+end
 
 #Toroidal equivalent ot eh island coords q, allows for direct comparison.
-function island_equiv_q(r::Float64, isl::IslandT)
+function island_equiv_q(r::Float64, isl::RadIslandT)
 
     q0 = isl.q0
     qp = isl.qp #chosen pretty arbitrarily based on vibes of continuum.

@@ -1,4 +1,5 @@
 
+#should this file be in equilibrium? it isn't really geometry?
 #maybe better if this was the default island case with m0, n0 and A. and the others are only used if needed.
 abstract type IslandT end
 
@@ -131,6 +132,8 @@ end
 Fills in the remaining values of the island struct based on the q-profile.
 """
 function inst_island(isl::IslandT, q::Function)
+    #TODO
+    #update for multiple island types
 
     #accounts for cases where q0 is not set.
     q0 = -isl.m0/isl.n0
@@ -214,6 +217,27 @@ function inst_island(isl::RadIslandT)
     return RadIslandT(m0=isl.m0, n0=isl.n0, A=A, q0=q0, qp=qp, r0=r0, w=w)
 end
     
+
+function inst_island(isl::FluxIslandT)
+
+    q0 = -isl.m0/isl.n0
+
+    qp = isl.qp
+
+    ψ0 = isl.ψ0
+    
+    if isnan(isl.w)
+
+        w = 4 * sqrt(q0^2*isl.A / qp)
+        A = isl.A
+    else
+        #A = (isl.w / 4)^2 * qp / isl.q0^2
+        A = isl.w^2 / 16 * qp / (q0^2)
+        w = isl.w
+    end
+
+    return FluxIslandT(m0=isl.m0, n0=isl.n0, A=A, q0=q0, qp=qp, ψ0=ψ0, w=w)
+end
     
 function inst_island(isl::CoordIslandT)
 
@@ -238,7 +262,24 @@ end
 
 #TODO -> placeholder for the no_island case!
 function convert_isl(isl::RadIslandT)
-    return FluxIslandT(m0=1.0, n0=1.0, A=0.0)
+
+    qp = isl.qp / isl.r0
+    A = (isl.w/4)^2 * qp / isl.q0^2
+    ψ0 = isl.r0^2 / 2
+    
+    return FluxIslandT(m0=isl.m0, n0=isl.n0, q0=isl.q0, A=A, qp=qp, ψ0 = ψ0, w=w) #unsure about w! but think it should be the same in both cases!
 end
+
+#going to cause problemos if we need the coordislandT
+function convert_isl(isl::FluxIslandT)
+
+    #unsure if we need to be able to convert to a coordislandT
+    r0 = sqrt(2 * isl.ψ0)
+
+    qp = isl.qp * r0
+    A = isl.w^2 / 16 * qp / (isl.q0^2 * r0)
+    return RadIslandT(m0=isl.m0, n0=isl.n0, q0=isl.q0, qp=qp, A=A, r0=r0, w=isl.w)
+end
+
 
     

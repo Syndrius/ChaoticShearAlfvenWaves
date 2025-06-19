@@ -150,7 +150,11 @@ function init_problem(; type::Symbol=:radial, q::Function, met::Symbol=:torus, d
                 #this probably won't actually do anything!
                 isl = convert_isl(isl)
             end
-            push!(new_isls, isl)
+            #awful solution, just notes that these are the same lol.
+            #starting to seem like our normal island should contain less information!
+            #and the CoordislandT should be the only one used for the weird q-rpfiles.
+            new_isl = CoordIslandT(m0=isl.m0, n0=isl.n0, q0=isl.q0, w=isl.w, A=isl.A, qp=isl.qp, r0=isl.r0)
+            push!(new_isls, new_isl)
         end
 
         un_inst_prob = IslProblemT(q_func=q, met_func = met_func, dens_func = dens, q=q_profile, met=metric!, dens=density_profile, isls=new_isls, geo=geo, flr=flr)
@@ -276,7 +280,7 @@ function inst_problem(prob::IslProblemT)
         display("Please specify m0, n0, r0 and either w or A.")
         return
     end
-    inst_island_q_prof(r::Float64) = island_coords_q(r, isl)
+    inst_island_q_prof(r::Float64) = island_q(r, isl)
     #probably should assert this matches the proper q-profile!
     
     #not sure this knows about the above instantiated form of the q-profile.
@@ -293,7 +297,7 @@ function inst_problem(prob::RadProblemT)
     
     #note that this does not handle flux coordinates at all.
     #TODO
-    if prob.q_func == island_equiv_q
+    if prob.q_func == island_q
 
         if length(prob.isls) > 1
             display("Island q-profile only supports a single island.")
@@ -308,33 +312,16 @@ function inst_problem(prob::RadProblemT)
             display("Please specify m0, n0, r0 and either w or A.")
             return
         end
-        inst_equiv_q_prof(r::Float64) = island_equiv_q(r, isl)
+        inst_island_q_prof(r::Float64) = island_q(r, isl)
+
+        if prob.met_func == island_metric!
+            inst_island_metric(met::MetT, κ::Float64, ᾱ::Float64, τ::Float64, R0::Float64) = island_metric!(met, κ, ᾱ, τ, R0, isl)
+            return RadProblemT(q_func=prob.q_func, met_func = prob.met_func, dens_func = prob.dens_func, q=inst_island_q_prof, met=inst_island_metric, dens=prob.dens_func, isls=[isl], geo=prob.geo, flr=prob.flr)
+        end
 
         #the array of isl won't work, rip.
-        return RadProblemT(q_func=prob.q_func, met_func = prob.met_func, dens_func = prob.dens_func, q=inst_equiv_q_prof, met=prob.met_func, dens=prob.dens_func, isls=[isl], geo=prob.geo, flr=prob.flr)
+        return RadProblemT(q_func=prob.q_func, met_func = prob.met_func, dens_func = prob.dens_func, q=inst_island_q_prof, met=prob.met_func, dens=prob.dens_func, isls=[isl], geo=prob.geo, flr=prob.flr)
 
-        #need some assertation about flux vs radial islands!
-        #and or any other islands we use.
-        #i.e. the islandcoords case.
-        #note that both of these should be true or neither.
-    elseif prob.q_func == island_coords_q || prob.met_func == island_metric!
-        if length(prob.isls) > 1
-            display("Island q-profile only supports a single island.")
-            return
-        end
-
-        #not sure if this actually happens for all of these.
-        isl = inst_island(prob.isls[1])
-        if isnan(isl.w) || isnan(isl.A)
-            display("Please specify m0, n0, r0 and either w or A.")
-            return
-        end
-        inst_island_q_prof(r::Float64) = island_coords_q(r, isl)
-        #probably should assert this matches the proper q-profile!
-        
-        #not sure this knows about the above instantiated form of the q-profile.
-        inst_island_metric(met::MetT, κ::Float64, ᾱ::Float64, τ::Float64, R0::Float64) = island_metric!(met, κ, ᾱ, τ, R0, isl)
-        return RadProblemT(q_func=prob.q_func, met_func = prob.met_func, dens_func = prob.dens_func, q=inst_island_q_prof, met=inst_island_metric, dens=prob.dens_func, isls=[isl], geo=prob.geo, flr=prob.flr)
 
     else
         return RadProblemT(q_func=prob.q_func, met_func = prob.met_func, dens_func = prob.dens_func, q=prob.q_func, met=prob.met_func, dens=prob.dens_func, isls=prob.isls, geo=prob.geo, flr=prob.flr)
@@ -348,12 +335,16 @@ end
 #this is a disaster.
 function inst_problem(prob::FluxProblemT)
     
+    if prob.met == island_metric!
+        display("Island metric only works with radius problems.")
+        return
+    end
     #note that this does not handle flux coordinates at all.
     #TODO
     #don't think this exists in the flux case
-    if prob.q_func == island_equiv_q
+    if prob.q_func == island_q
 
-        if length(isls) > 1
+        if length(prob.isls) > 1
             display("Island q-profile only supports a single island.")
             return
         end
@@ -361,40 +352,15 @@ function inst_problem(prob::FluxProblemT)
         #think this will be the only case where we insantiate the island tbh!
         #we only really use the istantiated form when doing mapping
         #which we probably will only ever do with this q-profile.
-        isl = inst_island(isls[1])
-        if isnan(isl.w) || isnan(isl.A)
-            display("Please specify m0, n0, r0 and either w or A.")
-            return
-        end
-        inst_equiv_q_prof(r::Float64) = island_equiv_q(r, isl)
-
-        #the array of isl won't work, rip.
-        return FluxProblemT(q_func=prob.q_func, met_func = prob.met_func, dens_func = prob.dens_func, q=ins_equiv_q_prof, met=prob.met_func, dens=prob.dens_func, isls=[isl], geo=prob.geo, flr=prob.flr)
-
-        #need some assertation about flux vs radial islands!
-        #and or any other islands we use.
-        #i.e. the islandcoords case.
-        #note that both of these should be true or neither.
-        #pretty sure this doesn't work in flux either!
-    elseif prob.q_func == island_coords_q || prob.met_func == island_metric!
-        if length(prob.isls) > 1
-            display("Island q-profile only supports a single island.")
-            return
-        end
-
-        #not sure if this actually happens for all of these.
         isl = inst_island(prob.isls[1])
         if isnan(isl.w) || isnan(isl.A)
-            display("Please specify m0, n0, r0 and either w or A.")
+            display("Please specify m0, n0, ψ0 and either w or A.")
             return
         end
-        inst_island_q_prof(r::Float64) = island_coords_q(r, isl)
-        #probably should assert this matches the proper q-profile!
-        
-        #not sure this knows about the above instantiated form of the q-profile.
-        inst_island_metric(met::MetT, κ::Float64, ᾱ::Float64, τ::Float64, R0::Float64) = island_metric!(met, κ, ᾱ, τ, R0, isl)
-        return FluxProblemT(q_func=prob.q_func, met_func = prob.met_func, dens_func = prob.dens_func, q=inst_island_q_prof, met=inst_island_metric, dens=prob.dens_func, isls=[isl], geo=prob.geo, flr=prob.flr)
+        inst_island_q(r::Float64) = island_q(r, isl)
 
+        #the array of isl won't work, rip.
+        return FluxProblemT(q_func=prob.q_func, met_func = prob.met_func, dens_func = prob.dens_func, q=inst_island_q, met=prob.met_func, dens=prob.dens_func, isls=[isl], geo=prob.geo, flr=prob.flr)
     else
         return FluxProblemT(q_func=prob.q_func, met_func = prob.met_func, dens_func = prob.dens_func, q=prob.q_func, met=prob.met_func, dens=prob.dens_func, isls=prob.isls, geo=prob.geo, flr=prob.flr)
     end

@@ -1,6 +1,5 @@
 
 #using qfm surfaces for a single island to see what happens
-#even with amplitude restriction, the axis is cooked af.
 using MID
 using MIDViz
 using Statistics
@@ -11,8 +10,14 @@ using Plots; plotlyjs()
 
 geo = init_geo(R0=4.0)
 
-isl21b = init_island(m0=2, n0=-1, w=0.1, r0=0.5, qp=2.0)
-prob = init_problem(geo=geo, q=island_q, met=:cylinder, isl=isl21b)
+isl21a = init_island(m0=2, n0=-1, w=0.1, ψ0=0.5, qp=2.0, flux=true)
+#start with no islands
+prob = init_problem(geo=geo, q=island_q, met=:cylinder, isl=isl21a, type=:flux)
+prob.isls[1]
+#%%
+rvals = LinRange(0.0, 1.0, 100)
+qvals = [prob.q(i)[1] for i in rvals]
+plot(rvals, qvals)
 #%%
 Ntraj = 150;
 rlist = collect(LinRange(0.005, 0.995, Ntraj));
@@ -33,7 +38,6 @@ surfs2 = construct_surfaces(rats2, gl2, prob, M=32, N=16);
 plot_surfs(surfs2)
 #%%
 #this will be the spiciest one!
-#have to assume that none of these are any good!
 rats3 = lowest_rationals(7, prob.q(0.4)[1], prob.q(0.6)[1])
 gl3 = surface_guess(rats3, prob.q)
 surfs3 = construct_surfaces(rats3, gl3, prob, M=32, N=16);
@@ -44,22 +48,20 @@ gl4 = surface_guess(rats4, prob.q)
 surfs4 = construct_surfaces(rats4, gl4, prob, M=32, N=16);
 plot_surfs(surfs4)
 #%%
-rats5 = lowest_rationals(21, prob.q(0.0)[1], prob.q(0.2)[1])
+rats5 = lowest_rationals(23, prob.q(0.0)[1], prob.q(0.2)[1])
 gl5 = surface_guess(rats5, prob.q)
 surfs5 = construct_surfaces(rats5, gl5, prob, M=32, N=16);
 plot_surfs(surfs5)
 #%%
 curr_surfs = vcat(surfs1, surfs2, surfs3, surfs4, surfs5);
-#the b case is less convincing. Jacobian is cooked, may need to reduce surfaces
-#these surfaces will probably require a lot more work to make them nice!
-save_object("/Users/matt/phd/MID/data/surfaces/rad_island_21b.jld2", curr_surfs)
+save_object("/Users/matt/phd/MID/data/surfaces/island_21a.jld2", curr_surfs)
 plot_surfs(curr_surfs)
 #%%
 surfs = load_object("/Users/matt/phd/MID/data/surfaces/island_surfs.jld2");
 #this does make things look much better, we may want to be a bit more thorough with this though!
-#new_surfs = remove_surfs([(15, 7), (13, 6), (11, 5), (13, 7), (11, 6)], surfs);
-#curr_surfs = surfs;
-#curr_surfs = new_surfs;
+new_surfs = remove_surfs([(15, 7), (13, 6), (11, 5), (13, 7), (11, 6)], surfs);
+curr_surfs = surfs;
+curr_surfs = new_surfs;
 #%%
 #Jacobian is propto R0, so it is a bit hard to tell here if the jacobian is actually to large?
 #we may need to try with lower R0, but then matching with Zhisongs code could be q bit annoying?
@@ -131,10 +133,13 @@ island_om = evals.ω[0.44 .< evals.x1 .< 0.56]
 #given this is a tiny grid.
 #also no zero zero harmonic in this test.
 #think we have at least the maximim surfaces. May need to remove some around the sepratrix as per.
-isl_ind = 26
+isl_ind = 145
 
 ind = find_ind(evals, island_om[isl_ind])
-#ind = find_ind(evals, 0.190136)
+ind = find_ind(evals, 0.190136)
 potential_plot(ϕft, grids, ind)
 
 contour_plot(ϕ, grids, ind=ind)
+
+
+#%%

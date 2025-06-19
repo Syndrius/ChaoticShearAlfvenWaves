@@ -350,7 +350,7 @@ function compute_jac(prob::ProblemT, grids::FFFGridsT, surfs::Array{QFMSurfaceT}
     for (i, x1) in enumerate(x1grid), (j, x2) in enumerate(x2grid), (k, x3) in enumerate(x3grid)
         coord_transform!(x1, x2, x3, CT, surf_itp, sd)
         prob.met(tor_met, CT.coords[1], CT.coords[2], CT.coords[3], prob.geo.R0)
-        prob.B(tor_B, tor_met, prob.q, prob.isls, CT.coords[1], CT.coords[2], CT.coords[3])
+        compute_B!(tor_B, tor_met, prob.q, prob.isls, CT.coords[1], CT.coords[2], CT.coords[3])
         met_transform!(tor_met, qfm_met, CT)
         B_transform!(tor_B, qfm_B, qfm_met, CT)
 

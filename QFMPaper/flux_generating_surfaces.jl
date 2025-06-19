@@ -94,7 +94,7 @@ curr_surfs = vcat(surfs1, surfs2, surfs3, surfs4, surfs5, surfs7);
 plot_surfs(curr_surfs)
 
 #save_object("low_shear_surfs.jld2", curr_surfs)
-curr_surfs = load_object("low_shear_surfs.jld2");
+curr_surfs = load_object("/Users/matt/phd/MID/data/cyl_qfm_surfaces/flux_surfaces.jld2");
 save_object("/Users/matt/phd/MID/data/cyl_qfm_surfaces/flux_surfaces.jld2", curr_surfs)
 
 #%%
@@ -153,7 +153,25 @@ solver = init_solver(nev=150, targets=[0.20, 0.25, 0.30, 0.35], prob=prob)
 evals, ϕ, ϕft = compute_spectrum_qfm(prob=prob, grids=grids, solver=solver, surfs=curr_surfs);
 
 #%%
+rgrid = init_grid(type=:rf, N = 20, start=0.05, stop=0.95, sep1=0.5, sep2=0.66, frac=0.5)
+θgrid = init_grid(type=:af, N = 5, pf=3) 
+ζgrid = init_grid(type=:af, N = 2, pf=-2)
+grids = init_grids(rgrid, θgrid, ζgrid)
+solver = init_solver(prob=prob, full_spectrum=true)
+evals, ϕ, ϕft = compute_spectrum_qfm(prob=prob, grids=grids, solver=solver, surfs=curr_surfs);
+#%%
 
+W, I = MID.Construct.construct(prob, grids, curr_surfs);
+#%%
+using LinearAlgebra
+Wmat = Matrix(W);
+Imat = Matrix(I);
+ishermitian(Matrix(W))
+isapprox(Wmat, Wmat', rtol=1e-15)
+isapprox(Imat, Imat', rtol=1e-15)
+
+eigen(Wmat)
+eigen(Imat)
 #this probably already shows adequate results.
 #we will just have to ignore the islands etc.
 #but if we zoom in very closely to the chaotic region

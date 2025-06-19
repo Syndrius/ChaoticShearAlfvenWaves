@@ -179,7 +179,7 @@ function island_amplitude(x1::Float64)
     return 1, 0
 
     #we may want to try this for a flatter profile over the island
-    return 1-16*(x1-1/2)^4, -64*(x1-1/2)^3
+    #return 1-16*(x1-1/2)^4, -64*(x1-1/2)^3
     #
 
 end

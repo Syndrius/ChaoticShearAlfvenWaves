@@ -8,11 +8,11 @@ using Plots; gr()
 using Plots; plotlyjs()
 #%%
 
-geo = init_geo(R0=10.0)
+geo = init_geo(R0=4.0)
 
 isl21a = init_island(m0=2, n0=-1, w=0.05, r0=0.5, qp=2.0)
 #start with no islands
-prob = init_problem(geo=geo, q=MID.Equilibrium.island_equiv_q, met=:cylinder, isl=isl21a)
+prob = init_problem(geo=geo, q=island_q, met=:cylinder, isl=isl21a)
 #%%
 rvals = LinRange(0.0, 1.0, 100)
 qvals = [prob.q(i)[1] for i in rvals]

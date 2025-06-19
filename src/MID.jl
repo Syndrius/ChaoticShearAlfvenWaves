@@ -51,6 +51,7 @@ using ..Equilibrium; export fu_dam_q
 using ..Equilibrium; export qfm_q
 using ..Equilibrium; export low_shear_qfm_q
 using ..Equilibrium; export qfm_benchmark_q
+using ..Equilibrium; export island_q
 
 
 
