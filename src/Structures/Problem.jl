@@ -63,8 +63,8 @@ end
 
 
 #constant island storing the case without an island.
-const no_rad_isl = RadIslandT(m0=1.0, n0=1.0, A=0.0)
-const no_flux_isl = FluxIslandT(m0=1.0, n0=1.0, A=0.0)
+const no_rad_isl = RadIslandT(m0=1.0, n0=1.0, A=0.0, r0=1.0, qp=1.0, q0=1.0, w=0.0)
+const no_flux_isl = FluxIslandT(m0=1.0, n0=1.0, A=0.0) #unused I think!
 #constant flr for cases without any flr corrections.
 const no_flr = FLRT(δ=0.0, ρ_i=0.0, δ_e=0.0)
 
