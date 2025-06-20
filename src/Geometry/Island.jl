@@ -268,7 +268,7 @@ function convert_isl(isl::RadIslandT)
     A = (isl.w/4)^2 * qp / isl.q0^2
     ψ0 = isl.r0^2 / 2
     
-    return FluxIslandT(m0=isl.m0, n0=isl.n0, q0=isl.q0, A=A, qp=qp, ψ0 = ψ0, w=w) #unsure about w! but think it should be the same in both cases!
+    return FluxIslandT(m0=isl.m0, n0=isl.n0, q0=isl.q0, A=A, qp=qp, ψ0 = ψ0, w=isl.w) #unsure about w! but think it should be the same in both cases!
 end
 
 #going to cause problemos if we need the coordislandT

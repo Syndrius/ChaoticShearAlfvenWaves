@@ -146,9 +146,9 @@ function init_problem(; type::Symbol=:radial, q::Function, met::Symbol=:torus, d
         for isl in isls
             if isl isa FluxIslandT
                 isl = convert_isl(isl)
-            elseif isl isa RadIslandT
+#            elseif isl isa RadIslandT
                 #this probably won't actually do anything!
-                isl = convert_isl(isl)
+#                isl = convert_isl(isl)
             end
             #awful solution, just notes that these are the same lol.
             #starting to seem like our normal island should contain less information!

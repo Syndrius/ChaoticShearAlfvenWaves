@@ -23,12 +23,14 @@ function tor_spectrum_to_isl(dir_base::String, isl_grids::GridsT)
     rgrid, θgrid, ζgrid = inst_grids(tor_grids)
     κgrid, ᾱgrid, τgrid = inst_grids(isl_grids)
 
+    isl = prob.isls[1]
+
     κms = [] #note that we don't know the size of this yet
     isl_ω = []
     mode_labs = Tuple{Int64, Int64}[]
 
     #mostly use fff so ft is not needed, but this keeps the process general.
-    ϕ_tor, ϕ_torft = PostProcessing.allocate_phi_arrays(tor_grids, derov=true)
+    ϕ_tor, ϕ_torft = PostProcessing.allocate_phi_arrays(tor_grids, deriv=true)
 
     ϕ_isl, ϕ_islft = PostProcessing.allocate_phi_arrays(isl_grids, deriv=false)
 
@@ -41,7 +43,7 @@ function tor_spectrum_to_isl(dir_base::String, isl_grids::GridsT)
 
     #0.0 is the widest part of the island.
     #islands as an array is cooked af here.
-    sep_min, sep_max = sepratrix(0.0, prob.isls[1])
+    sep_min, sep_max = sepratrix(0.0, isl)
 
     mode_count = 1
 
@@ -82,7 +84,7 @@ function tor_spectrum_to_isl(dir_base::String, isl_grids::GridsT)
 
         #may need to check the plan is not in place or anything stupid.
         #i.e. maybe we write ϕ_isl to file, then fft in place and do the other stuff
-        PostProcessing.ft_phi!(ϕ_is, ϕ_islft, isl_grids, plan_isl)
+        PostProcessing.ft_phi!(ϕ_isl, ϕ_islft, isl_grids, plan_isl)
 
         κind, mode_lab = PostProcessing.label_mode(ϕ_islft, isl_grids, κmarray, ϕ_islmarray)
 
@@ -226,19 +228,19 @@ function qfm_spectrum_to_tor(dir_base::String, tor_grids::GridsT, surfs_dir::Str
     #think this process is indep of flux vs rad, just depends how the surfaces where generated
     rgrid, θgrid, ζgrid = inst_grids(tor_grids)
 
-    κms = [] #note that we don't know the size of this yet
+    rms = [] #note that we don't know the size of this yet
     tor_ω = []
     mode_labs = Tuple{Int64, Int64}[]
 
 
-    ϕ_qfm, ϕ_qfmft = PostProcessing.allocate_phi_arrays(tor_grids, deriv=true)
+    ϕ_qfm, ϕ_qfmft = PostProcessing.allocate_phi_arrays(qfm_grids, deriv=true)
 
     ϕ_tor, ϕ_torft = PostProcessing.allocate_phi_arrays(tor_grids, deriv=false)
 
     plan_qfm = PostProcessing.create_ft_plan(ϕ_qfmft, qfm_grids)
     plan_tor = PostProcessing.create_ft_plan(ϕ_torft, tor_grids)
 
-    κmarray = Array{Int64}(undef, isl_grids.x2.N, isl_grids.x3.N)
+    rmarray = Array{Int64}(undef, tor_grids.x2.N, tor_grids.x3.N)
     ϕ_tormarray = Array{Float64}(undef, tor_grids.x2.N, tor_grids.x3.N)
 
     surf_itp, sd = create_surf_itp(surfs)
@@ -247,7 +249,7 @@ function qfm_spectrum_to_tor(dir_base::String, tor_grids::GridsT, surfs_dir::Str
 
     mode_count = 1
 
-    coord_map = qfm_to_tor_coord_map(κgrid, ᾱgrid, τgrid, CT, surf_itp, sd)
+    coord_map = qfm_to_tor_coord_map(rgrid, θgrid, ζgrid, CT, surf_itp, sd)
     for i in 1:length(evals.ω)
 
         #Not impossible we would only want to map over the chaotic region or something!
@@ -275,9 +277,9 @@ function qfm_spectrum_to_tor(dir_base::String, tor_grids::GridsT, surfs_dir::Str
         
         PostProcessing.ft_phi!(ϕ_tor, ϕ_torft, tor_grids, plan_tor)
 
-        κind, mode_lab = PostProcessing.label_mode(ϕ_torft, tor_grids, κmarray, ϕ_tormarray)
+        rind, mode_lab = PostProcessing.label_mode(ϕ_torft, tor_grids, rmarray, ϕ_tormarray)
 
-        push!(κms, κgrid[κind])
+        push!(rms, rgrid[rind])
         push!(mode_labs, mode_lab)
         push!(tor_ω, evals.ω[i])
 
@@ -288,7 +290,7 @@ function qfm_spectrum_to_tor(dir_base::String, tor_grids::GridsT, surfs_dir::Str
         mode_count += 1
     end
 
-    tor_evals = EvalsT(tor_ω, κms, mode_labs)
+    tor_evals = EvalsT(tor_ω, rms, mode_labs)
     save_object(dir_base*"/tor_map/evals.jld2", tor_evals)
     #so we have a record of the grids used in the mapping
     save_object(dir_base*"/tor_map/grids.jld2", tor_grids)

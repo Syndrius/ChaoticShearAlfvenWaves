@@ -94,7 +94,7 @@ for i in 0:a-1
     #r2D_α[1+idx*fM:(idx+1)*fM, 1:(a-i)*fM] .= 0.0
 end
 #%%
-contourf(r2D_α
+contourf(r2D_α)
 contourf(θ2D_α)
 
 #%%
