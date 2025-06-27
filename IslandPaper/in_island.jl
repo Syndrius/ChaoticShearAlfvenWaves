@@ -7,6 +7,7 @@
 using MID
 using MIDViz
 using MIDIslands
+using Plots; plotlyjs()
 #%%
 
 geo = init_geo(R0=4.0)

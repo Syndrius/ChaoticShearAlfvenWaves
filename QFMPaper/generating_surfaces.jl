@@ -35,7 +35,7 @@ isl2 = init_island(m0=5, n0=-3, A=k1)
 
 isls = MID.Geometry.IslandT[isl1, isl2]
 
-prob = init_problem(geo=geo, q=cyl_qfm_q, isls=isls, met=:cylinder)
+prob = init_problem(geo=geo, q=MID.Equilibrium.cyl_qfm_q, isls=isls, met=:cylinder)
 
 #%%
 
