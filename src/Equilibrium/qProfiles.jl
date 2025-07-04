@@ -6,6 +6,8 @@ function q_profile(x1::Float64)
     return 1.0, 1.0
 end
 
+#this should be called cantori q or something
+#this is almost the most basic case we can consider
 function cyl_qfm_q(r::Float64)
     return 1.0 + r, 1.0
 end
