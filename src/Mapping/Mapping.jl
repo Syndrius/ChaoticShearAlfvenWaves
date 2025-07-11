@@ -27,6 +27,9 @@ include("CoordTransform.jl")
 include("HermiteInterpolation.jl") 
 
 
+include("DerivativeInterpolation.jl") 
+
+
 include("Eigenfunctions.jl")
 
 

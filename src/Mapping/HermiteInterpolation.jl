@@ -37,9 +37,17 @@ function global_to_local(ind::Int64, grid::AbstractArray{Float64}, x::Float64)
 
     #guard in case point is exactly on grid
     if grid[ind]==x
+        #extra edge cases only for derivatives.
         ξ = 0.0
-        inds = [ind, ind]
-        dx = 1.0 #choosing 1.0 due to division later, for this case this value should not matter. as Shape functions should evaluate to zero.
+        ind1 = ind
+        #assumes 2π periodicity!
+        if ind1 == length(grid)
+            ind2 = 1
+            dx = 2π + (grid[ind2] - grid[ind1])  #global difference
+        else
+            ind2 = ind+1 #doesn't matter
+            dx = grid[ind2] - grid[ind] 
+        end
     #periodic case
     elseif x > grid[end]
         inds = [length(grid), 1]
@@ -90,8 +98,7 @@ Function that returns the appropriate hermite basis function based on h.
 function hb(t::Float64, h::Int64, dt::Float64)
     #additional jacobian term is very awkward.
 
-    #dt is required as we are transforming from [-1, 1] to [0, 1]
-    #and from global to local, so the derivatives need an extra jacobian.
+    #dt is due to arbitrary interval, see wikipedia page.
     if h==1
         return h00(t)
     elseif h==2

@@ -15,7 +15,7 @@ geo = init_geo(R0=4.0)
 #is flux island at 0.5 going to cause problemos?
 #perhaps we should have done the flux case at 0.125? and gone to 0.5?
 #island has no issue with it, which is probably all that matters.
-isl21a = init_island(m0=2, n0=-1, w=0.1, ψ0=0.5, qp=2.0, flux=true)
+isl21a = init_island(m0=2, n0=-1, w=0.2, ψ0=0.5, qp=2.0, flux=true)
 #start with no islands
 #prob = init_problem(geo=geo, q=island_q, met=:cylinder, isl=isl21a, type=:flux)
 prob = init_problem(geo=geo, q=island_q, met=:island, isl=isl21a, type=:island)
