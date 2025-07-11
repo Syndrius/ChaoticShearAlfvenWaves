@@ -1,6 +1,8 @@
 
 
 using MID
+using Plots; plotlyjs()
+using Statistics
 #for dgl, looks like 4 components, ∂r g_{33}, ∂r g_{11} and ∂r g_{12} are perfectly approximated by the scheme. The off diagononals are surprising as they are not as simple as the the diagonals.
 #dgu seems to be ok (now!) however, ∂r g^{22} converges very slowly, think this is just because it has a 1/r^3 term?
 #changing to a fourth order difference has fixed this problemo.
@@ -9,7 +11,9 @@ function f(r, θ, ζ)
 
     #peak efficiency
     met = MID.Geometry.MetT()
-    MID.Geometry.toroidal_metric!(met, r, θ, ζ, 4.0)
+    #MID.Geometry.rad_toroidal_metric!(met, r, θ, ζ, 4.0)
+    MID.Geometry.flux_toroidal_metric!(met, r, θ, ζ, 4.0)
+    #MID.Geometry.flux_cylindrical_metric!(met, r, θ, ζ, 4.0)
 
     return met.gu
 end
@@ -17,7 +21,9 @@ function df(r, θ, ζ)
 
     #peak efficiency
     met = MID.Geometry.MetT()
-    MID.Geometry.toroidal_metric!(met, r, θ, ζ, 4.0)
+    #MID.Geometry.rad_toroidal_metric!(met, r, θ, ζ, 4.0)
+    MID.Geometry.flux_toroidal_metric!(met, r, θ, ζ, 4.0)
+    #MID.Geometry.flux_cylindrical_metric!(met, r, θ, ζ, 4.0)
 
     return met.dgu
 end
@@ -38,7 +44,7 @@ Nh = length(hlist)
 Nr = 21
 Nθ = 21
 Nζ = 21
-vals = LinRange(0.2, 0.8, Nr)
+rvals = LinRange(0.2, 0.8, Nr)
 θvals = LinRange(0.2, 6.0, Nθ)
 ζvals = LinRange(0.2, 6.0, Nζ)
 
@@ -53,7 +59,6 @@ for (i, h) in enumerate(hlist), (j, r) in enumerate(rvals), (k, θ) in enumerate
     error[i, j, k, l, 2, :, :] = abs.(an[:, :, 2] .- dfdθ(r, θ, ζ, h))
     error[i, j, k, l, 3, :, :] = abs.(an[:, :, 3] .- dfdζ(r, θ, ζ, h))
 end
-#%% 
 
 avg_error = zeros(Nh, 3, 3, 3);
 
@@ -64,7 +69,7 @@ end
 lh = log.(hlist)
 le = log.(avg_error)
 
-p = plot(ylims=(0, 5))
+p = plot()#ylims=(0, 0.1))
 for i in 1:3, j in 1:3, k in 1:3
     #plot!(-lh, le[:, i, j, k], label="d"*string(i)*"g_"*string(j) * string(k))
     plot!(-lh, avg_error[:, i, j, k], label="d"*string(i)*"g_"*string(j) * string(k))

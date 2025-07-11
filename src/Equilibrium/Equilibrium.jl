@@ -26,6 +26,7 @@ include("qProfiles.jl") #once again, this has become a disaster. Ideally, we sho
 
 export q_profile
 export fu_dam_q
+export cantori_q
 export low_shear_q
 export low_shear_qfm_q
 export qfm_q

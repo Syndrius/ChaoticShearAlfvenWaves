@@ -6,6 +6,14 @@ function q_profile(x1::Float64)
     return 1.0, 1.0
 end
 
+function cantori_q(ψ::Float64)
+    
+    #designed to mimic a normal q-profile, q(0)=1, q(1)=2
+    #while making the iota profile linear is ψ
+    #this has 3/2 island at ψ=0.5, and 4/3 island at ψ=2/3
+    return 1/(1-0.5*ψ), 1/2 / (1-1/2*ψ)^2
+end
+
 #this should be called cantori q or something
 #this is almost the most basic case we can consider
 function cyl_qfm_q(r::Float64)

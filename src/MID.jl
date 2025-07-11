@@ -19,6 +19,7 @@ Current term is back on, it is working fine, may need higher res for best result
 #Long Term fixes
  - Perhaps https://github.com/fredrikekre/Literate.jl if we ever want to share this garbage.
  - Re do all the example cases, include proper benchmarks and tests. -> tests are better now, but still not ideal!
+ - Perhaps add the option of an iota problem instead? would just be a slightly different compute_B.
  - Add try catch to sqrt in solve, most of the time it is just because of ~0 numbers, but it owuld be good to have a warning rather than just always take abs. -> Maybe in this case we dont return the normalised ones? Or should we always have a normalise flag??? -> cka does this better, below some tolerance they are just set to zero.
  - Use of kwargs is inconsistent and sometimes annoying.
  - May want to change the way the q-profile is done. May be better to precompute the values, and just pass in q and dq and floats so that there is no uncertainty, will need to profile.
@@ -53,6 +54,7 @@ using ..Equilibrium; export qfm_q
 using ..Equilibrium; export low_shear_qfm_q
 using ..Equilibrium; export qfm_benchmark_q
 using ..Equilibrium; export island_q
+using ..Equilibrium; export cantori_q
 
 
 

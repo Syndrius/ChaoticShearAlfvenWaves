@@ -10,10 +10,14 @@ using Plots; plotlyjs()
 
 geo = init_geo(R0=4.0)
 
-isl21a = init_island(m0=2, n0=-1, w=0.1, ψ0=0.5, qp=2.0, flux=true)
+#isl21a = init_island(m0=2, n0=-1, w=0.1, ψ0=0.5, qp=2.0, flux=true)
+isl21b = init_island(m0=2, n0=-1, w=0.2, ψ0=0.5, qp=2.0, flux=true)
 #start with no islands
-prob = init_problem(geo=geo, q=island_q, met=:cylinder, isl=isl21a, type=:flux)
+#prob = init_problem(geo=geo, q=island_q, met=:cylinder, isl=isl21a, type=:flux)
+prob = init_problem(geo=geo, q=island_q, met=:cylinder, isl=isl21b, type=:flux)
 prob.isls[1]
+M = 32
+N = 8
 #%%
 rvals = LinRange(0.0, 1.0, 100)
 qvals = [prob.q(i)[1] for i in rvals]
@@ -24,38 +28,40 @@ rlist = collect(LinRange(0.005, 0.995, Ntraj));
 #rlist = collect(LinRange(0.1, 1.0, Ntraj));
 Nlaps = 500;
 
-poincare_plot(prob, Nlaps, Ntraj, rlist)
+poincare_plot(prob, Nlaps, rlist, zeros(Ntraj))
 #%%
-rats1 = lowest_rationals(2, prob.q(0.8)[1], prob.q(1.0)[1])
+rats1 = lowest_rationals(5, prob.q(0.8)[1], prob.q(1.0)[1])
 #gl1 = surface_guess(rats1, prob.q)
 gl1 = 0.9*ones(length(rats1))
-surfs1 = construct_surfaces(rats1, gl1, prob, M=32, N=16);
+surfs1 = construct_surfaces(rats1, gl1, prob, M=M, N=N);
 plot_surfs(surfs1)
 #%%
-rats2 = lowest_rationals(5, prob.q(0.6)[1], prob.q(0.8)[1])
+rats2 = lowest_rationals(7, prob.q(0.6)[1], prob.q(0.8)[1])
 gl2 = surface_guess(rats2, prob.q)
-surfs2 = construct_surfaces(rats2, gl2, prob, M=32, N=16);
+surfs2 = construct_surfaces(rats2, gl2, prob, M=M, N=N);
 plot_surfs(surfs2)
 #%%
 #this will be the spiciest one!
 rats3 = lowest_rationals(7, prob.q(0.4)[1], prob.q(0.6)[1])
 gl3 = surface_guess(rats3, prob.q)
-surfs3 = construct_surfaces(rats3, gl3, prob, M=32, N=16);
+surfs3 = construct_surfaces(rats3, gl3, prob, M=M, N=N);
 plot_surfs(surfs3)
 #%%
-rats4 = lowest_rationals(11, prob.q(0.2)[1], prob.q(0.4)[1])
+rats4 = lowest_rationals(10, prob.q(0.2)[1], prob.q(0.4)[1])
 gl4 = surface_guess(rats4, prob.q)
-surfs4 = construct_surfaces(rats4, gl4, prob, M=32, N=16);
+surfs4 = construct_surfaces(rats4, gl4, prob, M=M, N=N);
 plot_surfs(surfs4)
 #%%
-rats5 = lowest_rationals(23, prob.q(0.0)[1], prob.q(0.2)[1])
+rats5 = lowest_rationals(15, prob.q(0.0)[1], prob.q(0.2)[1])
 gl5 = surface_guess(rats5, prob.q)
-surfs5 = construct_surfaces(rats5, gl5, prob, M=32, N=16);
+surfs5 = construct_surfaces(rats5, gl5, prob, M=M, N=N);
 plot_surfs(surfs5)
 #%%
 curr_surfs = vcat(surfs1, surfs2, surfs3, surfs4, surfs5);
-save_object("/Users/matt/phd/MID/data/surfaces/island_21a.jld2", curr_surfs)
 plot_surfs(curr_surfs)
+#%%
+#save_object("/Users/matt/phd/MID/data/surfaces/island/21a_surfs.jld2", curr_surfs)
+save_object("/Users/matt/phd/MID/data/surfaces/island/21b_surfs.jld2", curr_surfs)
 #%%
 surfs = load_object("/Users/matt/phd/MID/data/surfaces/island_surfs.jld2");
 #this does make things look much better, we may want to be a bit more thorough with this though!

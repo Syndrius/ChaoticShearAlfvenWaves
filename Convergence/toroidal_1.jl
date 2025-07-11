@@ -14,30 +14,32 @@ function f(r, θ, ζ, prob)
     met = MID.Geometry.MetT()
     B = MID.Equilibrium.BFieldT()
 
-    prob.met(met, r, θ, ζ, prob.geo.R0)
+    #prob.met(met, r, θ, ζ, prob.geo.R0)
 
-    MID.Equilibrium.compute_B!(B, met, prob.q, prob.isls, r, θ, ζ)
+    #MID.Equilibrium.compute_B!(B, met, prob.q, prob.isls, r, θ, ζ)
 
-    return B.mag_B[1]
-    #return met.J[1]
+    MID.Geometry.new_flux_toroidal_metric!(met, r, θ, ζ, 4.0)
+    #return B.mag_B[1]
+    return met.J[1]
 end
 function df(r, θ, ζ, prob)
 
     #peak efficiency
     met = MID.Geometry.MetT()
-    B = MID.Equilibrium.BFieldT()
+    #B = MID.Equilibrium.BFieldT()
 
-    prob.met(met, r, θ, ζ, prob.geo.R0)
+    #prob.met(met, r, θ, ζ, prob.geo.R0)
 
-    MID.Equilibrium.compute_B!(B, met, prob.q, prob.isls, r, θ, ζ)
+    #MID.Equilibrium.compute_B!(B, met, prob.q, prob.isls, r, θ, ζ)
+    MID.Geometry.new_flux_toroidal_metric!(met, r, θ, ζ, 4.0)
 
-    return B.dmag_B
-    #return met.dJ
+    #return B.dmag_B
+    return met.dJ
 end
 function dfdr(r, θ, ζ, prob, Δr)
     #display(f(r+Δr, θ, ζ, prob))
-    return (f(r+Δr, θ, ζ, prob) - f(r - Δr, θ, ζ, prob)) / (2 * Δr)
-    #return @. (-f(r+2Δr, θ, ζ) + 8 * f(r + Δr, θ, ζ) - 8 * f(r-Δr, θ, ζ) + f(r - 2*Δr, θ, ζ)) / (12 * Δr)
+    #return (f(r+Δr, θ, ζ, prob) - f(r - Δr, θ, ζ, prob)) / (2 * Δr)
+    return (-f(r+2Δr, θ, ζ, prob) + 8 * f(r + Δr, θ, ζ, prob) - 8 * f(r-Δr, θ, ζ, prob) + f(r - 2*Δr, θ, ζ, prob)) / (12 * Δr)
 end
 function dfdθ(r, θ, ζ, prob, Δθ)
     #display("where and why")
@@ -73,7 +75,6 @@ for (i, h) in enumerate(hlist), (j, r) in enumerate(rvals), (k, θ) in enumerate
     error[i, j, k, l, 2] = abs(an[2] - dfdθ(r, θ, ζ, prob, h))
     error[i, j, k, l, 3] = abs(an[3] - dfdζ(r, θ, ζ, prob, h))
 end
-#%% 
 
 avg_error = zeros(Nh, 3);
 
