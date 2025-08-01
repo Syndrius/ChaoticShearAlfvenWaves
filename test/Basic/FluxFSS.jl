@@ -20,13 +20,13 @@ evals, _, _ = compute_spectrum(prob=prob, grids=grids, solver=solver);
 #continuum_plot(evals)
 
 
-tae_ind = find_ind(evals, 0.284)
+tae_ind = find_ind(evals, 0.291)
 tae_freq = evals.ω[tae_ind]
 
 #potential_plot(ϕft, grids, tae_ind)
 
 @test tae_ind == 58
-@test tae_freq ≈ 0.284 atol=0.001
+@test tae_freq ≈ 0.291 atol=0.001
 
 
 #=

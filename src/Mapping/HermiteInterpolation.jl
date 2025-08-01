@@ -15,13 +15,36 @@ function hermite_interpolation(x1::Float64, x2::Float64, x3::Float64, ϕ::Array{
     ξ3, inds3, dx3 = global_to_local(x3ind, x3grid, x3)
 
 
+    #so something is wrong here.
     ϕ_int = 0.0+0.0im
     gid = Indexing.grid_id
     bid = Indexing.basis_id
-    for h1 in 1:4, h2 in 1:4, h3 in 1:4
+    for h3 in 1:4, h2 in 1:4, h1 in 1:4
         gi = (inds1[gid[h1]+1], inds2[gid[h2]+1], inds3[gid[h3]+1])
-        bi = 1 + bid[h1] + 2*bid[h2] + 4*bid[h3] #cannot be sure this is actually valid yet!
+        bi = 1 + 4*bid[h1] + 2*bid[h2] + 1*bid[h3] #cannot be sure this is actually valid yet!
         ϕ_int += ϕ[gi..., bi] * hb(ξ1, h1, dx1) * hb(ξ2, h2, dx2) * hb(ξ3, h3, dx3)
+    end
+    return ϕ_int
+
+end
+
+
+function hermite_interpolation(x1::Float64, ϕ::Array{ComplexF64, 2}, x1grid::Array{Float64})
+    #first find the index of the grid point closest to the target point
+    x1ind = find_ind(x1grid, x1)
+
+    #using this point, we find the two indices left and right of the point, the distance from the left point (ξ) and the disatnce between the two points.
+    ξ1, inds1, dx1 = global_to_local(x1ind, x1grid, x1)
+
+
+    #so something is wrong here.
+    ϕ_int = 0.0+0.0im
+    gid = Indexing.grid_id
+    bid = Indexing.basis_id
+    for h1 in 1:4
+        gi = inds1[gid[h1]+1]
+        bi = 1 + bid[h1] 
+        ϕ_int += ϕ[gi, bi] * hb(ξ1, h1, dx1) 
     end
     return ϕ_int
 
@@ -48,6 +71,7 @@ function global_to_local(ind::Int64, grid::AbstractArray{Float64}, x::Float64)
             ind2 = ind+1 #doesn't matter
             dx = grid[ind2] - grid[ind] 
         end
+        inds = [ind1, ind2]
     #periodic case
     elseif x > grid[end]
         inds = [length(grid), 1]

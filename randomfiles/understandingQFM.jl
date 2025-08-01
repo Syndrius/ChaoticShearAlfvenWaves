@@ -1,9 +1,154 @@
 
 using MID
+using MIDCantori
 using MIDViz
 using Plots; plotlyjs()
 using Plots; gr()
 #try to understand the action function, from after the coefficeints are returned.
+#%%
+
+k = 0.003
+geo = init_geo(R0=1.0)
+isl1 = init_island(m0=4, n0=-3, A=k/4, flux=true)
+isl2 = init_island(m0=3, n0=-2, A=k/3, flux=true)
+isls = MID.IslandT[isl1, isl2]
+
+prob = init_problem(q=cantori_q, isls=isls, geo=geo, type=:flux, met=:cylinder)
+
+#%%
+r0, θ0 = MIDCantori.QFM.anal_periodic_orbit(a, b, 2, k)
+
+poincare_plot(prob, 1000, collect(LinRange(0.58, 0.62, 50)), zeros(50), xlimits=(0, 2π), ylimits=(0.59, 0.61))
+poincare_plot(prob, 1000, [0.6], [0.0], xlimits=(0, 2π), ylimits=(0.59, 0.61))
+scatter!(LinRange(0, 2π/a, length(νarr)), gl[1] .+ νarr)#, ylimits=(0.55, 0.65))
+
+#why on earth is ν a constant for each psuedo field line, that seems to be actually wild
+#wild that a fixed correction can create a periodic orbit.
+#also seems odd that this is a perfect sin function,
+#perhaps this can be analytically computed based on the size of perturbation?
+#also looks like this could place upper limits on the qfm process.
+gl = surface_guess([(13, 9)], cantori_q)
+#%%
+
+αvals = LinRange(0, 2π/a, length(νarr))
+k*(sin(3*αvals[3]) + sin(4*αvals[3]))
+k*(cos(3*αvals[3])/3 + cos(4*αvals[3])/4)
+
+νarr[3] #* gl[1]^2
+
+scatter(αvals, νarr)
+scatter!(αvals, @. k*(cos(3*αvals)/3 + cos(4*αvals)/4))
+#%%
+a = 13
+b = 9
+r1 = (a, b)
+
+met = MID.MetT()
+B = MID.BFieldT()
+M = 32
+N = 8
+rcosarr, rsinarr, θcosarr, θsinarr, νarr = MID.QFM.action(r1, prob, met, B, M, N, 0.7, 2);
+
+scatter(LinRange(0, 2π/a, length(νarr)), νarr)
+#%%
+#size if (number of field lines, number of coefficients (a*N+1)).
+size(rcosarr)
+
+#first step is to convert back to normal space,
+r = MID.QFM.irfft1D(rcosarr, rsinarr, 1)
+θ = MID.QFM.irfft1D(θcosarr, θsinarr, 1)
+ζ = LinRange(0, 2π*a, 2*N*a)
+
+θf = zeros(8, 2*N*a)
+for i in 1:8
+    θf[i, :] = @. θ[i, :] + b/a * ζ
+end
+
+
+fll = 3
+scatter(θ[fll, 1:2*N:end], r[fll, 1:2*N:end])
+scatter(θf[fll, 1:2*N:end], r[fll, 1:2*N:end])
+
+2π / (b) * 2
+6π/5
+
+2π * (b/a)
+2π/b
+
+mod(b*3, a)
+
+
+LinRange(0, 2π/7, 9)[1:end-1]
+
+θf[:, 1:2*N:end]
+mod.(θf[:, 1:2*N:end], 2π)
+2π/a
+4π/a
+
+#%%
+p = plot()
+for i in 1:8
+    scatter!(θ[i, 1:2*N:end], r[i, 1:2*N:end])
+end
+display(p)
+
+
+#so we have the solution in the domain (0, 2π/a), we need to extend the field lines to 2π.
+#%%
+r2dal = zeros((a*8, a*8));
+θ2dal = zeros((a*8, a*8));
+for i in 0:a-1
+    idx = mod(b*i, a)
+    display(idx)
+    r2dal[1+idx*2*N:(idx+1)*2*N, 1:(a-i) * N*2] = r[:, 1+i*N*2:end]
+    r2dal[1+idx*2*N:(idx+1)*2*N, 1+(a-i) * N*2: end] = r[:, 1:i*N*2]
+    θ2dal[1+idx*2*N:(idx+1)*2*N, 1:(a-i) * N*2] = θ[:, 1+i*N*2:end]
+    θ2dal[1+idx*2*N:(idx+1)*2*N, 1+(a-i) * N*2: end] = θ[:, 1:i*N*2]
+end
+
+#%%
+fll = 4
+#ok, so we only consider α [0, 2π/a] as the rest are the same
+#this looks to duplicated each field line, but start from the next position essentially.
+#but for some reason this is transposed....
+scatter(θ2dal[fll, 1:2*N:end], r2dal[fll, 1:2*N:end])
+scatter!(θ2dal[fll+8, 1:2*N:end], r2dal[fll+8, 1:2*N:end])
+scatter(θ2dal[fll, 1:2*N:6*N], r2dal[fll, 1:2*N:6*N])
+scatter!(θ2dal[fll+8, 1:2*N:6*N], r2dal[fll+8, 1:2*N:6*N])
+scatter(θ2dal[fll, 1:N:end], r2dal[fll, 1:N:end])
+scatter!(θ2dal[fll+8, 1:N:end], r2dal[fll+8, 1:N:end])
+scatter(θ2dal[1:2*N:end, fll], r2dal[1:2*N:end, fll])
+scatter(θ2dal[1:end, fll], r2dal[1:end, fll])
+
+scatter(θ2dal[fll, 2*N:2*N], r2dal[fll, 2*N:2*N])
+scatter!(θ2dal[fll, 4*N:4*N], r2dal[fll, 4*N:4*N])
+scatter!(θ2dal[fll+8, 1:2*N:end], r2dal[fll+8, 1:2*N:end])
+#%%
+myr2d = zeros((8*a, 2*N*a));
+myθ2d = zeros((8*a, 2*N*a));
+
+#lets see if we can do this another way.
+#%%
+n_fl = 8
+#doesn't work as the starting point needs to be shifted for each batch of the field lines.
+#so the first fl always hits the same a points, but the order is different.
+for i in 1:7
+    display((i-1)*n_fl)
+    display((i)*n_fl)
+    myr2d[1+(i-1)*n_fl:(i*n_fl), :] = r[:, :]
+    myθ2d[1+(i-1)*n_fl:(i*n_fl), :] = θ[:, :]
+end
+
+display(myr2d .- r2dal)
+
+scatter(myθ2d[fll, 1:2*N:end], myr2d[fll, 1:2*N:end])
+scatter!(myθ2d[fll+8, 1:2*N:end], myr2d[fll+8, 1:2*N:end])
+scatter(myθ2d[fll, 1:2*N:6*N], myr2d[fll, 1:2*N:6*N])
+scatter!(myθ2d[fll+8, 1:2*N:6*N], myr2d[fll+8, 1:2*N:6*N])
+#%%
+#ok now we have r(α, ζ), θ(α, ζ)
+#need to change the α to ϑ via ϑ = α + b/a ζ
+
 #%%
 
 k1 = 0.005

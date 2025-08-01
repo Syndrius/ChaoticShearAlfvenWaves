@@ -1,5 +1,6 @@
 
 using MID
+using Plots; plotlyjs()
 
 #so I guess the hermite stuff is fine, just the cost of doing cubic interpolation instead of linear...
 #we may need to come up with a way to create a qfm grid that will be islandy. we will probably just settle for super high density in the island region.
@@ -48,3 +49,10 @@ for (i, x) in enumerate(xi), (j, y) in enumerate(yi), (k, z) in enumerate(zi)
 end
 #perhaps this wasn't actually that slow, just a bit slower than the actual interpolation
 #so I guess we can use this then?
+
+#lovely, this doesn;t work. just looks a bit like it is.
+plot(xvals, real.(fvals[:, 25, 5, 1]))
+plot(xi, real.(ϕ[:, 50, 10]))
+
+contourf(yvals, xvals, real.(fvals[:, :, 1, 1]))
+contourf(yi, xi, real.(ϕ[:, :, 1]))

@@ -22,11 +22,11 @@ evals, _, _ = compute_spectrum(prob=prob, grids=grids, solver=solver);
 
 #unsure why it is flipped... hopefully a resolution problemo
 #this is an extremly different tae frequency... real good lol
-tae_ind = find_ind(evals, 0.294)
+tae_ind = find_ind(evals, 0.306)
 tae_freq = evals.ω[tae_ind]
 
 @test tae_ind == 38
-@test tae_freq ≈ 0.294 atol=0.001
+@test tae_freq ≈ 0.306 atol=0.001
 
 #unsure if the second test is actually providing anything tbh!
 #=

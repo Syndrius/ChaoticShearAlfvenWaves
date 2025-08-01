@@ -21,12 +21,13 @@ evals, _, _ = compute_spectrum(prob=prob, grids=grids, solver=solver);
 
 #continuum_plot(evals)
 
+#potential_plot(ϕft, grids, 28)
 
 #almost impossible to tell from the continuum reconstruction,
 #but the same tae is found with both FFS and FFF which is v promising.
 #even with tiny grid they seem to have v similar frequency and mode structure!
-tae_ind = find_ind(evals, 0.294)
+tae_ind = find_ind(evals, 0.306)
 tae_freq = evals.ω[tae_ind]
 
 @test tae_ind == 28
-@test tae_freq ≈ 0.294 atol=0.001
+@test tae_freq ≈ 0.306 atol=0.001

@@ -104,6 +104,8 @@ function allocate_phi_arrays(grids::FSSGridsT, nevals=0; deriv=false)
     if deriv
 
         if nevals == 0
+            #these being 8 instead of 2 is fine as hermite only interacts with the first 2,
+            #and this will allow us to maybe add fourier derivatives later.
             ϕ = Array{ComplexF64}(undef, grids.x1.N, x2size, x3size, 8)
             ϕft = Array{ComplexF64}(undef, grids.x1.N, grids.x2.N, grids.x3.N, 8)
         else

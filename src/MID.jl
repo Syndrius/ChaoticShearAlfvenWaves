@@ -106,6 +106,7 @@ using ..Io; export efunc_from_file
 include("PostProcessing/PostProcessing.jl")
 
 
+include("Helmholtz/Helmholtz.jl")
 
 
 include("WeakForm/WeakForm.jl")
@@ -125,6 +126,7 @@ using ..Solve; export compute_continuum
 
 
 include("Mapping/Mapping.jl") #hopefully not a mistake
+
 
 
 end

@@ -13,6 +13,7 @@ struct HB1d
     ddH :: Array{Float64, 2}
 end
 
+#this is wrong!!!!!!! fk moi.
 
 """
     hermite_basis(gp::Array{Float64})

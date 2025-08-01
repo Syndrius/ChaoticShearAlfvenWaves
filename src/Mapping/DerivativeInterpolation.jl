@@ -18,7 +18,7 @@ function hermite_interpolation(x1::Float64, x2::Float64, x3::Float64, ϕ::Array{
     bid = Indexing.basis_id
     for h1 in 1:4, h2 in 1:4, h3 in 1:4
         gi = (inds1[gid[h1]+1], inds2[gid[h2]+1], inds3[gid[h3]+1])
-        bi = 1 + bid[h1] + 2*bid[h2] + 4*bid[h3] #cannot be sure this is actually valid yet!
+        bi = 1 + 4*bid[h1] + 2*bid[h2] + 1*bid[h3] #cannot be sure this is actually valid yet!
         ϕ_int += ϕ[gi..., bi] * hb(ξ1, h1, dx1, x1d) * hb(ξ2, h2, dx2, x2d) * hb(ξ3, h3, dx3, x3d)
     end
     return ϕ_int

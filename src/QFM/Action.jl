@@ -181,22 +181,24 @@ end
 Extremizes the action for a given rational, returns the fourier coefficients of the solution.
 """
 function action(rational::Tuple{Int64, Int64}, prob::ProblemT, met::MetT, B::BFieldT, M::Int64, N::Int64, sguess=0.5::Float64, nfft=2::Int64)
+
+
     #a, b is the toroidal, poloidal mode number that defines the rational surfaces a/b
     #surfaces are defined at q=a/b
     #not that b≡p and a≡q in original case, as they use iota.
-
-    #N is the number of fourier harmonics included in the trial function.
-    #this gets expanded to q*N, as the new field line will have 2πq periodicity
-    #so the domain is expanded, requiring more fourier harmonics.
-    #placeholders until we swap fully.
     a = rational[1]
     b = rational[2]
+    #N is the number of fourier points per 2π
+    #hence we have 2πa fourier points
     aN = a * N
 
+    #this is a made up additional scaling used by Zhisong, nfft is just an increase to the fourier resolution, which is just scaled arbitrarily by 2.
     MM = 2 * nfft #still very unsure what this is.
 
     #number of pseudo field lines to be found
     fl = MM * N
+    #seems like this should have more to do with M rather than N?
+    #fl = N * nfft #number of pseudo field lines to find. Unsure why this has anything to do with N.
 
     afM = fl * a
     Nfft = afM
@@ -283,6 +285,7 @@ function action(rational::Tuple{Int64, Int64}, prob::ProblemT, met::MetT, B::BFi
         
     end
 
+    #wrap_field_lines(rcosarr, rsinarr, θcosarr, θsinarr, MM, M, N, a, b, afM, Nfft)
     #return rcosarr, rsinarr, θcosarr, θsinarr, νarr
 
     #field lines are wrapped into the qfm surface.
@@ -313,16 +316,25 @@ function wrap_field_lines(rcosarr::Array{Float64, 2}, rsinarr::Array{Float64, 2}
     θ = irfft1D(θcosarr, θsinarr, 2)
 
 
-    #these are the same fkn value
-    #by golly this is cooked.
-    #no idea what this is, or what this is supposed to be a function of
-    #quite literally could be anything!
+    #so this should be (number of field lines * a, number of coeffs in real space 2*aN)
+    #field lines are a bit congfusing atm.
     r2D_alpha = zeros((afM, Nfft))
     θ2D_alpha = zeros((afM, Nfft))
+    #display(size(r2D_alpha))
 
-    #this just extends the solution from 2π to 2qπ, as this is the periodicity of the pesudo fieldline.
+    #this is taken the solutions with α [0, 2π/a] and extending them to [0, 2π]
+    #this is done by duplicating the solutions a times,
+    #however, the phase of each duplicated point has to be modified.
+    #exact way this is done is copied from Zhisong.
     for i in 0:a-1
-        idx = mod(b*i, a)
+        idx = mod(b*i, a) #this is the real trick here
+        #unsure why this takes the form
+        #this dictates the starting point of each 'batch' of field lines
+        #i.e. if the periodic orbit has points θ0, θ1, θ2..., θN
+        #the idx tells us where the feild lines starting at α0+2π/a should start
+        #i.e. they might go θ2, θ3 ..., θN, θ0, θ1.
+        #and same for r.
+        #this must be forcing the periodicity to be correct, but I cannot replicate in a simpler way.
 
         r2D_alpha[1+idx * fM : (idx+1)*fM, 1 :(a-i) * N * MM] = r[:, 1+ i * N * MM : end]
 
@@ -336,8 +348,11 @@ function wrap_field_lines(rcosarr::Array{Float64, 2}, rsinarr::Array{Float64, 2}
 
     r2D_vartheta = zeros((afM, MM * N))
     θ2D_vartheta = zeros((afM, MM * N))
+    #display(size(r2D_vartheta))
 
     #here we actually get r(ϑ, φ), creating the result we want.
+    #this is mapping the evolution in α to evolution in ϑ, zhisongs code kind of explains it
+    #but this is also not clear.
     for i in 0:MM * N-1
         #v odd that this is required. but otherwise the mod function removes some of the input???
         arr = 0:afM

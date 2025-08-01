@@ -2,14 +2,17 @@
 #the interpolation package is fkn terrible
 #so we need to get the hermite stuff working
 #here we test in 1d to make sure it works properly
-using Plots
+using Plots; plotlyjs()
 
 #start simple
-f(x) = sin(x)
-df(x) = cos(x)
+#f(x) = sin(x)
+#df(x) = cos(x)
+f(x) = x*(1-x)*exp(x)
+df(x) = -exp(x)*(x^2+x-1)
 
-N1 = 20
-xvals = LinRange(0.0, 2π, N1+1)[1:end-1]
+N1 = 10
+#xvals = LinRange(0.0, 2π, N1+1)[1:end-1]
+xvals = LinRange(0.0, 1, N1)
 fvals = zeros(N1, 2)
 fvals[:, 1] = f.(xvals)
 fvals[:, 2] = df.(xvals)
@@ -62,7 +65,7 @@ plot!(tvals, h10.(tvals))
 plot!(tvals, h01.(tvals))
 plot!(tvals, h11.(tvals))
 #%%
-function int(x, fvals, dfvals, xvals)
+function int(x, fvals, xvals)
     ind = argmin(abs.(x .- xvals))
     #display(abs.(x .- xvals))
 
@@ -137,20 +140,23 @@ function int(x, fvals, dfvals, xvals)
     return val
 end
 println(collect(xvals))
-display(int(2π-0.1, fvals, dfvals, xvals))
+display(int(2π-0.1, fvals, xvals))
 display(f(2π-0.1))
 #%%
-N2 = 200
-xi = LinRange(0.0, 2π, N2+1)[1:end-1]
+N2 = 100
+#xi = LinRange(0.0, 2π, N2+1)[1:end-1]
+xi = LinRange(0.0, 1, N2)
 ϕ = zeros(N2);
 
 for (i, x) in enumerate(xi)
-    ϕ[i] = int(x, fvals, dfvals, xvals)
+    #ϕ[i] = int(x, fvals, xvals)
+    ϕ[i] = MID.Mapping.hermite_interpolation(x, fvals .+ 0.0im, collect(xvals))
 end
 
 #%%
 
 plot(xi, ϕ)
+plot!(xvals, fvals[:, 1])
 plot!(xi, f.(xi))
 #plot!(xvals, fvals)
 

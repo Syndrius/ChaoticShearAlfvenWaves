@@ -1,4 +1,8 @@
 #note that we are not working with radius anymore!
+#need to do a k1= 0.0011 case now, as that is a similar distance from the two criticals
+#they are at ~0.0012, and 0.0014.
+#the k2=0.0013 case is quite a good example now.
+#may also want to change k3 = 0.0015, then we may not need k4.
 
 using MID
 using MIDViz
