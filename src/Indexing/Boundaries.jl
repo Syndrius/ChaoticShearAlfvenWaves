@@ -6,38 +6,6 @@ Computes the indicies of the matrices that correspond to the radial boundaries. 
 """
 function compute_boundary_inds(grids::FFFGridsT)
 
-    #temp for direchlet on every side.
-    #used for Helmholtz testing
-    
-    #=
-    Nx = grids.x1.N
-    Ny = grids.x2.N
-    Nz = grids.x3.N
-
-    bcs = Int64[]
-    for i in 1:8*Nx*Ny*Nz
-        xind, yind, zind, h = index_to_grid(i, grids)
-
-        if h==1 || h==2 || h==3 || h==4
-            if xind == 1 || xind == Nx
-                push!(bcs, i)
-            end
-        end
-        if h==1 || h==2 || h==5 || h==6
-            if yind == 1 || yind == Ny
-                push!(bcs, i)
-            end
-        end
-        if h==1 || h==3 || h==5 || h==7
-            if zind == 1 || zind == Nz
-                push!(bcs, i)
-            end
-        end
-    end
-    return bcs
-    =#
-
-    
     Nx1 = grids.x1.N
     Nx2 = grids.x2.N
     Nx3 = grids.x3.N

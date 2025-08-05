@@ -29,9 +29,4 @@ export inputs_to_file
 export evals_to_file
 export efuncs_to_file
 
-
-#include("Fortran.jl")
-
-#export fortran_process
-
 end

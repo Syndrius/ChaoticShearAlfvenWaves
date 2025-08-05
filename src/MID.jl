@@ -14,6 +14,16 @@ Current term is back on, it is working fine, may need higher res for best result
 
 - Based on fft stuff in qfm, we may need to double check fft in the spectral method to make sure the scaling is actually correct
 - Changing to x1,x2,x3 is better long term, but we probably want some functions to still be written in terms of r, θ, ζ, or even ψ, θ, ζ as unique labels
+- Add interpolations in properly
+- still some room for optimization by removing a few allocations, i.e. in local_to_global.
+- Due for a big clean
+- Mapping needs hek loads of work.
+- QFM Could probably be described properly now, could do with a final fix up.
+- Change anal to analytical for proper release
+- Maybe remove double ups for sllice solving, and remove boundary evals, not a huge problem typically.
+- Extrapolate the continuum by using Interpolation, shown that it could work, unsure how important this actually is.
+- Option of creating grids just by giving an array directly. -> will require significant changes to file storage! 
+- We may want to change global basis to two functions, one that just scales the H functions and one that adds the phase factor, as this would be more convenient for Mapping
 
 
 #Long Term fixes
@@ -32,6 +42,7 @@ Current term is back on, it is working fine, may need higher res for best result
  - The order of includes in this file has become very precarious, purpose of some modules is perhaps not clear enough
  - we may benefit from more, but smaller modules one day. This has become especially apparent with Mapping, especially given that the main mapping functions are in post-processing, which could be a mistake.
  - Perhaps move Island.jl into its own module
+ - Just like we have a mode label, we might want a way to get the index for a given mode number? Rare usage but who knows
  
  
 
@@ -105,8 +116,6 @@ using ..Io; export efunc_from_file
 
 include("PostProcessing/PostProcessing.jl")
 
-
-include("Helmholtz/Helmholtz.jl")
 
 
 include("WeakForm/WeakForm.jl")

@@ -25,6 +25,9 @@ function construct(prob::ProblemT, grids::FFFGridsT)
     #Gets the Hermite basis for the grids
     S = hermite_basis(ξx1, ξx2, ξx3)
 
+    #array for storing the scaling of the tangent basis functions when transforming
+    #from the local ξ∈[-1, 1] to global x∈[x_i, x_{i+1}] domain
+    ts = ones(size(S.H))
 
     #creates the trial and test function arrays.
     #these store the basis functions for each derivative
@@ -55,7 +58,7 @@ function construct(prob::ProblemT, grids::FFFGridsT)
     for i in 1:grids.x1.N-1, j in 1:grids.x2.N, k in 1:grids.x3.N 
 
         #takes the local ξ arrays to a global arrays around the grid point.
-        x1, x2, x3, dx1, dx2, dx3 = local_to_global(i, j, k, ξx1, ξx2, ξx3, x1grid, x2grid, x3grid) 
+        x1, x2, x3, dx1, dx2, dx3 = local_to_global(i, j, k, ξx1, ξx2, ξx3, x1grid, x2grid, x3grid)
 
         #jacobian of the local to global transformation.
         jac = dx1 * dx2 * dx3 / 8 
@@ -64,10 +67,10 @@ function construct(prob::ProblemT, grids::FFFGridsT)
         W_and_I!(W, I, B, met, prob, x1, x2, x3, tm)
 
         
-        #adjust the basis functions to the current coordinates/mode numbers considered.
-        create_local_basis!(Φ, S, grids.x2.pf, grids.x3.pf, dx1, dx2, dx3)
+        #transforms the local basis function to the global.
+        create_global_basis!(Φ, S, grids.x2.pf, grids.x3.pf, dx1, dx2, dx3, ts)
         #negatives for conjugate of test function
-        create_local_basis!(Ψ, S, -grids.x2.pf, -grids.x3.pf, dx1, dx2, dx3)
+        create_global_basis!(Ψ, S, -grids.x2.pf, -grids.x3.pf, dx1, dx2, dx3, ts)
 
 
         #loop over the Hermite elements for the trial function
@@ -175,6 +178,9 @@ function construct(prob::ProblemT, grids::FFFGridsT, surfs::Array{QFMSurfaceT})
     #Gets the Hermite basis for the grids
     S = hermite_basis(ξx1, ξx2, ξx3)
 
+    #array for storing the scaling of the tangent basis functions when transforming
+    #from the local ξ∈[-1, 1] to global x∈[x_i, x_{i+1}] domain
+    ts = ones(size(S.H))
 
     #creates the trial and test function arrays.
     #these store the basis functions for each derivative
@@ -218,10 +224,10 @@ function construct(prob::ProblemT, grids::FFFGridsT, surfs::Array{QFMSurfaceT})
         W_and_I!(W, I, tor_B, tor_met, qfm_B, qfm_met, prob, x1, x2, x3, tm, surf_itp, CT, sd)
 
 
-        #adjust the basis functions to the current coordinates/mode numbers considered.
-        create_local_basis!(Φ, S, grids.x2.pf, grids.x3.pf, dx1, dx2, dx3)
+        #transforms the local basis function to the global.
+        create_global_basis!(Φ, S, grids.x2.pf, grids.x3.pf, dx1, dx2, dx3, ts)
         #negatives for conjugate of test function
-        create_local_basis!(Ψ, S, -grids.x2.pf, -grids.x3.pf, dx1, dx2, dx3)
+        create_global_basis!(Ψ, S, -grids.x2.pf, -grids.x3.pf, dx1, dx2, dx3, ts)
 
 
         #loop over the Hermite elements for the trial function

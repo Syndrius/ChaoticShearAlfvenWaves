@@ -1,3 +1,6 @@
+#TODO - unsure if we ever actually need this!
+#also the basis functions are perhaps wrong now
+#and should be called from Basis.
 
 #also does the derivatives 
 #unsure if this really needs to be a different function.

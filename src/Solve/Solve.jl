@@ -56,10 +56,11 @@ function compute_spectrum(; prob::ProblemT, grids::GridsT, solver::SolverT, deri
     @allocated W, I = construct(prob, grids)
     mat_size = matrix_size(grids)
     @printf("Construction of %dx%d matrices complete.\n", mat_size, mat_size)
+
     display("Solving...")
-    #with no non-ideal effects the matrices are hermitian.
     evals, efuncs = solve(W, I, solver)
     @printf("Solving complete, %d eigenvalues found.\n", length(evals))
+
     display("Post processing...")
 
     evals, ϕ, ϕft = post_process(evals, efuncs, grids, prob.geo, deriv)
@@ -203,16 +204,22 @@ function analytical_continuum(prob::ProblemT, grids::ContGridsT)
 
 end
 
+
 #basic functionality works here, need more serious testing with actual anon-functions
-function spectrum_from_file(dir::String)
+function spectrum_from_file(dir::String, deriv::Bool=false)
     uninst_prob, grids, solver = inputs_from_file(dir=dir)
 
     prob = Structures.inst_problem(uninst_prob)
 
-    #TODO, writing the eigenvalues in the same way as parallel is needed here
-    evals, _, _ = compute_spectrum(prob=prob, grids=grids, solver=solver)
+    evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, solver=solver, deriv=deriv)
 
     evals_to_file(evals, dir)
+
+    mkpath(dir * "/efuncs")
+    mkpath(dir * "/efuncs_ft")
+
+    efuncs_to_file(ϕ, ϕft, dir)
+
 end
 
 end

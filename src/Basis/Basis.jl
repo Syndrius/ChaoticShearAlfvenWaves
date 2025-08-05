@@ -4,7 +4,7 @@ Deals with the Hermite basis functions in 1, 2 and 3 dimensions and modifies the
 """
 module Basis
 
-#Maybe consider moving some of MatrixSize and LocalBasis to Indexing.
+#Maybe consider moving some of MatrixSize and LocalBasis to Indexing. -> probably only if we ever generalise this code to allow different basis functions,
 
 using ..Structures
 
@@ -17,6 +17,8 @@ export matrix_size
 export init_basis_function
 
 
+include("ShapeFunctions.jl")
+
 
 include("Hermite.jl")
 
@@ -26,7 +28,7 @@ export hermite_basis
 
 include("LocalBasis.jl")
 
-export create_local_basis!
+export create_global_basis!
 export local_to_global #arguably belongs in indexing...
 
 

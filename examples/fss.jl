@@ -24,7 +24,7 @@ grids = init_grids(rgrid, θgrid, ζgrid);
 solver = init_solver(prob=prob, targets=[0.2, 0.3, 0.4, 0.5])
 #%%
 
-evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, solver=solver, deriv=false);
+evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, solver=solver);
 #%%
 #scatter(cr.r, real.(cr.ω), ylimits=(-0.05, 1.05))
 continuum_plot(evals)

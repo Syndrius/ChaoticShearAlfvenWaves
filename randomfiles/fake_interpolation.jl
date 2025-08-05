@@ -2,7 +2,8 @@
 #the interpolation package is fkn terrible
 #so we need to get the hermite stuff working
 #here we test in 1d to make sure it works properly
-using Plots; plotlyjs()
+using MID
+using Plots; gr()
 
 #start simple
 #f(x) = sin(x)
@@ -22,126 +23,84 @@ fvals[:, 2] = df.(xvals)
 
 plot(xvals, f.(xvals))
 #%%
-
-function h00(t)
-
-    return 2*t^3 - 3*t^2 + 1
-    #return (1+2*t)*(1-t)^2
-end
-
-function h10(t)
-    #return 2 * (t^3-2*t^2+t)
-    return t*(1-t)^2
-end
-
-function h01(t)
-    return -2t^3+3t^2
-    #return t^2*(3-2*t)
-end
-
-function h11(t)
-    #return 2*(t^3-t^2)
-    return t^2*(t-1)
-end
-
-function hb(t, h, dt)
+function hb(ξ, h, Δx)
     #additional jacobian term is very awkward.
 
+    #local to global jacobain is no 2/ Δx
+    #so we need to invert the local to global tangent scaling.
+
     if h==1
-        return h00(t)
+        return MID.Basis.h00(ξ) #/ Δx
     elseif h==2
-        return h10(t) * dt
+        return MID.Basis.h10(ξ) * Δx / 2
     elseif h==3
-        return h01(t)
+        return MID.Basis.h01(ξ) #/ Δx
     else
-        return h11(t) * dt
+        return MID.Basis.h11(ξ) * Δx / 2
     end
 end
-#%%
+function global_to_local(ind, grid, x)
+    #guard in case point is exactly on grid
+    if grid[ind]==x
+        #extra edge cases only for derivatives.
+        ξ = -1.0
+        ind1 = ind
+        #assumes 2π periodicity!
+        if ind1 == length(grid)
+            #display("seeing periodicity?")
+            ind2 = 1
+            Δx = 2π + (grid[ind2] - grid[ind1])  #global difference
+        else
+            ind2 = ind+1 #doesn't matter
+            Δx = grid[ind2] - grid[ind] 
+        end
+        inds = [ind1, ind2]
+    #periodic case
+    elseif x > grid[end]
+        inds = [length(grid), 1]
+        Δx = 2π + (grid[1] - grid[end])
+        #ξ = (x - grid[end]) / dx
+        #this should be the only difference with new basis
+        ξ = (x - grid[end]) * 2 / Δx - 1
+    elseif grid[ind] < x
+        inds = [ind, ind+1]
+        Δx = grid[ind+1] - grid[ind]
+        #ξ = (x - grid[ind]) / Δx
+        ξ = (x - grid[ind]) * 2 / Δx - 1
+    else
+        #may need to add some other edge cases 
+        #in particular, the qfm grid not being maximal can cause problemos
+        #typically this is easily fixed by making the mapped grid smaller.
+        inds = [ind-1, ind]
+        Δx = grid[ind] - grid[ind-1]
+        ξ = (x - grid[ind-1]) * 2 / Δx - 1
+        #ξ = (x - grid[ind-1]) / Δx
+    end
+    return ξ, inds, Δx
 
-tvals = collect(0:0.01:1)
-plot(tvals, h00.(tvals))
-plot!(tvals, h10.(tvals))
-plot!(tvals, h01.(tvals))
-plot!(tvals, h11.(tvals))
+end
 #%%
 function int(x, fvals, xvals)
     ind = argmin(abs.(x .- xvals))
     #display(abs.(x .- xvals))
 
-    #exact point!
-    #just need to worry about the edges now, start by considering a grid that is only 
-    #between the edges.
-    if xvals[ind] == x
-        #yet to test this case occuring!
-        ξ = 0.0
-        ind1 = ind
-        ind2 = ind #doesn't matter
-        #occuring!
-        #display("occuring")
-        dx = 0.0 #shouldn't matter I think
+    ξ, inds, Δx = global_to_local(ind, xvals, x)
+    #grid_id = [0, 0, 1, 1]
+    #basis_id = [0, 1, 0, 1]
+    grid_id = MID.Indexing.grid_id
+    basis_id = MID.Indexing.basis_id
 
-    #periodic case
-    elseif x > xvals[end]
-        ind1 = length(xvals)
-        ind2 = 1
-        dx = 2π + (xvals[ind2] - xvals[ind1])  #global difference
-        ξ = (x - xvals[ind1]) / dx
-
-    elseif xvals[ind] < x
-
-        #will need to check for endpoints!
-        ind1 = ind
-        ind2 = ind + 1
-
-        dx = xvals[ind2] - xvals[ind1] #global difference
-        ξ = (x - xvals[ind1]) / dx
-        #ξ = (xvals[ind2] - x) / dx
-    else
-        ind1 = ind-1
-        ind2 = ind
-        dx = xvals[ind2] - xvals[ind1] #global difference
-        ξ = (x - xvals[ind1]) / dx
-        #ξ = (xvals[ind2] - x) / dx
-    end
-    #display(xvals[ind1])
-
-    #guesss, but gets the gist across
-    #we will also need to generalise this to a loop over the values, perhaps one for ind1 and one for ind2? we will need to create an S object I think.
-
-    grid_id = [0, 0, 1, 1]
-    basis_id = [0, 1, 0, 1]
-
-    xinds = [ind1, ind2]
     val = 0.0
     for hx in 1:4
-
-        gi = xinds[grid_id[hx]+1]
+        gi = inds[grid_id[hx]+1]
         bi = 1 + basis_id[hx]
-        val += fvals[gi, bi] * hb(ξ, hx, dx)
+        val += fvals[gi, bi] * hb(ξ, hx, Δx)
     end
-
-    #display(x)
-    #display(ξ)
-    #ind1 denotes the ind of the grid point to the left of the x value
-    #ind2 denotes the ind of the grid point to the right of the x value
-    #need a dx as we are changing coords to local, so we get a jacobian term
-    #makes this perf
-    #val = fvals[ind1] * h00(ξ) + dfvals[ind1] * h10(ξ) * dx + fvals[ind2]*h01(ξ) + dfvals[ind2]*h11(ξ) * dx
-    #without the deriv it seems to work pretty well
-    #but the deriv is cooked af.
-    #val = fvals[ind2] * h01(ξ) + fvals[ind1] * h00(ξ)
-    #this approxes the deriv very well
-    #are we not supposed to use the extra shape functions?
-    #surely we are??
-    #val = dfvals[ind2] * h01(ξ) + dfvals[ind1] * h00(ξ)
-    #val = dfvals[ind2] * h11(ξ) + dfvals[ind1] * h10(ξ)
 
     return val
 end
-println(collect(xvals))
-display(int(2π-0.1, fvals, xvals))
-display(f(2π-0.1))
+display(int(0.67, fvals, xvals))
+display(f(0.67))
 #%%
 N2 = 100
 #xi = LinRange(0.0, 2π, N2+1)[1:end-1]
@@ -184,75 +143,16 @@ fvals[:, :, 4] = d2fdxdy.(xvals, yvals')
 function int_2d(x, y, fvals, xvals, yvals)
     xind = argmin(abs.(x .- xvals))
     yind = argmin(abs.(y .- yvals))
-    #exact point!
-    #just need to worry about the edges now, start by considering a grid that is only 
-    #between the edges.
-    if xvals[xind] == x
-        ξx = 0.0
-        xind1 = xind
-        xind2 = xind #doesn't matter
-        dx = 0.0 #shouldn't matter I think
-    #x is not periodic now.
-    elseif xvals[xind] < x
-
-        #will need to check for endpoints!
-        xind1 = xind
-        xind2 = xind + 1
-
-        dx = xvals[xind2] - xvals[xind1] #global difference
-        ξx = (x - xvals[xind1]) / dx
-        #ξ = (xvals[ind2] - x) / dx
-    else
-        xind1 = xind-1
-        xind2 = xind
-        dx = xvals[xind2] - xvals[xind1] #global difference
-        ξx = (x - xvals[xind1]) / dx
-        #ξ = (xvals[ind2] - x) / dx
-    end
-    if yvals[yind] == y
-        ξy = 0.0
-        yind1 = yind
-        yind2 = yind #doesn't matter
-        dy = 0.0 #shouldn't matter I think
-
-    #periodic case
-    elseif y > yvals[end]
-        yind1 = length(yvals)
-        yind2 = 1
-        dy = 2π + (yvals[yind2] - yvals[yind1])  #global difference
-        ξy = (y - yvals[yind1]) / dy
-
-    elseif yvals[yind] < y
-
-        #will need to check for endpoints!
-        yind1 = yind
-        yind2 = yind + 1
-
-        dy = yvals[yind2] - yvals[yind1] #global difference
-        ξy = (y - yvals[yind1]) / dy
-        #ξ = (xvals[ind2] - x) / dx
-    else
-        yind1 = yind-1
-        yind2 = yind
-        dy = yvals[yind2] - yvals[yind1] #global difference
-        ξy = (y - yvals[yind1]) / dy
-        #ξ = (xvals[ind2] - x) / dx
-    end
-    #we will want some clarity about the fkn division stuff.
-    #it is a global_to_local jacobian transformation.
-    #naturally we will want these functions within Basis.
-    #val = fvals[ind1] * h00(ξ) + dfvals[ind1] * h10(ξ) * dx + fvals[ind2]*h01(ξ) + dfvals[ind2]*h11(ξ) * dx
-
-    #display(xind)
-    #display(ξx)
-    #display(yind)
-    #display(ξy)
 
     grid_id = [0, 0, 1, 1]
     basis_id = [0, 1, 0, 1]
 
-    xinds = [xind1, xind2]
-    yinds = [yind1, yind2]
+    ξx, xinds, Δx = global_to_local(xind, xvals, x)
+    ξy, yinds, Δy = global_to_local(yind, yvals, y)
+    #grid_id = [0, 0, 1, 1]
+    #basis_id = [0, 1, 0, 1]
+    grid_id = MID.Indexing.grid_id
+    basis_id = MID.Indexing.basis_id
 
     val = 0.0
     for hx in 1:4, hy in 1:4
@@ -261,26 +161,8 @@ function int_2d(x, y, fvals, xvals, yvals)
         #most likely needs to be swapped as our structure here is different to ϕ in the normal case.
         #yep, this is in the opposit eorder to ϕ, no big deal!
         bi = 1 + basis_id[hx] + 2*basis_id[hy]
-        val += fvals[gi..., bi] * hb(ξx, hx, dx) * hb(ξy, hy, dy)
+        val += fvals[gi..., bi] * hb(ξx, hx, Δx) * hb(ξy, hy, Δy)
     end
-
-    #this was the difference, need to consider all 4 corners of the square.
-    #gonna get messy real quick in 3d.
-    #need to loopify this.
-    #val = fvals[xind1, yind1] * h00(ξx)*h00(ξy) + fvals[xind2, yind2] * h01(ξx)*h01(ξy) + fvals[xind1, yind2] * h00(ξx)*h01(ξy) + fvals[xind2, yind1] * h01(ξx) * h00(ξy)
-
-    #val += (dfdxvals[xind1, yind1] * h10(ξx)*h00(ξy) + dfdxvals[xind2, yind2] * h11(ξx)*h01(ξy) + dfdxvals[xind1, yind2] * h10(ξx)*h01(ξy) + dfdxvals[xind2, yind1] * h11(ξx) * h00(ξy)) * dx
-
-    #val += (dfdyvals[xind1, yind1] * h00(ξx)*h10(ξy) + dfdyvals[xind2, yind2] * h01(ξx)*h11(ξy) + dfdyvals[xind1, yind2] * h00(ξx)*h11(ξy) + dfdyvals[xind2, yind1] * h01(ξx) * h10(ξy)) * dy
-
-    #val += (d2fdxdyvals[xind1, yind1] * h10(ξx)*h10(ξy) + d2fdxdyvals[xind2, yind2] * h11(ξx)*h11(ξy) + d2fdxdyvals[xind1, yind2] * h10(ξx)*h11(ξy) + d2fdxdyvals[xind2, yind1] * h11(ξx) * h10(ξy)) * (dx * dy)
-
-    #val += (dfdxvals[xind1, yind1] * h10(ξx)*h00(ξy) + dfdxvals[xind2, yind2] * h11(ξx)*h01(ξy)) *dx
-
-    #val += (dfdyvals[xind1, yind1] * h00(ξx)*h10(ξy) + dfdyvals[xind2, yind2] * h01(ξx)*h11(ξy)) * dy
-
-    #val += (d2fdxdyvals[xind1, yind1] * h10(ξx)*h10(ξy) + d2fdxdyvals[xind2, yind2] * h11(ξx)*h11(ξy)) * (dx * dy)
-
     return val
 end
 #%%

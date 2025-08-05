@@ -13,52 +13,50 @@ struct HB1d
     ddH :: Array{Float64, 2}
 end
 
-#this is wrong!!!!!!! fk moi.
 
 """
     hermite_basis(gp::Array{Float64})
 
 Creates the four Hermite basis functions, taken from wikipedia. Returns a 4xgp matrix for the 0th, 1st and 2nd derivative.
 """
-function hermite_basis(gp::Array{Float64})
-    t = @. (gp + 1)/(2) #converts to correct range
+function hermite_basis(ξ::Array{Float64})
+
+    gp = length(ξ) #number of grid points in the gaussian quadrature
 
     #creates a struct to store the hermiete shape functions, their derivative and second derivative.
-    S = HB1d(zeros(4, length(gp)), zeros(4, length(gp)), zeros(4, length(gp)))
+    S = HB1d(zeros(4, gp), zeros(4, gp), zeros(4, gp))
 
     ##############
     # node structure per element
-    #element defined so locally x = [0, 1]
-    # 0 -------- 1
+    #element defined so locally x = [-1, 1]
+    # -1 -------- 1
 
     #each of the basis functions has either a value of 1 at one edge or a derivative of 1 at one edge
     #and then value of zero at the other three options.
 
-    #ie first basis functions has H(0) = 1, H'(0) = 0, H(1) = 0, H'(1) = 0
+    #ie first basis functions has H(-1) = 1, H'(-1) = 0, H(1) = 0, H'(1) = 0
 
-    #node 1 H(0) = 1
-    S.H[1, :] = @. 2*t^3 - 3*t^2 + 1
+    #node 1 H(-1) = 1
+    S.H[1, :] = h00.(ξ)
 
-    #node 1 H'(0) = 1
-    S.H[2, :] = @. 2*(t^3-2t^2 + t) #2 is from changin from -1, 1, to 1
+    #node 1 H'(-1) = 1
+    S.H[2, :] = h10.(ξ)
 
-    #node 2 H(1) = 0
-    S.H[3, :] = @. -2t^3 + 3t^2
+    #node 2 H(1) = 1
+    S.H[3, :] = h01.(ξ)
 
-    #node 2 H'(1) = 0
-    S.H[4, :] = @. 2*(t^3 - t^2) #2 is from changin from -1, 1, to 1
+    #node 2 H'(1) = 1
+    S.H[4, :] = h11.(ξ)
 
-    #divide by 2 so each is 1 or 0 on the edges.
-    S.dH[1, :] = @. (6*t^2 - 6*t) / 2
-    S.dH[2, :] = @. 2*(3*t^2-4t + 1) / 2 #2 is from changin from -1, 1, to 1
-    S.dH[3, :] = @. (-6t^2 + 6t) / 2
-    S.dH[4, :] = @. 2*(3t^2 - 2t) / 2 #2 is from changin from -1, 1, to 1
+    S.dH[1, :] = dh00.(ξ)
+    S.dH[2, :] = dh10.(ξ)
+    S.dH[3, :] = dh01.(ξ)
+    S.dH[4, :] = dh11.(ξ)
 
-    #these have to be divided again!
-    S.ddH[1, :] = @. (12*t - 6) / 4
-    S.ddH[2, :] = @. 2*(6*t-4) / 4 #2 is from changin from -1, 1, to 1
-    S.ddH[3, :] = @. (-12t + 6) / 4
-    S.ddH[4, :] = @. 2*(6t - 2) / 4 #2 is from changin from -1, 1, to 1
+    S.ddH[1, :] = ddh00.(ξ)
+    S.ddH[2, :] = ddh10.(ξ)
+    S.ddH[3, :] = ddh01.(ξ)
+    S.ddH[4, :] = ddh11.(ξ)
 
     return S
 
@@ -81,18 +79,18 @@ end
 
 
 """
-    hermite_basis(x1gp::Array{Float64}, x2gp::Array{Float64})
+    hermite_basis(ξ1::Array{Float64}, ξ2::Array{Float64})
 
 Creates the 16 Hermite basis functions used in 2d. Creates a 1d hermite_basis for each dimension, then combines them.
 """
-function hermite_basis(x1gp::Array{Float64}, x2gp::Array{Float64})
+function hermite_basis(ξ1::Array{Float64}, ξ2::Array{Float64})
 
     #create two 1d basis'
-    Sx1 = hermite_basis(x1gp)
-    Sx2 = hermite_basis(x2gp)
+    Sx1 = hermite_basis(ξ1)
+    Sx2 = hermite_basis(ξ2)
    
     #then take a tensor product to get the 2d basis
-    S = combine_basis(Sx1, Sx2, x1gp, x2gp)
+    S = combine_basis(Sx1, Sx2, ξ1, ξ2)
 
     return S
 
@@ -100,14 +98,14 @@ end
 
 
 """
-    combine_basis(Hx1::Array{Float64, 2}, Hx2::Array{Float64, 2}, x1gp::Array{Float64}, x2gp::Array{Float64})
+    combine_basis(Hx1::Array{Float64, 2}, Hx2::Array{Float64, 2}, ξ1::Array{Float64}, ξ2::Array{Float64})
 
 Combines two 1d Hermite basis' into a 2d basis.
 """
-function combine_basis(Sx1::HB1d, Sx2::HB1d, x1gp::Array{Float64}, x2gp::Array{Float64})
+function combine_basis(Sx1::HB1d, Sx2::HB1d, ξ1::Array{Float64}, ξ2::Array{Float64})
 
     #the size of each array.
-    as = (4, 4, length(x1gp), length(x2gp))
+    as = (4, 4, length(ξ1), length(ξ2))
     #define the struct to store the basis functions.
     S = HB2d(zeros(as), zeros(as), zeros(as), zeros(as), zeros(as), zeros(as))
 
@@ -115,10 +113,10 @@ function combine_basis(Sx1::HB1d, Sx2::HB1d, x1gp::Array{Float64}, x2gp::Array{F
     ##############
     # node structure per element
 
-    # 0 -------- 1
+    # -1 -------- 1
 
-    #H[1] -> H(0) = 1
-    #H[2] -> H'(0) = 1
+    #H[1] -> H(-1) = 1
+    #H[2] -> H'(-1) = 1
     #H[3] -> H(1) = 1
     #H[4] -> H'(1) = 1
 
@@ -126,16 +124,13 @@ function combine_basis(Sx1::HB1d, Sx2::HB1d, x1gp::Array{Float64}, x2gp::Array{F
     ############### 
     #node labels for each element!
 
-    # (0, 1) -------- (1, 1)
+    # (-1, 1) -------- (1, 1)
     #  |               |
     #  |               |
     #  |               |
-    # (0, 0) -------- (1, 0)
+    # (-1, -1) -------- (1, -1)
 
-
-    #The order of this doesn't really matter tbh.
-
-    for i in 1:length(x1gp), j in 1:length(x2gp)
+    for i in 1:length(ξ1), j in 1:length(ξ2)
 
         #loop through the 4 nodes to consider.
         for y in 1:4, x in 1:4
@@ -174,19 +169,19 @@ end
 
 
 """
-    hermite_basis(x1gp::Array{Float64}, x2gp::Array{Float64}, x3gp::Array{Float64})
+    hermite_basis(ξ1::Array{Float64}, x2gp::Array{Float64}, ξ3::Array{Float64})
 
 Creates the 64 Hermite basis functions used in 3d. Creates a 1d hermite_basis for each dimension, then combines them.
 """
-function hermite_basis(x1gp::Array{Float64}, x2gp::Array{Float64}, x3gp::Array{Float64})
+function hermite_basis(ξ1::Array{Float64}, ξ2::Array{Float64}, ξ3::Array{Float64})
 
     #create 3 1d basis'
-    Sx1 = hermite_basis(x1gp)
-    Sx2 = hermite_basis(x2gp)
-    Sx3 = hermite_basis(x3gp)
+    Sx1 = hermite_basis(ξ1)
+    Sx2 = hermite_basis(ξ2)
+    Sx3 = hermite_basis(ξ3)
 
     #tensory product to combine 1d basis' into 3d.
-    S = combine_basis(Sx1, Sx2, Sx3, x1gp, x2gp, x3gp)
+    S = combine_basis(Sx1, Sx2, Sx3, ξ1, ξ2, ξ3)
    
     return S
 
@@ -194,14 +189,14 @@ end
 
 
 """
-    combine_basis(Hx1::Array{Float64, 2}, Hx2::Array{Float64, 2}, Hx3::Array{Float64, 2}, x1gp::Array{Float64}, x2gp::Array{Float64}, x3gp::Array{Float64})
+    combine_basis(Hx1::Array{Float64, 2}, Hx2::Array{Float64, 2}, Hx3::Array{Float64, 2}, ξ1::Array{Float64}, ξ2::Array{Float64}, ξ3::Array{Float64})
 
 Combines three 1d Hermite basis' into a 3d basis.
 """
-function combine_basis(Sx1::HB1d, Sx2::HB1d, Sx3::HB1d, x1gp::Array{Float64}, x2gp::Array{Float64}, x3gp::Array{Float64})
+function combine_basis(Sx1::HB1d, Sx2::HB1d, Sx3::HB1d, ξ1::Array{Float64}, ξ2::Array{Float64}, ξ3::Array{Float64})
 
     #size of the arrays to create.
-    as = (4, 4, 4, length(x1gp), length(x2gp), length(x3gp))
+    as = (4, 4, 4, length(ξ1), length(ξ2), length(ξ3))
 
     #creates the struct to store the functions.
     S = HB3d(zeros(as), zeros(as), zeros(as), zeros(as), zeros(as), zeros(as), zeros(as), zeros(as), zeros(as), zeros(as))
@@ -210,10 +205,10 @@ function combine_basis(Sx1::HB1d, Sx2::HB1d, Sx3::HB1d, x1gp::Array{Float64}, x2
     ##############
     # node structure per element
 
-    # 0 -------- 1
+    # -1 -------- 1
 
-    #H[1] -> H(0) = 1
-    #H[2] -> H'(0) = 1
+    #H[1] -> H(-1) = 1
+    #H[2] -> H'(-1) = 1
     #H[3] -> H(1) = 1
     #H[4] -> H'(1) = 1
 
@@ -221,14 +216,13 @@ function combine_basis(Sx1::HB1d, Sx2::HB1d, Sx3::HB1d, x1gp::Array{Float64}, x2
     ############### 
     #node labels for each element!
 
-    # (0, 1) -------- (1, 1)
+    # (-1, 1) -------- (1, 1)
     #  |               |
     #  |               |
     #  |               |
-    # (0, 0) -------- (1, 0)
+    # (-1, -1) -------- (1, -1)
 
-
-    for i in 1:length(x1gp), j in 1:length(x2gp), k in 1:length(x3gp)
+    for i in 1:length(ξ1), j in 1:length(ξ2), k in 1:length(ξ3)
 
         #loops over the sixteen relevant nodes, ie (0, 0, 0), (1, 0, 0) etc
         #we increment in 2's to account for derivative terms in H.
@@ -251,5 +245,4 @@ function combine_basis(Sx1::HB1d, Sx2::HB1d, Sx3::HB1d, x1gp::Array{Float64}, x2
     
     return S
 end
-
 

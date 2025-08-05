@@ -26,9 +26,12 @@ function construct(prob::ProblemT, grids::FFSGridsT)
     ξx1, wgx1 = gausslegendre(grids.x1.gp) 
     ξx2, wgx2 = gausslegendre(grids.x2.gp)
 
-    
     #Gets the Hermite basis for the radial grid and poloidal grid.
     S = hermite_basis(ξx1, ξx2)
+
+    #array for storing the scaling of the tangent basis functions when transforming
+    #from the local ξ∈[-1, 1] to global x∈[x_i, x_{i+1}] domain
+    ts = ones(size(S.H))
 
     #creates the trial and test function arrays.
     #these store the basis functions for each derivative
@@ -81,13 +84,13 @@ function construct(prob::ProblemT, grids::FFSGridsT)
         #loop over the fourier components of the trial function
         for (l1, n1) in enumerate(nlist)
 
-            #adjust the basis functions to the current coordinates/mode numbers considered.
-            create_local_basis!(Φ, S, grids.x2.pf, n1, dx1, dx2)
+            #transforms the local basis function to the global.
+            create_global_basis!(Φ, S, grids.x2.pf, n1, dx1, dx2, ts)
 
             for (l2, n2) in enumerate(nlist)
 
                 #negatives for conjugate of test function
-                create_local_basis!(Ψ, S, -grids.x2.pf, -n2, dx1, dx2)
+                create_global_basis!(Ψ, S, -grids.x2.pf, -n2, dx1, dx2, ts)
 
                 #extract the relevant indicies from the ffted matrices.
                 nind = mod(l1-l2 + Nx3, Nx3) + 1
@@ -197,9 +200,12 @@ function construct(prob::ProblemT, grids::FFSGridsT, surfs::Array{QFMSurfaceT})
     ξx1, wgx1 = gausslegendre(grids.x1.gp) 
     ξx2, wgx2 = gausslegendre(grids.x2.gp)
 
-    
     #Gets the Hermite basis for the radial grid and poloidal grid.
     S = hermite_basis(ξx1, ξx2)
+
+    #array for storing the scaling of the tangent basis functions when transforming
+    #from the local ξ∈[-1, 1] to global x∈[x_i, x_{i+1}] domain
+    ts = ones(size(S.H))
 
     #creates the trial and test function arrays.
     #these store the basis functions for each derivative
@@ -256,13 +262,13 @@ function construct(prob::ProblemT, grids::FFSGridsT, surfs::Array{QFMSurfaceT})
         #loop over the fourier components of the trial function
         for (l1, n1) in enumerate(nlist)
 
-            #adjust the basis functions to the current coordinates/mode numbers considered.
-            create_local_basis!(Φ, S, grids.x2.pf, n1, dx1, dx2)
+            #transforms the local basis function to the global.
+            create_global_basis!(Φ, S, grids.x2.pf, n1, dx1, dx2, ts)
 
             for (l2, n2) in enumerate(nlist)
 
                 #negatives for conjugate of test function
-                create_local_basis!(Ψ, S, -grids.x2.pf, -n2, dx1, dx2)
+                create_global_basis!(Ψ, S, -grids.x2.pf, -n2, dx1, dx2, ts)
 
                 #extract the relevant indicies from the ffted matrices.
                 nind = mod(l1-l2 + Nx3, Nx3) + 1

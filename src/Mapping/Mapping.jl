@@ -13,6 +13,7 @@ using ..Indexing
 using ..QFM 
 using ..PostProcessing
 using ..Io
+using ..Basis
 
 
 using Elliptic

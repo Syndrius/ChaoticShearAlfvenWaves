@@ -57,79 +57,66 @@ end
 Maps the global grid into t alocal grid defined between 0 and 1.
 """
 function global_to_local(ind::Int64, grid::AbstractArray{Float64}, x::Float64)
-
+    #this is essentially an inverse of our local to global functions
+    #this takes the global segment, x∈[x_i, x_{i+1}] to local domain, ξ∈[-1, 1]
     #guard in case point is exactly on grid
     if grid[ind]==x
         #extra edge cases only for derivatives.
-        ξ = 0.0
+        ξ = -1.0
         ind1 = ind
         #assumes 2π periodicity!
         if ind1 == length(grid)
             ind2 = 1
-            dx = 2π + (grid[ind2] - grid[ind1])  #global difference
+            Δx = 2π + (grid[ind2] - grid[ind1])  #global difference
         else
             ind2 = ind+1 #doesn't matter
-            dx = grid[ind2] - grid[ind] 
+            Δx = grid[ind2] - grid[ind] 
         end
         inds = [ind1, ind2]
     #periodic case
     elseif x > grid[end]
         inds = [length(grid), 1]
-        dx = 2π + (grid[1] - grid[end])
-        ξ = (x - grid[end]) / dx
+        Δx = 2π + (grid[1] - grid[end])
+        #ξ = (x - grid[end]) / dx
+        #this should be the only difference with new basis
+        ξ = (x - grid[end]) * 2 / Δx - 1
     elseif grid[ind] < x
         inds = [ind, ind+1]
-        dx = grid[ind+1] - grid[ind]
-        ξ = (x - grid[ind]) / dx
+        Δx = grid[ind+1] - grid[ind]
+        #ξ = (x - grid[ind]) / Δx
+        ξ = (x - grid[ind]) * 2 / Δx - 1
     else
         #may need to add some other edge cases 
         #in particular, the qfm grid not being maximal can cause problemos
         #typically this is easily fixed by making the mapped grid smaller.
         inds = [ind-1, ind]
-        dx = grid[ind] - grid[ind-1]
-        ξ = (x - grid[ind-1]) / dx
+        Δx = grid[ind] - grid[ind-1]
+        ξ = (x - grid[ind-1]) * 2 / Δx - 1
+        #ξ = (x - grid[ind-1]) / Δx
     end
-    return ξ, inds, dx
+    return ξ, inds, Δx
+
 end
 
 
-#needs to be moved
-function h00(t::Float64)
-
-    return 2*t^3 - 3*t^2 + 1
-end
-
-function h10(t::Float64)
-    #return 2 * (t^3-2*t^2+t)
-    return t*(1-t)^2
-end
-
-function h01(t::Float64)
-    return -2t^3+3t^2
-    #return t^2*(3-2*t)
-end
-
-function h11(t::Float64)
-    #return 2*(t^3-t^2)
-    return t^2*(t-1)
-end
-
+#TODO fix this, may want to add the ffs case, but that doesn't really make sense unless we keep the ffs ϕ originally produced
+#also change dx to Δx everywhere
+#may still need this, 
 """
     hb(t::Float64, h::Int64, dt::Float64)
 
 Function that returns the appropriate hermite basis function based on h.
 """
-function hb(t::Float64, h::Int64, dt::Float64)
-    #additional jacobian term is very awkward.
-
-    #dt is due to arbitrary interval, see wikipedia page.
+function hb(ξ::Float64, h::Int64, Δx::Float64)
+    #Δx is due to arbitrary interval, see wikipedia page.
+    #change from ξ∈[-1, 1] to x∈[x_i, x_{i+1}]
     if h==1
-        return h00(t)
+        return Basis.h00(ξ)
     elseif h==2
-        return h10(t) * dt
+        return Basis.h10(ξ) * Δx / 2
     elseif h==3
-        return h01(t)
+        return Basis.h01(ξ)
     else
-        return h11(t) * dt
+        return Basis.h11(ξ) * Δx / 2
     end
 end

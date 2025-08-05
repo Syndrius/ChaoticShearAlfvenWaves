@@ -72,6 +72,7 @@ export inst_grids
 include("FLR.jl")
 
 export FLRT
+export init_flr
 
 
 

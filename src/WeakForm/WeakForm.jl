@@ -39,9 +39,6 @@ include("W.jl")
 include("I.jl")
 
 
-using ..Helmholtz
-include("Helmholtz.jl")
-
 """
     W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, B::BFieldT, met::MetT, prob::ProblemT, r:: Array{Float64}, θ, ζ::AbstractRange)
 

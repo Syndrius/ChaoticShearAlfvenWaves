@@ -30,6 +30,9 @@ function construct(prob::ProblemT, grids::FSSGridsT)
     #Gets the Hermite basis for the radial grid.
     S = hermite_basis(ξ)
 
+    #array for storing the scaling of the tangent basis functions when transforming
+    #from the local ξ∈[-1, 1] to global x∈[x_i, x_{i+1}] domain
+    ts = ones(size(S.H))
     
     #creates the trial and test function arrays.
     #these store the basis functions for each derivative
@@ -81,13 +84,13 @@ function construct(prob::ProblemT, grids::FSSGridsT)
         #loop over the fourier components of the trial function
         for (k1,m1) in enumerate(mlist), (l1, n1) in enumerate(nlist)
 
-            #adjust the basis functions to the current coordinates/mode numbers considered.
-            create_local_basis!(Φ, S, m1, n1, jac)
+            #transforms the local basis function to the global.
+            create_global_basis!(Φ, S, m1, n1, jac, ts)
 
             for (k2, m2) in enumerate(mlist), (l2, n2) in enumerate(nlist)
 
                 #negatives for conjugate in the test function.
-                create_local_basis!(Ψ, S, -m2, -n2, jac)
+                create_global_basis!(Ψ, S, -m2, -n2, jac, ts)
 
                 #extract the relevant indicies from the fft'ed matrices.
                 mind = mod(k1-k2 + Nx2, Nx2) + 1
@@ -203,6 +206,9 @@ function construct(prob::ProblemT, grids::FSSGridsT, surfs::Array{QFMSurfaceT})
     #Gets the Hermite basis for the radial grid.
     S = hermite_basis(ξ)
 
+    #array for storing the scaling of the tangent basis functions when transforming
+    #from the local ξ∈[-1, 1] to global x∈[x_i, x_{i+1}] domain
+    ts = ones(size(S.H))
     
     #creates the trial and test function arrays.
     #these store the basis functions for each derivative
@@ -257,13 +263,13 @@ function construct(prob::ProblemT, grids::FSSGridsT, surfs::Array{QFMSurfaceT})
         #loop over the fourier components of the trial function
         for (k1,m1) in enumerate(mlist), (l1, n1) in enumerate(nlist)
 
-            #adjust the basis functions to the current coordinates/mode numbers considered.
-            create_local_basis!(Φ, S, m1, n1, jac)
+            #transforms the local basis function to the global.
+            create_global_basis!(Φ, S, m1, n1, jac, ts)
 
             for (k2, m2) in enumerate(mlist), (l2, n2) in enumerate(nlist)
 
                 #negatives for conjugate in the test function.
-                create_local_basis!(Ψ, S, -m2, -n2, jac)
+                create_global_basis!(Ψ, S, -m2, -n2, jac, ts)
 
                 #extract the relevant indicies from the fft'ed matrices.
                 mind = mod(k1-k2 + Nϑ, Nϑ) + 1
