@@ -85,7 +85,10 @@ function linear(N::Int64, gp::Int64)
     return eigen(M, A)
     return eigen(Hermitian(M), Hermitian(A))
 end#
-#
+
+
+#we may want to redefine these in terms of ξ, just to skip a transformation
+#given we will have to do another transformation later!
 function h00(t::Float64)
 
     return 2*t^3 - 3*t^2 + 1
@@ -147,6 +150,8 @@ end
 
 
 
+#this is perhaps a bit clearer, but results in the same.
+#I think we are better off defining these in terms of ξ so that this is just normal.
 function new_hermite_basis(ξ::Array{Float64})
 
     S = NHB1d(zeros(4, length(ξ)), zeros(4, length(ξ)), zeros(4, length(ξ)))
@@ -170,24 +175,40 @@ function new_hermite_basis(ξ::Array{Float64})
     S.H[4, :] = h11.(t) * dξdt #reflects change of coords to ξ
 
     S.dH[1, :] = dh00.(t) * dtdξ
-    S.dH[2, :] = dh10.(t) #* dξdt * dtdξ #no net result.
+    S.dH[2, :] = dh10.(t) * dξdt * dtdξ #no net result.
     S.dH[3, :] = dh01.(t) * dtdξ
-    S.dH[4, :] = dh11.(t) #* dξdt * dtdξ #no net result.
+    S.dH[4, :] = dh11.(t) * dξdt * dtdξ #no net result.
 
     S.ddH[1, :] = ddh00.(t) * dtdξ * dtdξ
-    S.ddH[2, :] = ddh10.(t) * dtdξ #* dξdt * dtdξ #no net result.
+    S.ddH[2, :] = ddh10.(t) * dtdξ * dξdt * dtdξ #
     S.ddH[3, :] = ddh01.(t) * dtdξ * dtdξ
-    S.ddH[4, :] = ddh11.(t) * dtdξ #* dξdt * dtdξ #no net result.
+    S.ddH[4, :] = ddh11.(t) * dtdξ * dξdt * dtdξ #
 
    return S
+
+end
+
+function local_bas!(Φ::Array{Float64}, S::NHB1d, jac::Float64)
+
+    sf = ones(size(S.H))
+    display(size(sf))
+
+    #reflect the tangent basis functions being scaled from the local to global transformation.
+    #I think this is the way to go.
+    sf[2, :] .= jac #dx / 2
+    sf[4, :] .= jac #dx / 2
+
+    Φ[:, 1, :] = @. S.H * sf
+    Φ[:, 2, :] = @. S.dH * sf / jac
+    Φ[:, 3, :] = @. S.ddH * sf / jac^2
 
 end
 
 function cubic(N::Int64, gp::Int64, n=1)
 
 
-    xgrid = collect(LinRange(0, π, N))
-    #xgrid = collect(LinRange(0, 1, N))
+    #xgrid = collect(LinRange(0, π, N))
+    xgrid = collect(LinRange(0, 1, N)) .^ 2
 
     ξ, wg = gausslegendre(gp)
 
@@ -203,6 +224,10 @@ function cubic(N::Int64, gp::Int64, n=1)
     A = zeros(Float64, mat_size, mat_size)
 
     bcs = compute_hermite_bcs(N)
+
+    #4 hermite, 2 for zeroth and first deriv, and length)gp.
+    Φ = zeros(4, 3, gp)
+    Ψ = zeros(4, 3, gp)
 
     for i in 1:N-1
 
@@ -221,7 +246,17 @@ function cubic(N::Int64, gp::Int64, n=1)
         #so the tangent shape functions need an extra scaling of dx/2 from the chain rule.
         #this is not the way to put this into the function!
         #should be done in the local basis step./
-        sf = [1.0, dx/2, 1.0, dx/2]
+        #do we need to modify this for the derivatives of the tangent vectors?
+        #will need to check!
+        #don't think so, this is a scale due to shift of local to global
+        #the others are just chain rule derivatives, which gives more terms for higher derivs of the basis functions.
+        #sf = [1.0, dx/2, 1.0, dx/2]
+
+        #terminology for this is terrible, we are actually mapping this back to local
+        #do we can integrate. It is very unclear what is going on here,
+        local_bas!(Φ, S, jac)
+        #same for this case but keep it split for later.
+        local_bas!(Ψ, S, jac)
 
         for trialx in 1:4
 
@@ -246,8 +281,27 @@ function cubic(N::Int64, gp::Int64, n=1)
                     #A[l_ind, r_ind] += jac * (S.dH[testx, kx] * S.dH[trialx, kx]) / jac^2 * wg[kx] 
 
                     #normal cartesian case
-                    M[l_ind, r_ind] += jac * (S.dH[testx, kx] * S.dH[trialx, kx]) / jac^2 * wg[kx] * sf[testx] * sf[trialx]
-                    A[l_ind, r_ind] += jac * S.H[testx, kx] * S.H[trialx, kx] * wg[kx] * sf[testx] * sf[trialx]
+                    #M[l_ind, r_ind] += jac * (S.dH[testx, kx] * S.dH[trialx, kx]) / jac^2 * wg[kx] * sf[testx] * sf[trialx]
+                    #A[l_ind, r_ind] += jac * S.H[testx, kx] * S.H[trialx, kx] * wg[kx] * sf[testx] * sf[trialx]
+
+                    #now hopefully, this is just doing the integration, nothing else.
+                    #simple cartesian cases.
+                    #M[l_ind, r_ind] += jac * Ψ[testx, 2, kx] * Φ[trialx, 2, kx] * wg[kx]
+                    #A[l_ind, r_ind] += jac * Ψ[testx, 1, kx] * Φ[trialx, 1, kx] * wg[kx]
+
+                    #
+                    #unsure if the integration is actually taking place in the global or local coordinates.
+                    #Bessel equation for a given n.
+                    #do we actually need the jac out the front here? Seems a bit not required
+                    #wikipedia seems to think it must be
+                    #Sort of seems like each matrix element would have the same scale?
+                    #but this probably gets weird if we have a weird grid.
+                    #weird grid cooks this a bit without the jac, hence it is required.
+                    M[l_ind, r_ind] +=  jac * (-Ψ[testx, 2, kx] * Φ[trialx, 2, kx]
+                                              + Ψ[testx, 1, kx] / x[kx] * Φ[trialx, 2, kx]
+                                              - n^2 * Ψ[testx, 1, kx] * Φ[trialx, 1, kx] / x[kx]^2) * wg[kx]
+
+                    A[l_ind, r_ind] += -jac * (Ψ[testx, 1, kx] * Φ[trialx, 1, kx]) * wg[kx]
 
                     #polar cas with a given n.
                     #M[l_ind, r_ind] += jac * (-S.dH[testx, kx] * S.dH[trialx, kx] / jac^2

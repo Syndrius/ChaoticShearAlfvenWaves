@@ -1,23 +1,22 @@
 using Bessels
 using FunctionZeros
 #%%
-function anal_sol(i, m, n, xgrid, ygrid, zgrid)
+
+function rad_anal_sol(i, m, xgrid)
     #ith zero
     #mth bessel function and poloidal mode number
     #n toroidal mode number
 
     Nx = length(xgrid)
-    Ny = length(ygrid)
-    Nz = length(zgrid)
 
-    sol = zeros(Nx, Ny, Nz)
+    sol = zeros(Nx)
 
     j0 = besselj_zero(m, i)
 
-    for (j, x) in enumerate(xgrid), (k, y) in enumerate(ygrid), (l, z) in enumerate(zgrid)
+    for (j, x) in enumerate(xgrid)
 
         #unsure about the sin and cos.
-        sol[j, k, l] = besselj(m, j0*x)*(sin(m*y) + cos(m*y))*(sin(n*z) + cos(n*z))
+        sol[j] = besselj(m, j0*x)
     end
 
     return sol
@@ -48,3 +47,14 @@ function anal_eval(i, m, n)
 
 end
 
+function zero_crossings(f, N) 
+    nflip = 0
+    for i in 2:N-2 #ignore start and finish as we know they are zeros
+        if sign(real(f[i])) ≠ sign(real(f[i+1])) #obvs will need the m, n combo we are using! -> annoying for sign of m, n
+            nflip += 1
+        end
+    end
+    #plus 1 here is to match bessel definition.
+    #i..e the end point is considered a zero.
+    return nflip + 1
+end

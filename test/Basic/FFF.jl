@@ -17,6 +17,7 @@ solver = init_solver(full_spectrum=true, prob=prob);
 #outrageous spead up shifting the ϕ[:, test, :, ...] to ϕ[:, testr, testθ, :, :]
 
 evals, _, _ = compute_spectrum(prob=prob, grids=grids, solver=solver);
+#evals, _, ϕft = compute_spectrum(prob=prob, grids=grids, solver=solver);
 
 
 #continuum_plot(evals)
@@ -27,6 +28,8 @@ evals, _, _ = compute_spectrum(prob=prob, grids=grids, solver=solver);
 #even with tiny grid they seem to have v similar frequency and mode structure!
 tae_ind = find_ind(evals, 0.301)
 tae_freq = evals.ω[tae_ind]
+
+#potential_plot(ϕft, grids, tae_ind)
 
 @test tae_ind == 28
 @test tae_freq ≈ 0.301 atol=0.001

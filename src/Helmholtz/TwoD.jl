@@ -29,7 +29,7 @@ function compute_cubic_bcs(Nx::Int64, Ny::Int64)
 
     x_bc = vcat(left_bc1, left_bc2, right_bc1, right_bc2)
 
-    #return x_bc #for periodic case.
+    return x_bc #for periodic case.
 
     left_bc1 = 1:4*Ny:4*Nx*Ny
     left_bc2 = 3:4*Ny:4*Nx*Ny
@@ -178,6 +178,34 @@ function linear(Nx, Ny, gpx, gpy)
 
 end
 
+#this should defs be a global basis tbh.
+function local_bas!(Φ::Array{Float64, 5}, S::Basis.HB2d, dx::Float64, dy::Float64)
+
+    sf = ones(size(S.H))
+
+    xjac = dx / 2
+    yjac = dy / 2
+
+    #ok so this looks good enough.
+    sf[2, :, :, :, :] *= xjac
+    sf[4, :, :, :, :] *= xjac
+    sf[:, 2, :, :, :] *= yjac
+    sf[:, 4, :, :, :] *= yjac
+
+
+    Φ[:, :, 1, :, :] = @. S.H * sf
+    Φ[:, :, 2, :, :] = @. S.dHx1 / xjac * sf
+    Φ[:, :, 3, :, :] = @. S.dHx2 / yjac * sf
+    Φ[:, :, 4, :, :] = @. S.ddHx1x1 / xjac ^2 * sf
+    Φ[:, :, 5, :, :] = @. S.ddHx1x2 / (xjac * yjac) * sf
+    Φ[:, :, 6, :, :] = @. S.ddHx2x2 / yjac^2 * sf
+
+
+
+end
+
+
+
 function cubic(Nx, Ny, gpx, gpy)
 
 
@@ -185,6 +213,7 @@ function cubic(Nx, Ny, gpx, gpy)
     #ygrid = LinRange(0, π, Ny)#+1)[1:end-1]
     xgrid = LinRange(0, 1, Nx)#+1)[1:end-1]
     ygrid = LinRange(0, 2π, Ny+1)[1:end-1]
+    xgrid = LinRange(0, 1, Nx) 
 
     ξx, wgx = gausslegendre(gpx)
     ξy, wgy = gausslegendre(gpy)
@@ -200,11 +229,24 @@ function cubic(Nx, Ny, gpx, gpy)
     bcs = compute_cubic_bcs(Nx, Ny)
     
 
+    #6 is no deriv, dx, dy, dxdx, dxdy, dydy.
+    Φ = zeros(4, 4, 6, gpx, gpy)
+    Ψ = zeros(4, 4, 6, gpx, gpy)
+
     for i in 1:Nx-1, j in 1:Ny
 
         x, y, dx, dy = linear_local_to_global(i, j, ξx, ξy, xgrid, ygrid)
 
         jac = dx * dy / 4
+
+        #sfx = [1.0, dx/2, 1.0, dx/2]
+        #sfy = [1.0, dy/2, 1.0, dy/2]
+        #sfx = [1.0, 1.0, 1.0, 1.0]
+        #sfy = [1.0, 1.0, 1.0, 1.0]
+
+        local_bas!(Φ, S, dx, dy)
+        #again, this is currently the same.
+        local_bas!(Ψ, S, dx, dy)
 
         for trialx in 1:4, trialy in 1:4
 
@@ -224,6 +266,38 @@ function cubic(Nx, Ny, gpx, gpy)
 
                 for kx in 1:gpx, ky in 1:gpy
 
+                    #M[l_ind, r_ind] += jac * (Ψ[testx, testy, 2, kx, ky] * Φ[trialx, trialy, 2, kx, ky]
+                    #                          - Ψ[testx, testy, 1, kx, ky] * Φ[trialx, trialy, 2, kx, ky] / x[kx]
+                    #                          + Ψ[testx, testy, 3, kx, ky] * Φ[trialx, trialy, 3, kx, ky] / x[kx]^2
+                    #                         ) * wgx[kx] * wgy[ky]
+                    #A[l_ind, r_ind] += jac * (Ψ[testx, testy, 1, kx, ky] * Φ[trialx, trialy, 1, kx, ky]) * wgx[kx] * wgy[ky]
+
+                    #M[l_ind, r_ind] += jac * (Ψ[testx, testy, 5, kx, ky] * Φ[trialx, trialy, 5, kx, ky]
+                    #                          - Ψ[testx, testy, 3, kx, ky] * Φ[trialx, trialy, 5, kx, ky] / x[kx]
+                    #                          + Ψ[testx, testy, 6, kx, ky] * Φ[trialx, trialy, 6, kx, ky] / x[kx]^2
+                    #                         ) * wgx[kx] * wgy[ky]
+                    #A[l_ind, r_ind] += jac * (Ψ[testx, testy, 3, kx, ky] * Φ[trialx, trialy, 3, kx, ky]) * wgx[kx] * wgy[ky]
+
+                    #try multiply by r^2 to see if we can fix the extra derivative shite.
+                    #M[l_ind, r_ind] += jac * (-Ψ[testx, testy, 2, kx, ky] * Φ[trialx, trialy, 2, kx, ky] * x[kx]^2
+                    #                          - Ψ[testx, testy, 1, kx, ky] * Φ[trialx, trialy, 2, kx, ky] * x[kx]
+                    #                          - Ψ[testx, testy, 3, kx, ky] * Φ[trialx, trialy, 3, kx, ky] 
+                    #                         ) * wgx[kx] * wgy[ky]
+                    #A[l_ind, r_ind] += -jac * (Ψ[testx, testy, 1, kx, ky] * Φ[trialx, trialy, 1, kx, ky] * x[kx]^2) * wgx[kx] * wgy[ky]
+
+                    #extra derivs for r^2 scaled version, may be more accurate!
+                    #clearly something wrong with this problemo!
+                    #evals are good, efuncs are not findable.
+                    #guess the fss case shows us that something is wrong with n=0 case
+                    #perhaps this is just messing it all up big time?
+                    #time to abandon this idea I think!, instead just modify the basis functions?
+                    M[l_ind, r_ind] += jac * (-Ψ[testx, testy, 5, kx, ky] * Φ[trialx, trialy, 5, kx, ky] * x[kx]^2
+                                              - Ψ[testx, testy, 3, kx, ky] * Φ[trialx, trialy, 5, kx, ky] * x[kx]
+                                              - Ψ[testx, testy, 6, kx, ky] * Φ[trialx, trialy, 6, kx, ky] 
+                                             ) * wgx[kx] * wgy[ky]
+                    A[l_ind, r_ind] += -jac * (Ψ[testx, testy, 3, kx, ky] * Φ[trialx, trialy, 3, kx, ky] * x[kx]^2) * wgx[kx] * wgy[ky]
+                    
+
                     #simple cartesian case
                     #M[l_ind, r_ind] += jac * (S.dHx1[testx, testy, kx, ky] * S.dHx1[trialx, trialy, kx, ky] * 2/dx * 2/dx + S.dHx2[testx, testy, kx, ky] * S.dHx2[trialx, trialy, kx, ky] * 2/dy * 2/dy) * wgx[kx] * wgy[ky]
                     #A[l_ind, r_ind] += jac * S.H[testx, testy, kx, ky] * S.H[trialx, trialy, kx, ky] * wgx[kx] * wgy[ky]
@@ -236,19 +310,19 @@ function cubic(Nx, Ny, gpx, gpy)
                     #seems to be working now, the degeneracy in n is kind of odd.
                     #M[l_ind, r_ind] += jac * (+S.dHx1[testx, testy, kx, ky] * S.dHx1[trialx, trialy, kx, ky] * (2/dx)^2 
                     #                          - S.H[testx, testy, kx, ky] / x[kx] * S.dHx1[trialx, trialy, kx, ky] * (2/dx)
-                    #                          + S.dHx2[testx, testy, kx, ky] * S.dHx2[trialx, trialy, kx, ky] / x[kx]^2 * (2/dy)^2) * wgx[kx] * wgy[ky]
+                    #                          + S.dHx2[testx, testy, kx, ky] * S.dHx2[trialx, trialy, kx, ky] / x[kx]^2 * (2/dy)^2) * wgx[kx] * wgy[ky] * sfx[testx] * sfx[trialx] * sfy[testy] * sfy[trialy]
 
-                    #A[l_ind, r_ind] += jac * S.H[testx, testy, kx, ky] * S.H[trialx, trialy, kx, ky] * wgx[kx] * wgy[ky]
+                    #A[l_ind, r_ind] += jac * S.H[testx, testy, kx, ky] * S.H[trialx, trialy, kx, ky] * wgx[kx] * wgy[ky] * sfx[testx] * sfx[trialx] * sfy[testy] * sfy[trialy]
 
                     #polar with extra double derivative of x2. aka θ
                     #this gives perfect eigenvalues
                     #but eigenfunctions are cooked af.
                     #mayhap this will work in 3d with z instead of θ?
-                    M[l_ind, r_ind] += jac * (+S.ddHx1x2[testx, testy, kx, ky] * S.ddHx1x2[trialx, trialy, kx, ky] * (2/dx)^2 
-                                              - S.dHx2[testx, testy, kx, ky] / x[kx] * S.ddHx1x2[trialx, trialy, kx, ky] * (2/dx)
-                                              + S.ddHx2x2[testx, testy, kx, ky] * S.ddHx2x2[trialx, trialy, kx, ky] / x[kx]^2 * (2/dy)^2) * wgx[kx] * wgy[ky] * (2/dy)^2
+                    #M[l_ind, r_ind] += jac * (+S.ddHx1x2[testx, testy, kx, ky] * S.ddHx1x2[trialx, trialy, kx, ky] * (2/dx)^2 
+                    #                          - S.dHx2[testx, testy, kx, ky] / x[kx] * S.ddHx1x2[trialx, trialy, kx, ky] * (2/dx)
+                    #                          + S.ddHx2x2[testx, testy, kx, ky] * S.ddHx2x2[trialx, trialy, kx, ky] / x[kx]^2 * (2/dy)^2) * wgx[kx] * wgy[ky] * (2/dy)^2 * sfx[trialx] * sfx[testx] * sfy[trialy] * sfy[testy]
 
-                    A[l_ind, r_ind] += jac * S.dHx2[testx, testy, kx, ky] * S.dHx2[trialx, trialy, kx, ky] * wgx[kx] * wgy[ky] * (2/dy)^2
+                    #A[l_ind, r_ind] += jac * S.dHx2[testx, testy, kx, ky] * S.dHx2[trialx, trialy, kx, ky] * wgx[kx] * wgy[ky] * (2/dy)^2 * sfx[trialx] * sfx[testx] * sfy[trialy] * sfy[testy]
 
                 end
             end
@@ -267,13 +341,14 @@ function cubic(Nx, Ny, gpx, gpy)
 
 
     #evals, efuncs = eigen(Hermitian(M), Hermitian(A))
-    #evals, efuncs = eigen(M, A)
-    nev = 10
-    evals, efuncs = eigs(M, A, nev=nev, ritzvec=true, sigma=20)
+    evals, efuncs = eigen(M, A)
+    #nev = 10
+    #evals, efuncs = eigs(M, A, nev=nev, ritzvec=true, sigma=20)
 
+    nev = length(evals)
     #return evals, efuncs
 
-    #bc_evs = length(unique(bcs))
+    bc_evs = length(unique(bcs))
 
     #println(length(evals) - bc_evs)
 
@@ -281,18 +356,18 @@ function cubic(Nx, Ny, gpx, gpy)
 
     #ef = zeros(length(evals), Nx, Ny)
     #ef = zeros(ComplexF64, length(evals), Nx, Ny)
-    ef = zeros(ComplexF64, nev, Nx, Ny)
+    ef = zeros(ComplexF64, nev, Nx, Ny, 4)
 
 
 
     #for i in 1:length(evals) #- bc_evs
     for i in 1:nev
 
-        for j in 1:4:4*Nx * Ny
+        for j in 1:1:4*Nx * Ny
 
-            xind, yind = index_to_grid_cubic(j, Nx, Ny)
+            xind, yind, h = index_to_grid_cubic(j, Nx, Ny)
             #display((xind, yind))
-            ef[i, xind, yind] = efuncs[j, i]
+            ef[i, xind, yind, h] = efuncs[j, i]
         end
     end
 
@@ -301,7 +376,7 @@ function cubic(Nx, Ny, gpx, gpy)
 
     #println(bcs)
 
-    return evals, ef
-    #return evals[1+bc_evs:end], ef[1+bc_evs:end, :, :]
+    #return evals, ef
+    return evals[1+bc_evs:end], ef[1+bc_evs:end, :, :, :]
 
 end

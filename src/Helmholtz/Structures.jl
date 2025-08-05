@@ -8,4 +8,9 @@
     geo :: GeoParamsT
 end
 
+function inst_problem(prob::TestProblemT)
+
+    return prob
+end
+
 

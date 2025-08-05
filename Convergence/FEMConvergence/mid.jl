@@ -1,19 +1,36 @@
 
 #actual integration with MID
 using MID
+using Plots
 #%%
 
 flr = MID.Structures.FLRT(δ=1e-8)
 geo = init_geo(R0=1.0)
 prob = MID.Helmholtz.TestProblemT(flr=flr, geo=geo)
 
-Nx = 9
+Nx = 5
 Ny = 5
 Nz = 5
 #this could cause problemos.
 xgrid = init_grid(type=:rf, N = Nx, gp=3)
-ygrid = init_grid(type=:af, N = Ny, gp=3)#, pf=2)
-zgrid = init_grid(type=:af, N = Nz, gp=3)
+#so with pf = 3, we are very accuratly able to get the m=3 eigenvalues
+#as we would hope,
+#ideally, we can actually study this behaviour
+#in order to make sure it is working as intended.
+#but this looks pretty good.
+#similar is noted for ζ.
+#think we need to pick a relatively random assortment of evals 
+#and see if we can hone in on them 
+#perhaps consider the first m and second n or something?
+#for each eval we should be able to pretty easily determine the zero by just counting the number of times the functions flips sign.
+#guess we actually need to consider how important this all is?
+#maybe better of just picking a few evals, 
+#then looking at the convergence as res increases in parallel?
+#This should show us that the grid is split properly
+#but also can check pf by just doing this multiple times and hopefully showing that the convergence is faster for the chosen pf.
+#last thing we really ought to check is different grid widths, eg run with quadratic etc.
+ygrid = init_grid(type=:af, N = Ny, gp=3)#, pf=3)
+zgrid = init_grid(type=:af, N = Nz, gp=3)#, pf=2)
 #this seems to be find crossing zero though!
 #ygrid = init_grid(type=:as, start=-1, N=3)
 #looks like this doesn't work when n crosses zero.
@@ -36,7 +53,8 @@ solver = init_solver(full_spectrum=true, prob=prob)
 #then we need to look at the ocnvergence as the grid size increases
 #compare fss to fff -> may be a bit tricky as the modes are decoupled.
 #make sure this works in v large scales in Petsc.
-evals, ϕ, ϕft = MID.Solve.compute_spectrum(prob=prob, grids=grids, solver=solver);
+evals, ϕ, ϕft = MID.Solve.compute_spectrum(prob=prob, grids=grids, solver=solver, deriv=true);
+evals.ω[35:50] .^ 2
 #%%
 nbcs = length(unique(MID.Indexing.compute_boundary_inds(grids)))
 ems = sort(real.(evals.ω .^2))
@@ -46,16 +64,32 @@ ems[nbcs+1:end]
 #%%
 xgp = MID.inst_grid(xgrid);
 ygp = MID.inst_grid(ygrid);
+zgp = MID.inst_grid(zgrid);
 ygp = LinRange(0, 2π, MID.ifft_size(ygrid)+1)[1:end-1]
 zgp = LinRange(0, 2π, MID.ifft_size(zgrid)+1)[1:end-1]
 
-ev = nbcs+3
+#for zero crossings we may want to focus on one of the fss cases!
+ev = nbcs+37
 display(ems[ev])
-plot(xgp, real.(ϕft[ev, :, 2, 1]))
+plot(xgp, real.(ϕft[ev, :, 1, 3, 1]))
+plot!(xgp, real.(ϕft[ev, :, 1, 3, 5]))
 #think to compare with analytical solution we might need to automatically find the phase.
-contourf(ygp, xgp, real.(ϕ[ev, :, :, 2]))
-contourf(zgp, xgp, real.(ϕ[ev, :, 2, :]))
+contourf(ygp, xgp, real.(ϕ[ev, :, :, 2, 1]))
+contourf(zgp, xgp, real.(ϕ[ev, :, 2, :, 1]))
+contourf(zgp, ygp, real.(ϕ[ev, 2, :, :, 1]))
 
+#%%
+#finding number of zeros!
+#could work, sign of m, n will be annoying
+#and we might still have problemos with larger n.
+nflip = 0
+for i in 2:Nx-2 #ignore start and finish as we know they are zeros
+    if sign(real(ϕft[ev, i, 1, 3, 1])) ≠ sign(real(ϕft[ev, i+1, 1, 3, 1])) #obvs will need the m, n combo we are using! -> annoying for sign of m, n
+        nflip += 1
+    end
+end
+display(nflip)
+#%%
 #so ϕ goes 
 #[efunc, rad, bessel function, n^2]
 #eval is zero of bessel function + n^2
@@ -123,8 +157,72 @@ plot(xgp, real.(ϕ[nbcs+13, :, 2, 2]))
 #perhaps this won't be a problem once the grid is larger.
 #this is perhaps highlighting a real problemo.
 #think as the grid gets larger this is not a problem.
-ktot = anal_evals(1:200, -50:50, -50:50);
+ktot, code = anal_evals(1:500, -100:100, -100:100);
 (sort(real.(evals.ω))[nbcs+1:nbcs+20]) .^2
 sort(real.(evals.ω)) .^2
 sort(ktot)[1:20]
 sort(real.(evals.ω))[1:20] .^2
+
+length(ktot[ ktot .< 100])
+
+
+#%%
+#I think we just need to pick our ~10 favourite modes.
+#this will probably require ~10 in each dim. so parallel.
+#ideally we would be able to just find that these are the 10th, 15th etc eigenmode
+#but I don't think that will be true,
+#at least for low res.
+#we may have to hunt through the solutions.
+#specifically the m=0,n=0 case seems a bit odd, but perhaps not now we aren't doing the extra deriv shite.
+#think the early ones will be indiciable, but no the larger ones.
+#guess we can just go from the analytical ones and above
+#to find the efunc that has the same m, n and number of zeros.
+mlist = [1, 3, 5]
+nlist = [1, 3, 5]
+zl = [1, 3, 5]
+mlist = [1, 3]
+nlist = [1, 3]
+zl = [1, 3]
+#these should all be resolvable even in the small case.
+mlist = [1, 2]
+nlist = [1, 2]
+zl = [1, 2]
+
+#actually not baahd, just obvs need to factor in which zero is the solution!
+#can either actually check the efunc, or maybe just group the evals somehow? Think that will be numerically difficult.
+for m in mlist, n in nlist, zr in zl
+    display("True sol")
+    display(anal_evals(zr:zr, m:m, n:n))
+    mat = []
+    for i in nbcs+1:nbcs+200
+        if (m, n) == (abs(evals.modelabs[i][1]), abs(evals.modelabs[i][2]))
+            push!(mat, i)
+            display(evals.ω[i] ^2)
+        end
+    end
+    zrs = []
+    zr_count = 1
+    push!(zrs, mat[1])
+    for i in mat
+        #because the n label is not reliable, this does not really work!
+        #might actually have to check how many times the sign changes.
+        #this will naturally become less of a problemo with higher res
+        #or with fss.
+        if real(evals.ω[i] - evals.ω[zrs[zr_count]]) > 0.5 #defs a new zero
+            push!(zrs, i)
+            zr_count += 1
+        end
+    end
+    display("Found")
+    display(evals.ω[zrs[zr]]^2)
+
+end
+
+#this seems to actually be making some sense now!
+real.(evals.ω)[nbcs+30:nbcs+50] .^ 2
+
+evals.modelabs[nbcs+1:nbcs+20]
+
+
+
+

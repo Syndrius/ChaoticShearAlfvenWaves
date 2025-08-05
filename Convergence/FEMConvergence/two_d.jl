@@ -5,8 +5,8 @@ using Plots
 #then we can test in 3d, 
 #then test in parallel.
 #%%
-Nx = 20
-Ny = 50
+Nx = 25
+Ny = 25
 
 #seems to behave as expected.
 #llam, lf = MID.Helmholtz.linear(Nx, Ny, 3, 3)
@@ -15,16 +15,23 @@ Ny = 50
 llam[15:20]
 
 #with proper bc's the evals of this are now behaving as expected.
-clam, cf = MID.Helmholtz.cubic(Nx, Ny, 4, 4)
+clam, cf = MID.Helmholtz.cubic(Nx, Ny, 4, 4);
 
 println(clam[7])
-
+clam
+clam[20:30]
 clam[4*Ny:4*Ny+5]
 #%%
-xgrid = LinRange(0, 1, Nx)
+xgrid = LinRange(0, 1, Nx) 
 ygrid = LinRange(0, 2π, Ny+1)[1:end-1]
+clam[2]
+#looks like this is ok with the extra tangent local to global jac.
+#ideally we could actually test these results properly.
+plot(xgrid, 2 .* real.(cf[24, :, 7, 1]))
+plot!(xgrid, 2 .* real.(cf[13, :, 7, 3]))
 
-plot(xgrid, real.(cf[1, :, 13]))
+plot(ygrid, real.(cf[2, 7, :, 1]))
+plot!(ygrid, real.(cf[2, 7, :, 4]))
 #%%
 clam[8]
 #not even kind of periodic...

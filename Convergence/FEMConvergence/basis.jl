@@ -8,9 +8,9 @@ using Plots
 #%%
 
 
-N = 10
+N = 20
 xgrid = LinRange(0, π, N)
-#xgrid = LinRange(0, 1, N)
+xgrid = LinRange(0, 1, N) .^ 2
 gp = 5
 llam, lf = MID.Helmholtz.linear(N, gp)
 
@@ -22,8 +22,8 @@ nlam
 #%%
 
 clam[5]
-plot(xgrid, cf[1:2:end, 5])
-plot!(xgrid, cf[2:2:end, 5])
+plot(xgrid, 2 .*cf[1:2:end, 3])
+plot!(xgrid, 2 .*cf[2:2:end, 3])
 nlam[5]
 plot!(xgrid, nf[1:2:end, 5])
 plot!(xgrid, nf[2:2:end, 5])

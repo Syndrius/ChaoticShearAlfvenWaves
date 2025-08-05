@@ -21,6 +21,7 @@ include("ThreeD.jl")
 #include("WeakForm.jl")
 
 export W_and_I!
+export inst_problem
 
 
 end

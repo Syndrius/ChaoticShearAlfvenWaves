@@ -29,6 +29,31 @@ function hermite_interpolation(x1::Float64, x2::Float64, x3::Float64, ϕ::Array{
 end
 
 
+#this is v awkward, probably needs the original phi to actually work, but assuming a good enough ζ slice is taken this might just work a bit.
+function hermite_interpolation(x1::Float64, x2::Float64, ϕ::Array{ComplexF64, 3}, x1grid::Array{Float64}, x2grid::AbstractArray{Float64})
+    #first find the index of the grid point closest to the target point
+    x1ind = find_ind(x1grid, x1)
+    x2ind = find_ind(x2grid, x2)
+
+    #using this point, we find the two indices left and right of the point, the distance from the left point (ξ) and the disatnce between the two points.
+    ξ1, inds1, dx1 = global_to_local(x1ind, x1grid, x1)
+    ξ2, inds2, dx2 = global_to_local(x2ind, x2grid, x2)
+
+
+    #so something is wrong here.
+    ϕ_int = 0.0+0.0im
+    gid = Indexing.grid_id
+    bid = Indexing.basis_id
+    for h2 in 1:4, h1 in 1:4
+        gi = (inds1[gid[h1]+1], inds2[gid[h2]+1])
+        bi = 1 + 2*bid[h1] + 1*bid[h2]
+        ϕ_int += ϕ[gi..., bi] * hb(ξ1, h1, dx1) * hb(ξ2, h2, dx2) 
+    end
+    return ϕ_int
+
+end
+
+
 function hermite_interpolation(x1::Float64, ϕ::Array{ComplexF64, 2}, x1grid::Array{Float64})
     #first find the index of the grid point closest to the target point
     x1ind = find_ind(x1grid, x1)

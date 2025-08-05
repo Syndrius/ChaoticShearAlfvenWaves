@@ -48,6 +48,8 @@ Computes the size of the local I, W matrices needed at each grid point.
 """
 function local_matrix_size(grids::ContGridsT)
 
+    #USED FOR TESTING!
+    #TODO
     return zeros(ComplexF64, 9, 9, 1, grids.x2.N * grids.x2.f_quad, grids.x3.N * grids.x3.f_quad)
 end
 
@@ -59,6 +61,9 @@ Computes the size of the local I, W matrices needed at each grid point.
 """
 function local_matrix_size(grids::FSSGridsT)
 
+    #USED FOR TESTING!
+    #TODO
+    return zeros(ComplexF64, 10, 10, grids.x1.gp, grids.x2.N * grids.x2.f_quad, grids.x3.N * grids.x3.f_quad)
     return zeros(ComplexF64, 9, 9, grids.x1.gp, grids.x2.N * grids.x2.f_quad, grids.x3.N * grids.x3.f_quad)
 end
 
@@ -70,6 +75,9 @@ Computes the size of the local I, W matrices needed at each grid point.
 """
 function local_matrix_size(grids::FFSGridsT)
 
+    #USED FOR TESTING!
+    #TODO
+    return zeros(ComplexF64, 10, 10, grids.x1.gp, grids.x2.gp, grids.x3.N * grids.x3.f_quad)
     return zeros(ComplexF64, 9, 9, grids.x1.gp, grids.x2.gp, grids.x3.N * grids.x3.f_quad)
 end
 
@@ -80,6 +88,9 @@ Computes the size of the local I, W matrices needed at each grid point.
 """
 function local_matrix_size(grids::FFFGridsT)
 
+    #USED FOR TESTING!
+    #TODO
+    return zeros(ComplexF64, 10, 10, grids.x1.gp, grids.x2.gp, grids.x3.gp)
     return zeros(ComplexF64, 9, 9, grids.x1.gp, grids.x2.gp, grids.x3.gp)
 end
 
@@ -93,6 +104,9 @@ Initialises the empty structure that contains the trial and test functions.
 """
 function init_basis_function(grids::FSSGridsT)
 
+    #USED FOR TESTING
+    #TODO
+    return zeros(ComplexF64, 4, 10, grids.x1.gp)   
     #order here is chosen so integration is done on contigeous block
     return zeros(ComplexF64, 4, 9, grids.x1.gp)   
 end
@@ -107,6 +121,9 @@ Initialises the empty structure that contains the trial and test functions.
 """
 function init_basis_function(grids::FFFGridsT)
 
+    #USED FOR TESTING
+    #TODO
+    return zeros(ComplexF64, 4, 4, 4, 10, grids.x1.gp, grids.x2.gp, grids.x3.gp)
     #order here is chosen so integration is done on contigeous block
     return zeros(ComplexF64, 4, 4, 4, 9, grids.x1.gp, grids.x2.gp, grids.x3.gp)
 end
@@ -120,6 +137,9 @@ Initialises the empty structure that contains the trial and test functions.
 """
 function init_basis_function(grids::FFSGridsT)
 
+    #USED FOR TESTING
+    #TODO
+    return zeros(ComplexF64, 4, 4, 10, grids.x1.gp, grids.x2.gp) 
     #order here is chosen so integration is done on contigeous block
     return zeros(ComplexF64, 4, 4, 9, grids.x1.gp, grids.x2.gp) 
 end

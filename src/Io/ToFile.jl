@@ -29,7 +29,7 @@ end
 Writes the eigenfunctions and the fourier transformed eigenfunctions
 to file. Each eigenfunction is written to an individual file.
 """
-function efuncs_to_file(ϕ, ϕft, dir::String)
+function efuncs_to_file(ϕ::Array{ComplexF64, 4}, ϕft::Array{ComplexF64, 4}, dir::String)
     nevals = size(ϕft)[1]
     efunc_base = dir*"/efuncs/"
     efunc_ft_base = dir*"/efuncs_ft/"
@@ -37,14 +37,35 @@ function efuncs_to_file(ϕ, ϕft, dir::String)
     mkpath(efunc_ft_base)
     for i in 1:nevals
 
-        efunc_label = efunc_base * @sprintf("efunc%04d.jld2", i)
-        efunc_ft_label = efunc_ft_base * @sprintf("efunc%04d.jld2", i)
+        efunc_label = efunc_base * @sprintf("efunc%05d.jld2", i)
+        efunc_ft_label = efunc_ft_base * @sprintf("efunc%05d.jld2", i)
 
         if !isnothing(ϕ)
             #handles ϕ for fss case
             save_object(efunc_label, ϕ[i, :, :, :])
         end
         save_object(efunc_ft_label, ϕft[i, :, :, :])
+
+    end
+    
+end
+
+function efuncs_to_file(ϕ::Array{ComplexF64, 5}, ϕft::Array{ComplexF64, 5}, dir::String)
+    nevals = size(ϕft)[1]
+    efunc_base = dir*"/efuncs/"
+    efunc_ft_base = dir*"/efuncs_ft/"
+    mkpath(efunc_base)
+    mkpath(efunc_ft_base)
+    for i in 1:nevals
+
+        efunc_label = efunc_base * @sprintf("efunc%05d.jld2", i)
+        efunc_ft_label = efunc_ft_base * @sprintf("efunc%05d.jld2", i)
+
+        if !isnothing(ϕ)
+            #handles ϕ for fss case
+            save_object(efunc_label, ϕ[i, :, :, :, :])
+        end
+        save_object(efunc_ft_label, ϕft[i, :, :, :, :])
 
     end
     

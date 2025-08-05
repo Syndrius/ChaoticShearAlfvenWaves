@@ -13,7 +13,7 @@ using Plots; plotlyjs()
 
 prob = init_problem(type=:flux, geo=init_geo(R0=4.0), q=fu_dam_q)
 
-rgrid = init_grid(type=:rf, N=20)
+rgrid = init_grid(type=:rf, N=50)
 θgrid = init_grid(type=:af, N=5)
 ζgrid = init_grid(type=:af, N=3)
 θgrid = init_grid(type=:as, start=1, N=3)
@@ -24,9 +24,12 @@ grids = init_grids(rgrid, θgrid, ζgrid)
 solver = init_solver(full_spectrum=true, prob=prob)
 evals, ϕ, ϕft = compute_spectrum(grids=grids, prob=prob, deriv=true, solver=solver);
 #%%
+#small test case, but does show that the interpolation of two efuncs at the same radial location 
+#can be split by the interpolation
+#this may allow a smoother continuum.
 continuum_plot(evals)
-ind1 = find_ind(evals, 0.1658)
-ind2 = find_ind(evals, 0.1518)
+ind1 = find_ind(evals, 0.16396)
+ind2 = find_ind(evals, 0.1586)
 
 ϕ1 = ϕ[ind1, :, :, :, :];
 ϕ2 = ϕ[ind2, :, :, :, :];
@@ -56,7 +59,8 @@ intphi = zeros(ComplexF64, Nmr)
 intphi2 = zeros(ComplexF64, Nmr)
 for i in 1:Nmr
     intphi[i] = MID.Mapping.hermite_interpolation(mr[i], ϕ[ind1, :, 1, 2, :], rg)
-    intphi2[i] = itp(mr[i])
+    intphi2[i] = MID.Mapping.hermite_interpolation(mr[i], ϕ[ind2, :, 1, 2, :], rg)
+    #intphi2[i] = itp(mr[i])
 end
 
 #%%

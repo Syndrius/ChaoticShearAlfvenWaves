@@ -16,6 +16,7 @@ grids = init_grids(rgrid, θgrid, ζgrid)
 solver = init_solver(full_spectrum=true, prob=prob)
 
 evals, _, _ = compute_spectrum(prob=prob, grids=grids, solver=solver);
+#evals, _, ϕft = compute_spectrum(prob=prob, grids=grids, solver=solver);
 
 #continuum_plot(evals)
 

@@ -68,6 +68,44 @@ function compute_cubic_bcs(Nx::Int64, Ny::Int64, Nz::Int64)
     return vcat(left_boundary1, left_boundary2, left_boundary3, left_boundary4, right_boundary1, right_boundary2, right_boundary3, right_boundary4)
 end
 
+function local_bas!(Φ::Array{Float64, 7}, S::Basis.HB3d, dx::Float64, dy::Float64, dz::Float64)
+
+    sf = ones(size(S.H))
+
+    x1jac = dx / 2
+    x2jac = dy / 2
+    x3jac = dz / 2
+
+    sf[2, :, :, :, :, :, :] *= x1jac
+    sf[4, :, :, :, :, :, :] *= x1jac
+    sf[:, 2, :, :, :, :, :] *= x2jac
+    sf[:, 4, :, :, :, :, :] *= x2jac
+    sf[:, :, 2, :, :, :, :] *= x3jac
+    sf[:, :, 4, :, :, :, :] *= x3jac
+    
+    @. Φ[:, :, :, 1, :, :, :] = S.H * sf
+    #Φ_x1
+    @. Φ[:, :, :, 2, :, :, :] = S.dHx1 / x1jac * sf
+    #Φ_x2
+    @. Φ[:, :, :, 3, :, :, :] = (S.dHx2 / x2jac ) * sf
+    #Φ_x3
+    @. Φ[:, :, :, 4, :, :, :] = (S.dHx3 / x3jac ) * sf
+    #Φ_x1x1
+    @. Φ[:, :, :, 5, :, :, :] = S.ddHx1x1 / x1jac^2 * sf
+    #Φ_x1x2
+    @. Φ[:, :, :, 6, :, :, :] = (S.ddHx1x2 / (x1jac * x2jac) ) * sf
+    #Φ_x1x3   
+    @. Φ[:, :, :, 7, :, :, :] = (S.ddHx1x3 / (x1jac * x3jac) ) * sf
+    #Φ_x2x2
+    @. Φ[:, :, :, 8, :, :, :] = (S.ddHx2x2 / x2jac^2 ) * sf
+    #Φ_x2x3
+    @. Φ[:, :, :, 9, :, :, :] = (S.ddHx2x3 / (x2jac * x3jac) ) * sf
+    #Φ_x3x3
+    @. Φ[:, :, :, 10, :, :, :] = (S.ddHx3x3 / x3jac^2 ) * sf
+
+end
+
+
 function cubic(Nx, Ny, Nz, gpx, gpy, gpz)
 
 
@@ -92,6 +130,10 @@ function cubic(Nx, Ny, Nz, gpx, gpy, gpz)
 
     bcs = compute_cubic_bcs(Nx, Ny, Nz)
     #bcs = cubic_bcs_cart(Nx, Ny, Nz)
+
+
+    Φ = zeros(4, 4, 4, 10, gpx, gpy, gpz)
+    Ψ = zeros(4, 4, 4, 10, gpx, gpy, gpz)
     
 
     for i in 1:Nx-1, j in 1:Ny, k in 1:Nz
@@ -100,6 +142,9 @@ function cubic(Nx, Ny, Nz, gpx, gpy, gpz)
         x, y, z, dx, dy, dz = linear_local_to_global(i, j, k, ξx, ξy, ξz, xgrid, ygrid, zgrid)
 
         jac = dx * dy * dz / 8
+
+        local_bas!(Φ, S, dx, dy, dz)
+        local_bas!(Ψ, S, dx, dy, dz)
 
         for trialx in 1:4, trialy in 1:4, trialz in 1:4
 
@@ -143,13 +188,35 @@ function cubic(Nx, Ny, Nz, gpx, gpy, gpz)
 
                     #A[l_ind, r_ind] += jac * S.H[testx, testy, testz, kx, ky, kz] * S.H[trialx, trialy, trialz, kx, ky, kz] * wgx[kx] * wgy[ky] * wgz[kz]
 
+                    tei = (testx, testy, testz)
+                    tri = (trialx, trialy, trialz)
+                    ks = (kx, ky, kz)
+                    #normal polar case.
+                    #M[l_ind, r_ind] += jac * (Ψ[tei..., 2, ks...] * Φ[tri..., 2, ks...]
+                    #                          - Ψ[tei..., 1, ks...] * Φ[tri..., 2, ks...] / x[kx]
+                    #                          + Ψ[tei..., 3, ks...] * Φ[tri..., 3, ks...] / x[kx]^2
+                    #                          + Ψ[tei..., 4, ks...] * Φ[tri..., 4, ks...]
+                    #                         ) * wgx[kx] * wgy[ky] * wgz[kz]
+
+                    #A[l_ind, r_ind] += jac * Ψ[tei..., 1, ks...] * Φ[tri..., 1, ks...] * wgx[kx] * wgy[ky] * wgz[kz]
+
                     #polar with extra double derivative of x3. aka ζ
+                    #eigen functions are just cooked in this case,
+                    #perhaps we just need a higher res?
                     M[l_ind, r_ind] += jac * (+S.ddHx1x3[testx, testy, testz, kx, ky, kz] * S.ddHx1x3[trialx, trialy, trialz, kx, ky, kz] * (2/dx)^2 *(2/dz)^2
                                               - S.dHx3[testx, testy, testz, kx, ky, kz] / x[kx] * S.ddHx1x3[trialx, trialy, trialz, kx, ky, kz] * (2/dx) * (2/dz)^2
                                               + S.ddHx2x3[testx, testy, testz, kx, ky, kz] * S.ddHx2x3[trialx, trialy, trialz, kx, ky, kz] / x[kx]^2 * (2/dy)^2 * (2/dz)^2
                                               + S.ddHx3x3[testx, testy, testz, kx, ky, kz] * S.ddHx3x3[trialx, trialy, trialz, kx, ky, kz] * (2/dz)^4) * wgx[kx] * wgy[ky] * wgz[kz]
 
                     A[l_ind, r_ind] += jac * S.dHx3[testx, testy, testz, kx, ky, kz] * S.dHx3[trialx, trialy, trialz, kx, ky, kz] * wgx[kx] * wgy[ky] * wgz[kz] * (2/dz)^2
+
+                    #M[l_ind, r_ind] += jac * (Ψ[tei..., 7, ks...] * Φ[tri..., 7, ks...]
+                    #                          - Ψ[tei..., 3, ks...] * Φ[tri..., 7, ks...] / x[kx]
+                    #                          + Ψ[tei..., 9, ks...] * Φ[tri..., 9, ks...] / x[kx]^2
+                    #                          + Ψ[tei..., 10, ks...] * Φ[tri..., 10, ks...]
+                    #                         ) * wgx[kx] * wgy[ky] * wgz[kz]
+
+                    #A[l_ind, r_ind] += jac * (Ψ[tei..., 3, ks...] * Φ[tri..., 3, ks...]) * wgx[kx] * wgy[ky] * wgz[kz]
 
                 end
             end
@@ -184,18 +251,18 @@ function cubic(Nx, Ny, Nz, gpx, gpy, gpz)
 
     #ef = zeros(length(evals), Nx, Ny)
     #ef = zeros(ComplexF64, length(evals), Nx, Ny)
-    ef = zeros(ComplexF64, nev, Nx, Ny, Nz)
+    ef = zeros(ComplexF64, nev, Nx, Ny, Nz, 8)
 
 
 
     #for i in 1:length(evals) #- bc_evs
     for i in 1:nev
 
-        for j in 1:8:8*Nx * Ny*Nz
+        for j in 1:1:8*Nx * Ny*Nz
 
-            xind, yind, zind, _ = index_to_grid_cubic(j, Nx, Ny, Nz)
+            xind, yind, zind, h = index_to_grid_cubic(j, Nx, Ny, Nz)
             #display((xind, yind))
-            ef[i, xind, yind, zind] = efuncs[j, i]
+            ef[i, xind, yind, zind, h] = efuncs[j, i]
         end
     end
 
@@ -205,6 +272,6 @@ function cubic(Nx, Ny, Nz, gpx, gpy, gpz)
     display(bc_evs)
 
     #return evals, ef
-    return evals[1+bc_evs:end], ef[1+bc_evs:end, :, :, :]
+    return evals[1+bc_evs:end], ef[1+bc_evs:end, :, :, :, :]
 
 end

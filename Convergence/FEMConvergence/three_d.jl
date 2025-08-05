@@ -1,7 +1,7 @@
 using MID
 using Plots
 #%%
-Nx = 8
+Nx = 20
 Ny = 3
 Nz = 3
 
@@ -14,15 +14,18 @@ Nz = 3
 #so that we can be more confident for a less straightforward case
 #however, it is still probably worth running this on Gadi to see how it looks.
 clam, cf = MID.Helmholtz.cubic(Nx, Ny, Nz, 3, 3, 3);
-clam[46]
+clam[112]
+clam
 #%%
 xgrid = LinRange(0, 1, Nx)
 ygrid = LinRange(0, 2π, Ny+1)[1:end-1]
 zgrid = LinRange(0, 2π, Nz+1)[1:end-1]
 
-plot(xgrid, real.(cf[46, :, 3, 3]))
-plot(ygrid, real.(cf[2, 5, :, 3]))
-plot(zgrid, real.(cf[2, 5, 3, :]))
+#need to be able to accruatly match the functions.
+plot(xgrid, real.(cf[110, :, 2, 2, 1]))
+plot!(xgrid, real.(cf[110, :, 2, 2, 5]))
+plot(ygrid, real.(cf[6, 5, :, 3]))
+plot(zgrid, real.(cf[6, 5, 3, :]))
 
 #hard to tell if this are ok,
 #but the seem fine.

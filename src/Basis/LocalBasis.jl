@@ -17,24 +17,32 @@ function create_local_basis!(Φ::Array{ComplexF64, 3}, S::HB1d, m::Int64, n::Int
 
     #the middle index is chosen to increase efficiency with numerical integration.
 
+    #TODO, better name, change the description of this function!
+    sf = ones(size(S.H))
+
+    sf[2, :] *= jac
+    sf[4, :] *= jac
+
     #Φ_x1
-    @. Φ[:, 1, :] = S.dH / jac
+    @. Φ[:, 1, :] = S.dH / jac * sf
     #Φ_x2
-    @. Φ[:, 2, :] = S.H * m * 1im
+    @. Φ[:, 2, :] = S.H * m * 1im * sf
     #Φ_x3
-    @. Φ[:, 3, :] = S.H * n * 1im
+    @. Φ[:, 3, :] = S.H * n * 1im * sf
     #Φ_x1x1
-    @. Φ[:, 4, :] = S.ddH / jac^2
+    @. Φ[:, 4, :] = S.ddH / jac^2 * sf
     #Φ_x1x2
-    @. Φ[:, 5, :] = S.dH * m * 1im / jac
+    @. Φ[:, 5, :] = S.dH * m * 1im / jac * sf
     #Φ_x1x3   
-    @. Φ[:, 6, :] = S.dH * n * 1im / jac
+    @. Φ[:, 6, :] = S.dH * n * 1im / jac * sf
     #Φ_x2x2
-    @. Φ[:, 7, :] = S.H * (-m^2)
+    @. Φ[:, 7, :] = S.H * (-m^2) * sf
     #Φ_x2x3
-    @. Φ[:, 8, :] = S.H * (-m*n)
+    @. Φ[:, 8, :] = S.H * (-m*n) * sf
     #Φ_x3x3
-    @. Φ[:, 9, :] = S.H * (-n^2)
+    @. Φ[:, 9, :] = S.H * (-n^2) * sf
+    #TODO
+    @. Φ[:, 10, :] = (S.H) * sf
 
 end
 
@@ -46,27 +54,37 @@ Modifies the matrix storing the basis functions, Φ, to reflect the local deriva
 """
 function create_local_basis!(Φ::Array{ComplexF64, 5}, S::HB2d, m::Int64, n::Int64, dx1::Float64, dx2::Float64)
 
+    #TODO
+    sf = ones(size(S.H))
+
     x1jac = dx1 / 2
     x2jac = dx2 / 2
+
+    sf[2, :, :, :, :] *= x1jac
+    sf[4, :, :, :, :] *= x1jac
+    sf[:, 2, :, :, :] *= x2jac
+    sf[:, 4, :, :, :] *= x2jac
     
     #Φ_x1
-    @. Φ[:, :, 1, :, :] = S.dHx1 / x1jac 
+    @. Φ[:, :, 1, :, :] = S.dHx1 / x1jac * sf
     #Φ_x2
-    @. Φ[:, :, 2, :, :] = S.dHx2 / x2jac + S.H * 1im * m
+    @. Φ[:, :, 2, :, :] = (S.dHx2 / x2jac + S.H * 1im * m) * sf
     #Φ_x3
-    @. Φ[:, :, 3, :, :] = S.H * n * 1im 
+    @. Φ[:, :, 3, :, :] = S.H * n * 1im * sf
     #Φ_x1x1
-    @. Φ[:, :, 4, :, :] = S.ddHx1x1 / x1jac^2 
+    @. Φ[:, :, 4, :, :] = S.ddHx1x1 / x1jac^2 * sf
     #Φ_x1x2
-    @. Φ[:, :, 5, :, :] = S.ddHx1x2 / (x1jac * x2jac) + S.dHx1 * 1im * m / x1jac
+    @. Φ[:, :, 5, :, :] = (S.ddHx1x2 / (x1jac * x2jac) + S.dHx1 * 1im * m / x1jac) * sf
     #Φ_x1x3   
-    @. Φ[:, :, 6, :, :] = S.dHx1 * n * 1im / x1jac 
+    @. Φ[:, :, 6, :, :] = S.dHx1 * n * 1im / x1jac * sf
     #Φ_x2x2
-    @. Φ[:, :, 7, :, :] = S.ddHx2x2 / x2jac^2 + 2 * S.dHx2 * 1im * m / x2jac - m^2 * S.H
+    @. Φ[:, :, 7, :, :] = (S.ddHx2x2 / x2jac^2 + 2 * S.dHx2 * 1im * m / x2jac - m^2 * S.H) * sf
     #Φ_x2x3
-    @. Φ[:, :, 8, :, :] = 1im * n * (S.dHx2 / x2jac + S.H * 1im * m)
+    @. Φ[:, :, 8, :, :] = 1im * n * (S.dHx2 / x2jac + S.H * 1im * m) * sf
     #Φ_x3x3
-    @. Φ[:, :, 9, :, :] = S.H * (-n^2) 
+    @. Φ[:, :, 9, :, :] = S.H * (-n^2) * sf
+    #TODO
+    @. Φ[:, :, 10, :, :] = (S.H) * sf
 
 end
 
@@ -80,29 +98,41 @@ Modifies the matrix storing the basis functions, Φ, to reflect the local deriva
 """
 function create_local_basis!(Φ::Array{ComplexF64, 7}, S::HB3d, m::Int64, n::Int64, dx1::Float64, dx2::Float64, dx3::Float64)
 
+    #TODO
+    sf = ones(size(S.H))
 
     x1jac = dx1 / 2
     x2jac = dx2 / 2
     x3jac = dx3 / 2
+
+    sf[2, :, :, :, :, :, :] *= x1jac
+    sf[4, :, :, :, :, :, :] *= x1jac
+    sf[:, 2, :, :, :, :, :] *= x2jac
+    sf[:, 4, :, :, :, :, :] *= x2jac
+    sf[:, :, 2, :, :, :, :] *= x3jac
+    sf[:, :, 4, :, :, :, :] *= x3jac
     
     #Φ_x1
-    @. Φ[:, :, :, 1, :, :, :] = S.dHx1 / x1jac 
+    @. Φ[:, :, :, 1, :, :, :] = S.dHx1 / x1jac * sf
     #Φ_x2
-    @. Φ[:, :, :, 2, :, :, :] = S.dHx2 / x2jac + S.H * 1im * m
+    @. Φ[:, :, :, 2, :, :, :] = (S.dHx2 / x2jac + S.H * 1im * m) * sf
     #Φ_x3
-    @. Φ[:, :, :, 3, :, :, :] = S.dHx3 / x3jac + S.H * 1im * n
+    @. Φ[:, :, :, 3, :, :, :] = (S.dHx3 / x3jac + S.H * 1im * n) * sf
     #Φ_x1x1
-    @. Φ[:, :, :, 4, :, :, :] = S.ddHx1x1 / x1jac^2 
+    @. Φ[:, :, :, 4, :, :, :] = S.ddHx1x1 / x1jac^2 * sf
     #Φ_x1x2
-    @. Φ[:, :, :, 5, :, :, :] = S.ddHx1x2 / (x1jac * x2jac) + S.dHx1 * 1im * m / x1jac
+    @. Φ[:, :, :, 5, :, :, :] = (S.ddHx1x2 / (x1jac * x2jac) + S.dHx1 * 1im * m / x1jac) * sf
     #Φ_x1x3   
-    @. Φ[:, :, :, 6, :, :, :] = S.ddHx1x3 / (x1jac * x3jac) + S.dHx1 * 1im * n / x1jac 
+    @. Φ[:, :, :, 6, :, :, :] = (S.ddHx1x3 / (x1jac * x3jac) + S.dHx1 * 1im * n / x1jac) * sf
     #Φ_x2x2
-    @. Φ[:, :, :, 7, :, :, :] = S.ddHx2x2 / x2jac^2 + 2 * S.dHx2 * 1im * m / x2jac - m^2 * S.H
+    @. Φ[:, :, :, 7, :, :, :] = (S.ddHx2x2 / x2jac^2 + 2 * S.dHx2 * 1im * m / x2jac - m^2 * S.H) * sf
     #Φ_x2x3
-    @. Φ[:, :, :, 8, :, :, :] = S.ddHx2x3 / (x2jac * x3jac) + S.dHx3 * 1im * m / x3jac + S.dHx2 * 1im * n / x2jac - m * n * S.H
+    @. Φ[:, :, :, 8, :, :, :] = (S.ddHx2x3 / (x2jac * x3jac) + S.dHx3 * 1im * m / x3jac + S.dHx2 * 1im * n / x2jac - m * n * S.H) * sf
     #Φ_x3x3
-    @. Φ[:, :, :, 9, :, :, :] = S.ddHx3x3 / x3jac^2 + 2 * S.dHx3 * 1im * n / x3jac - n^2 * S.H
+    @. Φ[:, :, :, 9, :, :, :] = (S.ddHx3x3 / x3jac^2 + 2 * S.dHx3 * 1im * n / x3jac - n^2 * S.H) * sf
+    #USED FOR Testing!
+    #TODO
+    @. Φ[:, :, :, 10, :, :, :] = (S.H) * sf
 
 end
 
