@@ -20,7 +20,7 @@ Current term is back on, it is working fine, may need higher res for best result
 - Mapping needs hek loads of work.
 - QFM Could probably be described properly now, could do with a final fix up.
 - Change anal to analytical for proper release
-- Maybe remove double ups for sllice solving, and remove boundary evals, not a huge problem typically.
+- Maybe remove double ups for sllice solving, and remove boundary evals, not a huge problem typically. -> done for parallel, not for serial...
 - Extrapolate the continuum by using Interpolation, shown that it could work, unsure how important this actually is.
 - Option of creating grids just by giving an array directly. -> will require significant changes to file storage! 
 - We may want to change global basis to two functions, one that just scales the H functions and one that adds the phase factor, as this would be more convenient for Mapping

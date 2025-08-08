@@ -1,6 +1,6 @@
 
+using Arpack
 using MID
-using MIDViz
 #%%
 
 #first define the problem
@@ -24,27 +24,21 @@ grids = init_grids(rgrid, θgrid, ζgrid);
 solver = init_solver(prob=prob, targets=[0.2, 0.21], nev=20)
 #%%
 
+
+W, I = MID.Construct.construct(prob, grids)
+
+ev, ef, nconv, niter, nmult, resid = eigs(W, I, nev=solver.nev, sigma=solver.targets[2], tol=1e-10)
+
+display(ev)
+display(resid[1:10])
+display(nconv)
+
+
+
+
+
 evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, solver=solver);
 #%%
 #scatter(cr.r, real.(cr.ω), ylimits=(-0.05, 1.05))
 continuum_plot(evals)
 display(evals.ω)
-
-
-ind = find_ind(evals, 0.289)
-#ind = 348
-potential_plot(ϕft, grids, ind)
-
-#%%
-C = [[1, 2]  [3, 4]  [5, 6]]
-D = [[0.1, 0.2] [0.3, 0.4]]
-
-T = C' * D
-res = T * C
-#%%
-W = zeros(3, 3)
-
-for i in 1:3, j in 1:3, k in 1:2, l in 1:2
-    W[i, j] += C[k, i] * D[k, l] * C[l, j]
-end
-display(W)
