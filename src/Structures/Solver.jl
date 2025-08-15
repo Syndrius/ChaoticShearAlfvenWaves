@@ -34,6 +34,10 @@ Struct storing the solving parameters.
     ideal :: Bool = false
 end
 
+@kwdef struct IntervalSolverT <: SolverT
+    left :: Float64
+    right :: Float64
+end
 
 """
     init_solver(;nev :: Int64 = 100, target :: Float64 = 0.0, nshifts::Int64=1, tlow::Float64=0.0, thigh::Float64=1.0, targets::Array{Float64}=Float64[], full_spectrum::Bool=false, prob::ProblemT)
@@ -50,7 +54,7 @@ Constructor for struct which stores the key information that defines how the pro
 - full_spectrum::Bool=false - Set true to solve the full spectrum, only practical for small grids.
 - prob::ProblemT - problem struct for normalising and determining if matrices are Hermitian.
 """
-function init_solver(;nev :: Int64 = 100, target :: Float64 = 0.0, nshifts::Int64=1, tlow::Float64=0.0, thigh::Float64=1.0, targets::Array{Float64}=Float64[], full_spectrum::Bool=false, prob::ProblemT)
+function init_solver(;nev :: Int64 = 100, target :: Float64 = 0.0, nshifts::Int64=1, tlow::Float64=0.0, thigh::Float64=1.0, targets::Array{Float64}=Float64[], full_spectrum::Bool=false, prob::ProblemT, left=0.0::Float64, right=0.0::Float64)
 
     if full_spectrum
         if prob.flr.δ == 0.0 && prob.flr.ρ_i == 0 && prob.flr.δ_e == 0
@@ -58,6 +62,10 @@ function init_solver(;nev :: Int64 = 100, target :: Float64 = 0.0, nshifts::Int6
         else
             return FullSpectrumSolverT(ideal=false)
         end
+    elseif left != 0.0 && right != 0.0
+        left = left^2 / prob.geo.R0^2
+        right = right^2 / prob.geo.R0^2
+        return IntervalSolverT(left, right)
     elseif isempty(targets) && nshifts==1
         target = target^2 / prob.geo.R0^2
         return ShiftInvertSolverT(nev, target)

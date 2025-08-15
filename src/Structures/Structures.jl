@@ -96,6 +96,7 @@ include("Solver.jl")
 export SolverT
 export FullSpectrumSolverT
 export ShiftInvertSolverT
+export IntervalSolverT
 export SliceSolverT
 export init_solver
 
