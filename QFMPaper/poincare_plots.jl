@@ -21,7 +21,7 @@ xlab = L"\theta"
 conv_num = 8 #probably want this to be 15 for actual results, finding the all the orbits takes ~20 mins, smaller number for changing the plot vars.
 ylims = (0.5, 2/3)
 tfs = 16
-dpi = 1200
+dpi = 600
 msize = 0.7
 msize1 = 1.7
 msize2 = 1.7
@@ -241,3 +241,4 @@ x, z = poincare_plot(prob, 1000, ψvals, θvals, ylimits=ylims, markersize=msize
 #x1, z1 = poincare_plot(prob, 2000, [r01[1], r02[1]], [θ01[1], θ02[1]]);
 #%%
 scatter(x, z, ylimits=ylims, markersize=msize, legend=false, color=:black, xlabel=L"\theta", ylabel=L"\psi", xguidefontsize=xfs, yguidefontsize=yfs, xtickfontsize=xtfs, ytickfontsize=ytfs, dpi=dpi)
+#%%

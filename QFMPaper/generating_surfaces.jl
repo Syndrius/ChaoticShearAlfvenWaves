@@ -25,7 +25,10 @@ k2 = 0.0013
 k3 = 0.00145
 k4 = 0.0017
 k0 = 0.0005
-k = k0
+k12 = 0.0012
+k10 = 0.001
+k08 = 0.0008
+k = k08
 
 geo = init_geo(R0=1.0)
 isl1 = init_island(m0=3, n0=-2, A=k/3, flux=true)
@@ -79,4 +82,4 @@ plot_surfs(surfs4)
 curr_surfs = vcat(surfs1, surfs2, surfs3, surfs4);
 plot_surfs(curr_surfs)
 #%%
-save_object("/Users/matt/phd/MID/data/surfaces/qfm/k0_surfs.jld2", curr_surfs)
+save_object("/Users/matt/phd/MID/data/surfaces/qfm/k08_surfs.jld2", curr_surfs)

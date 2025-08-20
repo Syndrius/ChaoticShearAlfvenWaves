@@ -37,5 +37,8 @@ include("Eigenfunctions.jl")
 include("Spectrum.jl") 
 
 
+include("Harmonics.jl") 
+
+
 
 end

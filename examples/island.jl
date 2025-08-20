@@ -1,16 +1,15 @@
 
 #basic test of island damping
 using MID
-using Plots; plotlyjs()
-
-
-
-geo = GeoParamsT(R0 = 1000)
-rgrid = rfem_grid(N=100, start=0.0, stop=1.0, sep1=0.4, sep2=0.6, frac=0.5)#, left_bc=false)
-θgrid = asm_grid(start=-2, N=5)
-ζgrid = asm_grid(start=-1, N=3)
+using MIDViz
+#%%
+geo = init_geo(R0=1.0)
+rgrid = init_grid(type=:rf, N=40, sep1=0.4, sep2 = 0.6, frac=0.5)
+θgrid = init_grid(type=:as, start=-2, N=5)
+ζgrid = init_grid(type=:as, start=-1, N=3)
 
 grids = init_grids(rgrid, θgrid, ζgrid)
+#%%
 
 isl = IslandT(m0=2, n0=-1, r0=0.5, w=0.03, qp=2.0)
 #prob = init_problem(q = inside_island_q, geo=geo, met=MID.Geometry.Axel_island_metric!)

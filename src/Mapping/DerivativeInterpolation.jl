@@ -29,11 +29,77 @@ function hermite_interpolation(x1::Float64, x2::Float64, x3::Float64, ϕ::Array{
 end
 
 
+#unsure if this will actually work!
+function hermite_interpolation(x1::Float64, ϕ::Array{ComplexF64, 2}, x1grid::Array{Float64}, x1d::Int64)
+    #first find the index of the grid point closest to the target point
+    x1ind = find_ind(x1grid, x1)
+
+    #using this point, we find the two indices left and right of the point, the distance from the left point (ξ) and the disatnce between the two points.
+    ξ1, inds1, dx1 = global_to_local(x1ind, x1grid, x1)
+
+
+    #so something is wrong here.
+    ϕ_int = 0.0+0.0im
+    gid = Indexing.grid_id
+    bid = Indexing.basis_id
+    for h1 in 1:4
+        gi = inds1[gid[h1]+1]
+        bi = 1 + bid[h1] 
+        ϕ_int += ϕ[gi, bi] * hb(ξ1, h1, dx1, x1d) 
+    end
+    return ϕ_int
+
+end
+
 """
     hb(t::Float64, h::Int64, dt::Float64)
 
 Function that returns the appropriate hermite basis function based on h.
 """
+function hb(ξ::Float64, h::Int64, Δx::Float64, order::Int64)
+    #Δx is due to arbitrary interval, see wikipedia page.
+    #change from ξ∈[-1, 1] to x∈[x_i, x_{i+1}]
+    jac = Δx / 2 #may need to be upside down!
+    if order == 0
+        if h==1
+            return Basis.h00(ξ)
+        elseif h==2
+            return Basis.h10(ξ) * jac
+        elseif h==3
+            return Basis.h01(ξ)
+        else
+            return Basis.h11(ξ) * jac
+        end
+    elseif order == 1
+        if h==1
+            return Basis.dh00(ξ) / jac
+        elseif h==2
+            return Basis.dh10(ξ) 
+        elseif h==3
+            return Basis.dh01(ξ) / jac
+        else
+            return Basis.dh11(ξ) 
+        end
+    elseif order == 2
+        if h==1
+            return Basis.ddh00(ξ) / jac^2
+        elseif h==2
+            return Basis.ddh10(ξ) / jac
+        elseif h==3
+            return Basis.ddh01(ξ) / jac^2
+        else
+            return Basis.ddh11(ξ) / jac
+        end
+    end
+end
+
+
+"""
+    hb(t::Float64, h::Int64, dt::Float64)
+
+Function that returns the appropriate hermite basis function based on h.
+"""
+#=
 function hb(t::Float64, h::Int64, dt::Float64, deriv::Int64)
     #additional jacobian term is very awkward.
 
@@ -71,9 +137,9 @@ function hb(t::Float64, h::Int64, dt::Float64, deriv::Int64)
         end
     end
 end
-
+=#
 #derivatives of the hermite basis functions.
-
+#=
 function dh00(t)
 
     return 6*t^2 - 6*t
@@ -106,4 +172,4 @@ end
 function ddh11(t)
     return 4*t + 2*(t-1)
 end
-
+=#

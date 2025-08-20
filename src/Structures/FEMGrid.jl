@@ -179,9 +179,13 @@ end
 
 
 
-function mode_list(gd::AngFEMGridDataT)
-    #TODO
-    return NaN
+function mode_list(grid::AngFEMGridDataT)
+
+    if isodd(grid.N)
+        return vcat(0:grid.N ÷ 2,  -grid.N÷2:-1) .+ grid.pf
+    else
+        return vcat(0:grid.N ÷ 2,  -grid.N÷2+1:-1) .+ grid.pf
+    end
 end
 
 

@@ -6,11 +6,6 @@ Current term is back on, it is working fine, may need higher res for best result
 ####################
 
 
- ###### More Urgent
-- Map the island results to normal space to see whats going on.
-- May need to start removing the raw data as we are using stupid amounts of data...
-- Add continuum plotting option to ignore eigenmodes far from validity.
-
 
 - Based on fft stuff in qfm, we may need to double check fft in the spectral method to make sure the scaling is actually correct
 - Changing to x1,x2,x3 is better long term, but we probably want some functions to still be written in terms of r, θ, ζ, or even ψ, θ, ζ as unique labels
@@ -24,6 +19,7 @@ Current term is back on, it is working fine, may need higher res for best result
 - Extrapolate the continuum by using Interpolation, shown that it could work, unsure how important this actually is.
 - Option of creating grids just by giving an array directly. -> will require significant changes to file storage! 
 - We may want to change global basis to two functions, one that just scales the H functions and one that adds the phase factor, as this would be more convenient for Mapping
+- Ideally get the continuum functions to return an evalsT struct, may not be possible
 
 
 #Long Term fixes
