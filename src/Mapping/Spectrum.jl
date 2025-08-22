@@ -20,6 +20,10 @@ function tor_spectrum_to_isl(dir_base::String, isl_grids::GridsT)
 
     evals = evals_from_file(dir=dir_base)
 
+    un_inds = load_object(joinpath(dir_base, "unique_inds.jld2"))
+
+    nevals = length(un_inds)
+
     rgrid, θgrid, ζgrid = inst_grids(tor_grids)
     κgrid, ᾱgrid, τgrid = inst_grids(isl_grids)
 
@@ -50,7 +54,7 @@ function tor_spectrum_to_isl(dir_base::String, isl_grids::GridsT)
     #maps the coordinates first to efficiently compute the interpolation
     coord_map = tor_to_isl_coord_map(κgrid, ᾱgrid, τgrid, isl)
 
-    for i in 1:length(evals.ω)
+    for i in 1:nevals
 
         #this eigenfunction is not an island mode, so we ignore.
         #initial test to remove modes that are certainly not island modes.
@@ -58,7 +62,7 @@ function tor_spectrum_to_isl(dir_base::String, isl_grids::GridsT)
             continue
         end
 
-        efunc_read = @sprintf("efunc%05d.hdf5", i)
+        efunc_read = @sprintf("efunc%05d.hdf5", un_inds[i])
         #unfort doesn't handle complex numbers v well
         efunc_split = load_object(dir_base*"/efuncs_raw/"*efunc_read)
 
@@ -113,6 +117,10 @@ function qfm_spectrum_to_isl(dir_base::String, isl_grids::GridsT, surfs_dir::Str
 
     prob, qfm_grids, _ = inputs_from_file(dir=dir_base)
 
+    un_inds = load_object(joinpath(dir_base, "unique_inds.jld2"))
+
+    nevals = length(un_inds)
+
     surfs = load_object(surfs_dir)
 
     evals = evals_from_file(dir=dir_base)
@@ -160,14 +168,14 @@ function qfm_spectrum_to_isl(dir_base::String, isl_grids::GridsT, surfs_dir::Str
     mode_count = 1
 
     coord_map = qfm_to_isl_coord_map(κgrid, ᾱgrid, τgrid, prob.isls[1], CT, surf_itp, sd)
-    for i in 1:length(evals.ω)
+    for i in 1:nevals
 
         #first remove evals far from island
         if evals.x1[i] < sep_min || evals.x1[i] > sep_max
             continue
         end
 
-        efunc_read = @sprintf("efunc%05d.hdf5", i)
+        efunc_read = @sprintf("efunc%05d.hdf5", un_inds[i])
         #unfort doesn't handle complex numbers v well
         efunc_split = load_object(dir_base*"/efuncs_raw/"*efunc_read)
 
@@ -223,6 +231,10 @@ function qfm_spectrum_to_tor(dir_base::String, tor_grids::GridsT, surfs_dir::Str
 
     evals = evals_from_file(dir=dir_base)
 
+    un_inds = load_object(joinpath(dir_base, "unique_inds.jld2"))
+
+    nevals = length(un_inds)
+
     sgrid, ϑgrid, φgrid = inst_grids(qfm_grids)
 
     #think this process is indep of flux vs rad, just depends how the surfaces where generated
@@ -250,7 +262,8 @@ function qfm_spectrum_to_tor(dir_base::String, tor_grids::GridsT, surfs_dir::Str
     mode_count = 1
 
     coord_map = qfm_to_tor_coord_map(rgrid, θgrid, ζgrid, CT, surf_itp, sd)
-    for i in 1:length(evals.ω)
+
+    for i in 1:nevals
 
         #Not impossible we would only want to map over the chaotic region or something!
         #if evals.x1[i] < sep_min || evals.x1[i] > sep_max
@@ -259,7 +272,7 @@ function qfm_spectrum_to_tor(dir_base::String, tor_grids::GridsT, surfs_dir::Str
 
         #we could generalise this process by creating a get efunc function or something
         #unsure how usefull that would ever be though!
-        efunc_read = @sprintf("efunc%05d.hdf5", i)
+        efunc_read = @sprintf("efunc%05d.hdf5", un_inds[i])
         #unfort doesn't handle complex numbers v well
         efunc_split = load_object(dir_base*"/efuncs_raw/"*efunc_read)
 

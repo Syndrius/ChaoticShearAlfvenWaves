@@ -176,7 +176,7 @@ Computes the continuum analytically, assuming cylindrical geometry and no pertur
 function analytical_continuum(prob::ProblemT, grids::ContGridsT)
 
 
-    rgrid = inst_grid(grids.x1)
+    x1grid = inst_grid(grids.x1)
     mlist = mode_list(grids.x2)
     nlist = mode_list(grids.x3)
 

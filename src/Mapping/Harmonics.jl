@@ -42,7 +42,9 @@ function harmonic_info(dir::String)
 
     evals = evals_from_file(dir=dir)
 
-    nevals = length(evals.ω)
+    un_inds = load_object(joinpath(dir, "unique_inds.jld2"))
+
+    nevals = length(un_inds)
 
     ht = HarmonicsT(nevals)
 
@@ -63,7 +65,7 @@ function harmonic_info(dir::String)
 
     for i in 1:nevals
 
-        efunc_read = @sprintf("efunc%05d.hdf5", i)
+        efunc_read = @sprintf("efunc%05d.hdf5", un_inds[i])
         #unfort doesn't handle complex numbers v well
         efunc_split = load_object(dir*"/efuncs_raw/"*efunc_read)
 
