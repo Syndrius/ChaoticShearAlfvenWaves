@@ -7,7 +7,7 @@ using Plots; gr()
 #try to understand the action function, from after the coefficeints are returned.
 #%%
 
-k = 0.003
+k = 0.0012
 geo = init_geo(R0=1.0)
 isl1 = init_island(m0=4, n0=-3, A=k/4, flux=true)
 isl2 = init_island(m0=3, n0=-2, A=k/3, flux=true)
@@ -39,17 +39,20 @@ k*(cos(3*αvals[3])/3 + cos(4*αvals[3])/4)
 scatter(αvals, νarr)
 scatter!(αvals, @. k*(cos(3*αvals)/3 + cos(4*αvals)/4))
 #%%
-a = 13
-b = 9
+a = 7
+b = 5
 r1 = (a, b)
 
 met = MID.MetT()
 B = MID.BFieldT()
-M = 32
+M = 1
 N = 8
 rcosarr, rsinarr, θcosarr, θsinarr, νarr = MID.QFM.action(r1, prob, met, B, M, N, 0.7, 2);
 
 scatter(LinRange(0, 2π/a, length(νarr)), νarr)
+#%%
+rcosarr[1, :]
+rsinarr[1, :]
 #%%
 #size if (number of field lines, number of coefficients (a*N+1)).
 size(rcosarr)

@@ -15,6 +15,7 @@ using ..Equilibrium
 
 using FunctionWrappers
 import FunctionWrappers: FunctionWrapper
+using BSplineKit
 
 
 """
@@ -106,5 +107,12 @@ include("Output.jl")
 
 export EvalsT
 export find_ind
+
+
+include("QFM.jl")
+
+export QFMSurfaceT
+export SurfaceITPT
+export TempSurfT
 
 end

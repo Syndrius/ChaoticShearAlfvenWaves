@@ -18,8 +18,11 @@ using Plots; gr()
 k11 = 0.0011 #this is quite the onset of chaos case.
 #k13 = 0.0013 #already created the surfs for this.
 k15 = 0.0015
+k05 = 0.0005
+k13 = 0.0013
+k17 = 0.0017
 
-k = k15
+k = k17
 geo = init_geo(R0=1.0)
 isl1 = init_island(m0=3, n0=-2, A=k/3, flux=true)
 isl2 = init_island(m0=4, n0=-3, A=k/4, flux=true)
@@ -72,4 +75,4 @@ plot_surfs(surfs4)
 curr_surfs = vcat(surfs1, surfs2, surfs3, surfs4);
 plot_surfs(curr_surfs)
 #%%
-save_object("/Users/matt/phd/MID/data/surfaces/qfm/k15_surfs.jld2", curr_surfs)
+save_object("/Users/matt/phd/MID/data/surfaces/qfm/k17_surfs.jld2", curr_surfs)

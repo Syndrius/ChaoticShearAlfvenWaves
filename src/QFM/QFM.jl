@@ -7,6 +7,8 @@ Quadratic Flux Minimisation. Module for creating approximate flux surfaces in ch
 #TODO
 #wrapping field lines is still a mystery. Few other smaller things to clean up, but otherwise this module is ok now.
 #part of this is the rfft functions used by wrap_field_lines
+#going to change this to just interacting with the surfaces rather than actually creating them, 
+#creation will be moved to MIDCantori.
 
 module QFM
 
@@ -15,29 +17,22 @@ using ..Geometry
 using ..Equilibrium
 
 
-using NLsolve
-using Roots
-using FFTW
+#using NLsolve
+#using Roots
+#using FFTW
 using BSplineKit
 using LinearAlgebra
-using Printf
+#using Printf
 
 
-include("Action.jl")
-include("GradAction.jl")
-include("Rfft.jl")
+#include("Action.jl")
+#include("GradAction.jl")
+#include("Rfft.jl")
 
 
 
 include("Surfaces.jl")
 
-export QFMSurfaceT
-export SurfaceITPT
-export TempSurfT #terrible name
-export construct_surfaces
-export farey_tree
-export lowest_rationals
-export surface_guess
 export convert_surf
 export compute_jac
 export create_surf_itp

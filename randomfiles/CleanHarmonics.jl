@@ -59,9 +59,7 @@ function harmonic_info(ϕft, grids, evals)
 
     ϕm = zeros(grids.x2.N, grids.x3.N)
     nvals = size(ϕft)[1]
-
-    harm2 = zeros(nvals)
-    x1loc = zeros(nvals) #location of the main harmonic
+    ht.modelabs .= evals.modelabs
 
     for i in 1:nvals
 
@@ -75,7 +73,7 @@ function harmonic_info(ϕft, grids, evals)
         ϕm[max_mode] = 0.0 #so we can find the second
         max2 = argmax(ϕm)
 
-        harm2[i] = ϕm[max2] / max_val
+        ht.harm2[i] = ϕm[max2] / max_val
         ht.x1[i] = x1grid[x1m[max_mode]]
 
         #computes the second derivative at the peak.
@@ -105,6 +103,8 @@ end
 
 ht = harmonic_info(ϕft, grids, evals)
 scatter(ht.x1, ht.fwhm)
+scatter(ht.x1, ht.harm2)
+scatter(ht.x1, ht.dd)
 #%%
 
 

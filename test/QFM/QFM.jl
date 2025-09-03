@@ -1,4 +1,5 @@
 
+#this needs to change, ideally we just check if there are any surfaces then run the tests if they do exist.
 display("Computing surfaces")
 
 R0=4.0
@@ -17,6 +18,8 @@ rationals = lowest_rationals(6, prob.q(0.0)[1], prob.q(1.0)[1])
 guess_list = surface_guess(rationals, prob.q)
 
 surfs = construct_surfaces(rationals, guess_list, prob);
+
+
 
 display("Running Continuum Test")
 include("Continuum.jl")

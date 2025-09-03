@@ -34,6 +34,12 @@ Struct storing the solving parameters.
     ideal :: Bool = false
 end
 
+"""
+Struct storing the solving when finding all eigenvalues in an interval.
+### Fields
+- left::Float64 - left edge of the interval
+- right::Float64 - right edge of the interval
+"""
 @kwdef struct IntervalSolverT <: SolverT
     left :: Float64
     right :: Float64
