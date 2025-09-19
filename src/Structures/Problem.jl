@@ -153,7 +153,7 @@ function init_problem(; type::Symbol=:radial, q::Function, met::Symbol=:torus, d
             #awful solution, just notes that these are the same lol.
             #starting to seem like our normal island should contain less information!
             #and the CoordislandT should be the only one used for the weird q-rpfiles.
-            new_isl = CoordIslandT(m0=isl.m0, n0=isl.n0, q0=isl.q0, w=isl.w, A=isl.A, qp=isl.qp, r0=isl.r0)
+            new_isl = CoordIslandT(m0=isl.m0, n0=isl.n0, q0=isl.q0, w=isl.w, A=isl.A, qp=isl.qp, ψ0=isl.ψ0)
             push!(new_isls, new_isl)
         end
 

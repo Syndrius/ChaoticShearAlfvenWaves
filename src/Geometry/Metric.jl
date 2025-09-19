@@ -153,6 +153,203 @@ function anal_toroidal_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, 
 
 end
 
+#starting to come together, looks to work for low m/n and not many κ values, but doesn't work
+#for all cases.
+function island_metric!(met::MetT, κ::Float64, ᾱ::Float64, τ::Float64, R0::Float64, isl::CoordIslandT)
+
+    #first we compute our intermediate metric (κ, β, ζ)
+    #where √κsin(β) = sin(m0 α/2)
+
+    #we have, for the first transformation
+    #κ = 4/w^2 * (ψ-ψ0)^2 + sin^2(m0*α/2) -> κ(ψ, θ, ζ)
+    #β = arctan(w/2 * sin(m0*α/2)/(ψ-ψ0)) -> β(ψ, θ, ζ)
+    #τ = ζ -> τ(ψ, θ, ζ)
+
+    #We then straighten these coordinates via
+    #ᾱ = π/(2*K(κ)) * F(β, κ) -> ᾱ(κ, θ, ζ)
+
+    #other relations
+    #ψ-ψ0 = w*sqrt(κ)/2 * cos(β)
+    #but we will use β as an intermediate for derivatives to reduce complexity.
+
+    #once we have the non-deriv metric
+    #we should be able to replictate the island continuum
+    #then we can check all the derivs with finite diff.
+
+
+
+    #in first transformed coordinates
+    #need to change to ab.
+    #maybe even swap from ab to something else.
+    #∇κ2 = 32*ψ*κ / w^2 * cos(β)^2 + bhat * κ * sin(β)^2
+
+    #bhat = (m^2/(2ψ) + n^2 / R0^2) * (1-κ*sin(β)^2)
+
+    #∇κ∇β = (-16ψ/w^2 + bhat/2) * cos(β) * sin(β)
+
+    #∇κ∇τ = n/R0^2 * sqrt(κ) * sin(β) * sqrt(1-κ*sin^2(β))
+
+    #∇β2 = 8*ψ*sin(β)^2 / (w^2*κ) + bhat/(2κ) * cos(β)^2
+
+    #∇β∇τ = n/(2*sqrt(κ)*R0^2) * cos(β) * sqrt(1-κ*sin(β)^2) / R0^2 #this term is probbaly negligible.
+
+    #∇τ2 = 1/R0^2
+
+
+    K, E = Elliptic.ellipke(κ)
+
+    arg = 2*K / π * ᾱ
+
+    sn, cn, dn = Elliptic.ellipj(arg, κ)
+    β = Elliptic.Jacobi.am(arg, κ)
+
+    Eβ = Elliptic.E(β, κ)
+    Fβ = Elliptic.F(β, κ)
+
+    Z = Eβ - E / K * Fβ
+
+    #extract the island info
+    ψ0 = isl.ψ0
+    w = isl.w
+    m0 = isl.m0
+    n0 = isl.n0
+
+    ψ = ψ0 + w * sqrt(κ) / 2  * cn
+
+    chat = dn #unsure if this is clearer!
+
+    bhat = (m0^2/(2ψ) + n0^2 / R0^2) * chat^2
+
+    ∇κ∇β = (-16ψ/w^2 + bhat/2) * cn * sn
+
+    ∇β2 = 8*ψ*cn^2 / (w^2*κ) + bhat/(2κ) * cn^2
+
+    ∇β∇τ = n0/(2*sqrt(κ)*R0^2) * cn * dn / R0^2 #this term is probbaly negligible.
+
+    ∇κ2 = 32 * κ / w^2 * cn^2 + bhat * κ * sn^2
+
+    dᾱdκ = π / (4*κ * (1-κ) * K) * (Z - κ*sn*cn / dn)
+
+    dᾱdβ = π / (2 * K * chat)
+
+    ∇κ∇ᾱ = dᾱdκ * ∇κ2 + dᾱdβ * ∇κ∇β
+
+    ∇κ∇τ = n0/R0^2 * sqrt(κ) * sn * dn
+
+    ∇ᾱ2 = (dᾱdκ)^2 * ∇κ2 + dᾱdκ * dᾱdβ * ∇κ∇β + (dᾱdβ)^2 * ∇β2
+
+    ∇ᾱ∇τ = dᾱdκ * ∇κ∇τ + dᾱdβ * ∇β∇τ
+
+    ∇τ2 = 1/ R0^2
+
+    met.gu[1, 1] = ∇κ2
+    met.gu[1, 2] = ∇κ∇ᾱ
+    met.gu[1, 3] = ∇κ∇τ
+
+    met.gu[2, 1] = ∇κ∇ᾱ
+    met.gu[2, 2] = ∇ᾱ2
+    met.gu[2, 3] = ∇ᾱ∇τ
+
+    met.gu[3, 1] = ∇κ∇τ
+    met.gu[3, 2] = ∇ᾱ∇τ
+    met.gu[3, 3] = ∇τ2
+
+    met.gl .= inv(met.gu)
+    #display(sqrt(det(met.gl)))
+    #display(w/(m0*π) * K * R0)
+    #display((m0*π) / (w * K) * R0)
+    #met.J[1] = sqrt(det(met.gl))
+    met.J[1] = w/(m0*π) * K * R0
+
+
+end 
+#=
+
+    #and some common vars used
+    sκ = sqrt(κ)
+
+    #we can then compute our original vars
+    ψ = ψ0 + w/2 * sκ * cos(β)
+    α = 2/m0 * asin(sκ*sin(β))
+
+    r = sqrt(2ψ)
+
+    #and metric elements, assuming cylinder.
+    ∇ψ2 = r^2
+    ∇θ2 = 1/r^2
+    ∇ζ2 = 1/R0^2
+
+    dκdψ = 8/w^2*(ψ-ψ0)
+    display(dκdψ)
+    dκdθ = m0*sin(m0*α/2)*cos(m0*α/2)
+    dκdζ = n0*sin(m0*α/2)*cos(m0*α/2)
+
+    display(dκdθ)
+    display(dκdζ)
+    dβdψ = -2/(w*κ^2) * sin(m0*α/2)
+    dβdθ = m0 / (w*κ^2) * (ψ-ψ0) * cos(m0*α/2)
+    dβdζ = n0 / (w*κ^2) * (ψ-ψ0) * cos(m0*α/2)
+
+    #this probably shows it is possible to do the toroidal version, probbaly not very interesting.
+    ∇κ2 = (dκdψ)^2 * ∇ψ2 + (dκdθ)^2 * ∇θ2 + (dκdζ)^2 * ∇ζ2
+    #∇β2 = (dβdψ)^2 * ∇ψ2 + (dβdθ)^2 * ∇θ2 + (dβdζ)^2 * ∇ζ2
+    #∇κ∇β = 
+
+    #Axel's version of this is wildy more complicated, as he writes this in terms of ᾱ instead of β, may be simpler once we take derivatives?
+    dᾱdκ = π / (8*(κ-1) * κ * K^2) * (2 * E * Fβ + K * (-2*Eβ + κ*sin(2*β) / sqrt(1-κ*sin(β)^2))) #last term can probably be simplified a bit.
+    dᾱdβ = π / (2 * K * sqrt(1-κ*sin(β)^2))
+
+    #we will need the derives of each of these, and all the terms that makes them up!
+    dᾱdψ = dᾱdκ * dκdψ + dᾱdβ * dβdψ
+    dᾱdθ = dᾱdκ * dκdθ + dᾱdβ * dβdθ
+    dᾱdζ = dᾱdκ * dκdζ + dᾱdβ * dβdζ
+
+    dτdζ = 1.0 #just kept for symmetry.
+
+    #computing derivatives of this will be awful
+    #perhaps we can follow a similar pattern with the inverse derivs
+    #this should be the actual values of the metric tho! assuming no typos.
+    ∇κ2 = (dκdψ)^2 * ∇ψ2 + (dκdθ)^2 * ∇θ2 + (dκdζ)^2 * ∇ζ2
+    ∇κ∇ᾱ = dκdψ * dᾱdψ * ∇ψ2 + dκdθ * dᾱdθ * ∇θ2 + dκdζ * dᾱdζ * ∇ζ2
+    ∇κ∇τ = dκdζ * dτdζ * ∇ζ2
+    ∇ᾱ2 = (dᾱdψ)^2 * ∇ψ2 + (dᾱdθ)^2 * ∇θ2 + (dᾱdζ)^2 * ∇ζ2
+    ∇ᾱ∇τ = dᾱdζ * dτdζ * ∇ζ2
+    ∇τ2 = (dτdζ)^2 * ∇ζ2
+
+
+    met.gu[1, 1] = ∇κ2
+    met.gu[1, 2] = ∇κ∇ᾱ
+    met.gu[1, 3] = ∇κ∇τ
+
+    met.gu[2, 1] = ∇κ∇ᾱ
+    met.gu[2, 2] = ∇ᾱ2
+    met.gu[2, 3] = ∇ᾱ∇τ
+
+    met.gu[3, 1] = ∇κ∇τ
+    met.gu[3, 2] = ∇ᾱ∇τ
+    met.gu[3, 3] = ∇τ2
+end
+
+    #this will be annoying though, as we will need to find ψ(κ, ᾱ, τ) etc.
+    #unsure if this approach will be easier or harder than the one below
+    #think this is better because we can check each step of the derivatives as we go with finite difference etc.
+    d∇ψ2dκ = d∇ψ2dψ * dψdκ + d∇ψ2dθ * dθdκ
+
+    #will this work?
+    #plausible, can't see it working for ᾱ though!
+    #may need to convert each of our expressions in terms of κ, ᾱ, τ...
+    #nah think it should work, just be a mess
+    d∇κ2dκ = 2*ddκdψdκ * ∇ψ2 + (dκdψ)^2 * d∇ψ2dκ
+
+
+
+
+
+
+
+end
+=#
+
 
 
 """
@@ -160,7 +357,7 @@ end
 
 Function that fills out the MetT structure for magnetic island striaght field line geometry. Based on Konies et al 2024. κ is the radial variable, measure from island center, ᾱ is the striaghtened helical angle and φ is a typical toroidal angle. This assumed the original geometry was cylindrical.
 """
-function island_metric!(met::MetT, κ::Float64, ᾱ::Float64, φ::Float64, R0::Float64, isl::CoordIslandT)
+function old_island_metric!(met::MetT, κ::Float64, ᾱ::Float64, φ::Float64, R0::Float64, isl::CoordIslandT)
 
     #derivs have all been checked
     #assuming original expressions are correct

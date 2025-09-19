@@ -8,7 +8,7 @@ function f(κ, ᾱ, ζ)
 
     k = 0.002
     #think this matches the island_mode_21, we will need further verification.
-    isl = init_island(m0=2, n0=-1, A=k/2, r0=0.5, qp=2.0)
+    isl = init_island(m0=2, n0=-1, A=k/2, ψ0=0.5, qp=2.0, flux=true)
     isl = MID.Structures.inst_island(isl)
     #peak efficiency
     met = MID.Geometry.MetT()
@@ -54,7 +54,9 @@ end
 function dfdζ(κ, ᾱ, ζ, Δζ)
     return @. (f(κ, ᾱ, ζ+Δζ) - f(κ, ᾱ, ζ-Δζ)) / (2 * Δζ)
 end
+
 #%%
+
 
 hlist = [0.01, 0.005, 0.003, 0.001, 0.0005, 0.0003, 0.0001]
 #hlist = [0.0003, 0.0001]

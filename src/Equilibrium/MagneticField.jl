@@ -127,6 +127,8 @@ function magnitude_B!(B::BFieldT, met::MetT)
     #changing this, hopefully not a problemo!
     B.mag_B .= 0.0
     B.dmag_B .= 0.0
+
+    display(met.gl)
     
     for i in 1:3, j in 1:3
 
@@ -253,6 +255,7 @@ function compute_B!(B::BFieldT, met::MetT, q_prof::FunctionWrapper{Tuple{Float64
     B.dB[3, 2] = - met.dJ[2] * q / (met.J[1]^2)
 
 
+    display((κ, ᾱ, τ))
     magnitude_B!(B, met)
     
     B.b[1] = B.B[1]/B.mag_B[1]

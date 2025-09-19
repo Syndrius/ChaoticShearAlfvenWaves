@@ -2,6 +2,8 @@
 #should this file be in equilibrium? it isn't really geometry?
 #maybe better if this was the default island case with m0, n0 and A. and the others are only used if needed.
 #island should probably be in structures...
+#ideally, island stuff will be merged with a magnetic field type thing
+#and these structures will be simplified and moves to structures.
 abstract type IslandT end
 
 """
@@ -49,7 +51,7 @@ end
     A :: Float64 = NaN
     q0 :: Float64 = NaN
     qp :: Float64 = NaN
-    r0 :: Float64 = NaN
+    ψ0 :: Float64 = NaN
     w :: Float64 = NaN
 end
 
@@ -69,7 +71,7 @@ function init_island(; w::Float64=NaN, m0::Int64, n0::Int64, qp::Float64=NaN, r0
     if flux
         isl = FluxIslandT(m0=m0, n0=n0, A=A, q0 = -m0/n0, qp=qp, ψ0 = ψ0, w=w)
     elseif coords 
-        isl = CoordIslandT(m0=m0, n0=n0, A=A, q0 = -m0/n0, qp=qp, r0 = r0, w=w)
+        isl = CoordIslandT(m0=m0, n0=n0, A=A, q0 = -m0/n0, qp=qp, ψ0 = ψ0, w=w)
     else
         isl = RadIslandT(m0=m0, n0=n0, A=A, q0 = -m0/n0, qp=qp, r0 = r0, w=w)
     end
@@ -247,19 +249,23 @@ function inst_island(isl::CoordIslandT)
 
     qp = isl.qp
 
-    r0 = isl.r0
+    ψ0 = isl.ψ0
     
     if isnan(isl.w)
 
-        w = 4 * sqrt(q0^2*r0*isl.A / qp)
+        #w = 4 * sqrt(q0^2*r0*isl.A / qp)
+        #changing to flux
+        w = 4 * sqrt(q0^2*isl.A / qp)
         A = isl.A
     else
         #A = (isl.w / 4)^2 * qp / isl.q0^2
-        A = isl.w^2 / 16 * qp / (q0^2 * r0)
+        #A = isl.w^2 / 16 * qp / (q0^2 * r0)
+        #changing to flux!
+        A = isl.w^2 / 16 * qp / (q0^2)
         w = isl.w
     end
 
-    return CoordIslandT(m0=isl.m0, n0=isl.n0, A=A, q0=q0, qp=qp, r0=r0, w=w)
+    return CoordIslandT(m0=isl.m0, n0=isl.n0, A=A, q0=q0, qp=qp, ψ0=ψ0, w=w)
 end
 
 

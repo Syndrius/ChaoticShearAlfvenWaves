@@ -141,7 +141,8 @@ end
 
 Computes the shear Aflven continuum for the non-island case. Has the default option to compute the continuum for each n (toroidal mode number) individually.
 """
-function compute_continuum(prob::ProblemT, grids::ContGridsT, perN=true::Bool)
+#TODO, changing to evals struct means the perN thing won't work anymore!
+function compute_continuum(prob::ProblemT, grids::ContGridsT, perN=false::Bool)
 
     #we can do this because usual cases (i.e. no island) have no toroidal coupling
     #so we can compute the continuum for each n individually

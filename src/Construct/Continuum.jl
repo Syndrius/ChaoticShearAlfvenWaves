@@ -110,10 +110,28 @@ function continuum(prob::ProblemT, grids::ContGridsT)
 
     end
 
+    #don't think modelabs will actually work for this case but whatever.
+    #actually, surely it does?
+    #nah they are returned sorted.
+
+    evals_ω = ComplexF64[]
+    evals_x1 = Float64[]
+    evals_ml = Tuple{Int64, Int64}[]
+
+    for i in 1:grids.x1.N
+        for j in 1:grids.x2.N * grids.x3.N
+            push!(evals_ω, ωlist[i, j])
+            push!(evals_x1, x1grid[i])
+            #don't know what these are!
+            push!(evals_ml, (0, 0))
+        end
+    end
+
     #ideally this would return an evals like structure instead of this
     #TODO, either make this return evalsT, or create postprocessing step that does this
     #would help with making the plotting less shit, maybe trickier than thought though
-    return ωlist
+
+    return EvalsT(evals_ω, evals_x1, evals_ml)
 end
 
 
