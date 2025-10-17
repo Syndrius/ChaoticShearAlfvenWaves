@@ -8,11 +8,19 @@ function continuum(prob::ProblemT, grids::ContGridsT)
 
     x1grid, x2grid, x3grid = inst_grids(grids)
 
+
+    #seems to make no difference.
+    #x3grid = range(0, 2π * prob.isls[1].m0, grids.x3.N * grids.x3.f_quad+1)[1:end-1]
+
+    #display(x3grid)
     Nx2 = length(x2grid)
     Nx3 = length(x3grid)
 
     mlist = mode_list(grids.x2)
     nlist = mode_list(grids.x3)
+    #nlist = grids.x3.start:grids.x3.incr*prob.isls[1].m0:grids.x3.stop*prob.isls[1].m0
+
+    #display(collect(nlist))
 
 
     #this condition no longer works with the new setup.

@@ -1,3 +1,4 @@
+#this is a disaster of a file.
 
 #should this file be in equilibrium? it isn't really geometry?
 #maybe better if this was the default island case with m0, n0 and A. and the others are only used if needed.

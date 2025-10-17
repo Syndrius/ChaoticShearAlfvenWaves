@@ -25,9 +25,12 @@ end
 function island_q(κ::Float64, isl::CoordIslandT)
     K, E = Elliptic.ellipke(κ)
 
+    #this obviously needs more work!
     q = isl.w / (isl.m0*π) * K
+    #q = K * isl.w / (2 * isl.m0 * π * isl.A)
 
     dq = isl.w / (isl.m0*π) * (E - (1-κ) * K) / (2*(1-κ)*κ)
+    #dq = isl.w / (2 * isl.m0 * π * isl.A) * (E - (1-κ) * K) / (2*(1-κ) * κ)
 
     return q, dq
 end

@@ -6,6 +6,7 @@
 
 using MID
 using MIDViz
+using MIDCantori
 using JLD2
 using Plots; plotlyjs()
 using Plots; gr()
@@ -53,6 +54,7 @@ poincare_plot(prob, Nlaps, ψlist, zeros(Ntraj), ylimits=(0.5, 0.67))
 
 #%%
 rats1 = lowest_rationals(11, prob.q(0.0)[1], prob.q(1.0)[1])
+println(rats1)
 gl1 = surface_guess(rats1, prob.q)
 #changing these numbers doesn't really help remove the spikes
 surfs1 = construct_surfaces(rats1, gl1, prob, M=M, N=N);

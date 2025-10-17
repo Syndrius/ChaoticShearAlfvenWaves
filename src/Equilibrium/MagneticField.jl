@@ -128,8 +128,6 @@ function magnitude_B!(B::BFieldT, met::MetT)
     B.mag_B .= 0.0
     B.dmag_B .= 0.0
 
-    display(met.gl)
-    
     for i in 1:3, j in 1:3
 
         #note that this is actual |B|^2
@@ -240,6 +238,9 @@ function compute_B!(B::BFieldT, met::MetT, q_prof::FunctionWrapper{Tuple{Float64
     #much simpler expressions now we understand our damn coordinates
     #it may be worth considering what the metric would look like in χ or r̄
     #would be a disaster nevermind.
+
+    #pretty unclear, but we are not using Zhisongs q-profile, we sort of have a new one
+    #but this is not in the typical canonical form, so the q-profile is not in the same spot.
     
     B.B[1] = 0
     B.B[2] = 2*isl.A/ met.J[1]
@@ -251,11 +252,15 @@ function compute_B!(B::BFieldT, met::MetT, q_prof::FunctionWrapper{Tuple{Float64
     B.dB[2, 2] = - met.dJ[2] * 2 * isl.A / met.J[1]^2
 
 
-    B.db[3, 1] = dq / met.J[1] - q * met.dJ[1] / met.J[1]^2
+    #otherwise the magnetic field seems to be good.
+    B.dB[3, 1] = dq / met.J[1] - q * met.dJ[1] / met.J[1]^2 #this seems to be always zero, must be to do with how the coords are defined? #doesn't seem right..
     B.dB[3, 2] = - met.dJ[2] * q / (met.J[1]^2)
+    #display(dq / met.dJ[1])
+    #display(q*met.dJ[1] / met.J[1]^2)
+    #display(B.dB[3, 1])
 
 
-    display((κ, ᾱ, τ))
+    #display((κ, ᾱ, τ))
     magnitude_B!(B, met)
     
     B.b[1] = B.B[1]/B.mag_B[1]

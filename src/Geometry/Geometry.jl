@@ -28,8 +28,9 @@ export compute_sepratrix
 export convert_isl
 
 
-
+#TODO
 include("Metric.jl")
+include("IslandMetric.jl")
 
 export MetT
 export metric!

@@ -1,4 +1,7 @@
+#we may also need to adjust slightly the chaotic cases to make the region they explore a bit
+#more consistent!
 
+#we probabbly will need to change the shape of the two irrational surfaces!
 #neat copies of the poincare plots for each case.
 using MID
 using MIDCantori
@@ -18,7 +21,9 @@ ytfs = 14
 xtfs = 16
 ylab = L"\psi"
 xlab = L"\theta"
-conv_num = 7 #14 causes us to run out of mem, takes fkn ages.#probably want this to be 15 for actual results, finding the all the orbits takes ~20 mins, smaller number for changing the plot vars.
+#the two irrationals are v different now!
+conv_num1 = 9 #10 is a big jump, but not impossible, perhaps for the final run?
+conv_num2 = 11 #14 causes us to run out of mem, takes fkn ages.#probably want this to be 15 for actual results, finding the all the orbits takes ~20 mins, smaller number for changing the plot vars.
 #stuart uses 22nd convergents, for that we will need Gadi. -> his case is also just above the critical threshold!
 ylims = (0.5, 2/3)
 tfs = 16
@@ -26,8 +31,9 @@ dpi = 600
 msize = 0.7
 msize1 = 1.7
 msize2 = 1.7
-c1 = cur_colors[1]
-c2 = cur_colors[2]
+#1 is for (6, 4) branch
+c1 = cur_colors[2]
+c2 = cur_colors[3]
 #c1 =:black
 #c2 =:black
 
@@ -50,17 +56,20 @@ x0s[:, 7] = [0.5990874285426273, 1.742571748958684e-11]
 x0s[:, 8] = [0.5982316368030925, 3.021340507842228e-12]
 #%%
 MIDCantori.NumberTheory.continued_fraction(1.4362215818857254, 15)
-#ir1 is cooked beyond anything, won't be included 
-#ir1 = [0, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+#probably not perf but good enough!
+ir1 = [1, 2, 1, 2, 2, 1, 5, 1, 5, 1, 5, 1, 5, 1, 5, 1, 5, 1, 5, 1, 5, 1, 5, 1] #not very noble!
 ir2 = [1, 2, 3, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 #conv1 = MIDCantori.NumberTheory.convergents(ir1)
 #a1 = conv1[conv_num][2]
 #b1 = conv1[conv_num][1]
+conv1 = MIDCantori.NumberTheory.convergents(ir1)
 conv2 = MIDCantori.NumberTheory.convergents(ir2)
 #think the order of this depends on how we define our irrational number
 #keeping up the incosistency with a/b!
-a2 = conv2[conv_num][1]
-b2 = conv2[conv_num][2]
+a1 = conv1[conv_num1][1]
+b1 = conv1[conv_num1][2]
+a2 = conv2[conv_num2][1]
+b2 = conv2[conv_num2][2]
 
 Ntraj = 151
 ψvals = collect(LinRange(0.35, 0.8, Ntraj));
@@ -82,19 +91,19 @@ isls = MID.IslandT[isl1, isl2]
 geo = init_geo(R0=1.0)
 prob = init_problem(q=cantori_q, geo=geo, met=:cylinder, isls=isls, type=:flux)
 
-#r01, θ01 = MIDCantori.QFM.anal_periodic_orbit(a1, b1, 4, k)
+r01, θ01 = periodic_orbit(a1, b1, 4, k)
 r02, θ02 = periodic_orbit(a2, b2, 4, k)
 x, z = poincare_plot(prob, 1000, ψvals, θvals);
-#x1, z1 = poincare_plot(prob, 2000, [r01[1], r02[1]], [θ01[1], θ02[1]]);
-x1, z1 = poincare_plot(prob, 2000, [r02[1]], [θ02[1]]);
-x2, z2 = poincare_plot(prob, 2000, [x0s[1, 1]], [x0s[2, 1]]);
+x1, z1 = poincare_plot(prob, 5000, [r01[1], r02[1]], [θ01[1], θ02[1]]);
+#x1, z1 = poincare_plot(prob, 2000, [r02[1]], [θ02[1]]);
+#x2, z2 = poincare_plot(prob, 2000, [x0s[1, 1]], [x0s[2, 1]]);
 #%%
 scatter(x, z, ylimits=ylims, markersize=msize, legend=false, color=:black, xlabel=L"\theta", ylabel=L"\psi", xguidefontsize=xfs, yguidefontsize=yfs, xtickfontsize=xtfs, ytickfontsize=ytfs, dpi=dpi)
 #scatter(x, z, ylimits=ylims, markersize=msize, label=false, color=:black, xlabel=L"\theta", ylabel=L"\psi", xguidefontsize=xfs, yguidefontsize=yfs, xtickfontsize=xtfs, ytickfontsize=ytfs, dpi=dpi)
 savefig("~/phd/MID/QFMPaper/results/k0_no_ir_poincare.png")
 scatter!(x1[1, :], z1[1, :], markersize=msize1, color=c1, label=L"\iota_1", markershape=shape1)
-scatter!(x2[1, :], z2[1, :], markersize=msize1, color=c1, label=L"\iota_1", markershape=shape1)
-#scatter!(x1[2, :], z1[2, :], markersize=msize2, color=c2, label=L"\iota_2", markershape=shape2)
+#scatter!(x2[1, :], z2[1, :], markersize=msize1, color=c1, label=L"\iota_1", markershape=shape1)
+scatter!(x1[2, :], z1[2, :], markersize=msize2, color=c2, label=L"\iota_2", markershape=shape2)
 savefig("~/phd/MID/QFMPaper/results/k0_poincare.png")
 #%%
 #k05 is a shit example.
@@ -106,18 +115,19 @@ geo = init_geo(R0=1.0)
 prob = init_problem(q=cantori_q, geo=geo, met=:cylinder, isls=isls, type=:flux)
 
 #r01, θ01 = MIDCantori.QFM.anal_periodic_orbit(a1, b1, 4, k)
+r01, θ01 = periodic_orbit(a1, b1, 4, k)
 r02, θ02 = periodic_orbit(a2, b2, 4, k)
 x, z = poincare_plot(prob, 1000, ψvals, θvals);
-#x1, z1 = poincare_plot(prob, 2000, [r01[1], r02[1]], [θ01[1], θ02[1]]);
-x1, z1 = poincare_plot(prob, 2000, [r02[1]], [θ02[1]]);
-x2, z2 = poincare_plot(prob, 2000, [x0s[1, 2]], [x0s[2, 2]]);
+x1, z1 = poincare_plot(prob, 5000, [r01[1], r02[1]], [θ01[1], θ02[1]]);
+#x1, z1 = poincare_plot(prob, 2000, [r02[1]], [θ02[1]]);
+#x2, z2 = poincare_plot(prob, 2000, [x0s[1, 2]], [x0s[2, 2]]);
 #%%
 scatter(x, z, ylimits=ylims, markersize=msize, legend=false, color=:black, xlabel=L"\theta", ylabel=L"\psi", xguidefontsize=xfs, yguidefontsize=yfs, xtickfontsize=xtfs, ytickfontsize=ytfs, dpi=dpi)
 #scatter(x, z, ylimits=ylims, markersize=msize, label=false, color=:black, xlabel=L"\theta", ylabel=L"\psi", xguidefontsize=xfs, yguidefontsize=yfs, xtickfontsize=xtfs, ytickfontsize=ytfs, dpi=dpi)
 savefig("~/phd/MID/QFMPaper/results/k08_no_ir_poincare.png")
 scatter!(x1[1, :], z1[1, :], markersize=msize1, color=c1, label=L"\iota_1", markershape=shape1)
-scatter!(x2[1, :], z2[1, :], markersize=msize1, color=c1, label=L"\iota_1", markershape=shape1)
-#scatter!(x1[2, :], z1[2, :], markersize=msize2, color=c2, label=L"\iota_2", markershape=shape2)
+#scatter!(x2[1, :], z2[1, :], markersize=msize1, color=c1, label=L"\iota_1", markershape=shape1)
+scatter!(x1[2, :], z1[2, :], markersize=msize2, color=c2, label=L"\iota_2", markershape=shape2)
 savefig("~/phd/MID/QFMPaper/results/k08_poincare.png")
 
 #%%
@@ -130,20 +140,23 @@ geo = init_geo(R0=1.0)
 prob = init_problem(q=cantori_q, geo=geo, met=:cylinder, isls=isls, type=:flux)
 
 #r01, θ01 = MIDCantori.QFM.anal_periodic_orbit(a1, b1, 4, k)
+r01, θ01 = periodic_orbit(a1, b1, 4, k)
 r02, θ02 = periodic_orbit(a2, b2, 4, k)
 x, z = poincare_plot(prob, 1000, ψvals, θvals);
-#x1, z1 = poincare_plot(prob, 2000, [r01[1], r02[1]], [θ01[1], θ02[1]]);
-x1, z1 = poincare_plot(prob, 2000, [r02[1]], [θ02[1]]);
-x2, z2 = poincare_plot(prob, 2000, [x0s[1, 3]], [x0s[2, 3]]);
+x1, z1 = poincare_plot(prob, 5000, [r01[1], r02[1]], [θ01[1], θ02[1]]);
+#x1, z1 = poincare_plot(prob, 2000, [r02[1]], [θ02[1]]);
+#x2, z2 = poincare_plot(prob, 2000, [x0s[1, 3]], [x0s[2, 3]]);
 #%%
 scatter(x, z, ylimits=ylims, markersize=msize, legend=false, color=:black, xlabel=L"\theta", ylabel=L"\psi", xguidefontsize=xfs, yguidefontsize=yfs, xtickfontsize=xtfs, ytickfontsize=ytfs, dpi=dpi)
 #scatter(x, z, ylimits=ylims, markersize=msize, label=false, color=:black, xlabel=L"\theta", ylabel=L"\psi", xguidefontsize=xfs, yguidefontsize=yfs, xtickfontsize=xtfs, ytickfontsize=ytfs, dpi=dpi)
 savefig("~/phd/MID/QFMPaper/results/k10_no_ir_poincare.png")
 scatter!(x1[1, :], z1[1, :], markersize=msize1, color=c1, label=L"\iota_1", markershape=shape1)
-scatter!(x2[1, :], z2[1, :], markersize=msize1, color=c1, label=L"\iota_1", markershape=shape1)
-#scatter!(x1[2, :], z1[2, :], markersize=msize2, color=c2, label=L"\iota_2", markershape=shape2)
+#scatter!(x2[1, :], z2[1, :], markersize=msize1, color=c1, label=L"\iota_1", markershape=shape1)
+scatter!(x1[2, :], z1[2, :], markersize=msize2, color=c2, label=L"\iota_2", markershape=shape2)
 savefig("~/phd/MID/QFMPaper/results/k10_poincare.png")
 #%%
+#could be a tricky one to explain, as the first flux surface is broken (visble!)
+#but it does not yet go all over the place!
 k = k11
 isl1 = init_island(m0=3, n0=-2, A=k/3, flux=true)
 isl2 = init_island(m0=4, n0=-3, A=k/4, flux=true)
@@ -152,18 +165,19 @@ geo = init_geo(R0=1.0)
 prob = init_problem(q=cantori_q, geo=geo, met=:cylinder, isls=isls, type=:flux)
 
 #r01, θ01 = MIDCantori.QFM.anal_periodic_orbit(a1, b1, 4, k)
+r01, θ01 = periodic_orbit(a1, b1, 4, k)
 r02, θ02 = periodic_orbit(a2, b2, 4, k)
 x, z = poincare_plot(prob, 1000, ψvals, θvals);
-x2, z2 = poincare_plot(prob, 2000, [x0s[1, 4]], [x0s[2, 4]]);
-#x1, z1 = poincare_plot(prob, 2000, [r01[1], r02[1]], [θ01[1], θ02[1]]);
-x1, z1 = poincare_plot(prob, 2000, [r02[1]], [θ02[1]]);
+#x2, z2 = poincare_plot(prob, 2000, [x0s[1, 4]], [x0s[2, 4]]);
+x1, z1 = poincare_plot(prob, 20000, [r01[1], r02[1]], [θ01[1], θ02[1]]);
+#x1, z1 = poincare_plot(prob, 2000, [r02[1]], [θ02[1]]);
 #%%
 scatter(x, z, ylimits=ylims, markersize=msize, legend=false, color=:black, xlabel=L"\theta", ylabel=L"\psi", xguidefontsize=xfs, yguidefontsize=yfs, xtickfontsize=xtfs, ytickfontsize=ytfs, dpi=dpi)
 #scatter(x, z, ylimits=ylims, markersize=msize, label=false, color=:black, xlabel=L"\theta", ylabel=L"\psi", xguidefontsize=xfs, yguidefontsize=yfs, xtickfontsize=xtfs, ytickfontsize=ytfs, dpi=dpi)
 savefig("~/phd/MID/QFMPaper/results/k11_no_ir_poincare.png")
 scatter!(x1[1, :], z1[1, :], markersize=msize1, color=c1, label=L"\iota_1", markershape=shape1)
-scatter!(x2[1, :], z2[1, :], markersize=msize1, color=c1, label=L"\iota_1", markershape=shape1)
-#scatter!(x1[2, :], z1[2, :], markersize=msize2, color=c2, label=L"\iota_2", markershape=shape2)
+#scatter!(x2[1, :], z2[1, :], markersize=msize1, color=c1, label=L"\iota_1", markershape=shape1)
+scatter!(x1[2, :], z1[2, :], markersize=msize2, color=c2, label=L"\iota_2", markershape=shape2)
 savefig("~/phd/MID/QFMPaper/results/k11_poincare.png")
 #%%
 k = k12
@@ -174,18 +188,19 @@ geo = init_geo(R0=1.0)
 prob = init_problem(q=cantori_q, geo=geo, met=:cylinder, isls=isls, type=:flux)
 
 #r01, θ01 = MIDCantori.QFM.anal_periodic_orbit(a1, b1, 4, k)
+r01, θ01 = periodic_orbit(a1, b1, 4, k)
 r02, θ02 = periodic_orbit(a2, b2, 4, k)
 x, z = poincare_plot(prob, 1000, ψvals, θvals);
-#x1, z1 = poincare_plot(prob, 2000, [r01[1], r02[1]], [θ01[1], θ02[1]]);
-x1, z1 = poincare_plot(prob, 2000, [r02[1]], [θ02[1]]);
-x2, z2 = poincare_plot(prob, 2000, [x0s[1, 5]], [x0s[2, 5]]);
+x1, z1 = poincare_plot(prob, 20000, [r01[1], r02[1]], [θ01[1], θ02[1]]);
+#x1, z1 = poincare_plot(prob, 2000, [r02[1]], [θ02[1]]);
+#x2, z2 = poincare_plot(prob, 2000, [x0s[1, 5]], [x0s[2, 5]]);
 #%%
 scatter(x, z, ylimits=ylims, markersize=msize, legend=false, color=:black, xlabel=L"\theta", ylabel=L"\psi", xguidefontsize=xfs, yguidefontsize=yfs, xtickfontsize=xtfs, ytickfontsize=ytfs, dpi=dpi)
 #scatter(x, z, ylimits=ylims, markersize=msize, label=false, color=:black, xlabel=L"\theta", ylabel=L"\psi", xguidefontsize=xfs, yguidefontsize=yfs, xtickfontsize=xtfs, ytickfontsize=ytfs, dpi=dpi)
 savefig("~/phd/MID/QFMPaper/results/k12_no_ir_poincare.png")
 scatter!(x1[1, :], z1[1, :], markersize=msize1, color=c1, label=L"\iota_1", markershape=shape1)
-scatter!(x2[1, :], z2[1, :], markersize=msize1, color=c1, label=L"\iota_1", markershape=shape1)
-#scatter!(x1[2, :], z1[2, :], markersize=msize2, color=c2, label=L"\iota_2", markershape=shape2)
+#scatter!(x2[1, :], z2[1, :], markersize=msize1, color=c1, label=L"\iota_1", markershape=shape1)
+scatter!(x1[2, :], z1[2, :], markersize=msize2, color=c2, label=L"\iota_2", markershape=shape2)
 savefig("~/phd/MID/QFMPaper/results/k12_poincare.png")
 
 #%%
@@ -197,18 +212,19 @@ geo = init_geo(R0=1.0)
 prob = init_problem(q=cantori_q, geo=geo, met=:cylinder, isls=isls, type=:flux)
 
 #r01, θ01 = MIDCantori.QFM.anal_periodic_orbit(a1, b1, 4, k)
+r01, θ01 = periodic_orbit(a1, b1, 4, k) #now way above critical value, starts to become difficult. #can probably just pick a roughly close value!
 r02, θ02 = periodic_orbit(a2, b2, 4, k)
 x, z = poincare_plot(prob, 1000, ψvals, θvals);
-#x1, z1 = poincare_plot(prob, 2000, [r01[1], r02[1]], [θ01[1], θ02[1]]);
-x1, z1 = poincare_plot(prob, 2000, [r02[1]], [θ02[1]]);
-x2, z2 = poincare_plot(prob, 2000, [x0s[1, 6]], [x0s[2, 6]]);
+x1, z1 = poincare_plot(prob, 20000, [r01[1], r02[1]], [θ01[1], θ02[1]]);
+#x1, z1 = poincare_plot(prob, 2000, [r02[1]], [θ02[1]]);
+#x2, z2 = poincare_plot(prob, 2000, [x0s[1, 6]], [x0s[2, 6]]);
 #%%
 scatter(x, z, ylimits=ylims, markersize=msize, legend=false, color=:black, xlabel=L"\theta", ylabel=L"\psi", xguidefontsize=xfs, yguidefontsize=yfs, xtickfontsize=xtfs, ytickfontsize=ytfs, dpi=dpi)
 #scatter(x, z, ylimits=ylims, markersize=msize, label=false, color=:black, xlabel=L"\theta", ylabel=L"\psi", xguidefontsize=xfs, yguidefontsize=yfs, xtickfontsize=xtfs, ytickfontsize=ytfs, dpi=dpi)
 savefig("~/phd/MID/QFMPaper/results/k13_no_ir_poincare.png")
 scatter!(x1[1, :], z1[1, :], markersize=msize1, color=c1, label=L"\iota_1", markershape=shape1)
-scatter!(x2[1, :], z2[1, :], markersize=msize1, color=c1, label=L"\iota_1", markershape=shape1)
-#scatter!(x1[2, :], z1[2, :], markersize=msize2, color=c2, label=L"\iota_2", markershape=shape2)
+#scatter!(x2[1, :], z2[1, :], markersize=msize1, color=c1, label=L"\iota_1", markershape=shape1)
+scatter!(x1[2, :], z1[2, :], markersize=msize2, color=c2, label=L"\iota_2", markershape=shape2)
 savefig("~/phd/MID/QFMPaper/results/k13_poincare.png")
 
 #%%
@@ -219,19 +235,20 @@ isls = MID.IslandT[isl1, isl2]
 geo = init_geo(R0=1.0)
 prob = init_problem(q=cantori_q, geo=geo, met=:cylinder, isls=isls, type=:flux)
 #r01, θ01 = MIDCantori.QFM.anal_periodic_orbit(a1, b1, 4, k)
+r01, θ01 = periodic_orbit(a1, b1, 4, k)
 r02, θ02 = periodic_orbit(a2, b2, 4, k)
 x, z = poincare_plot(prob, 1000, ψvals, θvals);
-#x1, z1 = poincare_plot(prob, 2000, [r01[1], r02[1]], [θ01[1], θ02[1]]);
+x1, z1 = poincare_plot(prob, 20000, [r01[1], r02[1]], [θ01[1], θ02[1]]);
 #not super sure what is best for this one.
-x1, z1 = poincare_plot(prob, 20000, [r02[1]], [θ02[1]]);
-x2, z2 = poincare_plot(prob, 20000, [x0s[1, 7]], [x0s[2, 7]]);
+#x1, z1 = poincare_plot(prob, 20000, [r02[1]], [θ02[1]]);
+#x2, z2 = poincare_plot(prob, 20000, [x0s[1, 7]], [x0s[2, 7]]);
 #%%
 scatter(x, z, ylimits=ylims, markersize=msize, legend=false, color=:black, xlabel=L"\theta", ylabel=L"\psi", xguidefontsize=xfs, yguidefontsize=yfs, xtickfontsize=xtfs, ytickfontsize=ytfs, dpi=dpi)
 #scatter(x, z, ylimits=ylims, markersize=msize, label=false, color=:black, xlabel=L"\theta", ylabel=L"\psi", xguidefontsize=xfs, yguidefontsize=yfs, xtickfontsize=xtfs, ytickfontsize=ytfs, dpi=dpi)
 savefig("~/phd/MID/QFMPaper/results/k15_no_ir_poincare.png")
 scatter!(x1[1, :], z1[1, :], markersize=msize1, color=c1, label=L"\iota_1", markershape=shape1)
-scatter!(x2[1, :], z2[1, :], markersize=msize1, color=c1, label=L"\iota_1", markershape=shape1)
-#scatter!(x1[2, :], z1[2, :], markersize=msize2, color=c2, label=L"\iota_2", markershape=shape2)
+#scatter!(x2[1, :], z2[1, :], markersize=msize1, color=c1, label=L"\iota_1", markershape=shape1)
+scatter!(x1[2, :], z1[2, :], markersize=msize2, color=c2, label=L"\iota_2", markershape=shape2)
 savefig("~/phd/MID/QFMPaper/results/k15_poincare.png")
 #%%
 k = k17
@@ -241,19 +258,20 @@ isls = MID.IslandT[isl1, isl2]
 geo = init_geo(R0=1.0)
 prob = init_problem(q=cantori_q, geo=geo, met=:cylinder, isls=isls, type=:flux)
 #r01, θ01 = MIDCantori.QFM.anal_periodic_orbit(a1, b1, 4, k)
+r01, θ01 = periodic_orbit(a1, b1, 4, k)
 r02, θ02 = periodic_orbit(a2, b2, 4, k)
 x, z = poincare_plot(prob, 1000, ψvals, θvals);
-#x1, z1 = poincare_plot(prob, 2000, [r01[1], r02[1]], [θ01[1], θ02[1]]);
+x1, z1 = poincare_plot(prob, 20000, [r01[1], r02[1]], [θ01[1], θ02[1]]);
 #ok so we just have to run this for longer!
 #now we see that the orbit can go basically anywhere.
-x1, z1 = poincare_plot(prob, 10000, [r02[1]], [θ02[1]]);
-x2, z2 = poincare_plot(prob, 10000, [x0s[1, 8]], [x0s[2, 8]]);
+#x1, z1 = poincare_plot(prob, 10000, [r02[1]], [θ02[1]]);
+#x2, z2 = poincare_plot(prob, 10000, [x0s[1, 8]], [x0s[2, 8]]);
 #%%
 scatter(x, z, ylimits=ylims, markersize=msize, legend=false, color=:black, xlabel=L"\theta", ylabel=L"\psi", xguidefontsize=xfs, yguidefontsize=yfs, xtickfontsize=xtfs, ytickfontsize=ytfs, dpi=dpi)
 #scatter(x, z, ylimits=ylims, markersize=msize, label=false, color=:black, xlabel=L"\theta", ylabel=L"\psi", xguidefontsize=xfs, yguidefontsize=yfs, xtickfontsize=xtfs, ytickfontsize=ytfs, dpi=dpi)
 savefig("~/phd/MID/QFMPaper/results/k17_no_ir_poincare.png")
 scatter!(x1[1, :], z1[1, :], markersize=msize1, color=c1, label=L"\iota_1", markershape=shape1)
-scatter!(x2[1, :], z2[1, :], markersize=msize1, color=c1, label=L"\iota_1", markershape=shape1)
-#scatter!(x1[2, :], z1[2, :], markersize=msize2, color=c2, label=L"\iota_2", markershape=shape2)
+#scatter!(x2[1, :], z2[1, :], markersize=msize1, color=c1, label=L"\iota_1", markershape=shape1)
+scatter!(x1[2, :], z1[2, :], markersize=msize2, color=c2, label=L"\iota_2", markershape=shape2)
 savefig("~/phd/MID/QFMPaper/results/k17_poincare.png")
 #%%

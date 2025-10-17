@@ -47,3 +47,7 @@ for i in 1:Nh - 1
 end
 
 plot(-lh[1:end-1], grad)
+#%%
+using Elliptic
+
+
