@@ -295,7 +295,9 @@ function map_sepratrix(rmin::Array{Float64}, rmax::Array{Float64}, θgrid::Abstr
 
 end
 
+#so this is a mess!
 function map_sepratrix(rmin::Array{Float64}, rmax::Array{Float64}, θgrid::AbstractArray{Float64}, isl::FluxIslandT, CT::CoordTransformT, surf_itp::QFM.SurfaceITPT, sd::TempSurfT)
+
 
     #what even is this function? doesn't actually use the island?
     #just maps an array from qfm to tor?
