@@ -40,16 +40,25 @@ function isl_in_coords_to_tor(κ::Float64, ᾱ::Float64, τ::Float64, isl::RadI
 end
 
 #case for flux
+#think we have got the other way working
+#but this is defo cooked.
 function isl_in_coords_to_tor(κ::Float64, ᾱ::Float64, τ::Float64, isl::FluxIslandT)
 
     #assumes κ < 1, throughout!
     sinβ = Elliptic.Jacobi.sn(2*Elliptic.K(κ) * ᾱ / π, κ)
     #may need to make sure the domain of ᾱ is correct
-    α = mod(2/isl.m0 * asin(sqrt(κ)*sinβ), 2π)
+    #we may want to do the manual quadrant assignment here as well.
+    #so clearly this is not doing what we expect.
+    #guess this is to be expected...
+    α = mod(2/isl.m0 * asin(sqrt(κ)*sinβ), 2π/isl.m0)
     #α = 2/isl.m0 * asin(sqrt(κ)*sinβ)
 
     #α = 2/isl.m0 * asin(sqrt(κ)*Elliptic.Jacobi.sn(2*Elliptic.K(κ) * ᾱ / π, κ))
 
+    #seems like one of these should have an m0 in it.
+    #this is obviously not going to work
+    #each (κ, ᾱ) maps to multiple θvalues.
+    #guess we just want this to work for the m=1 case..
     θ = mod(α + τ/isl.q0, 2π)
 
     ζ = mod(τ, 2π)
@@ -62,11 +71,12 @@ function isl_in_coords_to_tor(κ::Float64, ᾱ::Float64, τ::Float64, isl::Flux
     #r2diff = sqrt(isl.w^2*(κ - sin(isl.m0*α /2)^2))
 
     #split the solution into the different α quadrants
-    if α < π/2
+    #these conditions are completly wrong!
+    if ᾱ < π/2
         #first quad, r>r0
         #r = sqrt(+r2diff + isl.r0^2)
         ψ = isl.ψ0 + Δψ 
-    elseif α < 3π/2
+    elseif ᾱ < 3π/2
         #second or third quad r<r0
         #r = sqrt(-r2diff+isl.r0^2)
         ψ = isl.ψ0 - Δψ 
@@ -165,32 +175,46 @@ function tor_coords_to_isl(ψ::Float64, θ::Float64, ζ::Float64, isl::FluxIslan
 
     if κ < 1
         #so this is at least partially wrong...
-        τ = asin(1/sqrt(κ) * abs(sin(isl.m0 * α / 2)))
+        #τ = asin(1/sqrt(κ) * abs(sin(isl.m0 * α / 2)))
 
-        sinβ = 1/sqrt(κ) * sin(isl.m0 * α / 2)
+        #sinβ = 1/sqrt(κ) * sin(isl.m0 * α / 2)
+        #think we just take the abs here so that we can manually asign the quadrants!
+        #probably not the best way, but it at least works
+        β = asin(1/sqrt(κ) * abs(sin(isl.m0 * α / 2)))
 
-        if ψ > isl.ψ0
+        if ψ == isl.ψ0
+            return 0, 0, 0
+        #may need a case for ψ=ψ0, hitting the O point causes problemos.
+        #so this is not working
+        #the domain of these functions is more cooked that a bbq
+        elseif ψ > isl.ψ0
             #i.e. top right qudrant.
             #exact expressions need more explaining.
             #taken from restricted_mapping.jl, which uses abs to certify the correct quadrant,
             #may need to do that here as the 1/2 in the sin will probbaly cook things...
+            #think this condition is actually whats wrong!
+            #think it is only >/< π for ζ=0, not in general
             if mod(α * isl.m0, 2π) < π
 
-                ᾱ = π/ (2 * Elliptic.K(κ)) * Elliptic.F(τ, κ)
+                ᾱ = π/ (2 * Elliptic.K(κ)) * Elliptic.F(β, κ)
 
             else
                 #top left quadrant, 4th by our clockwise notation.
-                ᾱ = π/ (2 * Elliptic.K(κ)) * Elliptic.F(-τ + 2π, κ)
+                ᾱ = π/ (2 * Elliptic.K(κ)) * Elliptic.F(-β + 2π, κ)
+                #ᾱ = π/ (2 * Elliptic.K(κ)) * Elliptic.F(β, κ)
+                #ᾱ = 2π - π/ (2 * Elliptic.K(κ)) * Elliptic.F(β, κ)
             end
         else
 
             if mod(α * isl.m0, 2π) < π
                 #bottom right quadrant.
-                ᾱ = π/ (2 * Elliptic.K(κ)) * Elliptic.F(-τ + π, κ)
+                ᾱ = π/ (2 * Elliptic.K(κ)) * Elliptic.F(-β + π, κ)
+                #ᾱ = π/ (2 * Elliptic.K(κ)) * Elliptic.F(β, κ)
 
             else
                 #bottom left quadrant, 
-                ᾱ = π/ (2 * Elliptic.K(κ)) * Elliptic.F(τ + π, κ)
+                ᾱ = π/ (2 * Elliptic.K(κ)) * Elliptic.F(β + π, κ)
+                #ᾱ = π/ (2 * Elliptic.K(κ)) * Elliptic.F(β, κ)
             end
         end
 
@@ -203,7 +227,12 @@ function tor_coords_to_isl(ψ::Float64, θ::Float64, ζ::Float64, isl::FluxIslan
         return 0, 0, 0
     end
 
+    #display((κ, ᾱ, ζ))
+    #perhaps the mod will fix?
+    #mod seems to have made it worse
     return κ, ᾱ, ζ
+    #so these are not really returning what I think it should!
+    return κ, mod(ᾱ, 2π), ζ
 
 end
 

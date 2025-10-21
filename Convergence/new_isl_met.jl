@@ -3,6 +3,7 @@
 #need to add the derivatives and test the ffs and fff cases
 #May need to see if we can add the non-n=0 cases, unsure if this will be practical without a major shift in the code.
 #then obvs clean up and check to make sure the coordinate transformation is working etc
+#this file is in the wrong place!
 
 
 using MID
@@ -12,9 +13,11 @@ using MIDViz
 
 #%%
 
-isl = init_island(m0=4, n0=-3, w=0.1, qp=2.0, ψ0=0.5, coords=true)
+#to match case on gadi!
+isl = init_island(m0=1, n0=-1, w=0.2, qp=1.0, ψ0=0.5, coords=true)
+#to match zhisongs benchamrk case
+isl = init_island(m0=5, n0=-2, A=1e-5, qp=4.0, ψ0=0.125, coords=true)
 isl = MID.inst_island(isl)
-met = MID.MetT()
 isl.A
 #%%
 
@@ -35,7 +38,7 @@ met.gu
 #Looks like the problemo is that we are considering the wrong domain
 #zeta should be from 0 to 2π*m0. so our fourier expansion is actually different
 #unclear how to fix this...
-θgrid = init_grid(type=:as, N=5, start=1)
+θgrid = init_grid(type=:as, N=15, start=-7)
 ζgrid = init_grid(type=:as, N=1, start=0)
 #using the below grid with Zhisongs code, matches our case perfectly
 #really shows that the domain is the problemo
@@ -56,7 +59,7 @@ met.gu
 #perhaps the alg?
 #very small issue, but it would be good to fix.
 
-κlist = LinRange(0.001, 0.999, 100)
+κlist = LinRange(0.0001, 0.9999, 100)
 χlist = @. isl.A - κlist * 2 * isl.A 
 
 ψland = PsiIslandT(isl.m0, isl.n0, isl.A, isl.q0, isl.qp, isl.ψ0)
@@ -69,12 +72,12 @@ quom = island_continuum(χlist, θgrid, ζgrid, geo, ψland, 0)
 scatter(κp, sqrt.(abs.(quom .* geo.R0^2)), legend=false, markersize=1.0)#, ylimits=(0, 0.08))
 
 #%%
-κc = init_grid(type=:rc, N=100, start=0.001, stop=0.999)
-κgrid = init_grid(type=:rf, N=100, start=0.001, stop=0.999, left_bc=false)
+κc = init_grid(type=:rc, N=100, start=0.0, stop=0.999)
+κgrid = init_grid(type=:rf, N=30, start=0.0, stop=0.99999, left_bc=false)
 grids = init_grids(κgrid, θgrid, ζgrid)
 gridsc = init_grids(κc, θgrid, ζgrid)
 
-prob = init_problem(geo=geo, q=island_q, type=:island, isl=isl)
+prob = init_problem(geo=geo, q=island_q, type=:island, isl=isl, met=:island)
 
 solver = init_solver(full_spectrum=true, prob=prob)
 
@@ -83,9 +86,24 @@ evalsc = compute_continuum(prob, gridsc)
 evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, solver=solver)
 
 #looks pretty good, who knows if the global modes are ok though, may need to compare with Axel's case.
-continuum_plot(evals)#, ylimits=(0, 3))
+continuum_plot(evals, ylimits=(-0.01, 0.03))
 
-scatter!(κp, sqrt.(abs.(quom .* geo.R0^2)), legend=false, markersize=1.0, ylimits=(0, 0.4))
+scatter!(κp, sqrt.(abs.(quom .* geo.R0^2)), legend=false, markersize=1.0, ylimits=(0, 0.1))
+
+#%%
+#seems to be fine now???
+#think we still can't do cases without n=0 but that shouldn't matter tbh!
+#wot.
+#perhaps we didn't reinstantiate the island properly?
+κgrid = init_grid(type=:rf, N=40, start=0.0, stop=0.99999, left_bc=false)
+#θgrid = init_grid(type=:af, N=10, pf=1)
+θgrid = init_grid(type=:as, N=15, start=-7)
+ζgrid = init_grid(type=:as, N=1, start=0)
+grids = init_grids(κgrid, θgrid, ζgrid)
+evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, solver=solver)
+continuum_plot(evals, ylimits=(-0.0, 0.1))
+hline!([-isl.n0*sqrt(isl.A*isl.qp)])
+
 #%%
 #more direct compariosn
 

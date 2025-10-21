@@ -8,6 +8,7 @@ Maps the eigenfunction to a new coordinate system using the coordinate map.
 function efunc_map!(ϕ_map::Array{ComplexF64, 3}, N1::Int64, N2::Int64, N3::Int64, ϕ::Array{ComplexF64, 4}, x1g::AbstractArray{Float64}, x2g::AbstractArray{Float64}, x3g::AbstractArray{Float64}, coord_map::Array{Tuple{Float64, Float64, Float64}})
 
     for i in 1:N1, j in 1:N2, k in 1:N3
+        #display((i, j, k))
         ϕ_map[i, j, k] = hermite_interpolation(coord_map[i, j, k]..., ϕ, x1g, x2g, x3g)
     end
 end
@@ -76,6 +77,7 @@ function isl_to_tor_coord_map(rgrid::AbstractArray{Float64}, θgrid::AbstractArr
 
     for (i, r) in enumerate(rgrid), (j, θ) in enumerate(θgrid), (k, ζ) in enumerate(ζgrid)
         coord_map[i, j, k] = tor_coords_to_isl(r, θ, ζ, isl)
+        #display(tor_coords_to_isl(r, θ, ζ, isl))
     end
 
     return coord_map
