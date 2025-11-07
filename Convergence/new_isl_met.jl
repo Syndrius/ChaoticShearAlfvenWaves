@@ -14,9 +14,9 @@ using MIDViz
 #%%
 
 #to match case on gadi!
-isl = init_island(m0=1, n0=-1, w=0.2, qp=1.0, ψ0=0.5, coords=true)
+isl = init_island(m0=1, n0=-1, w=0.1, qp=1.0, ψ0=0.5, coords=true)
 #to match zhisongs benchamrk case
-isl = init_island(m0=5, n0=-2, A=1e-5, qp=4.0, ψ0=0.125, coords=true)
+#isl = init_island(m0=5, n0=-2, A=1e-5, qp=4.0, ψ0=0.125, coords=true)
 isl = MID.inst_island(isl)
 isl.A
 #%%
@@ -106,7 +106,9 @@ hline!([-isl.n0*sqrt(isl.A*isl.qp)])
 
 #%%
 #more direct compariosn
+harmonic_plot(ϕft, grids, 10)
 
+#%%
 κt = 0.3336
 αt = 5.256
 τt = 0.4

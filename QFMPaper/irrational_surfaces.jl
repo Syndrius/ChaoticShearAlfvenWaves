@@ -13,13 +13,14 @@ gl = surface_guess(rats, cantori_q)
 scatter(gl, kclist)
 #%%
 #for second freq
-indl = find_ind(gl, 0.608)
+indl = find_ind(gl, 0.608) #this one for second freq
 indr = find_ind(gl, 0.607)
 rats[indl]
 rats[indr]
+#%%
 #for first freq
 indl = find_ind(gl, 0.540)
-indr = find_ind(gl, 0.542)
+indr = find_ind(gl, 0.542) #this one is used for first freq
 rats[indl]
 rats[indr]
 #%%
@@ -41,6 +42,8 @@ conv2 = MIDCantori.NumberTheory.convergents(cf2)
 
 #10 is good for irr2, but to large for ir1.
 #8 and 9 seems better
+rat1 = conv1[10]
+rat2 = conv2[10]
 rat1 = conv1[8]
 rat2 = conv2[9]
 
