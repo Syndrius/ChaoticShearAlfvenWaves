@@ -4,10 +4,14 @@ Computes the weak form of our governing equation. This involves computing W and 
 """
 module WeakForm
 
-using MID.Geometry
-using MID.Equilibrium
-using MID.Structures
-using MID.QFM
+using ..Geometry #probbaly doesn't actually need this tbh!
+using ..Fields
+using ..Structures
+using ..QFM
+
+#don'r really like the idea of this having grids
+#so the trial function stuff needs to go elsewhere.
+
 
 using LinearAlgebra
 
@@ -18,7 +22,7 @@ Struct storing Tempory Matrices used for memory efficient weak form.
 struct TM 
     C :: Array{Float64, 2}
     D :: Array{Float64, 2}
-    T :: Array{Float64, 2}
+    T :: Array{Float64, 2} #can remove!
     F :: Array{Float64}
     Γ :: Array{Float64, 2}
     dΓ :: Array{Float64, 3}
@@ -49,7 +53,7 @@ function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, B::BFieldT, 
 
     
     #compute the density.
-    n = prob.dens.(r) :: Array{Float64}
+    n = prob.fields.dens.(r) :: Array{Float64}
     #TODO
     ωcap2 = ω_cap2.(r) :: Array{Float64}
 
@@ -57,11 +61,11 @@ function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, B::BFieldT, 
 
         #display("here")
         #compute the metric
-        prob.met(met, r[i], θ[j], ζ[k], prob.geo.R0)
+        prob.geo.met(met, r[i], θ[j], ζ[k], prob.geo.R0)
         #display("or here")
 
         #compute the magnetic field.
-        compute_B!(B, met, prob.q, prob.isls, r[i], θ[j], ζ[k])
+        compute_B!(B, met, prob.fields.q, prob.fields.isls, r[i], θ[j], ζ[k])
         #display("even here")
 
         #computes the matrix D.

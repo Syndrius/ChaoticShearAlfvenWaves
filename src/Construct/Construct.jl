@@ -6,15 +6,15 @@ module Construct
 
 using FFTW
 using SparseArrays
-using FastGaussQuadrature
+using FastGaussQuadrature #should still remove this!
 using LinearAlgebra
 
 
 using ..Geometry
-using ..Basis
-using ..Indexing
+using ..Basis #mayhap don't need this! but less sure
+using ..Grids
 using ..Integration
-using ..Equilibrium
+using ..Fields
 using ..WeakForm
 using ..Structures
 using ..QFM

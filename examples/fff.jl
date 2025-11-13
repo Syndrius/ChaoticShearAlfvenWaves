@@ -1,34 +1,27 @@
-
 using MID
-using MIDViz
-using Plots; plotlyjs()
+using Plots
 #%%
-#Integration has been massivly sped up, but this is still slow af, probbaly requires multiproc.
-#~90% of the time is spent numerically integrating. Wonder if there is anything we can do???
-Nr = 30
-Nθ = 6
-Nζ = 2
-rgrid = init_grid(type=:rf, N=Nr);
-θgrid = init_grid(type=:af, N=Nθ, pf=1);
-ζgrid = init_grid(type=:af, N=Nζ, pf=-1);
-grids = init_grids(rgrid, θgrid, ζgrid);
-#%%
+#this example may be able to cover all the grid cases.
 
-#first define the problem
-geo = init_geo(R0=4.0)
+#met = MID.Geometry.flux_toroidal_metric!
+geo = MID.Geometry.init_geometry(4.0)#, met)
+fields = init_fields()
 
-prob = init_problem(q=fu_dam_q, geo=geo); 
+prob = init_problem(geo=geo, fields=fields)
 #%%
-solver = init_solver(prob=prob, targets=[0.2, 0.3, 0.4, 0.5])
+x1grid = init_grid(:ψ, 30)
+x2grid = init_grid(:θ, 5, pf=1)
+x3grid = init_grid(:ζ, 2, pf=-1)
+
+grids = init_grids(x1grid, x2grid, x3grid)
 #%%
 
-evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, solver=solver);
+#prob here is suboptimal!
+#ideally, the normalisation is handled somewhere else.
+#perhaps solver can have targets and normalised targets? or something?
+#we defs have to do something about this!
+solver = init_solver(prob=prob, full_spectrum=true)
 #%%
-#scatter(cr.r, real.(cr.ω), ylimits=(-0.05, 1.05))
 
-continuum_plot(evals, n=-1)
-
-
-ind = find_ind(evals, 0.300)
-#ind = 348
-potential_plot(ϕft, grids, ind)
+@time evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, solver=solver);
+scatter(evals.x1, real.(evals.ω), ylimits=(0.0, 1.0))

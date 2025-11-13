@@ -48,9 +48,10 @@ function continuum(prob::ProblemT, grids::ContGridsT)
     ωlist = zeros(grids.x1.N, mat_size)
 
     #matrices for the local contribution to the global matrices.#
-    I = local_matrix_size(grids)
-    W = local_matrix_size(grids)
+    I = init_local_matrix(grids)
+    W = init_local_matrix(grids)
 
+    #should be a function!
     Imat = zeros(ComplexF64, mat_size, mat_size)
     Wmat = zeros(ComplexF64, mat_size, mat_size)
 
@@ -73,6 +74,7 @@ function continuum(prob::ProblemT, grids::ContGridsT)
         W_and_I!(W, I, B, met, prob, [x1], x2grid, x3grid, tm)
 
         #For the continuum we extract the relevant second derivative parts
+        #seems like this could be done in place tbh!
         Icont = pI * I[[1], [1], :, :, :]
         Wcont = pW * W[[1, 5, 6], [1, 5, 6], :, :, :]
         
@@ -114,7 +116,9 @@ function continuum(prob::ProblemT, grids::ContGridsT)
 
         #normalise the eigenvalues
         #abs here is not ideal.
-        ωlist[i, :] = prob.geo.R0 * sqrt.(abs.(vals))
+        #ωlist[i, :] = prob.geo.R0 * sqrt.(abs.(vals))
+        #normalising is done elsewhere.
+        ωlist[i, :] = vals
 
     end
 
@@ -122,6 +126,10 @@ function continuum(prob::ProblemT, grids::ContGridsT)
     #actually, surely it does?
     #nah they are returned sorted.
 
+    return ωlist
+
+    #this needs to be moved to post-processing!
+    #=
     evals_ω = ComplexF64[]
     evals_x1 = Float64[]
     evals_ml = Tuple{Int64, Int64}[]
@@ -140,6 +148,7 @@ function continuum(prob::ProblemT, grids::ContGridsT)
     #would help with making the plotting less shit, maybe trickier than thought though
 
     return EvalsT(evals_ω, evals_x1, evals_ml)
+    =#
 end
 
 

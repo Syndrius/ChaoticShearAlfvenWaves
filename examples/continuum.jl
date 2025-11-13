@@ -1,22 +1,38 @@
-
-#basis case of computing the continuum
-
 using MID
-using MIDViz
+using Plots
+#%%
+#maybe give this a default R0 value of 4.0?
+#perhaps kwards are useful for these intialisation type things
+#unless they are required eg in init_grid, the symbol and N.
+geo = init_geometry(4.0)
+
+fields = init_fields()
+
+prob = init_problem(geo=geo, fields=fields)
+#%%
+rgrid = init_grid(:cont, 20)
+θgrid = init_grid(:sm, 2, start=1)
+ζgrid = init_grid(:sm, 1, start=-1)
+
+grids = init_grids(rgrid, θgrid, ζgrid)
 #%%
 
-Nr = 100;
-geo = init_geo(R0=4.0)
+evals = compute_spectrum(prob, grids)
 
-prob = init_problem(q=fu_dam_q, geo=geo)#, met=no_delta_metric!); 
+scatter(evals.x1, real.(evals.ω))
 #%%
-#then create the grids
-Nr = 100;
-rgrid = init_grid(type=:rc, N=Nr)
-θgrid = init_grid(type=:as, N = 2, start = 1)
-ζgrid = init_grid(type=:as, N = 1, start = -1)
-grids = init_grids(rgrid, θgrid, ζgrid);
-#%%
-ω_cont = compute_continuum(prob, grids);
-#%%
-continuum_plot(ω_cont, grids)
+gap = 0.32
+
+
+mindiff = 10.0
+
+for ω in evals.ω
+    diff = minimum(abs.(gap .- ω))
+    if diff < mindiff
+        global mindiff = diff
+    end
+end
+
+#looks like this test is working a bit.
+display(mindiff)
+

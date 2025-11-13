@@ -47,48 +47,76 @@ Current term is back on, it is working fine, may need higher res for best result
 
 module MID
 
+#things to actually do!
+#fix perN continuum
+#fix test cases, including helmholtz, island and damping etc
+#fix local to global from being allocating
+#remove the extra matrix from tm()
+#perhaps change the lct to the new way.
+#delete all the extra random af files and stuff.
+#get the extra packages actually working
+#will be essential for the examples...
+#remove gaussquadrature from construct, perhaps fft as well.
+#will need to fix q-profiles and density etc -> rename fu_dam_q to quadratic_q
+#we could probably at least change some of the indexing to Cartesian indices, eg the test/trial in fff is gross
 
-include("Geometry/Geometry.jl")
+####################################
 
-using ..Geometry; export init_island
-
-
-
-include("Equilibrium/Equilibrium.jl")
-
-using ..Equilibrium; export fu_dam_q
-using ..Equilibrium; export qfm_q
-using ..Equilibrium; export low_shear_qfm_q
-using ..Equilibrium; export qfm_benchmark_q
-using ..Equilibrium; export island_q
-using ..Equilibrium; export cantori_q
-
-
+#ideally, we can still use the Helmholtz case for testing!
+#we might have to settle for the 3d version though!
+#but it should still be possible!
 
 include("Structures/Structures.jl")
 
-using ..Structures; export init_grids
-using ..Structures; export init_grid
-using ..Structures; export init_geo
-using ..Structures; export init_flr
-using ..Structures; export init_problem
-using ..Structures; export init_solver
-using ..Structures; export find_ind
+using ..Structures; export init_problem #may want to move to weakform
+
+
+#move MetT to structures
+#create Geometry struct 
+#init will be in here.
+include("Geometry/Geometry.jl")
+
+using ..Geometry; export init_geometry 
 
 
 
-include("Indexing/Indexing.jl")
+#change to fields
+#move islands to here -> maybe not tbh as islands are needed for the island met...
+#move BFieldT to structures.
+#create initialisation structure.
+include("Fields/Fields.jl")
+
+using ..Fields; export init_fields
+using ..Fields; export fu_dam_q
+using ..Fields; export qfm_q
+using ..Fields; export low_shear_qfm_q
+using ..Fields; export qfm_benchmark_q
+using ..Fields; export island_q
+using ..Fields; export cantori_q
 
 
 
+#think grids/basis/integration still kind of go together
+#same as geometry/fields/weakform.
+#then I guess we have construct/qfm/mapping?
+
+#needs to be more clearly defined as a single module.
 include("Basis/Basis.jl")
 
+#merged with grids.
+#new version of Gridding is defs better.
+include("Grids/Grids.jl")
+
+using ..Grids; export init_grids, init_grid, init_fem_grid, init_sm_grid
 
 
+#maybe move some fft stuff here? probably not worth it tbh.
+#maybe we could shift more of the integration into here
+#just to reduce the huge number of loops needed?
 include("Integration/Integration.jl")
 
 
-
+#almost certianly cooked af.
 include("QFM/QFM.jl")
 
 using ..QFM; export construct_surfaces
@@ -99,7 +127,7 @@ using ..QFM; export compute_jac #perhaps shouldn't be exported
 
 
 
-
+#can probbaly remove types to make this more indep.
 include("Io/Io.jl")
 
 using ..Io; export inputs_to_file
@@ -109,27 +137,34 @@ using ..Io; export efunc_from_file
 #using MID.Io; export fortran_process #not sure what to do with this tbh, clearly belongs somewhere else. Will have to see how much it is used in the future
 
 
-
+#probably mostly ok.
 include("PostProcessing/PostProcessing.jl")
 
 
-
+#mostly ok
+#think this form is actually better tbh.
 include("WeakForm/WeakForm.jl")
 
 
-
+#need to fix local_to_global and maybe change integration?
 include("Construct/Construct.jl")
 
 
-
+#should still change from solve to spectrum I think.
 include("Solve/Solve.jl")
 
-using ..Solve; export compute_spectrum
-using ..Solve; export compute_spectrum_qfm
-using ..Solve; export compute_continuum
+#using ..Solve; export compute_spectrum
+#using ..Solve; export compute_spectrum_qfm
+using ..Solve; export init_solver
+
+include("Spectrum/Spectrum.jl")
+
+using ..Spectrum; export compute_spectrum
+using ..Spectrum; export analytical_spectrum
 
 
-
+#this is a cooked af file
+#maybe this can be simplified a bit from other things.
 include("Mapping/Mapping.jl") #hopefully not a mistake
 
 

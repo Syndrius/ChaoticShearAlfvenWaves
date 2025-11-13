@@ -1,4 +1,4 @@
-
+#=
 """
 Struct for storing the magnetic field and related variables at a given coordinate.
 
@@ -21,7 +21,7 @@ struct BFieldT
         new(zeros(3), zeros(3), zeros(3, 3), zeros(3, 3), zeros(1), zeros(3))
     end
 end
-
+=#
 
 
 """

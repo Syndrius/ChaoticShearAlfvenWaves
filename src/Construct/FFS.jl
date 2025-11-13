@@ -36,8 +36,8 @@ function construct(prob::ProblemT, grids::FFSGridsT)
     #creates the trial and test function arrays.
     #these store the basis functions for each derivative
     #and finite elements basis 
-    Φ = init_basis_function(grids)
-    Ψ = init_basis_function(grids)
+    Φ = init_trial_function(grids)
+    Ψ = init_trial_function(grids)
     
     #arrays to store the row, column and data of each matrix element
     #used for constructing sparse matrices.
@@ -52,8 +52,8 @@ function construct(prob::ProblemT, grids::FFSGridsT)
 
     #generalised eval problem WΦ = ω^2 I Φ
     #these matrices store the local contribution, i.e. at each grid point, for the global matrices I and W.
-    I = local_matrix_size(grids)
-    W = local_matrix_size(grids)
+    I = init_local_matrix(grids)
+    W = init_local_matrix(grids)
 
 
     #creates a fft plan for efficient fft used in spectral method.
@@ -85,12 +85,12 @@ function construct(prob::ProblemT, grids::FFSGridsT)
         for (l1, n1) in enumerate(nlist)
 
             #transforms the local basis function to the global.
-            create_global_basis!(Φ, S, grids.x2.pf, n1, dx1, dx2, ts)
+            update_trial_function!(Φ, S, grids.x2.pf, n1, dx1, dx2, ts)
 
             for (l2, n2) in enumerate(nlist)
 
                 #negatives for conjugate of test function
-                create_global_basis!(Ψ, S, -grids.x2.pf, -n2, dx1, dx2, ts)
+                update_trial_function!(Ψ, S, -grids.x2.pf, -n2, dx1, dx2, ts)
 
                 #extract the relevant indicies from the ffted matrices.
                 nind = mod(l1-l2 + Nx3, Nx3) + 1

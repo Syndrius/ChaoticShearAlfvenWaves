@@ -1,32 +1,27 @@
-
 using MID
-using MIDViz
+using Plots
+#%%
+#this example may be able to cover all the grid cases.
+
+#met = MID.Geometry.flux_toroidal_metric!
+geo = MID.Geometry.init_geometry(4.0)#, met)
+fields = init_fields()
+
+prob = init_problem(geo=geo, fields=fields)
+#%%
+x1grid = init_grid(:ψ, 40)
+x2grid = init_grid(:θ, 10)
+x3grid = init_grid(:spectral, 1, start=-1) #perhaps remove start from kwargs?
+
+grids = init_grids(x1grid, x2grid, x3grid)
 #%%
 
-#first define the problem
-geo = init_geo(R0=4.0)
-
-#rgrid = collect(LinRange(0, 1, N));
-prob = init_problem(q=fu_dam_q, geo=geo); 
-#%%
-#then create the grids
-Nr = 40;
-Nθ = 8;
-rgrid = init_grid(type=:rf, N=Nr)
-θgrid = init_grid(type=:af, N=Nθ)
-ζgrid = init_grid(type=:as, N = 1, start = -1)
-grids = init_grids(rgrid, θgrid, ζgrid);
-
+#prob here is suboptimal!
+#ideally, the normalisation is handled somewhere else.
+#perhaps solver can have targets and normalised targets? or something?
+#we defs have to do something about this!
+solver = init_solver(prob=prob, full_spectrum=true)
 #%%
 
-solver = init_solver(prob=prob, targets=[0.2, 0.3, 0.4, 0.5])
-#%%
-evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, solver=solver);
-
-#%%
-#scatter(cr.r, real.(cr.ω), ylimits=(-0.05, 1.05))
-continuum_plot(evals)
-
-
-ind = find_ind(evals, 0.302)
-potential_plot(ϕft, grids, ind)
+@time evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, solver=solver);
+scatter(evals.x1, real.(evals.ω), ylimits=(0.0, 1.0))

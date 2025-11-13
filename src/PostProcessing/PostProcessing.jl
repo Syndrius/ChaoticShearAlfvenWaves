@@ -10,8 +10,8 @@ using JLD2
 using Printf
 
 using ..Structures
-using ..Indexing
-using ..Basis
+using ..Grids
+using ..Basis #do we need this?
 
 
 export post_process
@@ -29,12 +29,15 @@ include("FT.jl")
 include("Continuum.jl")
 
 
+include("Output.jl")
+
+
 """
-    post_process(evals::AbstractArray, efuncs::Array{ComplexF64}, grids::GridsT, geo::GeoParamsT, deriv=false::Bool)
+    post_process(evals::AbstractArray, efuncs::Array{ComplexF64}, grids::GridsT, geo::GeometryT, deriv=false::Bool)
 
 Processes the eigenvalues and eigenfunctions into useful forms. This involves recosntructing the 1d eigenfunction into the 3d grid representation for ϕ, and taking the fourier transform in x2 and x3. The fourier transform is used to label each eigenvalue with its dominant mode and radial location. The eigenvalues are also normalised to the Alfven frequency.
 """
-function post_process(evals::AbstractArray, efuncs::Array{ComplexF64}, grids::GridsT, geo::GeoParamsT, deriv=false::Bool)
+function post_process(evals::AbstractArray, efuncs::Array{ComplexF64}, grids::GridsT, geo::GeometryT, deriv=false::Bool)
 
     #deriv is only really valid for fff for now, and probably for a while lol.
 

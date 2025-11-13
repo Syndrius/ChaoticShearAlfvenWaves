@@ -48,3 +48,27 @@ function label_mode(ϕft::Array{ComplexF64, 4}, grids::GridsT, x1m::Array{Int64,
 
 end
 
+
+#may want different versions of this depending on the shape of evals.
+#eg if it is done per N.
+#somehow the evals are actually real, doubt that is true in general even with the hermitian tag.
+function post_process(evals::Array{Float64, 2}, grids::ContGridsT, geo::GeometryT)
+
+    ω = ComplexF64[]
+    x1 = Float64[]
+    ml = Tuple{Int64, Int64}[]
+
+    x1grid = inst_grid(grids.x1)
+
+    for i in 1:grids.x1.N
+        for j in 1:grids.x2.N*grids.x3.N
+            push!(ω, evals[i, j]) #this will not work for the perN case.
+            push!(x1, x1grid[i])
+            #not known in the continuum case.
+            push!(ml, (0, 0))
+        end
+    end
+
+    return EvalsT(geo.R0 .* sqrt.(ω), x1, ml)
+end
+

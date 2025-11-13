@@ -13,8 +13,9 @@ Quadratic Flux Minimisation. Module for creating approximate flux surfaces in ch
 module QFM
 
 using ..Structures
-using ..Geometry
-using ..Equilibrium
+using ..Grids
+using ..Geometry #to we need this?
+using ..Fields
 
 
 #using NLsolve

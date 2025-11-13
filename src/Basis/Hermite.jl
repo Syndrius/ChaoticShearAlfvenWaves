@@ -1,4 +1,8 @@
 
+const grid_id = [0, 0, 1, 1]
+const basis_id = [0, 1, 0, 1]
+
+
 """
 Struct for the hermite basis functions, for 1d finite elements.
 
@@ -7,7 +11,7 @@ Struct for the hermite basis functions, for 1d finite elements.
 - dH::Array{Float64, 2} - Derivatives, size [4, gp]
 - ddH::Array{Float64, 2} - Second derivatives, size [4, gp]
 """
-struct HB1d
+struct HB1dT
     H :: Array{Float64, 2}
     dH :: Array{Float64, 2}
     ddH :: Array{Float64, 2}
@@ -24,7 +28,7 @@ function hermite_basis(ξ::Array{Float64})
     gp = length(ξ) #number of grid points in the gaussian quadrature
 
     #creates a struct to store the hermiete shape functions, their derivative and second derivative.
-    S = HB1d(zeros(4, gp), zeros(4, gp), zeros(4, gp))
+    S = HB1dT(zeros(4, gp), zeros(4, gp), zeros(4, gp))
 
     ##############
     # node structure per element
@@ -67,7 +71,7 @@ end
 Struct for the hermite basis functions, for 2d finite elements.
 Each field has size [4, 4, x1gp, x2gp], dHx1 denotes derivative with respect to x1, ddHx1x2 denotes ∂_x1 ∂_x2 H.
 """
-struct HB2d
+struct HB2dT
     H :: Array{Float64, 4}
     dHx1 :: Array{Float64, 4}
     dHx2 :: Array{Float64, 4}
@@ -102,12 +106,12 @@ end
 
 Combines two 1d Hermite basis' into a 2d basis.
 """
-function combine_basis(Sx1::HB1d, Sx2::HB1d, ξ1::Array{Float64}, ξ2::Array{Float64})
+function combine_basis(Sx1::HB1dT, Sx2::HB1dT, ξ1::Array{Float64}, ξ2::Array{Float64})
 
     #the size of each array.
     as = (4, 4, length(ξ1), length(ξ2))
     #define the struct to store the basis functions.
-    S = HB2d(zeros(as), zeros(as), zeros(as), zeros(as), zeros(as), zeros(as))
+    S = HB2dT(zeros(as), zeros(as), zeros(as), zeros(as), zeros(as), zeros(as))
 
     #recall from 1d
     ##############
@@ -153,7 +157,7 @@ end
 Struct for the hermite basis functions, for 3d finite elements.
 Each field has size [4, 4, 4, x1gp, x2gp, x3gp], dHx1 denotes derivative with respect to x1, ddHx1x2 denotes ∂_x1 ∂_x2 H.
 """
-struct HB3d
+struct HB3dT
     H :: Array{Float64, 6}
     dHx1 :: Array{Float64, 6}
     dHx2 :: Array{Float64, 6}
@@ -193,13 +197,13 @@ end
 
 Combines three 1d Hermite basis' into a 3d basis.
 """
-function combine_basis(Sx1::HB1d, Sx2::HB1d, Sx3::HB1d, ξ1::Array{Float64}, ξ2::Array{Float64}, ξ3::Array{Float64})
+function combine_basis(Sx1::HB1dT, Sx2::HB1dT, Sx3::HB1dT, ξ1::Array{Float64}, ξ2::Array{Float64}, ξ3::Array{Float64})
 
     #size of the arrays to create.
     as = (4, 4, 4, length(ξ1), length(ξ2), length(ξ3))
 
     #creates the struct to store the functions.
-    S = HB3d(zeros(as), zeros(as), zeros(as), zeros(as), zeros(as), zeros(as), zeros(as), zeros(as), zeros(as), zeros(as))
+    S = HB3dT(zeros(as), zeros(as), zeros(as), zeros(as), zeros(as), zeros(as), zeros(as), zeros(as), zeros(as), zeros(as))
 
     #recall from 1d
     ##############

@@ -2,16 +2,18 @@
 
 Module for the equilibrium state of the plasma. This includes the density and the magnetic field, computed from an input q-profile and input magnetic islands.
 """
-module Equilibrium
+module Fields
 
 
-using ..Geometry
+using ..Structures
 
 
 using Elliptic
 using FunctionWrappers
 import FunctionWrappers: FunctionWrapper
 
+
+export init_fields
 
 
 include("MagneticField.jl")
@@ -40,5 +42,11 @@ include("DensityProfiles.jl")
 export density_profile
 export uniform_dens
 
+
+function init_fields(; q::Function=fu_dam_q, dens::Function=uniform_dens, isls::Array{<:IslandT}=IslandT[])
+
+    #this will take some work!
+    return FluxFieldsT(q, q, dens, dens, isls)
+end
 
 end

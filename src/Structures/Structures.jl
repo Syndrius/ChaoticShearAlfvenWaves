@@ -1,118 +1,45 @@
-"""
 
-Contains the structures and constructors used, includes
- - The ProblemT type.
- - The GridsT type.
- - The SolverT type.
- - The EvalsT type.
-
-"""
 module Structures
 
 
-using ..Geometry
-using ..Equilibrium
-
 using FunctionWrappers
 import FunctionWrappers: FunctionWrapper
-using BSplineKit
+using BSplineKit #not sure if this belongs!
 
 
-"""
-Abstract type for each grid.
-"""
-abstract type GridDataT end
+#think this should be split into 3 files:
+#WeakForm -> all structs needed for the weakform -> including Problem!
+#Solver -> structs needed for solving!
+#Grids
+#Fields.
 
+include("Geometry.jl")
 
-"""
-Abstract type for the global grids.
-"""
-abstract type GridsT end
+export GeometryT, MetT, init_geometry
 
+#unsure where this belongs tbh!
+include("Island.jl") #TODO BIGTIME
 
-"""
-Abstract type for the Problem.
-"""
-abstract type ProblemT end
+export IslandT, RadIslandT, FluxIslandT, CoordIslandT
 
+include("Fields.jl")
 
-"""
-Abstract type for Solving.
-"""
-abstract type SolverT end
-
-
-include("FEMGrid.jl")
-include("SMGrid.jl")
-include("ContGrid.jl")
-
-export periodic_grid
-export mode_list
-export ifft_size
-export mode_label
-export inst_grid
-
-
-
-
-include("GlobalGrids.jl")
-
-
-export GridsT
-export ContGridsT
-export FSSGridsT
-export FFSGridsT
-export FFFGridsT
-export init_grids
-export init_grid
-export init_geo
-export inst_grids
-
-
+export FieldsT, BFieldT, init_fields, FluxFieldsT, RadFieldsT
 
 include("FLR.jl")
 
 export FLRT
-export init_flr
-
-
-
-include("Geometry.jl")
-
-export GeoParamsT
-
-
 
 include("Problem.jl")
 
-export ProblemT
-export init_problem
-export IslProblemT
-export TorProblemT #this is a bad name for this, given this can work with any metric....
+export ProblemT, init_problem
 
+include("Inputs.jl")
 
-
-include("Solver.jl")
-
-export SolverT
-export FullSpectrumSolverT
-export ShiftInvertSolverT
-export IntervalSolverT
-export SliceSolverT
-export init_solver
-
-    
-
-include("Output.jl")
-
-export EvalsT
-export find_ind
-
+export WeakFormInputsT
 
 include("QFM.jl")
 
-export QFMSurfaceT
-export SurfaceITPT
-export TempSurfT
+export SurfaceITPT, TempSurfT, QFMSurfaceT
 
 end

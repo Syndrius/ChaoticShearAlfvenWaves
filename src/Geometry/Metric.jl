@@ -1,6 +1,7 @@
 #this file should be split amongst different files for each type of geometry.
 #may still want to keep this main file contianing the struct, although we may eventually want to move that to Structures.
 
+#=
 """
 Struct for storing the metric which describes the geometry and related derivatives at each coordinate.
 
@@ -23,6 +24,7 @@ struct MetT
         new(zeros(3, 3), zeros(3, 3), zeros(3, 3, 3), zeros(3, 3, 3), zeros(1), zeros(3))
     end
 end
+=#
 
 #template metric function
 function metric!(met::MetT, x1::Float64, x2::Float64, x3::Float64, R0::Float64)

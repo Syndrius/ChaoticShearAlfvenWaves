@@ -10,11 +10,11 @@ using ..Structures
 
 
 
-include("MatrixSize.jl")
+#include("MatrixSize.jl")
 
-export local_matrix_size 
-export matrix_size 
-export init_basis_function
+#export local_matrix_size 
+#export matrix_size 
+#export init_basis_function
 
 
 include("ShapeFunctions.jl")
@@ -22,14 +22,14 @@ include("ShapeFunctions.jl")
 
 include("Hermite.jl")
 
-export hermite_basis
+export hermite_basis, HB1dT, HB2dT, HB3dT, grid_id, basis_id
 
 
 
-include("LocalBasis.jl")
+#include("LocalBasis.jl")
 
-export create_global_basis!
-export local_to_global #arguably belongs in indexing...
+#export create_global_basis!
+#export local_to_global #arguably belongs in indexing...
 
 
 
