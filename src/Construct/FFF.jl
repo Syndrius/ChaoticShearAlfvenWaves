@@ -18,9 +18,7 @@ function construct(prob::ProblemT, grids::FFFGridsT)
     B = BFieldT()
 
     #compute the gaussian qudrature points for finite elements.
-    ξx1, wgx1 = gausslegendre(grids.x1.gp) #same as python!
-    ξx2, wgx2 = gausslegendre(grids.x2.gp)
-    ξx3, wgx3 = gausslegendre(grids.x3.gp)
+    ξx1, ξx2, ξx3, wgx1, wgx2, wgx3 = gauss_points(grids)
 
     #Gets the Hermite basis for the grids
     S = hermite_basis(ξx1, ξx2, ξx3)
@@ -54,23 +52,29 @@ function construct(prob::ProblemT, grids::FFFGridsT)
     #initialises a struct storing temporary matrices used in the weak form.
     tm = TM()
 
+    #will want a function for this!
+    x1 = zeros(length(ξx1))
+    x2 = zeros(length(ξx2))
+    x3 = zeros(length(ξx3))
+    dx = zeros(3)
+
     #main loop, x2, x3 go to N for periodicity.
     for i in 1:grids.x1.N-1, j in 1:grids.x2.N, k in 1:grids.x3.N 
 
         #takes the local ξ arrays to a global arrays around the grid point.
-        x1, x2, x3, dx1, dx2, dx3 = local_to_global(i, j, k, ξx1, ξx2, ξx3, x1grid, x2grid, x3grid)
+        #number of args probably tells us that this is a cooked af way of doing this.
+        #can probably combine i, j, k at least
+        jac = local_to_global!(x1, x2, x3, dx, i, j, k, ξx1, ξx2, ξx3, x1grid, x2grid, x3grid)
 
-        #jacobian of the local to global transformation.
-        jac = dx1 * dx2 * dx3 / 8 
 
         #computes the contribution to the W and I matrices.
         W_and_I!(W, I, B, met, prob, x1, x2, x3, tm)
 
         
         #transforms the local basis function to the global.
-        update_trial_function!(Φ, S, grids.x2.pf, grids.x3.pf, dx1, dx2, dx3, ts)
+        update_trial_function!(Φ, S, grids.x2.pf, grids.x3.pf, dx, ts)
         #negatives for conjugate of test function
-        update_trial_function!(Ψ, S, -grids.x2.pf, -grids.x3.pf, dx1, dx2, dx3, ts)
+        update_trial_function!(Ψ, S, -grids.x2.pf, -grids.x3.pf, dx, ts)
 
 
         #loop over the Hermite elements for the trial function

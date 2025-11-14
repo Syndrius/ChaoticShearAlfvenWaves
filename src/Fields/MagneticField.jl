@@ -35,7 +35,7 @@ B is assumed to be in the form (B^r, B^x2, B^x3) with
 
 This version does not take a quadratic form, this means the behaviour near r=0 will be cooked, requires a restricted grid.
 """
-function compute_B!(B::BFieldT, met::MetT, q_prof::FunctionWrapper{Tuple{Float64, Float64}, Tuple{Float64}}, isls::Array{RadIslandT}, x1::Float64, x2::Float64, x3::Float64)
+function compute_B!(B::BFieldT, met::MetT, q_prof::FunctionWrapper{Tuple{Float64, Float64}, Tuple{Float64}}, isls::Array{RadialIslandT}, x1::Float64, x2::Float64, x3::Float64)
 
     q, dq = q_prof(x1)
 

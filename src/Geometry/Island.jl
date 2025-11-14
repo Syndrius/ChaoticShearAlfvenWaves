@@ -131,6 +131,8 @@ function compute_sepratrix(θgrid::AbstractArray{Float64}, isl::IslandT, ζval::
 end
 
 
+#think this is never used tbh!
+#not sure why we would want or need this info?
 """
     inst_island(isl::IslandT, q::Functions)
 

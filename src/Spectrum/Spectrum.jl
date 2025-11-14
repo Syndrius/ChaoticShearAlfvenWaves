@@ -13,7 +13,8 @@ module Spectrum
 using Printf
 #using SparseArrays
 #using LinearAlgebra
-using ..WeakForm #why do we need this..
+using ..WeakForm #why do we need this.. this would be required for instantiating the problem...
+#ideally, the problem would just be instantiated once read in.
 using ..Grids
 using ..Structures
 #import ..ChaoticShearAlfvenWaves: GridsT, SolverT, ProblemT #think this isa ctually a bad idea

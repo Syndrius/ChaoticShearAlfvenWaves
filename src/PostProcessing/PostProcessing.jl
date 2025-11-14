@@ -11,7 +11,6 @@ using Printf
 
 using ..Structures
 using ..Grids
-using ..Basis #do we need this?
 
 
 export post_process
@@ -28,8 +27,6 @@ include("FT.jl")
 
 include("Continuum.jl")
 
-
-include("Output.jl")
 
 
 """

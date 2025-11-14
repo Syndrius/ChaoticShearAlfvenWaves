@@ -11,6 +11,11 @@ using ..QFM
 
 #don'r really like the idea of this having grids
 #so the trial function stuff needs to go elsewhere.
+#this needs to be split across multiple files
+#probably a basic and a QFM 
+#also want a problem file, where we initialise and instantiate the problem.
+#so in general, the fields and geometry structs are basically just place holders that store what has been used.
+#while prob stores the practical implementation of them!
 
 
 using LinearAlgebra
@@ -22,13 +27,12 @@ Struct storing Tempory Matrices used for memory efficient weak form.
 struct TM 
     C :: Array{Float64, 2}
     D :: Array{Float64, 2}
-    T :: Array{Float64, 2} #can remove!
     F :: Array{Float64}
     Γ :: Array{Float64, 2}
     dΓ :: Array{Float64, 3}
     K :: Array{Float64}
     function TM()
-        new(zeros(3, 9), zeros(3, 3), zeros(9, 3), zeros(9), zeros(3, 3), zeros(3, 3, 3), zeros(6))
+        new(zeros(3, 9), zeros(3, 3), zeros(9), zeros(3, 3), zeros(3, 3, 3), zeros(6))
     end
 end
 
@@ -41,6 +45,10 @@ include("Tl.jl")
 include("Tj.jl") 
 include("W.jl")
 include("I.jl")
+
+include("Problem.jl")
+
+export init_problem, inst_problem
 
 
 """

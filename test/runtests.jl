@@ -8,6 +8,13 @@ module MIDTests
 #in total takes ~3mins to run atm. May want to change to smaller grids for FFF case.
 #Probably want all the tests to run at lower grids, more just making sure nothing is broken, we dont actually care about the result
 
+#getting Helmholtz to work is going to be tricky
+#think we will need to import the Helmholtz module
+#which will need different matrix initialisation etc
+#but I think we can multiple dipatch on using real versions of stuff? perhaps?
+#probably not actuallly, RIP.
+#perhaps we don't worry about Helmholtz, but we just create helmholtz convergence testing with our generic version...
+
 
 using Test
 using MID

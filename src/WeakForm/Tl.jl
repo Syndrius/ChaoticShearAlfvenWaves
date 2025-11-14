@@ -5,7 +5,7 @@
 Computes the laplacian like term of W.
 T_l^{μν} = J C^μ_i D^i_j C_ν^j / B^2
 """
-function Tl!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, B::BFieldT, met::MetT, C::Array{Float64, 2}, D::Array{Float64, 2}, T::Array{Float64, 2})
+function Tl!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, B::BFieldT, met::MetT, C::Array{Float64, 2}, D::Array{Float64, 2})
 
     compute_C!(B, C)
 

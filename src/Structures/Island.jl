@@ -14,7 +14,7 @@ Island takes form A*sin(m0*θ + n0*ζ) so m0 and n0 should have different sign.
 - r0::Float64=NaN - Radial location of island.
 - w::Float64=NaN - Island width in units of r^2/2.
 """
-@kwdef struct RadIslandT <: IslandT
+@kwdef struct RadialIslandT <: IslandT
     m0 :: Int64 
     n0 :: Int64
     A :: Float64 = NaN

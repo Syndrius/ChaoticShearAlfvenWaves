@@ -6,7 +6,6 @@ module Construct
 
 using FFTW
 using SparseArrays
-using FastGaussQuadrature #should still remove this!
 using LinearAlgebra
 
 

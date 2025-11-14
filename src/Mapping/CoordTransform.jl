@@ -5,7 +5,7 @@
 Maps island coordinates (κ, ᾱ, τ) into the equivalent toroidal coordinates (r, θ, ζ).
 Assumes that κ < 1.
 """
-function isl_in_coords_to_tor(κ::Float64, ᾱ::Float64, τ::Float64, isl::RadIslandT)
+function isl_in_coords_to_tor(κ::Float64, ᾱ::Float64, τ::Float64, isl::RadialIslandT)
 
     #assumes κ < 1, throughout!
     sinβ = Elliptic.Jacobi.sn(2*Elliptic.K(κ) * ᾱ / π, κ)
@@ -114,7 +114,7 @@ end
 
 
 #we are just going to ignore outside the island for now!
-function tor_coords_to_isl(r::Float64, θ::Float64, ζ::Float64, isl::RadIslandT)
+function tor_coords_to_isl(r::Float64, θ::Float64, ζ::Float64, isl::RadialIslandT)
 
     #unsure on the domain of this, may be 2πm_0? or 2π/m0
     α = θ - ζ / isl.q0
@@ -299,7 +299,7 @@ end
 
 Maps the sepratrix from toroidal coordinates to qfm coordinates. Used to determine island modes.
 """
-function map_sepratrix(rmin::Array{Float64}, rmax::Array{Float64}, θgrid::AbstractArray{Float64}, isl::RadIslandT, CT::CoordTransformT, surf_itp::QFM.SurfaceITPT, sd::TempSurfT)
+function map_sepratrix(rmin::Array{Float64}, rmax::Array{Float64}, θgrid::AbstractArray{Float64}, isl::RadialIslandT, CT::CoordTransformT, surf_itp::QFM.SurfaceITPT, sd::TempSurfT)
 
 
     #TODO, Probably actually want to plot this for hek sake.

@@ -20,15 +20,15 @@ export GeometryT, MetT, init_geometry
 #unsure where this belongs tbh!
 include("Island.jl") #TODO BIGTIME
 
-export IslandT, RadIslandT, FluxIslandT, CoordIslandT
+export IslandT, RadialIslandT, FluxIslandT, CoordIslandT
 
 include("Fields.jl")
 
-export FieldsT, BFieldT, init_fields, FluxFieldsT, RadFieldsT
+export FieldsT, BFieldT, init_fields, FluxFieldsT, RadialFieldsT, IslandFieldsT
 
 include("FLR.jl")
 
-export FLRT
+export FLRT, ideal_flr
 
 include("Problem.jl")
 
@@ -41,5 +41,9 @@ export WeakFormInputsT
 include("QFM.jl")
 
 export SurfaceITPT, TempSurfT, QFMSurfaceT
+
+include("Output.jl")
+
+export EvalsT, find_ind
 
 end

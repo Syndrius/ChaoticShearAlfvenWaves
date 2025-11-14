@@ -1,14 +1,28 @@
 
 abstract type FieldsT end
 
+#hopefully, we don't need 3 types of islands anymore!
+
 struct FluxFieldsT <: FieldsT
     q_func :: Function #we may additionally want the option of q to be passed as a polynomail
     q :: FunctionWrapper{Tuple{Float64, Float64}, Tuple{Float64}}
-    dens_func :: Function
-    dens :: FunctionWrapper{Float64, Tuple{Float64}}
+    dens :: FunctionWrapper{Float64, Tuple{Float64}} #all dens functions follow the pattern.
     isls :: Array{FluxIslandT} 
 end
 
+struct IslandFieldsT <: FieldsT
+    q_func :: Function #we may additionally want the option of q to be passed as a polynomail
+    q :: FunctionWrapper{Tuple{Float64, Float64}, Tuple{Float64}}
+    dens :: FunctionWrapper{Float64, Tuple{Float64}} #all dens functions follow the pattern.
+    isls :: Array{CoordIslandT} 
+end
+
+struct RadialFieldsT <: FieldsT
+    q_func :: Function #we may additionally want the option of q to be passed as a polynomail
+    q :: FunctionWrapper{Tuple{Float64, Float64}, Tuple{Float64}}
+    dens :: FunctionWrapper{Float64, Tuple{Float64}} #all dens functions follow the pattern.
+    isls :: Array{RadialIslandT} 
+end
 
 
 #=

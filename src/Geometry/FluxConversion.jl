@@ -1,4 +1,4 @@
-
+#this is cooked af file, should probably delete
 
 """
     f2r(ψ)
@@ -21,8 +21,8 @@ function r2f(r)
     return r^2/2
 end
 
-
-function convert_island(isl::RadIslandT)
+#this is 
+function convert_island(isl::RadialIslandT)
 
     #need to make sure this actually covers everything first
     #this also will only work for a fully instantiated island.

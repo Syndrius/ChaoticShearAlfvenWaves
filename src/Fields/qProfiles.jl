@@ -36,7 +36,7 @@ function island_q(κ::Float64, isl::CoordIslandT)
 end
 
 
-function island_q(r::Float64, isl::RadIslandT)
+function island_q(r::Float64, isl::RadialIslandT)
     q0 = isl.q0
     qp = isl.qp 
     r0 = isl.r0
@@ -95,17 +95,6 @@ function island_equiv_q(r::Float64, isl::FluxIslandT)
 end
 
 #Toroidal equivalent ot eh island coords q, allows for direct comparison.
-function island_equiv_q(r::Float64, isl::RadIslandT)
-
-    q0 = isl.q0
-    qp = isl.qp #chosen pretty arbitrarily based on vibes of continuum.
-    r0 = isl.r0
-    #this form is to allows analytical integration in the construction of island coordinates.
-    q = 1 / (1 / q0 - qp / (2*q0^2*r0) * (r^2-r0^2))
-    dq = 4*qp*q0^2*r*r0 / (2*q0*r0 - qp * (r^2-r0^2))^2
-    return q, dq
-end
-
 #JLD2 cannot save anonymouse functions, so we probably need to hard code them unfort
 function island_21_q(r::Float64)
     q0 = 2/1

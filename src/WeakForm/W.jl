@@ -9,7 +9,7 @@ function compute_W!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, B::BFieldT
 
    
     #compute the laplacian like term
-    Tl!(W, B, met, tm.C, tm.D, tm.T)
+    Tl!(W, B, met, tm.C, tm.D)
     
     #compute the current term.
     Tj!(W, B, met, tm.Γ, tm.dΓ, tm.K)

@@ -35,7 +35,7 @@ end
 
 Function that fills out the MetT struct for toroidal geometry. Metric elements taken from Energetic Particles in Tokamak Plasmas by Sergai Sharapov. Straight field line coordinates are radius (r), generalised poloidal angle (θ) and generalised toroidal angle (ζ), equal to negative of true toroidal angle. Additionally we assume low shear and approximate Δ' ≈ r/(4*R0).
 """
-function rad_toroidal_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
+function radial_toroidal_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
     
     #now lets try without the manual entries fk me. 
     Δp = r/(4*R0)
@@ -335,7 +335,7 @@ end
 
 Cylindrical limit of toroidal metric, equivalent to taking R0→∞.
 """
-function rad_cylindrical_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
+function radial_cylindrical_metric!(met::MetT, r::Float64, θ::Float64, ζ::Float64, R0::Float64)
     #this is regular old cylindrical for comparing our weak form
 
     met.J[1] = r * R0

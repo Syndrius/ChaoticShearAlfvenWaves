@@ -2,10 +2,12 @@
 #stupid name, stupid location
 #don't know if this is better or worse than in weakform.
 
-function update_trial_function!(Φ::Array{ComplexF64, 3}, S::HB1dT, m::Int64, n::Int64, jac::Float64, ts::Array{Float64, 2})
+function update_trial_function!(Φ::Array{ComplexF64, 3}, S::HB1dT, m::Int64, n::Int64, dx::Array{Float64}, ts::Array{Float64, 2})
 
     #reset the tangent scaling to 1.
     ts .= 1.0
+
+    jac = dx[1] / 2
 
     #tangent basis functions need additional scaling when transforming from global ξ∈[-1, 1]
     #to global x∈[x_i, x_{i+1}]
@@ -41,11 +43,11 @@ end
 Converts the local basis functions into global, by mapping ξ∈[-1, 1] tp x∈[x_i, x_{i+1}].
 Additionally, m represents a phase factor for setting the '0' of the fourier transform to target specific modes.
 """
-function update_trial_function!(Φ::Array{ComplexF64, 5}, S::HB2dT, m::Int64, n::Int64, dx1::Float64, dx2::Float64, ts::Array{Float64, 4})
+function update_trial_function!(Φ::Array{ComplexF64, 5}, S::HB2dT, m::Int64, n::Int64, dx::Array{Float64}, ts::Array{Float64, 4})
 
     #jacobian of the local to global transformation in each dimension
-    x1jac = dx1 / 2
-    x2jac = dx2 / 2
+    x1jac = dx[1] / 2
+    x2jac = dx[2] / 2
 
     #reset the tangent scaling to 1.
     ts .= 1.0
@@ -88,13 +90,13 @@ end
 Converts the local basis functions into global, by mapping ξ∈[-1, 1] tp x∈[x_i, x_{i+1}].
 Additionally, m and n represent phase factors for setting the '0' of the fourier transform to target specific modes.
 """
-function update_trial_function!(Φ::Array{ComplexF64, 7}, S::HB3dT, m::Int64, n::Int64, dx1::Float64, dx2::Float64, dx3::Float64, ts::Array{Float64, 6})
+function update_trial_function!(Φ::Array{ComplexF64, 7}, S::HB3dT, m::Int64, n::Int64, dx::Array{Float64}, ts::Array{Float64, 6})
 
 
     #jacobian of the local to global transformation in each dimension
-    x1jac = dx1 / 2
-    x2jac = dx2 / 2
-    x3jac = dx3 / 2
+    x1jac = dx[1] / 2
+    x2jac = dx[2] / 2
+    x3jac = dx[3] / 2
 
     #reset the tangent scaling to 1.
     ts .= 1.0

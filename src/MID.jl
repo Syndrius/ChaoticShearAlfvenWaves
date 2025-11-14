@@ -49,26 +49,25 @@ module MID
 
 #things to actually do!
 #fix perN continuum
-#fix test cases, including helmholtz, island and damping etc
-#fix local to global from being allocating
-#remove the extra matrix from tm()
-#perhaps change the lct to the new way.
+#fix test cases, including helmholtz, island and damping etc -> helmholtz will be no more -> use generic FEM (change name to MID lol) for benchmarking in thesis.
 #delete all the extra random af files and stuff.
 #get the extra packages actually working
 #will be essential for the examples...
 #remove gaussquadrature from construct, perhaps fft as well.
 #will need to fix q-profiles and density etc -> rename fu_dam_q to quadratic_q
 #we could probably at least change some of the indexing to Cartesian indices, eg the test/trial in fff is gross
+#get qfm working again, will be fookin annoying. -> might be worth fully fixing up construct etc first, so functions looks the same. -> may even want to split the QFM up a bit.
+#islands, the structs and all related ufnctions, are still cooked af.
 
 ####################################
 
-#ideally, we can still use the Helmholtz case for testing!
+#ideally, we can still use the Helmholtz case for testing! -> not going to be practical tbh!
 #we might have to settle for the 3d version though!
 #but it should still be possible!
 
 include("Structures/Structures.jl")
 
-using ..Structures; export init_problem #may want to move to weakform
+using ..Structures; export find_ind
 
 
 #move MetT to structures
@@ -143,8 +142,14 @@ include("PostProcessing/PostProcessing.jl")
 
 #mostly ok
 #think this form is actually better tbh.
+#this can go much earlier in the order
+#we will also move the problem into the weakform
+#as the problem is the key piece that allows the weakform to function!
+#ideallly, we should be able to make this work without needing feilds or geometry at all.
+#but they will be needed for initialisation.
 include("WeakForm/WeakForm.jl")
 
+using ..WeakForm; export init_problem, inst_problem
 
 #need to fix local_to_global and maybe change integration?
 include("Construct/Construct.jl")

@@ -117,26 +117,11 @@ function jparonB(B::BFieldT, met::MetT)
 end
 
 
-"""
-    function get_lc_tensor()
-        
-Function for the levi-civita tensor.
-"""
-function get_lc_tensor()
-    #probably a more elegant way to do this.
-    lc = zeros(Float64, 3, 3, 3)
-    lc[1, 2, 3] = 1.0
-    lc[2, 3, 1] = 1.0
-    lc[3, 1, 2] = 1.0
-    lc[3, 2, 1] = -1.0
-    lc[1, 3, 2] = -1.0
-    lc[2, 1, 3] = -1.0
-    return lc
-end
-
-
 #define the levi-civita tensor for curls.
-const lct = get_lc_tensor()
+const lct = [0.0; 0.0; 0.0;; 0.0; 0.0; -1.0;; 0.0; 1.0; 0.0;;;
+        0.0; 0.0; 1.0;; 0.0; 0.0; 0.0;; -1.0; 0.0; 0.0;;;
+        0.0; -1.0; 0.0;; 1.0; 0.0; 0.0;; 0.0; 0.0; 0.0]
+
 
 
 

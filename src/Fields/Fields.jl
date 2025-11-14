@@ -43,10 +43,61 @@ export density_profile
 export uniform_dens
 
 
-function init_fields(; q::Function=fu_dam_q, dens::Function=uniform_dens, isls::Array{<:IslandT}=IslandT[])
+#will need to suss if we can just specify q for this?
+function init_fields(type=:ψ; q::Function=fu_dam_q, dens::Function=uniform_dens, isls::Array{<:IslandT}=IslandT[])
 
-    #this will take some work!
-    return FluxFieldsT(q, q, dens, dens, isls)
+    if q == island_q
+        if length(isls) != 1
+            display("Island q profile is only compatible with a single island.")
+            return 
+        end
+    end
+
+
+    if type in [:ψ, :flux, :f]
+        if length(isls) > 1 && !(isls[1] isa FluxIslandT)
+            display("Island does not match radial varible")
+            return
+        end
+        if q == island_q
+            inst_isl = inst_island(isls[1])
+            return FluxFieldsT(q, q, dens, FluxIslandT[inst_isl])
+        end
+        if isempty(isls)
+            isls = FluxIslandT[]
+        end
+
+        return FluxFieldsT(q, q, dens, isls)
+    end
+    if type in [:r, :radial, :rad, :s]
+        if length(isls) > 1 && !(isls[1] isa RadialIslandT)
+            display("Island does not match radial varible")
+            return
+        end
+        if q == island_q
+            inst_isl = inst_island(isls[1])
+            return RadialFieldsT(q, q, dens, RadialIslandT[inst_isl])
+        end
+        if isempty(isls)
+            isls = RadialIslandT[]
+        end
+
+        return RadialFieldsT(q, q, dens, isls)
+    end
+    if type in [:κ, :isl, :island]
+        if length(isls) > 1 && !(isls[1] isa CoordIslandT)
+            display("Island does not match radial varible")
+            return
+        end
+        if q != island_q
+            display("q profile has been set to island_q.")
+            #inst_isl = inst_island(isls[1])
+            #return FluxFieldsT(q, q, dens, FluxIslandT[inst_isl])
+        end
+        #not sure if this is needed!
+        inst_isl = inst_island(isls[1])
+        return IslandFieldsT(island_q, island_q, dens, CoordIslandT[inst_isl])
+    end
+
 end
-
 end

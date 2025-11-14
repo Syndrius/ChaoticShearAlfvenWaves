@@ -56,8 +56,8 @@ Struct storing the geometrical parameters.
 - B0::Float64=1.0 - The magnetic field strength at the axis. Not implemented yet, assumed to be 1.0 everywhere.
 """
 struct GeometryT
+    type :: Symbol
     R0 :: Float64
-    met_func :: Function 
     met :: FunctionWrapper{Nothing, Tuple{MetT, Float64, Float64, Float64, Float64}}
     a :: Float64 #not implemented yet, assume 1.
     B0 :: Float64 #not implemented yet, assume 1.
