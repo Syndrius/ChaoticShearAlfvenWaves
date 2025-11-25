@@ -2,7 +2,7 @@
 Struct storing the quantities needed to transform the toroidal metric and magnetic field into the qfm form.
 
 ### Fields
-- coords::Array{Float64, 1} - array of (s, ϑ, φ), stored as array to keep struct immutable.
+- coords::Array{Float64, 1} - array of (s, ϑ, ζ), stored as array to keep struct immutable.
 - JM::Array{Float64, 2} - Jacobian matrix, given by ∂x^i/∂x^μ, i.e. derivative matrix of the toroidal variables with respect to the qfm variables.
 - JM_inv::Array{Float64, 2} - Inverse Jacobian matrix.
 - dJM::Array{Float64, 3} - Derivative with respect to qfm variables of Jacobian matrix.
@@ -22,13 +22,12 @@ end
 
 
 """
-    coord_transform!(s::Float64, ϑ::Float64, φ::Float64, CT::CoordTransformT, surf_itp::SurfaceITPT)
+    coord_transform!(s::Float64, ϑ::Float64, ζ::Float64, CT::CoordTransformT, surf_itp::SurfaceITPT)
 
-Function that computes the transformation from (s, ϑ, φ) (qfm coords) into standard toroidal coordinates (r, θ, ζ). This includes determining the Jacobian Matrix and associated derivatives, stored in the CT struct. This allows us to full convert required data between coordinates.
+Function that computes the transformation from (s, ϑ, ζ) (qfm coords) into standard toroidal coordinates (r, θ, φ). This includes determining the Jacobian Matrix and associated derivatives, stored in the CT struct. This allows us to full convert required data between coordinates.
 """
-function coord_transform!(s::Float64, ϑ::Float64, φ::Float64, CT::CoordTransformT, surf_itp::SurfaceITPT, sd::TempSurfT)
+function coord_transform!(s::Float64, ϑ::Float64, ζ::Float64, CT::CoordTransformT, surf_itp::SurfaceITPT, sd::TempSurfT)
 
-    #the sd (surface data) struct is not very clear! probably needs a new name.
     pqMpol = surf_itp.M
     pqNtor = surf_itp.N
     dim1 = pqMpol+1
@@ -40,7 +39,7 @@ function coord_transform!(s::Float64, ϑ::Float64, φ::Float64, CT::CoordTransfo
 
     #computes α
     for j in 1:1:length(nlist), i in 1:1:length(mlist)
-        sd.α[i, j] = mlist[i] * ϑ - nlist[j] * φ
+        sd.α[i, j] = mlist[i] * ϑ - nlist[j] * ζ
     end
 
     sd.cosα .= cos.(sd.α)
@@ -50,49 +49,48 @@ function coord_transform!(s::Float64, ϑ::Float64, φ::Float64, CT::CoordTransfo
     #don't think this is a bottleneck though!
     itp_mat!(surf_itp, sd, s)
     
-    #starting point of the coords, (r, θ, ζ)
-    CT.coords .= [0.0, ϑ, φ]
+    #starting point of the coords, (ψ, θ, φ)
+    CT.coords .= [0.0, ϑ, ζ]
 
     #starting point of JM matrix.
     #the jacobian Matrix, J_μ^i = ∂x^i/∂x^μ
-    #JM[i, μ] denotes i as original var, (r, θ, ζ), and μ as new vars (s, ϑ, φ)
-    #CT.JM .= [drds drdϑ drdφ; dθds dθdϑ dθdφ; dζds dζdϑ dζdφ]
+    #JM[i, μ] denotes i as original var, (ψ, θ, φ), and μ as new vars (s, ϑ, ζ)
+    #CT.JM .= [dψds dψdϑ dψdζ; dθds dθdϑ dθdζ; dφds dφdϑ dφdζ]
     CT.JM .= [0.0 0.0 0.0; 0.0 1.0 0.0; 0.0 0.0 1.0]
 
     #starting point of dJM, all set to zero.
-    #CT.dJM[:, :, 1] = [d2rdsds d2rdsdϑ d2rdsdφ; d2θdsds d2θdsdϑ d2θdsdφ; d2ζdsds d2ζdsdϑ d2ζdsdφ]
-    #CT.dJM[:, :, 2] = [d2rdsdϑ d2rdϑdϑ d2rdϑdφ; d2θdsdϑ d2θdϑdϑ d2θdϑdφ; d2ζdsdϑ d2ζdϑdϑ d2ζdϑdφ]
-    #CT.dJM[:, :, 3] = [d2rdsdφ d2rdϑdφ d2rdφdφ; d2θdsdφ d2θdϑdφ d2θdφdφ; d2ζdsdφ d2ζdϑdφ d2ζdφdφ]
+    #CT.dJM[:, :, 1] = [d2ψdsds d2ψdsdϑ d2ψdsdζ; d2θdsds d2θdsdϑ d2θdsdζ; d2φdsds d2φdsdϑ d2φdsdζ]
+    #CT.dJM[:, :, 2] = [d2ψdsdϑ d2ψdϑdϑ d2ψdϑdζ; d2θdsdϑ d2θdϑdϑ d2θdϑdζ; d2φdsdϑ d2φdϑdϑ d2φdϑdζ]
+    #CT.dJM[:, :, 3] = [d2ψdsdζ d2ψdϑdζ d2ψdζdζ; d2θdsdζ d2θdϑdζ d2θdζdζ; d2φdsdζ d2φdϑdζ d2φdζdζ]
     CT.dJM .= 0.0
 
-    #perhaps less clear now, but maybe better?
     for j in 1:dim2, i in 1:dim1
-        CT.coords[1] += sd.rcos[i, j] * sd.cosα[i, j] #r
+        CT.coords[1] += sd.ψcos[i, j] * sd.cosα[i, j] #ψ
         CT.coords[2] += sd.θsin[i, j] * sd.sinα[i, j] #θ
 
-        CT.JM[1, 1] += sd.drcosds[i, j] * sd.cosα[i, j] #drds
-        CT.JM[1, 2] += -mlist[i] * sd.rcos[i, j] * sd.sinα[i, j] #drdϑ
-        CT.JM[1, 3] += nlist[j] * sd.rcos[i, j] * sd.sinα[i, j] #drdφ
+        CT.JM[1, 1] += sd.dψcosds[i, j] * sd.cosα[i, j] #dψds
+        CT.JM[1, 2] += -mlist[i] * sd.ψcos[i, j] * sd.sinα[i, j] #dψdϑ
+        CT.JM[1, 3] += nlist[j] * sd.ψcos[i, j] * sd.sinα[i, j] #dψdζ
 
         CT.JM[2, 1] += sd.dθsinds[i, j] * sd.sinα[i, j] #dθds
         CT.JM[2, 2] += mlist[i] * sd.θsin[i, j] * sd.cosα[i, j] #dθdϑ
-        CT.JM[2, 3] += -nlist[j] * sd.θsin[i, j] * sd.cosα[i, j] #dθdφ
+        CT.JM[2, 3] += -nlist[j] * sd.θsin[i, j] * sd.cosα[i, j] #dθdζ
 
-        CT.dJM[1, 1, 1] += sd.d2rcosdsds[i, j] * sd.cosα[i, j] #d2rdsds
-        CT.dJM[1, 1, 2] += -mlist[i] * sd.drcosds[i, j] * sd.sinα[i, j] #d2rdsdϑ
-        CT.dJM[1, 1, 3] += nlist[j] * sd.drcosds[i, j] * sd.sinα[i, j] #d2rdsdφ
+        CT.dJM[1, 1, 1] += sd.d2ψcosdsds[i, j] * sd.cosα[i, j] #d2ψdsds
+        CT.dJM[1, 1, 2] += -mlist[i] * sd.dψcosds[i, j] * sd.sinα[i, j] #d2ψdsdϑ
+        CT.dJM[1, 1, 3] += nlist[j] * sd.dψcosds[i, j] * sd.sinα[i, j] #d2ψdsdζ
 
-        CT.dJM[1, 2, 2] += -mlist[i]^2 * sd.rcos[i, j] * sd.cosα[i, j] #d2rdϑdϑ
-        CT.dJM[1, 2, 3] += mlist[i] * nlist[j] * sd.rcos[i, j] * sd.cosα[i, j] #d2rdϑdφ
-        CT.dJM[1, 3, 3] += -nlist[j]^2 * sd.rcos[i, j] * sd.cosα[i, j] #d2rdφdφ
+        CT.dJM[1, 2, 2] += -mlist[i]^2 * sd.ψcos[i, j] * sd.cosα[i, j] #d2ψdϑdϑ
+        CT.dJM[1, 2, 3] += mlist[i] * nlist[j] * sd.ψcos[i, j] * sd.cosα[i, j] #d2ψdϑdζ
+        CT.dJM[1, 3, 3] += -nlist[j]^2 * sd.ψcos[i, j] * sd.cosα[i, j] #d2ψdζdζ
 
         CT.dJM[2, 1, 1] += sd.d2θsindsds[i, j] * sd.sinα[i, j] #d2θdsds
         CT.dJM[2, 1, 2] += mlist[i] * sd.dθsinds[i, j] * sd.cosα[i, j] #d2θdsdϑ
-        CT.dJM[2, 1, 3] += -nlist[j] * sd.dθsinds[i, j] * sd.cosα[i, j] #d2θdsdφ
+        CT.dJM[2, 1, 3] += -nlist[j] * sd.dθsinds[i, j] * sd.cosα[i, j] #d2θdsdζ
 
         CT.dJM[2, 2, 2] += -mlist[i]^2 * sd.θsin[i, j] * sd.sinα[i, j] #d2θdϑdϑ
-        CT.dJM[2, 2, 3] += mlist[i] * nlist[j] * sd.θsin[i, j] * sd.sinα[i, j] #d2θdϑdφ
-        CT.dJM[2, 3, 3] += -nlist[j]^2 * sd.θsin[i, j] * sd.sinα[i, j] #d2θdφdφ
+        CT.dJM[2, 2, 3] += mlist[i] * nlist[j] * sd.θsin[i, j] * sd.sinα[i, j] #d2θdϑdζ
+        CT.dJM[2, 3, 3] += -nlist[j]^2 * sd.θsin[i, j] * sd.sinα[i, j] #d2θdζdζ
 
     end
 
@@ -100,12 +98,12 @@ function coord_transform!(s::Float64, ϑ::Float64, φ::Float64, CT::CoordTransfo
     CT.JM_inv .= inv(CT.JM)
 
     #symmetric second derivatives for dJM.
-    CT.dJM[1, 2, 1] = CT.dJM[1, 1, 2] #d2rdsdϑ
-    CT.dJM[1, 3, 1] = CT.dJM[1, 1, 3] #d2rdsdφ
+    CT.dJM[1, 2, 1] = CT.dJM[1, 1, 2] #d2ψdsdϑ
+    CT.dJM[1, 3, 1] = CT.dJM[1, 1, 3] #d2ψdsdζ
     CT.dJM[2, 2, 1] = CT.dJM[2, 1, 2] #d2θdsdϑ
-    CT.dJM[2, 3, 1] = CT.dJM[2, 1, 3] #d2θdsdφ
-    CT.dJM[1, 3, 2] = CT.dJM[1, 2, 3] #d2rdϑdφ
-    CT.dJM[2, 3, 2] = CT.dJM[2, 2, 3] #d2θdϑdφ
+    CT.dJM[2, 3, 1] = CT.dJM[2, 1, 3] #d2θdsdζ
+    CT.dJM[1, 3, 2] = CT.dJM[1, 2, 3] #d2ψdϑdζ
+    CT.dJM[2, 3, 2] = CT.dJM[2, 2, 3] #d2θdϑdζ
 
     #computes the derivative of the inverse transformation.
     #noteing that (K^-1)' = -(K^-1) @ K' @ (K^-1)
@@ -118,9 +116,9 @@ end
 
 
 """
-    B_transform!(tor_B::BFieldT, qfm_B::BFieldT, qfm_met::MetT, CT::CoordTransformT)
+    met_transform!(tor_met::MetT, qfm_met::MetT, CT::CoordTransformT)
 
-Function that fill out the BFieldT struct for qfm coordinates given the original BFieldT in toroidal coordinaets.
+Function that fill out the MetT struct for qfm coordinates given the original MetT in toroidal coordinaets.
 """
 function met_transform!(tor_met::MetT, qfm_met::MetT, CT::CoordTransformT)
 
@@ -159,11 +157,8 @@ function met_transform!(tor_met::MetT, qfm_met::MetT, CT::CoordTransformT)
     for i in 1:3
         qfm_met.dgu[:, :, i] =  -1 .* qfm_met.gu * qfm_met.dgl[:, :, i] * qfm_met.gu
     end
-    #perhap a try catche here?
-    #sqrt here is annoying for values v close to zero
-    #display((CT.coords[1], CT.coords[2], CT.coords[3]))
+
     qfm_met.J[1] = sqrt(det(qfm_met.gl))
-    #qfm_met.J[1] = sqrt(abs(det(qfm_met.gl)))
 
     # now we take the derivative, noting that 
     # ∂(det(A)) = det(A) * Tr(A^{-1} ∂(A))
@@ -196,7 +191,7 @@ function B_transform!(tor_B::BFieldT, qfm_B::BFieldT, qfm_met::MetT, CT::CoordTr
     end
 
     #same as normal, all in terms of new B and new met.
-    Equilibrium.magnitude_B!(qfm_B, qfm_met)
+    Fields.magnitude_B!(qfm_B, qfm_met)
     for i in 1:3
         qfm_B.b[i] = qfm_B.B[i]/qfm_B.mag_B[1]
     end

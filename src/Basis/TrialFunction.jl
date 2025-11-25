@@ -1,7 +1,8 @@
+"""
+    update_trial_function!(Φ::Array{ComplexF64, 3}, S::HB1dT, m::Int64, n::Int64, dx::Array{Float64}, ts::Array{Float64, 2})
 
-#stupid name, stupid location
-#don't know if this is better or worse than in weakform.
-
+Updates the trial (or test) function for each local element.
+"""
 function update_trial_function!(Φ::Array{ComplexF64, 3}, S::HB1dT, m::Int64, n::Int64, dx::Array{Float64}, ts::Array{Float64, 2})
 
     #reset the tangent scaling to 1.
@@ -38,10 +39,9 @@ end
 
 
 """
-    create_global_basis!(Φ::Array{Float64, 5}, S::HB2d, m::Int64, n::Int64, dx1::Float64, dx2::Float64, ts::Array{Float64, 5})
+    update_trial_function!(Φ::Array{ComplexF64, 5}, S::HB2dT, m::Int64, n::Int64, dx::Array{Float64}, ts::Array{Float64, 4})
 
-Converts the local basis functions into global, by mapping ξ∈[-1, 1] tp x∈[x_i, x_{i+1}].
-Additionally, m represents a phase factor for setting the '0' of the fourier transform to target specific modes.
+Updates the trial (or test) function for each local element.
 """
 function update_trial_function!(Φ::Array{ComplexF64, 5}, S::HB2dT, m::Int64, n::Int64, dx::Array{Float64}, ts::Array{Float64, 4})
 
@@ -83,12 +83,10 @@ end
 
 
 
-
 """
-    create_global_basis!(Φ::Array{Float64, 7}, S::HB3d, m::Int64, n::Int64, dx1::Float64, dx2::Float64, dx3::Float64, ts::Array{Float64, 7})
+    update_trial_function!(Φ::Array{ComplexF64, 7}, S::HB3dT, m::Int64, n::Int64, dx::Array{Float64}, ts::Array{Float64, 6})
 
-Converts the local basis functions into global, by mapping ξ∈[-1, 1] tp x∈[x_i, x_{i+1}].
-Additionally, m and n represent phase factors for setting the '0' of the fourier transform to target specific modes.
+Updates the trial (or test) function for each local element.
 """
 function update_trial_function!(Φ::Array{ComplexF64, 7}, S::HB3dT, m::Int64, n::Int64, dx::Array{Float64}, ts::Array{Float64, 6})
 

@@ -1,7 +1,7 @@
 """
     construct(prob::ProblemT, grids::FFSGridsT)
 
-Constructs the two matrices using the WeakForm of the SAW governing equation. Uses Finite elements with cubic Hermite polynomials in x1 and x2 and the fourier spectral method in x3. Returns two sparse matrices.
+Constructs the two matrices using the PeakForm of the SAP governing equation. Uses Finite elements with cubic Hermite polynomials in x1 and x2 and the fourier spectral method in x3. Returns two sparse matrices.
 
 ### Args
 prob::ProblemT - Struct containing the functions and parameters that define the problem we are solving
@@ -42,21 +42,21 @@ function construct(prob::ProblemT, grids::FFSGridsT)
     #used for constructing sparse matrices.
     rows = Array{Int64}(undef, 0) 
     cols = Array{Int64}(undef, 0) 
-    Idata = Array{ComplexF64}(undef, 0)
-    Wdata = Array{ComplexF64}(undef, 0)
+    Qdata = Array{ComplexF64}(undef, 0)
+    Pdata = Array{ComplexF64}(undef, 0)
 
 
     #determines the indicies in the matrices corresponding to the dirichlet boundary conditions for r.
     boundary_inds = compute_boundary_inds(grids)
 
-    #generalised eval problem WΦ = ω^2 I Φ
-    #these matrices store the local contribution, i.e. at each grid point, for the global matrices I and W.
-    I = init_local_matrix(grids)
-    W = init_local_matrix(grids)
+    #generalised eval problem PΦ = ω^2 Q Φ
+    #these matrices store the local contribution, i.e. at each grid point, for the global matrices Q and P.
+    Q = init_local_matrix(grids)
+    P = init_local_matrix(grids)
 
 
     #creates a fft plan for efficient fft used in spectral method.
-    p = plan_fft!(W, [5])
+    p = plan_fft!(P, [5])
 
     #initialises a struct storing temporary matrices used in the weak form.
     tm = TM()
@@ -73,12 +73,12 @@ function construct(prob::ProblemT, grids::FFSGridsT)
 
 
 
-        #computes the contribution to the W and I matrices.
-        W_and_I!(W, I, B, met, prob, x1, x2, x3grid, tm)
+        #computes the contribution to the P and Q matrices.
+        weak_form!(P, Q, B, met, prob, x1, x2, x3grid, tm)
         
         #fft the two matrices.
-        p * W
-        p * I
+        p * P
+        p * Q
 
         
         #loop over the fourier components of the trial function
@@ -117,8 +117,8 @@ function construct(prob::ProblemT, grids::FFSGridsT)
                                 #diagonals for boundary conditions are set to 1.
                                 push!(rows, left_ind)
                                 push!(cols, right_ind)
-                                push!(Wdata, 1.0 + 0.0im)
-                                push!(Idata, 1.0 + 0.0im)
+                                push!(Pdata, 1.0 + 0.0im)
+                                push!(Qdata, 1.0 + 0.0im)
                             
                             #otherwise the boundaries are set to zero, which for sparse matrices
                             #is the same as leaving blank.
@@ -130,26 +130,26 @@ function construct(prob::ProblemT, grids::FFSGridsT)
                             else
 
                                 #integrate the local contribution to our matrices.
-                                Wsum = @views gauss_integrate(Ψ[testx1, testx2, :, :, :], Φ[trialx1, trialx2, :, :, :], W[:, :, :, :, nind], wgx1, wgx2, jac, grids.x1.gp, grids.x2.gp)
+                                Psum = @views gauss_integrate(Ψ[testx1, testx2, :, :, :], Φ[trialx1, trialx2, :, :, :], P[:, :, :, :, nind], wgx1, wgx2, jac, grids.x1.gp, grids.x2.gp)
 
-                                Isum = @views gauss_integrate(Ψ[testx1, testx2, :, :, :], Φ[trialx1, trialx2, :, :, :], I[:, :, :, :, nind], wgx1, wgx2, jac, grids.x1.gp, grids.x2.gp)
+                                Qsum = @views gauss_integrate(Ψ[testx1, testx2, :, :, :], Φ[trialx1, trialx2, :, :, :], Q[:, :, :, :, nind], wgx1, wgx2, jac, grids.x1.gp, grids.x2.gp)
 
                                 #adds the local contribution to the global structure
                                 push!(rows, left_ind)
                                 push!(cols, right_ind)
-                                push!(Wdata, Wsum)
-                                push!(Idata, Isum)
+                                push!(Pdata, Psum)
+                                push!(Qdata, Qsum)
                             end
                         else
                             
                             #integrate the local contribution to our matrices.
-                            Wsum = @views gauss_integrate(Ψ[testx1, testx2, :, :, :], Φ[trialx1, trialx2, :, :, :], W[:, :, :, :, nind], wgx1, wgx2, jac, grids.x1.gp, grids.x2.gp)
+                            Psum = @views gauss_integrate(Ψ[testx1, testx2, :, :, :], Φ[trialx1, trialx2, :, :, :], P[:, :, :, :, nind], wgx1, wgx2, jac, grids.x1.gp, grids.x2.gp)
 
-                            Isum = @views gauss_integrate(Ψ[testx1, testx2, :, :, :], Φ[trialx1, trialx2, :, :, :], I[:, :, :, :, nind], wgx1, wgx2, jac, grids.x1.gp, grids.x2.gp)
+                            Qsum = @views gauss_integrate(Ψ[testx1, testx2, :, :, :], Φ[trialx1, trialx2, :, :, :], Q[:, :, :, :, nind], wgx1, wgx2, jac, grids.x1.gp, grids.x2.gp)
 
                             #adds the local contribution to the global structure
-                            push!(Wdata, Wsum)
-                            push!(Idata, Isum)
+                            push!(Pdata, Psum)
+                            push!(Qdata, Qsum)
                             push!(rows, left_ind)
                             push!(cols, right_ind)
                             
@@ -163,10 +163,10 @@ function construct(prob::ProblemT, grids::FFSGridsT)
     end
 
     #construct the sparse matrix.
-    Wmat = sparse(rows, cols, Wdata)
-    Imat = sparse(rows, cols, Idata)
+    Pmat = sparse(rows, cols, Pdata)
+    Qmat = sparse(rows, cols, Qdata)
 
-    return Wmat, Imat
+    return Pmat, Qmat
 end
 
 
@@ -217,21 +217,21 @@ function construct(prob::ProblemT, grids::FFSGridsT, surfs::Array{QFMSurfaceT})
     #used for constructing sparse matrices.
     rows = Array{Int64}(undef, 0) 
     cols = Array{Int64}(undef, 0) 
-    Idata = Array{ComplexF64}(undef, 0)
-    Wdata = Array{ComplexF64}(undef, 0)
+    Qdata = Array{ComplexF64}(undef, 0)
+    Pdata = Array{ComplexF64}(undef, 0)
 
 
     #determines the indicies in the matrices corresponding to the dirichlet boundary conditions for r.
     boundary_inds = compute_boundary_inds(grids)
 
-    #generalised eval problem WΦ = ω^2 I Φ
-    #these matrices store the local contribution, i.e. at each grid point, for the global matrices I and W.
-    I = local_matrix_size(grids)
-    W = local_matrix_size(grids)
+    #generalised eval problem PΦ = ω^2 Q Φ
+    #these matrices store the local contribution, i.e. at each grid point, for the global matrices Q and P.
+    Q = local_matrix_size(grids)
+    P = local_matrix_size(grids)
 
 
     #creates a fft plan for efficient fft used in spectral method.
-    p = plan_fft!(W, [5])
+    p = plan_fft!(P, [5])
 
     #initialises a struct storing temporary matrices used in the weak form.
     tm = TM()
@@ -250,13 +250,13 @@ function construct(prob::ProblemT, grids::FFSGridsT, surfs::Array{QFMSurfaceT})
         jac = dx1 * dx2 / 4
 
 
-        #computes the contribution to the W and I matrices.
-        #W_and_I!(W, I, B, met, prob, r, x2, x3grid, tm)
-        W_and_I!(W, I, tor_B, tor_met, qfm_B, qfm_met, prob, x1, x2, x3grid, tm, surf_itp, CT, sd)
+        #computes the contribution to the P and Q matrices.
+        #P_and_Q!(P, Q, B, met, prob, r, x2, x3grid, tm)
+        weak_form!(P, Q, tor_B, tor_met, qfm_B, qfm_met, prob, x1, x2, x3grid, tm, surf_itp, CT, sd)
         
         #fft the two matrices.
-        p * W
-        p * I
+        p * P
+        p * Q
 
         
         #loop over the fourier components of the trial function
@@ -295,8 +295,8 @@ function construct(prob::ProblemT, grids::FFSGridsT, surfs::Array{QFMSurfaceT})
                                 #diagonals for boundary conditions are set to 1.
                                 push!(rows, left_ind)
                                 push!(cols, right_ind)
-                                push!(Wdata, 1.0 + 0.0im)
-                                push!(Idata, 1.0 + 0.0im)
+                                push!(Pdata, 1.0 + 0.0im)
+                                push!(Qdata, 1.0 + 0.0im)
                             
                             #otherwise the boundaries are set to zero, which for sparse matrices
                             #is the same as leaving blank.
@@ -308,26 +308,26 @@ function construct(prob::ProblemT, grids::FFSGridsT, surfs::Array{QFMSurfaceT})
                             else
 
                                 #integrate the local contribution to our matrices.
-                                Wsum = @views gauss_integrate(Ψ[testx1, testx2, :, :, :], Φ[trialx1, trialx2, :, :, :], W[:, :, :, :, nind], wgx1, wgx2, jac, grids.x1.gp, grids.x2.gp)
+                                Psum = @views gauss_integrate(Ψ[testx1, testx2, :, :, :], Φ[trialx1, trialx2, :, :, :], P[:, :, :, :, nind], wgx1, wgx2, jac, grids.x1.gp, grids.x2.gp)
 
-                                Isum = @views gauss_integrate(Ψ[testx1, testx2, :, :, :], Φ[trialx1, trialx2, :, :, :], I[:, :, :, :, nind], wgx1, wgx2, jac, grids.x1.gp, grids.x2.gp)
+                                Qsum = @views gauss_integrate(Ψ[testx1, testx2, :, :, :], Φ[trialx1, trialx2, :, :, :], Q[:, :, :, :, nind], wgx1, wgx2, jac, grids.x1.gp, grids.x2.gp)
 
                                 #adds the local contribution to the global structure
                                 push!(rows, left_ind)
                                 push!(cols, right_ind)
-                                push!(Wdata, Wsum)
-                                push!(Idata, Isum)
+                                push!(Pdata, Psum)
+                                push!(Qdata, Qsum)
                             end
                         else
                             
                             #integrate the local contribution to our matrices.
-                            Wsum = @views gauss_integrate(Ψ[testx1, testx2, :, :, :], Φ[trialx1, trialx2, :, :, :], W[:, :, :, :, nind], wgx1, wgx2, jac, grids.x1.gp, grids.x2.gp)
+                            Psum = @views gauss_integrate(Ψ[testx1, testx2, :, :, :], Φ[trialx1, trialx2, :, :, :], P[:, :, :, :, nind], wgx1, wgx2, jac, grids.x1.gp, grids.x2.gp)
 
-                            Isum = @views gauss_integrate(Ψ[testx1, testx2, :, :, :], Φ[trialx1, trialx2, :, :, :], I[:, :, :, :, nind], wgx1, wgx2, jac, grids.x1.gp, grids.x2.gp)
+                            Qsum = @views gauss_integrate(Ψ[testx1, testx2, :, :, :], Φ[trialx1, trialx2, :, :, :], Q[:, :, :, :, nind], wgx1, wgx2, jac, grids.x1.gp, grids.x2.gp)
 
                             #adds the local contribution to the global structure
-                            push!(Wdata, Wsum)
-                            push!(Idata, Isum)
+                            push!(Pdata, Psum)
+                            push!(Qdata, Qsum)
                             push!(rows, left_ind)
                             push!(cols, right_ind)
                             
@@ -341,9 +341,9 @@ function construct(prob::ProblemT, grids::FFSGridsT, surfs::Array{QFMSurfaceT})
     end
 
     #construct the sparse matrix.
-    Wmat = sparse(rows, cols, Wdata)
-    Imat = sparse(rows, cols, Idata)
+    Pmat = sparse(rows, cols, Pdata)
+    Qmat = sparse(rows, cols, Qdata)
 
-    return Wmat, Imat
+    return Pmat, Qmat
 end
 

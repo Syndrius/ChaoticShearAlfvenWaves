@@ -1,47 +1,50 @@
-
+"""
+This module stores some of the key structures used throughout the package.
+"""
 module Structures
 
 
 using FunctionWrappers
 import FunctionWrappers: FunctionWrapper
-using BSplineKit #not sure if this belongs!
+using BSplineKit 
 
 
-#think this should be split into 3 files:
-#WeakForm -> all structs needed for the weakform -> including Problem!
-#Solver -> structs needed for solving!
-#Grids
-#Fields.
-
+#good
 include("Geometry.jl")
 
-export GeometryT, MetT, init_geometry
+export GeometryT, MetT
 
-#unsure where this belongs tbh!
-include("Island.jl") #TODO BIGTIME
+#good
+include("Island.jl") 
 
 export IslandT, RadialIslandT, FluxIslandT, CoordIslandT
+export init_island
+export no_isl
 
+
+#good
 include("Fields.jl")
 
-export FieldsT, BFieldT, init_fields, FluxFieldsT, RadialFieldsT, IslandFieldsT
+export FieldsT, BFieldT, FluxFieldsT, RadialFieldsT, IslandFieldsT
 
+#good
 include("FLR.jl")
 
-export FLRT, ideal_flr
+export FLRT
+export ideal_flr, init_flr
 
+
+#good
 include("Problem.jl")
 
-export ProblemT, init_problem
+export ProblemT
 
-include("Inputs.jl")
-
-export WeakFormInputsT
-
+#good
 include("QFM.jl")
 
 export SurfaceITPT, TempSurfT, QFMSurfaceT
 
+#good
 include("Output.jl")
 
 export EvalsT, find_ind

@@ -1,6 +1,8 @@
 """
 
-This modules handles the processing of the eigenvalues and eigenfunctions returned by the solver into convenient forms. In particular, the eigenvalues are normalised to the eigenfrequency at the axis, and the eigenfunctions are converted from 1d arrays into 3d arrays reflecting the grid. Additionally, the eigenfunctions are also Fourier transformed in x2 and x3 so the mode structure can be viewed.
+This modules handles the processing of the eigenvalues and eigenfunctions returned by the solver into convenient forms.
+In particular, the eigenvalues are normalised to the eigenfrequency at the axis, and the eigenfunctions are converted from 1d arrays into 3d arrays reflecting the grid.
+Additionally, the eigenfunctions are also Fourier transformed in x2 and x3 so the mode structure can be viewed.
 """
 module PostProcessing
 
@@ -16,15 +18,16 @@ using ..Grids
 export post_process
 
 
+#good
 include("EfuncSize.jl")
 
-
+#good
 include("Reconstruction.jl")
 
-
+#good
 include("FT.jl")
 
-
+#good
 include("Continuum.jl")
 
 
@@ -36,7 +39,7 @@ Processes the eigenvalues and eigenfunctions into useful forms. This involves re
 """
 function post_process(evals::AbstractArray, efuncs::Array{ComplexF64}, grids::GridsT, geo::GeometryT, deriv=false::Bool)
 
-    #deriv is only really valid for fff for now, and probably for a while lol.
+    #deriv is only really valid for fff for now.
 
     #allocates global arrays for storing everyeigenvalue
     ϕ_g, ϕft_g = allocate_phi_arrays(grids, length(evals), deriv=deriv)
@@ -64,8 +67,6 @@ function post_process(evals::AbstractArray, efuncs::Array{ComplexF64}, grids::Gr
         #converts the eigenfunction back into the 3d ϕ, including its fourier transformation in x2 and x3
         reconstruct_phi!(efuncs[:, i], grids, ϕp, ϕpft, plan)
 
-        #ft_phi!(ϕp, ϕft, grids, plan)
-
         #finds the dominant mode and its radial location for continuum reconstruction.
         x1ind, mode_lab = label_mode(ϕpft, grids, x1marray, ϕmarray)
 
@@ -76,18 +77,22 @@ function post_process(evals::AbstractArray, efuncs::Array{ComplexF64}, grids::Gr
         push!(mode_labs, mode_lab)
     end
 
-    #should only take abs for ideal cases, this is just to avoid
-    #tiny negatives that should be zero
-    #alterantively, as per cka, just set any tiny negatives to zero.
-    ω = geo.R0 .* sqrt.(abs.(evals))
-    #ω = geo.R0 .* sqrt.(evals)
+    #normalises the eigenvalues
+    #Floating point errors can lead to small (~10^{-8]) negative eigenvalues.
+    try 
+        #for non-ideal cases this will just return the complex version.
+        global ω = geo.R0 .* sqrt.(evals)
+    catch e
+        big_ω = maximum(-1 .*evals)
+        @printf "Negative real eigenvalues found with largest value %f, taking the absolute.\n" big_ω
+        global ω = geo.R0 .* sqrt.(abs.(evals))
+    end
 
     evals = EvalsT(ω, x1ms, mode_labs)
 
     return evals, ϕ_g, ϕft_g
 
 end
-
 
 
 end

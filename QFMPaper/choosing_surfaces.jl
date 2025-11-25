@@ -152,16 +152,17 @@ cur_colors = palette(:tol_bright);
 lfs = 18
 xfs = 20
 tfs = 16
+dpi = 300
 ylims = (0.0, 1)
 xlims = (15, 45)
-plot(nsurfs, B2mean, palette=:tol_bright, axis=:left, xlimits=xlims, label=L"(B^s)^2", color=cur_colors[1], legendfontsize=lfs, xlabel="Number of QFM Surfaces", xguidefontsize=xfs, xtickfontsize=tfs, ytickfontsize=tfs-3, dpi=1200, legend=:topleft, margin=5Plots.mm, y_foreground_color_border=cur_colors[1], y_foreground_color_axis=cur_colors[1], y_foreground_color_text=cur_colors[1], yaxis=:log)
+plot(nsurfs, log.(B2mean), palette=:tol_bright, axis=:left, xlimits=xlims, label=L"(B^s)^2", color=cur_colors[1], legendfontsize=lfs, xlabel="Number of QFM Surfaces", xguidefontsize=xfs, xtickfontsize=tfs, ytickfontsize=tfs-3, dpi=dpi, legend=:topleft, margin=5Plots.mm, y_foreground_color_border=cur_colors[1], y_foreground_color_axis=cur_colors[1], y_foreground_color_text=cur_colors[1], yaxis=:log)
 
 #plot!(nsurfs, djacdrmean, axis=:right, palette=:tol_bright, label=L"\partial\mathcal{J}/\partial s")
-plot!(twinx(), nsurfs, djacdrmean, palette=:tol_bright, xlimits=xlims, axis=:right, linestyle=:dot,linewidth=3, legend=:topright, label=L"|\partial\mathcal{J}/\partial s|", color=cur_colors[2], legendfontsize=lfs, xguidefontsize=xfs, tickfontsize=tfs, dpi=1200, y_foreground_color_border=cur_colors[2], y_foreground_color_axis=cur_colors[2], y_foreground_color_text=cur_colors[2], markerstrokewidth=10)#, yticklabelcolor=cur_colors[2])
+plot!(twinx(), nsurfs, log.(djacdrmean), palette=:tol_bright, xlimits=xlims, axis=:right, linestyle=:dot,linewidth=3, legend=:topright, label=L"|\partial\mathcal{J}/\partial s|", color=cur_colors[2], legendfontsize=lfs, xguidefontsize=xfs, tickfontsize=tfs, dpi=dpi, y_foreground_color_border=cur_colors[2], y_foreground_color_axis=cur_colors[2], y_foreground_color_text=cur_colors[2], markerstrokewidth=10)#, yticklabelcolor=cur_colors[2])
 
-plot!(twinx(), nsurfs .+ 100, djacdrmean, xlimits=xlims,  palette=:tol_bright, axis=:right, linestyle=:dot,linewidth=1.5, legend=:topright, label=L"|\partial\mathcal{J}/\partial s|", color=cur_colors[2], legendfontsize=lfs, xguidefontsize=xfs, tickfontsize=tfs, dpi=1200, y_foreground_color_border=cur_colors[2], y_foreground_color_axis=cur_colors[2], y_foreground_color_text=cur_colors[2], markerstrokewidth=10)#, yticklabelcolor=cur_colors[2])
+plot!(twinx(), nsurfs .+ 100, log.(djacdrmean), xlimits=xlims,  palette=:tol_bright, axis=:right, linestyle=:dot,linewidth=1.5, legend=:topright, label=L"|\partial\mathcal{J}/\partial s|", color=cur_colors[2], legendfontsize=lfs, xguidefontsize=xfs, tickfontsize=tfs, dpi=dpi, y_foreground_color_border=cur_colors[2], y_foreground_color_axis=cur_colors[2], y_foreground_color_text=cur_colors[2], markerstrokewidth=10)#, yticklabelcolor=cur_colors[2])
 
-savefig("/Users/matt/phd/MID/QFMPaper/results/number_of_surfaces_log.png")
+#savefig("/Users/matt/phd/MID/QFMPaper/results/number_of_surfaces_log.png")
 #%%
 #plot(nsurfs, djacdθmean)
 #why the fek didn't we save the surf_list!!
@@ -173,6 +174,8 @@ save_object("/Users/matt/phd/QFMPaper/djacdrmean.jld2", djacdrmean)
 good_rationals = vcat(rats1, rats2, rats3, rats4, rats5, rats6, rats7, rats8);
 save_object("/Users/matt/phd/QFMPaper/rationals.jld2", good_rationasl)
 #%%
+#ok so these are completly different.
+#just try lower the res, maybe recreate these later!
 nsurfs = load_object("/Users/matt/phd/QFMPaper/nsurfs.jld2");
 surfs_list = load_object("/Users/matt/phd/QFMPaper/surfs_list.jld2");
 B2mean = load_object("/Users/matt/phd/QFMPaper/B2mean.jld2");

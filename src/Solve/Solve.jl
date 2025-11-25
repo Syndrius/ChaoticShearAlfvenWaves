@@ -1,26 +1,31 @@
-
+"""
+Module for solving the generalised eigenvalue problem PΦ = ω^2 QΦ.
+"""
 module Solve
 
 
-#this is a much cleaner module, but we require some kind of normalisation in order to make this work.
-
 using SparseArrays
 using LinearAlgebra
+using Arpack
 
 using ..Structures
+
 
 abstract type SolverT end
 
 
 export solve, SolverT, init_solver
 
-include("Init.jl") #probably want to move this into this file.
+#good
+include("Init.jl") 
 
+#good
 include("FullSpectrumSolve.jl")
 
+#good
 include("SliceSolve.jl")
 
-
+#good
 include("ShiftInvertSolve.jl")
 
 end

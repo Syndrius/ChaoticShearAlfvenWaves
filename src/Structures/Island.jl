@@ -1,9 +1,10 @@
-#this is still v unclear
+#abstract type for generic island
 abstract type IslandT end
 
 """
 Struct storing the island parameters. Only m0, n0 and one of A or w are required.
 Island takes form A*sin(m0*θ + n0*ζ) so m0 and n0 should have different sign.
+Different types are used for multiple dispatch based on radial coordinate.
 
 ### Fields
 - m0::Int64 - The poloidal mode number of the island chain.
@@ -14,65 +15,64 @@ Island takes form A*sin(m0*θ + n0*ζ) so m0 and n0 should have different sign.
 - r0::Float64=NaN - Radial location of island.
 - w::Float64=NaN - Island width in units of r^2/2.
 """
-@kwdef struct RadialIslandT <: IslandT
+
+#geometric radius as radial coordinate
+struct RadialIslandT <: IslandT
     m0 :: Int64 
     n0 :: Int64
-    A :: Float64 = NaN
-    q0 :: Float64 = NaN
-    qp :: Float64 = NaN
-    r0 :: Float64 = NaN
-    w :: Float64 = NaN
+    A :: Float64
+    q0 :: Float64
+    qp :: Float64
+    r0 :: Float64
+    w :: Float64
+end
+
+#toroidal flux as the radial coordinate
+struct FluxIslandT <: IslandT
+    m0 :: Int64 
+    n0 :: Int64
+    A :: Float64
+    q0 :: Float64
+    qp :: Float64
+    ψ0 :: Float64
+    w :: Float64
 end
 
 
-@kwdef struct FluxIslandT <: IslandT
+#Island for case where island straight field line coordinates are used.
+struct CoordIslandT <: IslandT
     m0 :: Int64 
     n0 :: Int64
-    A :: Float64 = NaN
-    q0 :: Float64 = NaN
-    qp :: Float64 = NaN
-    ψ0 :: Float64 = NaN
-    w :: Float64 = NaN
+    A :: Float64
+    q0 :: Float64
+    qp :: Float64
+    ψ0 :: Float64
+    w :: Float64
 end
 
-
-#this is perhaps the only one that actually needs all of this info
-#this is also not a very good name!
-#we could also uniquely define this by r0?
-#but I think our island equiv q actually uses all of this info
-@kwdef struct CoordIslandT <: IslandT
-    m0 :: Int64 
-    n0 :: Int64
-    A :: Float64 = NaN
-    q0 :: Float64 = NaN
-    qp :: Float64 = NaN
-    ψ0 :: Float64 = NaN
-    w :: Float64 = NaN
-end
+const no_isl = FluxIslandT(0, 0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
 """
     init_island(; w::Float64=NaN, m0::Int64, n0::Int64, qp::Float64=NaN, r0::Float64=NaN, A::Float64=NaN)
 
 Initialises the island structure. Many of the extra parameters are filled in once the problem is fully defined.
 """
-function init_island(; w::Float64=NaN, m0::Int64, n0::Int64, qp::Float64=NaN, r0::Float64=NaN, A::Float64=NaN, flux::Bool=false, ψ0::Float64=NaN, coords::Bool=false)
+function init_island(type::Symbol=:ψ; w::Float64=NaN, m0::Int64, n0::Int64, qp::Float64=NaN, r0::Float64=NaN, A::Float64=NaN, ψ0::Float64=NaN)
 
     if isnan(w) && isnan(A)
         display("Please define the island width or amplitude")
         return 0
     end
-    
-    
-    if flux
-        isl = FluxIslandT(m0=m0, n0=n0, A=A, q0 = -m0/n0, qp=qp, ψ0 = ψ0, w=w)
-    elseif coords 
-        isl = CoordIslandT(m0=m0, n0=n0, A=A, q0 = -m0/n0, qp=qp, ψ0 = ψ0, w=w)
+
+    if type in [:r, :radial]
+        isl = RadIslandT(m0, n0, A, -m0/n0, qp, r0, w)
+    elseif type in [:κ, :island, :coords] 
+        isl = CoordIslandT(m0, n0, A, -m0/n0, qp, ψ0, w)
     else
-        isl = RadIslandT(m0=m0, n0=n0, A=A, q0 = -m0/n0, qp=qp, r0 = r0, w=w)
+        isl = FluxIslandT(m0, n0, A, -m0/n0, qp, ψ0, w)
     end
 
     return isl
 
 end
-
 

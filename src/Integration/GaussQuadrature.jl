@@ -1,9 +1,19 @@
 
+"""
+    gauss_points(grids::FSSGridsT)
+
+Returns the Gaussian integration points and corresponding weights
+"""
 function gauss_points(grids::FSSGridsT)
 
     return gausslegendre(grids.x1.gp)
 end
 
+"""
+    gauss_points(grids::FFSGridsT)
+
+Returns the Gaussian integration points and corresponding weights
+"""
 function gauss_points(grids::FFSGridsT)
     ξ1, wg1 = gausslegendre(grids.x1.gp)
     ξ2, wg2 = gausslegendre(grids.x2.gp)
@@ -11,6 +21,11 @@ function gauss_points(grids::FFSGridsT)
     return ξ1, ξ2, wg1, wg2
 end
 
+"""
+    gauss_points(grids::FFFGridsT)
+
+Returns the Gaussian integration points and corresponding weights
+"""
 function gauss_points(grids::FFFGridsT)
     ξ1, wg1 = gausslegendre(grids.x1.gp)
     ξ2, wg2 = gausslegendre(grids.x2.gp)
@@ -34,13 +49,12 @@ function gauss_integrate(Ψ::SubArray{ComplexF64, 2, Array{ComplexF64, 3}}, Φ::
     
         scale = wg[k] * jac
         for j in 1:9, i in 1:9
-            #significantly faster to have * jac here not later!
+            #significantly faster to have * jac here 
             res += @inbounds Ψ[i, k] * Φ[j, k] * mat[i, j, k] * scale
 
         end
     end
-    #res *= jac
-    return res #* dr / 2 
+    return res 
 end
 
 

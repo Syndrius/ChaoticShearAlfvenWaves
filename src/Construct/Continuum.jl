@@ -48,20 +48,20 @@ function continuum(prob::ProblemT, grids::ContGridsT)
     ωlist = zeros(grids.x1.N, mat_size)
 
     #matrices for the local contribution to the global matrices.#
-    I = init_local_matrix(grids)
-    W = init_local_matrix(grids)
+    Q = init_local_matrix(grids)
+    P = init_local_matrix(grids)
 
     #should be a function!
-    Imat = zeros(ComplexF64, mat_size, mat_size)
-    Wmat = zeros(ComplexF64, mat_size, mat_size)
+    Qmat = zeros(ComplexF64, mat_size, mat_size)
+    Pmat = zeros(ComplexF64, mat_size, mat_size)
 
     #sub matrices storing the relavant parts for continuum computation.
-    Icont = zeros(1, 1, 1, Nx2, Nx3)
-    Wcont = zeros(3, 3, 1, Nx2, Nx3)
+    Qcont = zeros(1, 1, 1, Nx2, Nx3)
+    Pcont = zeros(3, 3, 1, Nx2, Nx3)
 
     #Plans for efficient fourier transform
-    pI = plan_fft(Icont, [4, 5])
-    pW = plan_fft(Wcont, [4, 5])
+    pQ = plan_fft(Qcont, [4, 5])
+    pP = plan_fft(Pcont, [4, 5])
 
 
     #struct for storing temp matrices used for the weakform.
@@ -71,15 +71,15 @@ function continuum(prob::ProblemT, grids::ContGridsT)
     for (i, x1) in enumerate(x1grid) 
 
         #computes the full weakform
-        W_and_I!(W, I, B, met, prob, [x1], x2grid, x3grid, tm)
+        weak_form!(P, Q, B, met, prob, [x1], x2grid, x3grid, tm)
 
         #For the continuum we extract the relevant second derivative parts
         #seems like this could be done in place tbh!
-        Icont = pI * I[[1], [1], :, :, :]
-        Wcont = pW * W[[1, 5, 6], [1, 5, 6], :, :, :]
+        Qcont = pQ * Q[[1], [1], :, :, :]
+        Pcont = pP * P[[1, 5, 6], [1, 5, 6], :, :, :]
         
-        Imat .= 0.0 + 0.0im
-        Wmat .= 0.0 + 0.0im
+        Qmat .= 0.0 + 0.0im
+        Pmat .= 0.0 + 0.0im
 
         #loop over the fourier components of the trial function
         for (k1,m1) in enumerate(mlist), (l1, n1) in enumerate(nlist)
@@ -99,12 +99,12 @@ function continuum(prob::ProblemT, grids::ContGridsT)
                 nind = mod(l1-l2 + Nx3, Nx3) + 1
 
                 #silly matrix dims, but keeps it consistent.
-                Imat[left_ind, right_ind] += Icont[1, 1, 1, mind, nind]
+                Qmat[left_ind, right_ind] += Qcont[1, 1, 1, mind, nind]
 
                 #contract over the different derivatives.
                 for j in 1:3
                     for k in 1:3
-                        Wmat[left_ind, right_ind] += Ψ[j] * Wcont[j, k, 1, mind, nind] * Φ[k]
+                        Pmat[left_ind, right_ind] += Ψ[j] * Pcont[j, k, 1, mind, nind] * Φ[k]
                     end
                          
                 end
@@ -112,7 +112,7 @@ function continuum(prob::ProblemT, grids::ContGridsT)
         end
 
         
-        vals = eigvals(Hermitian(Wmat), Hermitian(Imat))
+        vals = eigvals(Hermitian(Pmat), Hermitian(Qmat))
 
         #normalise the eigenvalues
         #abs here is not ideal.
@@ -132,7 +132,7 @@ function continuum(prob::ProblemT, grids::ContGridsT)
     #=
     evals_ω = ComplexF64[]
     evals_x1 = Float64[]
-    evals_ml = Tuple{Int64, Int64}[]
+    evals_ml = Tuple{Qnt64, Qnt64}[]
 
     for i in 1:grids.x1.N
         for j in 1:grids.x2.N * grids.x3.N
@@ -187,20 +187,20 @@ function continuum(prob::ProblemT, grids::ContGridsT, surfs::Array{QFMSurfaceT})
     ωlist = zeros(grids.x1.N, mat_size)
 
     #pretty sure we have functions to do a bunch of this shite.
-    I = local_matrix_size(grids)
-    W = local_matrix_size(grids)
+    Q = local_matrix_size(grids)
+    P = local_matrix_size(grids)
 
-    Imat = zeros(ComplexF64, mat_size, mat_size)
-    Wmat = zeros(ComplexF64, mat_size, mat_size)
+    Qmat = zeros(ComplexF64, mat_size, mat_size)
+    Pmat = zeros(ComplexF64, mat_size, mat_size)
 
     #so turns out our original continuum funciton is garbage.
-    Icont = zeros(1, 1, 1, Nx2, Nx3)
+    Qcont = zeros(1, 1, 1, Nx2, Nx3)
 
-    Wcont = zeros(3, 3, 1, Nx2, Nx3)
+    Pcont = zeros(3, 3, 1, Nx2, Nx3)
 
     #probably not how this works.
-    pI = plan_fft(Icont, [4, 5])
-    pW = plan_fft(Wcont, [4, 5])
+    pQ = plan_fft(Qcont, [4, 5])
+    pP = plan_fft(Pcont, [4, 5])
 
     #structs storing temporary arrays.
     CT = CoordTransformT()
@@ -210,15 +210,15 @@ function continuum(prob::ProblemT, grids::ContGridsT, surfs::Array{QFMSurfaceT})
 
 
         #computes the weakform and coordinate transform
-        W_and_I!(W, I, tor_B, tor_met, qfm_B, qfm_met, prob, [s], x2grid, x3grid, tm, surf_itp, CT, sd)
+        weak_form!(P, Q, tor_B, tor_met, qfm_B, qfm_met, prob, [s], x2grid, x3grid, tm, surf_itp, CT, sd)
 
 
-        Icont = pI * I[[1], [1], :, :, :]
-        Wcont = pW * W[[1, 5, 6], [1, 5, 6], :, :, :]
+        Qcont = pQ * Q[[1], [1], :, :, :]
+        Pcont = pP * P[[1, 5, 6], [1, 5, 6], :, :, :]
         
 
-        Imat .= 0.0
-        Wmat .= 0.0
+        Qmat .= 0.0
+        Pmat .= 0.0
 
         for (k1,m1) in enumerate(mlist), (l1, n1) in enumerate(nlist)
 
@@ -237,12 +237,12 @@ function continuum(prob::ProblemT, grids::ContGridsT, surfs::Array{QFMSurfaceT})
                 nind = mod(l1-l2 + Nx3, Nx3) + 1
 
                 #silly matrix dims, but keeps it consistent.
-                Imat[left_ind, right_ind] += Icont[1, 1, 1, mind, nind]
+                Qmat[left_ind, right_ind] += Qcont[1, 1, 1, mind, nind]
 
                 #contract over the different derivatives.
                 for j in 1:3
                     for k in 1:3
-                        Wmat[left_ind, right_ind] += Ψ[j] * Wcont[j, k, 1, mind, nind] * Φ[k]
+                        Pmat[left_ind, right_ind] += Ψ[j] * Pcont[j, k, 1, mind, nind] * Φ[k]
                     end
                          
                 end
@@ -250,8 +250,8 @@ function continuum(prob::ProblemT, grids::ContGridsT, surfs::Array{QFMSurfaceT})
         end
 
         #not sure if this will always be Hermitian
-        vals = eigvals(Hermitian(Wmat), Hermitian(Imat))
-        #vals = eigvals(Wmat, Imat)
+        vals = eigvals(Hermitian(Pmat), Hermitian(Qmat))
+        #vals = eigvals(Pmat, Qmat)
 
         ωlist[i, :] = prob.geo.R0 * sqrt.(abs.(vals))
     end

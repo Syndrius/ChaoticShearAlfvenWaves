@@ -14,7 +14,7 @@ grids = init_grids(ψgrid, θgrid, ζgrid)
 
 solver = init_solver(full_spectrum=true, prob=prob)
 
-evals, _, _ = compute_spectrum(prob=prob, grids=grids, solver=solver);
+evals, _, _ = compute_spectrum(prob, grids, solver);
 
 
 tae_ind = find_ind(evals, 0.2709)

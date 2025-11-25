@@ -1,60 +1,51 @@
 """
 
-Module for indexing our matrices. Deals with the mapping between 3d space and the matrix. Split into the different cases for different grids.
+Module for creating and working with the grids.
+This includes indexing between grids and matrices and creating the trial and test functions.
 """
 module Grids
 
 
-#import ..ChaoticShearAlfvenWaves: GridsT
-
 using ..Basis
 
-abstract type GridsT end #do we want this...?
+#abstract 1d grid.
 abstract type GridT end
 
-
-include("ContGrid.jl") #fine, probably needs to be incorporated properly
-include("SMGrid.jl") #mostly fine will change if we modify the SM basis.
-include("FEMGrid.jl") #fineish
+#good
+include("ContGrid.jl") 
+#good
+include("SMGrid.jl") 
+#good
+include("FEMGrid.jl") 
+#good
 include("ThreeDGrids.jl")
 
 export GridsT, FSSGridsT, FFSGridsT, FFFGridsT, ContGridsT
 export FEMGridT, SMGridT
-export init_grids, init_grid
-export inst_grids, mode_list, mode_label, periodic_grid, ifft_size, inst_grid
+export init_grids, init_grid, inst_grid, inst_grids
+export mode_list, mode_label, periodic_grid, ifft_size
 
-
-include("Boundaries.jl") #either fine, or needs a complete rewrite, depending on desire for flexible boundaries.
+#good
+include("Boundaries.jl") 
 
 export compute_boundary_inds
 
 
-include("Indexing.jl") #same as boundaries, currently fine, but if we want flexibility, this will all need to be rewritten.
+#good
+include("Indexing.jl") 
 
 export grid_to_index
 export index_to_grid
 
-
-#include("Basis.jl") #kind of weird, but will allow future changes more easily.
-
-#export create_basis
-
-
-include("MatrixSize.jl") #could be generalised if we take that approach
+#good
+include("MatrixSize.jl") 
 
 export matrix_size, init_trial_function, init_local_matrix
 
-#this is a stupid name!
+#good
 include("LocalBasis.jl")
 
-export local_to_global!, local_to_global #not super sure this should be in here.
-
-#probably a sign this module has gone to far tbh!
-#perhaps a trial function module on its own? 
-#this is always going to be awkward due to needing the basis, grids and arguably the weak form for this,
-include("TrialFunction.jl")
-
-export update_trial_function!
+export local_to_global!
 
 
 end

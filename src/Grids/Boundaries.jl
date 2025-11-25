@@ -1,5 +1,3 @@
-#unsure if we want to change this, this is awfully unclear, but I am not sure the other way works.
-#if we want a more general case, we will have to change this.
 
 """
     compute_boundary_inds(grids::FFFGridsT)

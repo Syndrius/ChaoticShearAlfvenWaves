@@ -1,2 +1,0 @@
-
-#test with island coordinates

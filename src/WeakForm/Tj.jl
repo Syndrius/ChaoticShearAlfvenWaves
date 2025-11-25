@@ -1,11 +1,11 @@
 """
-    function Tj!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, B::BFieldT, met::MetT, Γ::Array{Float64, 2}, dΓ::Array{Float64, 3}, K::Array{Float64})
+    function Tj!(P::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, B::BFieldT, met::MetT, Γ::Array{Float64, 2}, dΓ::Array{Float64, 3}, K::Array{Float64})
 
-Computes the current term contribution for W.
+Computes the current term contribution for P.
 Tj  is given by the expression;
 Γ_i^n ∂_nΨ 1/J ϵ^{ijk}(Γ_k^q∂_j∂_qΦ + ∂_j(Γ_k^q)∂_qΦ) + Γ_i^n ∂_nΦ 1/J ϵ^{ijk}(Γ_k^q∂_j∂_qΨ + ∂_j(Γ_k^q)∂_qΨ)
 """
-function Tj!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, B::BFieldT, met::MetT, Γ::Array{Float64, 2}, dΓ::Array{Float64, 3}, K::Array{Float64})
+function Tj!(P::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, B::BFieldT, met::MetT, Γ::Array{Float64, 2}, dΓ::Array{Float64, 3}, K::Array{Float64})
 
     #scale factor for this term.
     sf = - met.J[1] * jparonB(B, met) / 2.0
@@ -18,7 +18,7 @@ function Tj!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, B::BFieldT, met::
 
         K .= 0.0
 
-        #computes K, contribution to W for ∂^2 terms without Γ derivatives.
+        #computes K, contribution to P for ∂^2 terms without Γ derivatives.
         compute_K!(met, Γ, K, n)
 
         #this loop computes the contributions for first derivatives,
@@ -31,14 +31,14 @@ function Tj!(W::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, B::BFieldT, met::
             end
 
             #transpose is added to reflect that the two terms of Tj are identical except Ψ -> Φ.
-            W[n, q] += val * sf
-            W[q, n] += val * sf
+            P[n, q] += val * sf
+            P[q, n] += val * sf
         end
 
         #add the K contributions.
         #transpose is added to reflect that the two terms of Tj are identical except Ψ -> Φ.
-        W[n, 4:9] .+= K .* sf
-        W[4:9, n] .+= K .* sf
+        P[n, 4:9] .+= K .* sf
+        P[4:9, n] .+= K .* sf
 
     end
 
@@ -48,7 +48,7 @@ end
 """
     function compute_K!(met::MetT, Γ::Array{Float64}, K::Array{Float64}, n::Int64)
 
-Computes the K vector, which stores the contribution for Tj for the double derivative terms, i.e. W[4:9]
+Computes the K vector, which stores the contribution for Tj for the double derivative terms, i.e. P[4:9]
 """
 function compute_K!(met::MetT, Γ::Array{Float64}, K::Array{Float64}, n::Int64)
 
@@ -102,7 +102,7 @@ end
 """
     jparonB(B::BFieldT, met::MetT)
 
-Computes the parrallel current divided by the magnitude of B, needed for the current term of W.
+Computes the parrallel current divided by the magnitude of B, needed for the current term of P.
 """
 function jparonB(B::BFieldT, met::MetT)
   

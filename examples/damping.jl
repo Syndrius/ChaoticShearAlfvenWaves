@@ -1,17 +1,23 @@
+#think at the end of this one, we might mention that other FLR things exist
+#but are still experimental.
 
-#replicate Axel's damping case.
+#Current set up adequatly replicated Bowden Singular.
+#the frequency is a bit off due to difference in equations.
 using MID
+using Plots; plotlyjs()
+using MIDViz
 #%%
 
 #how the fek are we initialising this????
 #we want to specify) the geometry and the fields to match coordinates right?
 #think the met should be given as a symbol, :torus, :cyl, :island etc.
-geo = init_geometry(10.0, met=MID.Geometry.rad_toroidal_metric!)
+geo = init_geometry(:tor, R0=10.0)
 
-fields = init_fields(q=axel_q, dens=axel_dens)
+fields = init_fields(:r, q=damping_q, dens=damping_dens)
 
 #does this need to be negative?
-flr = init_flr(δ=1e-7)
+flr = init_flr(δ=-4.0e-9)
+#%%
 #perhaps within init_prob we actually set the met function properly?
 #I am assuming we will have to recreate geo and fields
 #which is probably ok.
@@ -40,13 +46,32 @@ flr = init_flr(δ=1e-7)
 #so geo will probably need to store 2 symbols:
 #one for the actual geometry, :cyl, :tor etc
 #one for flux vs radius vs kappa. #may even be able to incorporate qfm in here somehow.
-prob = init_problem(geo=geo, fields=fields, flr=flr)
+prob = init_problem(geometry=geo, fields=fields, flr=flr)
 #%%
 
-rgrid = init_grid(:r, 100, sep1=0.85, sep2=0.95, frac=0.5)
-θgrid = init_grid(:sm, 2, start=2)
-ζgrid = init_grid(:sm, 1, start=-2)
+rgrid = init_grid(:r, 1000, sep1=0.75, sep2=0.78, frac=0.5)
+θgrid = init_grid(:sm, 2, start=1)
+ζgrid = init_grid(:sm, 1, start=-1)
 
 grids = init_grids(rgrid, θgrid, ζgrid)
+#%%
+solver = init_solver(prob=prob, full_spectrum=true)
+solver = init_solver(prob=prob, target=0.323)
+#%%
+#looks to be working now, just converging to a slightly different value
+#seem to need 1000 points before the tae is clear!
+evals, ϕ, ϕft = compute_spectrum(prob, grids, solver);
+
+continuum_plot(evals)
+
+#find_ind is no fkn good.
+ind = find_ind(evals, 0.323)
+ind = 1
+evals.ω[ind]
+imag(evals.ω[ind]) / real(evals.ω[ind]) 
+
+#not perfect, but this example is adequate I think.
+harmonic_plot(ϕft, grids, ind)
+
 
 

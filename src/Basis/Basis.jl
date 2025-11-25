@@ -1,36 +1,25 @@
 """
 
-Deals with the Hermite basis functions in 1, 2 and 3 dimensions and modifies the trial and test functions based on the local derivatives.
+Deals with the Hermite basis functions in 1, 2 and 3 dimensions for the finite element method. 
 """
 module Basis
 
-#Maybe consider moving some of MatrixSize and LocalBasis to Indexing. -> probably only if we ever generalise this code to allow different basis functions,
 
 using ..Structures
 
 
-
-#include("MatrixSize.jl")
-
-#export local_matrix_size 
-#export matrix_size 
-#export init_basis_function
-
-
+#good
 include("ShapeFunctions.jl")
 
-
+#good
 include("Hermite.jl")
 
 export hermite_basis, HB1dT, HB2dT, HB3dT, grid_id, basis_id
 
+#good
+include("TrialFunction.jl")
 
-
-#include("LocalBasis.jl")
-
-#export create_global_basis!
-#export local_to_global #arguably belongs in indexing...
-
+export update_trial_function!
 
 
 end

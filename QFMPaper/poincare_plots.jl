@@ -27,7 +27,7 @@ conv_num2 = 11 #14 causes us to run out of mem, takes fkn ages.#probably want th
 #stuart uses 22nd convergents, for that we will need Gadi. -> his case is also just above the critical threshold!
 ylims = (0.5, 2/3)
 tfs = 16
-dpi = 600
+dpi = 300
 msize = 0.7
 msize1 = 1.7
 msize2 = 1.7
@@ -75,7 +75,7 @@ Ntraj = 151
 ψvals = collect(LinRange(0.35, 0.8, Ntraj));
 θvals = zeros(Ntraj);
 k0 = 0.0
-k05 = 0.0005 #shit example
+k05 = 0.0005 
 k08 = 0.0008
 k10 = 0.0010
 k11 = 0.0011
@@ -88,8 +88,10 @@ k = k0
 isl1 = init_island(m0=3, n0=-2, A=k/3, flux=true)
 isl2 = init_island(m0=4, n0=-3, A=k/4, flux=true)
 isls = MID.IslandT[isl1, isl2]
-geo = init_geo(R0=1.0)
-prob = init_problem(q=cantori_q, geo=geo, met=:cylinder, isls=isls, type=:flux)
+geo = init_geometry(:cyl, R0=1.0)
+fields = init_fields(:ψ, q=cantori_q, isls=isls) 
+prob = init_problem(geometry=geo, fields=fields)
+#prob = init_problem(q=cantori_q, geo=geo, met=:cylinder, isls=isls, type=:flux)
 
 r01, θ01 = periodic_orbit(a1, b1, 4, k)
 r02, θ02 = periodic_orbit(a2, b2, 4, k)
@@ -106,13 +108,38 @@ scatter!(x1[1, :], z1[1, :], markersize=msize1, color=c1, label=L"\iota_1", mark
 scatter!(x1[2, :], z1[2, :], markersize=msize2, color=c2, label=L"\iota_2", markershape=shape2)
 savefig("~/phd/MID/QFMPaper/results/k0_poincare.png")
 #%%
-#k05 is a shit example.
+k = k05
+isl1 = init_island(m0=3, n0=-2, A=k/3, flux=true)
+isl2 = init_island(m0=4, n0=-3, A=k/4, flux=true)
+isls = MID.IslandT[isl1, isl2]
+geo = init_geometry(:cyl, R0=1.0)
+fields = init_fields(:ψ, q=cantori_q, isls=isls) 
+prob = init_problem(geometry=geo, fields=fields)
+
+#r01, θ01 = MIDCantori.QFM.anal_periodic_orbit(a1, b1, 4, k)
+r01, θ01 = periodic_orbit(a1, b1, 4, k)
+r02, θ02 = periodic_orbit(a2, b2, 4, k)
+x, z = poincare_plot(prob, 1000, ψvals, θvals);
+x1, z1 = poincare_plot(prob, 5000, [r01[1], r02[1]], [θ01[1], θ02[1]]);
+#x1, z1 = poincare_plot(prob, 2000, [r02[1]], [θ02[1]]);
+#x2, z2 = poincare_plot(prob, 2000, [x0s[1, 2]], [x0s[2, 2]]);
+#%%
+scatter(x, z, ylimits=ylims, markersize=msize, legend=false, color=:black, xlabel=L"\theta", ylabel=L"\psi", xguidefontsize=xfs, yguidefontsize=yfs, xtickfontsize=xtfs, ytickfontsize=ytfs, dpi=dpi)
+#scatter(x, z, ylimits=ylims, markersize=msize, label=false, color=:black, xlabel=L"\theta", ylabel=L"\psi", xguidefontsize=xfs, yguidefontsize=yfs, xtickfontsize=xtfs, ytickfontsize=ytfs, dpi=dpi)
+savefig("~/phd/MID/QFMPaper/results/k05_no_ir_poincare.png")
+scatter!(x1[1, :], z1[1, :], markersize=msize1, color=c1, label=L"\iota_1", markershape=shape1)
+#scatter!(x2[1, :], z2[1, :], markersize=msize1, color=c1, label=L"\iota_1", markershape=shape1)
+scatter!(x1[2, :], z1[2, :], markersize=msize2, color=c2, label=L"\iota_2", markershape=shape2)
+savefig("~/phd/MID/QFMPaper/results/k05_poincare.png")
+
+#%%
 k = k08
 isl1 = init_island(m0=3, n0=-2, A=k/3, flux=true)
 isl2 = init_island(m0=4, n0=-3, A=k/4, flux=true)
 isls = MID.IslandT[isl1, isl2]
-geo = init_geo(R0=1.0)
-prob = init_problem(q=cantori_q, geo=geo, met=:cylinder, isls=isls, type=:flux)
+geo = init_geometry(:cyl, R0=1.0)
+fields = init_fields(:ψ, q=cantori_q, isls=isls) 
+prob = init_problem(geometry=geo, fields=fields)
 
 #r01, θ01 = MIDCantori.QFM.anal_periodic_orbit(a1, b1, 4, k)
 r01, θ01 = periodic_orbit(a1, b1, 4, k)
@@ -136,8 +163,9 @@ k = k10
 isl1 = init_island(m0=3, n0=-2, A=k/3, flux=true)
 isl2 = init_island(m0=4, n0=-3, A=k/4, flux=true)
 isls = MID.IslandT[isl1, isl2]
-geo = init_geo(R0=1.0)
-prob = init_problem(q=cantori_q, geo=geo, met=:cylinder, isls=isls, type=:flux)
+geo = init_geometry(:cyl, R0=1.0)
+fields = init_fields(:ψ, q=cantori_q, isls=isls) 
+prob = init_problem(geometry=geo, fields=fields)
 
 #r01, θ01 = MIDCantori.QFM.anal_periodic_orbit(a1, b1, 4, k)
 r01, θ01 = periodic_orbit(a1, b1, 4, k)
@@ -161,8 +189,9 @@ k = k11
 isl1 = init_island(m0=3, n0=-2, A=k/3, flux=true)
 isl2 = init_island(m0=4, n0=-3, A=k/4, flux=true)
 isls = MID.IslandT[isl1, isl2]
-geo = init_geo(R0=1.0)
-prob = init_problem(q=cantori_q, geo=geo, met=:cylinder, isls=isls, type=:flux)
+geo = init_geometry(:cyl, R0=1.0)
+fields = init_fields(:ψ, q=cantori_q, isls=isls) 
+prob = init_problem(geometry=geo, fields=fields)
 
 #r01, θ01 = MIDCantori.QFM.anal_periodic_orbit(a1, b1, 4, k)
 r01, θ01 = periodic_orbit(a1, b1, 4, k)
@@ -184,8 +213,9 @@ k = k12
 isl1 = init_island(m0=3, n0=-2, A=k/3, flux=true)
 isl2 = init_island(m0=4, n0=-3, A=k/4, flux=true)
 isls = MID.IslandT[isl1, isl2]
-geo = init_geo(R0=1.0)
-prob = init_problem(q=cantori_q, geo=geo, met=:cylinder, isls=isls, type=:flux)
+geo = init_geometry(:cyl, R0=1.0)
+fields = init_fields(:ψ, q=cantori_q, isls=isls) 
+prob = init_problem(geometry=geo, fields=fields)
 
 #r01, θ01 = MIDCantori.QFM.anal_periodic_orbit(a1, b1, 4, k)
 r01, θ01 = periodic_orbit(a1, b1, 4, k)
@@ -208,8 +238,9 @@ k = k13
 isl1 = init_island(m0=3, n0=-2, A=k/3, flux=true)
 isl2 = init_island(m0=4, n0=-3, A=k/4, flux=true)
 isls = MID.IslandT[isl1, isl2]
-geo = init_geo(R0=1.0)
-prob = init_problem(q=cantori_q, geo=geo, met=:cylinder, isls=isls, type=:flux)
+geo = init_geometry(:cyl, R0=1.0)
+fields = init_fields(:ψ, q=cantori_q, isls=isls) 
+prob = init_problem(geometry=geo, fields=fields)
 
 #r01, θ01 = MIDCantori.QFM.anal_periodic_orbit(a1, b1, 4, k)
 r01, θ01 = periodic_orbit(a1, b1, 4, k) #now way above critical value, starts to become difficult. #can probably just pick a roughly close value!
@@ -232,8 +263,9 @@ k = k15
 isl1 = init_island(m0=3, n0=-2, A=k/3, flux=true)
 isl2 = init_island(m0=4, n0=-3, A=k/4, flux=true)
 isls = MID.IslandT[isl1, isl2]
-geo = init_geo(R0=1.0)
-prob = init_problem(q=cantori_q, geo=geo, met=:cylinder, isls=isls, type=:flux)
+geo = init_geometry(:cyl, R0=1.0)
+fields = init_fields(:ψ, q=cantori_q, isls=isls) 
+prob = init_problem(geometry=geo, fields=fields)
 #r01, θ01 = MIDCantori.QFM.anal_periodic_orbit(a1, b1, 4, k)
 r01, θ01 = periodic_orbit(a1, b1, 4, k)
 r02, θ02 = periodic_orbit(a2, b2, 4, k)
@@ -255,13 +287,14 @@ k = k17
 isl1 = init_island(m0=3, n0=-2, A=k/3, flux=true)
 isl2 = init_island(m0=4, n0=-3, A=k/4, flux=true)
 isls = MID.IslandT[isl1, isl2]
-geo = init_geo(R0=1.0)
-prob = init_problem(q=cantori_q, geo=geo, met=:cylinder, isls=isls, type=:flux)
+geo = init_geometry(:cyl, R0=1.0)
+fields = init_fields(:ψ, q=cantori_q, isls=isls) 
+prob = init_problem(geometry=geo, fields=fields)
 #r01, θ01 = MIDCantori.QFM.anal_periodic_orbit(a1, b1, 4, k)
 r01, θ01 = periodic_orbit(a1, b1, 4, k)
 r02, θ02 = periodic_orbit(a2, b2, 4, k)
 x, z = poincare_plot(prob, 1000, ψvals, θvals);
-x1, z1 = poincare_plot(prob, 20000, [r01[1], r02[1]], [θ01[1], θ02[1]]);
+x1, z1 = poincare_plot(prob, 50000, [r01[1], r02[1]], [θ01[1], θ02[1]]);
 #ok so we just have to run this for longer!
 #now we see that the orbit can go basically anywhere.
 #x1, z1 = poincare_plot(prob, 10000, [r02[1]], [θ02[1]]);

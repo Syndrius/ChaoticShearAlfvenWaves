@@ -1,4 +1,5 @@
 
+#define the order of the shape functions.
 const grid_id = [0, 0, 1, 1]
 const basis_id = [0, 1, 0, 1]
 

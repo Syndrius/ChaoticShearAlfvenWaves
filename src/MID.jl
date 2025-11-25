@@ -47,17 +47,25 @@ Current term is back on, it is working fine, may need higher res for best result
 
 module MID
 
+#submodules to fix
+#construct
+#mapping
+
+
 #things to actually do!
 #fix perN continuum
 #fix test cases, including helmholtz, island and damping etc -> helmholtz will be no more -> use generic FEM (change name to MID lol) for benchmarking in thesis.
 #delete all the extra random af files and stuff.
 #get the extra packages actually working
 #will be essential for the examples...
-#remove gaussquadrature from construct, perhaps fft as well.
-#will need to fix q-profiles and density etc -> rename fu_dam_q to quadratic_q
-#we could probably at least change some of the indexing to Cartesian indices, eg the test/trial in fff is gross
 #get qfm working again, will be fookin annoying. -> might be worth fully fixing up construct etc first, so functions looks the same. -> may even want to split the QFM up a bit.
 #islands, the structs and all related ufnctions, are still cooked af.
+#looks like we might need to fix slepcwrap after all lol -> cannot really get MIDParallel to compile anymore. old MPI version is conflicting with ordinary Diff eq.
+#alternatively, we can just create two different environments, one with parallel and one with ordinarydiffeq, until it is fixed. -> may be a more practical solution until thesis is done.
+#allow single island input in init_fields..
+#change W, I to P, Q to match paper and eventually thesis.
+#perhaps even change ζ to φ to match paper -> ideally we can determine what toroidal and cylindrical will actually be in general and make our code consistent with that!
+#gotta change the fkn spelling of separatrix....
 
 ####################################
 
@@ -65,68 +73,45 @@ module MID
 #we might have to settle for the 3d version though!
 #but it should still be possible!
 
+#good, assuming nothing else changes.
 include("Structures/Structures.jl")
 
-using ..Structures; export find_ind
+using ..Structures; export find_ind, init_flr, init_island
 
 
-#move MetT to structures
-#create Geometry struct 
-#init will be in here.
+#good
 include("Geometry/Geometry.jl")
 
 using ..Geometry; export init_geometry 
 
 
-
-#change to fields
-#move islands to here -> maybe not tbh as islands are needed for the island met...
-#move BFieldT to structures.
-#create initialisation structure.
+#good
 include("Fields/Fields.jl")
 
-using ..Fields; export init_fields
-using ..Fields; export fu_dam_q
-using ..Fields; export qfm_q
-using ..Fields; export low_shear_qfm_q
-using ..Fields; export qfm_benchmark_q
-using ..Fields; export island_q
-using ..Fields; export cantori_q
+using ..Fields; export init_fields 
+using ..Fields; export quadratic_q, island_q, damping_q, gae_q, cantori_q
+using ..Fields; export uniform_dens, damping_dens, gae_dens
 
 
-
-#think grids/basis/integration still kind of go together
-#same as geometry/fields/weakform.
-#then I guess we have construct/qfm/mapping?
-
-#needs to be more clearly defined as a single module.
+#good
 include("Basis/Basis.jl")
 
-#merged with grids.
-#new version of Gridding is defs better.
+
+#good
 include("Grids/Grids.jl")
 
 using ..Grids; export init_grids, init_grid, init_fem_grid, init_sm_grid
 
 
-#maybe move some fft stuff here? probably not worth it tbh.
-#maybe we could shift more of the integration into here
-#just to reduce the huge number of loops needed?
+#good
 include("Integration/Integration.jl")
 
 
-#almost certianly cooked af.
+#good
 include("QFM/QFM.jl")
 
-using ..QFM; export construct_surfaces
-using ..QFM; export farey_tree
-using ..QFM; export lowest_rationals
-using ..QFM; export surface_guess
-using ..QFM; export compute_jac #perhaps shouldn't be exported
 
-
-
-#can probbaly remove types to make this more indep.
+#good
 include("Io/Io.jl")
 
 using ..Io; export inputs_to_file
@@ -136,17 +121,10 @@ using ..Io; export efunc_from_file
 #using MID.Io; export fortran_process #not sure what to do with this tbh, clearly belongs somewhere else. Will have to see how much it is used in the future
 
 
-#probably mostly ok.
+#good
 include("PostProcessing/PostProcessing.jl")
 
-
-#mostly ok
-#think this form is actually better tbh.
-#this can go much earlier in the order
-#we will also move the problem into the weakform
-#as the problem is the key piece that allows the weakform to function!
-#ideallly, we should be able to make this work without needing feilds or geometry at all.
-#but they will be needed for initialisation.
+#good
 include("WeakForm/WeakForm.jl")
 
 using ..WeakForm; export init_problem, inst_problem
@@ -155,13 +133,13 @@ using ..WeakForm; export init_problem, inst_problem
 include("Construct/Construct.jl")
 
 
-#should still change from solve to spectrum I think.
+#good
 include("Solve/Solve.jl")
 
-#using ..Solve; export compute_spectrum
-#using ..Solve; export compute_spectrum_qfm
 using ..Solve; export init_solver
 
+
+#good
 include("Spectrum/Spectrum.jl")
 
 using ..Spectrum; export compute_spectrum

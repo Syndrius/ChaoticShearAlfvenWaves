@@ -24,7 +24,6 @@ function label_mode(ϕft::Array{ComplexF64, 3}, grids::GridsT, x1m::Array{Int64,
 end
 
 
-
 """
     label_mode(ϕft::Array{ComplexF64, 4}, grids::GridsT, x1m::Array{Int64, 2}, ϕm::Array{Float64, 2})
 
@@ -49,9 +48,11 @@ function label_mode(ϕft::Array{ComplexF64, 4}, grids::GridsT, x1m::Array{Int64,
 end
 
 
-#may want different versions of this depending on the shape of evals.
-#eg if it is done per N.
-#somehow the evals are actually real, doubt that is true in general even with the hermitian tag.
+"""
+    post_process(evals::Array{Float64, 2}, grids::ContGridsT, geo::GeometryT)
+
+Normalises the eigenvalues and determines the radial location for continuum case.
+"""
 function post_process(evals::Array{Float64, 2}, grids::ContGridsT, geo::GeometryT)
 
     ω = ComplexF64[]
@@ -62,7 +63,7 @@ function post_process(evals::Array{Float64, 2}, grids::ContGridsT, geo::Geometry
 
     for i in 1:grids.x1.N
         for j in 1:grids.x2.N*grids.x3.N
-            push!(ω, evals[i, j]) #this will not work for the perN case.
+            push!(ω, evals[i, j]) 
             push!(x1, x1grid[i])
             #not known in the continuum case.
             push!(ml, (0, 0))

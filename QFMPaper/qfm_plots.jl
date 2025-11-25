@@ -23,7 +23,7 @@ conv_num = 13 #14 causes us to run out of mem, takes fkn ages.#probably want thi
 #stuart uses 22nd convergents, for that we will need Gadi. -> his case is also just above the critical threshold!
 ylims = (0.45, 0.75)
 tfs = 16
-dpi = 600
+dpi = 300
 msize = 0.7
 msize1 = 1.7
 msize2 = 1.7
@@ -45,8 +45,9 @@ k = 0.0013
 isl1 = init_island(m0=3, n0=-2, A=k/3, flux=true)
 isl2 = init_island(m0=4, n0=-3, A=k/4, flux=true)
 isls = MID.IslandT[isl1, isl2]
-geo = init_geo(R0=1.0)
-prob = init_problem(q=cantori_q, geo=geo, met=:cylinder, isls=isls, type=:flux)
+geo = init_geometry(:cyl, R0=1.0)
+fields = init_fields(:ψ, q=cantori_q, isls=isls)
+prob = init_problem(geometry=geo, fields=fields)
 #r01, θ01 = MIDCantori.QFM.anal_periodic_orbit(a1, b1, 4, k)
 x, z = poincare_plot(prob, 1000, ψvals, θvals);
 
@@ -55,12 +56,12 @@ x, z = poincare_plot(prob, 1000, ψvals, θvals);
 scatter(x, z, ylimits=ylims, markersize=msize, legend=false, color=:black, xlabel=L"\theta", ylabel=L"\psi", xguidefontsize=xfs, yguidefontsize=yfs, xtickfontsize=xtfs, ytickfontsize=ytfs, dpi=dpi)
 #scatter(x, z, ylimits=ylims, markersize=msize, label=false, color=:black, xlabel=L"\theta", ylabel=L"\psi", xguidefontsize=xfs, yguidefontsize=yfs, xtickfontsize=xtfs, ytickfontsize=ytfs, dpi=dpi)
 savefig("~/phd/MID/QFMPaper/results/base_poincare.png")
-plot_surfs(surfs, overlay=true, color=cur_colors[2], linewidth=1.8)
-savefig("~/phd/MID/QFMPaper/results/base_poincare_surfs.png")
+plot_surfs(surfs, overlay=true, color=cur_colors[2], linewidth=3.0, ylimits=(0.45, 0.72))
+savefig("~/phd/MID/QFMPaper/results/overlay_poincare.png")
 #%%
 xq, zq = poincare_plot(prob, 1000, ψvals, θvals, surfs=surfs);
 #%%
-scatter(xq, zq, ylimits=ylims, markersize=msize, legend=false, color=:black, xlabel=L"\vartheta", ylabel=L"s", xguidefontsize=xfs, yguidefontsize=yfs, xtickfontsize=xtfs, ytickfontsize=ytfs, dpi=dpi)
+scatter(xq, zq, ylimits=(0.45, 0.72), markersize=msize, legend=false, color=:black, xlabel=L"\vartheta", ylabel=L"s", xguidefontsize=xfs, yguidefontsize=yfs, xtickfontsize=xtfs, ytickfontsize=ytfs, dpi=dpi)
 savefig("~/phd/MID/QFMPaper/results/qfm_poincare.png")
 #%%
 #unpert poincare

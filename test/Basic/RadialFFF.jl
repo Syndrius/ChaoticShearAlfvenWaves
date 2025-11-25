@@ -17,7 +17,7 @@ solver = init_solver(full_spectrum=true, prob=prob);
 #fk load more allocations and gc without views.
 #outrageous spead up shifting the ϕ[:, test, :, ...] to ϕ[:, testr, testθ, :, :]
 
-evals, _, _ = compute_spectrum(prob=prob, grids=grids, solver=solver);
+evals, _, _ = compute_spectrum(prob, grids, solver);
 
 
 #continuum_plot(evals)

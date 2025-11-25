@@ -24,7 +24,7 @@ function evals_to_file(evals, dir::String)
 end
 
 """
-    efuncs_to_file(ϕ, ϕft, dir::String)
+    efuncs_to_file(ϕ::Array{ComplexF64}, ϕft::Array{ComplexF64}, dir::String)
 
 Writes the eigenfunctions and the fourier transformed eigenfunctions
 to file. Each eigenfunction is written to an individual file.
@@ -40,10 +40,6 @@ function efuncs_to_file(ϕ::Array{ComplexF64}, ϕft::Array{ComplexF64}, dir::Str
         efunc_label = efunc_base * @sprintf("efunc%05d.jld2", i)
         efunc_ft_label = efunc_ft_base * @sprintf("efunc%05d.jld2", i)
 
-        if !isnothing(ϕ)
-            #handles ϕ for fss case
-            save_object(efunc_label, ϕ[i, ..])
-        end
         save_object(efunc_ft_label, ϕft[i, ..])
 
     end

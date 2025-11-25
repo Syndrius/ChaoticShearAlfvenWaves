@@ -2,12 +2,12 @@
 Struct storing the solving parameters for shift and invert.
 
 ### Fields
-- nev::Int64=100 - Number of eigenvalues to find.
-- target::Float64=0.0 - Target frequency. Solution will be the nev nearest eigenvalues to this target.
+- nev::Int64 - Number of eigenvalues to find.
+- target::Float64 - Target frequency. Solution will be the nev nearest eigenvalues to this target.
 """
-@kwdef struct ShiftInvertSolverT <: SolverT
-    nev :: Int64 = 100
-    target :: Float64 = 0.0
+struct ShiftInvertSolverT <: SolverT
+    nev :: Int64
+    target :: Float64
 end
 
 
@@ -15,11 +15,11 @@ end
 Struct storing the solving parameters for slice solving. 
 
 ### Fields
-- nev::Int64=100 - Number of eigenvalues to find for each slice.
+- nev::Int64 - Number of eigenvalues to find for each slice.
 - targets::Array{Float64} - List of the target frequency. Solution will be the nev nearest eigenvalues to each target in targets.
 """
-@kwdef struct SliceSolverT <: SolverT
-    nev :: Int64 = 100
+struct SliceSolverT <: SolverT
+    nev :: Int64
     targets :: Array{Float64}
 end
 
@@ -30,23 +30,13 @@ Struct storing the solving parameters.
 ### Fields
 - ideal::Bool=false - Boolean for the problem being ideal or not meaning the matrices are Hermitian or not.
 """
-@kwdef struct FullSpectrumSolverT <: SolverT
-    ideal :: Bool = false
+struct FullSpectrumSolverT <: SolverT
+    ideal :: Bool
 end
 
-"""
-Struct storing the solving when finding all eigenvalues in an interval.
-### Fields
-- left::Float64 - left edge of the interval
-- right::Float64 - right edge of the interval
-"""
-@kwdef struct IntervalSolverT <: SolverT
-    left :: Float64
-    right :: Float64
-end
 
 """
-    init_solver(;nev :: Int64 = 100, target :: Float64 = 0.0, nshifts::Int64=1, tlow::Float64=0.0, thigh::Float64=1.0, targets::Array{Float64}=Float64[], full_spectrum::Bool=false, prob::ProblemT)
+    init_solver(;nev::Int64=100, target::Float64 = 0.0, nshifts::Int64=1, tlow::Float64=0.0, thigh::Float64=1.0, targets::Array{Float64}=Float64[], full_spectrum::Bool=false, prob::ProblemT)
 
 Constructor for struct which stores the key information that defines how the problem will be solved.
 
@@ -60,18 +50,14 @@ Constructor for struct which stores the key information that defines how the pro
 - full_spectrum::Bool=false - Set true to solve the full spectrum, only practical for small grids.
 - prob::ProblemT - problem struct for normalising and determining if matrices are Hermitian.
 """
-function init_solver(;nev :: Int64 = 100, target :: Float64 = 0.0, nshifts::Int64=1, tlow::Float64=0.0, thigh::Float64=1.0, targets::Array{Float64}=Float64[], full_spectrum::Bool=false, prob, left=0.0::Float64, right=0.0::Float64)
+function init_solver(;nev:: Int64=100, target::Float64=0.0, nshifts::Int64=1, tlow::Float64=0.0, thigh::Float64=1.0, targets::Array{Float64}=Float64[], full_spectrum::Bool=false, prob)
 
     if full_spectrum
         if prob.flr.δ == 0.0 && prob.flr.ρ_i == 0 && prob.flr.δ_e == 0
-            return FullSpectrumSolverT(ideal=true)
+            return FullSpectrumSolverT(true)
         else
-            return FullSpectrumSolverT(ideal=false)
+            return FullSpectrumSolverT(false)
         end
-    elseif left != 0.0 && right != 0.0
-        left = left^2 / prob.geo.R0^2
-        right = right^2 / prob.geo.R0^2
-        return IntervalSolverT(left, right)
     elseif isempty(targets) && nshifts==1
         target = target^2 / prob.geo.R0^2
         return ShiftInvertSolverT(nev, target)
@@ -91,12 +77,8 @@ end
 Function that creates the target list for slice solving.
 """
 function get_targets(nshifts::Int64, tlow::Float64, thigh::Float64, geo) #dodge
-    #think just passing an array of targets is almost always the better option tbh
+    #just passing an array of targets is almost always the better option
     #but good to have the option.
-
-    #not certain that we do want to do this tbh.
-    #tlow = tlow^2 / geo.R0^2
-    #thigh = thigh^2 / geo.R0^2
 
     return LinRange(tlow, thigh, nshifts) .^2 ./ geo.R0^2
 end

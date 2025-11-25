@@ -2,16 +2,18 @@
 This struct stores Finite Larmor Radius effects to add.
 
 ### Fields
-- δ::Float64=0.0 - Artifical damping.  
-- ρ_i::Float64=0.0 - Ion gyro radius.
-- δ_e::Float64=0.0 - Electron damping.
+- δ::Float64 - Artifical damping.  
+- ρ_i::Float64 - Ion gyro radius.
+- δ_e::Float64 - Electron damping.
 """
-@kwdef struct FLRT
-    δ :: Float64 = 0.0 
-    ρ_i :: Float64 = 0.0
-    δ_e :: Float64 = 0.0
+struct FLRT
+    δ :: Float64
+    ρ_i :: Float64
+    δ_e :: Float64
 end
 
+#flr for ideal MHD.
+const ideal_flr = FLRT(0.0, 0.0, 0.0)
 
 """
     init_flr(;δ=0.0::Float64, ρ_i=0.0::Float64, δ_e=0.0::Float64)

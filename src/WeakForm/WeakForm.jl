@@ -1,21 +1,13 @@
 """
 
-Computes the weak form of our governing equation. This involves computing W and I for a given grid point.
+Computes the weak form of our governing equation. This involves computing P and Q for a given grid point.
 """
 module WeakForm
 
-using ..Geometry #probbaly doesn't actually need this tbh!
+using ..Geometry 
 using ..Fields
 using ..Structures
 using ..QFM
-
-#don'r really like the idea of this having grids
-#so the trial function stuff needs to go elsewhere.
-#this needs to be split across multiple files
-#probably a basic and a QFM 
-#also want a problem file, where we initialise and instantiate the problem.
-#so in general, the fields and geometry structs are basically just place holders that store what has been used.
-#while prob stores the practical implementation of them!
 
 
 using LinearAlgebra
@@ -37,158 +29,56 @@ struct TM
 end
 
 
-export W_and_I!
+export weak_form!
 export TM
-export init_tm
 
+#good
 include("Tl.jl") 
+#good
 include("Tj.jl") 
-include("W.jl")
-include("I.jl")
-
+#good
+include("P.jl")
+#good
+include("Q.jl")
+#good
+include("QFM.jl")
+#good
 include("Problem.jl")
 
 export init_problem, inst_problem
 
 
 """
-    W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, B::BFieldT, met::MetT, prob::ProblemT, r:: Array{Float64}, θ, ζ::AbstractRange)
+    weak_form!(P::Array{ComplexF64, 5}, Q::Array{ComplexF64, 5}, B::BFieldT, met::MetT, prob::ProblemT, r:: Array{Float64}, θ, ζ::AbstractRange)
 
-Computes the two matrices W and I based on the weak form of the SAW governing equation.
-Solving generalised eigenvalue problem Wϕ = ω^2Iϕ
+Computes the two matrices P and Q based on the weak form of the SAW governing equation.
+Solving generalised eigenvalue problem PΦ = ω^2QΦ.
 """
-function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, B::BFieldT, met::MetT, prob::ProblemT, r::Array{Float64}, θ::AbstractArray, ζ::AbstractArray, tm::TM)
+function weak_form!(P::Array{ComplexF64, 5}, Q::Array{ComplexF64, 5}, B::BFieldT, met::MetT, prob::ProblemT, r::Array{Float64}, θ::AbstractArray, ζ::AbstractArray, tm::TM)
 
     
     #compute the density.
     n = prob.fields.dens.(r) :: Array{Float64}
-    #TODO
-    ωcap2 = ω_cap2.(r) :: Array{Float64}
 
     for k=1:1:length(ζ), j=1:1:length(θ), i=1:1:length(r)
 
-        #display("here")
         #compute the metric
         prob.geo.met(met, r[i], θ[j], ζ[k], prob.geo.R0)
         #display("or here")
 
         #compute the magnetic field.
         compute_B!(B, met, prob.fields.q, prob.fields.isls, r[i], θ[j], ζ[k])
-        #display("even here")
 
         #computes the matrix D.
         compute_D!(B, met, tm.D)
 
-        #compute the W matrix
-        @views compute_W!(W[:, :, i, j, k], B, met, n[i], ωcap2[i], tm)
+        #compute the P matrix
+        @views compute_P!(P[:, :, i, j, k], B, met, n[i], tm)
 
-        #compute the I matrix
-        @views compute_I!(I[:, :, i, j, k], B, met, n[i], prob.flr, tm.D, tm.F)
-
-    end
-
-end
-
-
-
-#in theory this should no longer be needed, who the fek knows though!
-"""
-    W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, B::BFieldT, met::MetT, prob::IslProblemT, κ::Array{Float64}, ᾱ::AbstractArray, ζ::AbstractArray, tm::TM)
-
-Computes the two matrices W and I based on the weak form of the SAW governing equation for the case with island coordinates.
-In this case a specific metric and q-profile are used and the current nerm is not included.
-"""
-#=
-function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, B::BFieldT, met::MetT, prob::IslProblemT, κ::Array{Float64}, ᾱ::AbstractArray, ζ::AbstractArray, tm::TM)
-    
-    #TODO, no longer working with island as an array
-    #compute the density.
-    #density is probably assumed to be flat over the island
-    #unsure if we want this to be an option
-    n = prob.dens.(κ) :: Array{Float64}
-    #wcap is unused in this case, perhaps density as well.
-
-
-    for k=1:1:length(ζ), j=1:1:length(ᾱ), i=1:1:length(κ)
-
-        #compute the metric
-        island_metric!(met, κ[i], ᾱ[j], ζ[k], prob.geo.R0, prob.isls[1])
-
-        #compute the magnetic field.
-        prob.B(B, met, prob.q, prob.isls[1], κ[i], ᾱ[j], ζ[k])
-
-        #computes the matrix D.
-        compute_D!(B, met, tm.D)
-
-        #compute the W matrix
-        @views compute_isl_W!(W[:, :, i, j, k], B, met, tm)
-
-        #compute the I matrix
-        @views compute_I!(I[:, :, i, j, k], B, met, n[i], prob.flr, tm.D, tm.F)
+        #compute the Q matrix
+        @views compute_Q!(Q[:, :, i, j, k], B, met, n[i], prob.flr, tm.D, tm.F)
 
     end
-
-end
-=#
-
-
-"""
-    W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, tor_B::BFieldT, tor_met::MetT, qfm_B::BFieldT, qfm_met::MetT, prob::ProblemT, s::Array{Float64}, ϑ::AbstractArray, φ::AbstractArray, tm::TM, surfs::SurfaceITPT, CT::CoordTransformT, sd::TempSurfT)
-
-Computes the two matrices W and I based on the weak form of the SAW governing equation for the case with qfm surfaces.
-The surfaces are used to convert the (s, ϑ, φ) grid into (r, θ, ζ) values, then the original metric and B are computed.
-These are then transformed into the B and metric in (s, ϑ, φ) coordinates so that the weakform is computed in terms of (s, ϑ, φ).
-"""
-function W_and_I!(W::Array{ComplexF64, 5}, I::Array{ComplexF64, 5}, tor_B::BFieldT, tor_met::MetT, qfm_B::BFieldT, qfm_met::MetT, prob::ProblemT, s::Array{Float64}, ϑ::AbstractArray, φ::AbstractArray, tm::TM, surfs::SurfaceITPT, CT::CoordTransformT, sd::TempSurfT)
-
-    #compute the density.
-    n = prob.dens.(s) :: Array{Float64}
-    #TODO
-    #ωcap2 = ω_cap2.(r) :: Array{Float64}
-    ωcap2 = zeros(length(s))
-
-    for k=1:1:length(φ), j=1:1:length(ϑ), i=1:1:length(s)
-
-        #compute the original coords, (r, θ, ζ) and the jacobian matrix of the transformation.
-        coord_transform!(s[i], ϑ[j], φ[k], CT, surfs, sd)
-
-        #compute the original metric
-        #using the computed values of (r, θ, ζ)
-        prob.met(tor_met, CT.coords[1], CT.coords[2], CT.coords[3], prob.geo.R0)
-
-        #and original B field.
-        compute_B!(tor_B, tor_met, prob.q, prob.isls, CT.coords[1], CT.coords[2], CT.coords[3]) 
-
-        #transform the metric
-        met_transform!(tor_met, qfm_met, CT)
-
-        #transform the B field
-        B_transform!(tor_B, qfm_B, qfm_met, CT)
-
-        #now we compute the weakform in the usual way.
-
-        #computes the matrix D.
-        compute_D!(qfm_B, qfm_met, tm.D)
-
-        #compute the W matrix
-        @views WeakForm.compute_W!(W[:, :, i, j, k], qfm_B, qfm_met, n[i], ωcap2[i], tm)
-
-        #compute the I matrix
-        @views WeakForm.compute_I!(I[:, :, i, j, k], qfm_B, qfm_met, n[i], prob.flr, tm.D, tm.F)
-
-
-    end
-
-end
-
-
-#TODO work in progress.
-function ω_cap2(r::Float64)
-
-    #this seems to be having a much larger effect for fff than ffs, interesting...
-    β = 0.0000000000
-    #stab in the dark lol.
-    return β * (1-r)
 
 end
 
@@ -196,7 +86,7 @@ end
 """
     function compute_D!(B::BFieldT, met::MetT, D::Array{Float64, 2})
 
-Function to compute D matrix, used by both W and I.
+Function to compute D matrix, used by both P and Q.
 """
 function compute_D!(B::BFieldT, met::MetT, D::Array{Float64, 2})
 

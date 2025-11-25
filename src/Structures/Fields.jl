@@ -1,60 +1,53 @@
-
+#abstract type that stores the fields used 
+#note that dipatch is performed on island type, this is used for future proofing.
 abstract type FieldsT end
 
-#hopefully, we don't need 3 types of islands anymore!
+"""
+Three differenent cases for different radial coordinate used.
+Note that the q-function is defined twice for creating anonymous functions that can be written to file.
+
+### Fields
+- q_func::Function - Generic function, stored for instantiation.
+- q::FunctionWrapper{Tuple{Float64, Float64}, Tuple{Float64}} - Actual function used in computation.
+- dens::FunctionWrapper{Float64, Tuple{Float64}} - Function to compute the density.
+- isls::Array{FluxIslandT} - Islands used, the type is different for multiple dispatch.
+
+
+"""
 
 struct FluxFieldsT <: FieldsT
-    q_func :: Function #we may additionally want the option of q to be passed as a polynomail
+    q_func :: Function 
     q :: FunctionWrapper{Tuple{Float64, Float64}, Tuple{Float64}}
-    dens :: FunctionWrapper{Float64, Tuple{Float64}} #all dens functions follow the pattern.
+    dens :: FunctionWrapper{Float64, Tuple{Float64}} 
     isls :: Array{FluxIslandT} 
 end
 
 struct IslandFieldsT <: FieldsT
-    q_func :: Function #we may additionally want the option of q to be passed as a polynomail
+    q_func :: Function 
     q :: FunctionWrapper{Tuple{Float64, Float64}, Tuple{Float64}}
-    dens :: FunctionWrapper{Float64, Tuple{Float64}} #all dens functions follow the pattern.
+    dens :: FunctionWrapper{Float64, Tuple{Float64}} 
     isls :: Array{CoordIslandT} 
 end
 
 struct RadialFieldsT <: FieldsT
-    q_func :: Function #we may additionally want the option of q to be passed as a polynomail
+    q_func :: Function 
     q :: FunctionWrapper{Tuple{Float64, Float64}, Tuple{Float64}}
-    dens :: FunctionWrapper{Float64, Tuple{Float64}} #all dens functions follow the pattern.
+    dens :: FunctionWrapper{Float64, Tuple{Float64}} 
     isls :: Array{RadialIslandT} 
 end
 
 
-#=
 """
 Struct for storing the magnetic field and related variables at a given coordinate.
 
 ### Fields
 - B::Array{Float64} - Vector storing the magnetic field.
 - b::Array{Float64} - Vector storing the normalised magnetic field.
-- dB::Array{Float64, 2} V- ector storing the derivative of the magnetic field, second index refers to derivative coordinate.
+- dB::Array{Float64, 2} - Vector storing the derivative of the magnetic field, second index refers to derivative coordinate.
 - db::Array{Float64, 2} - Vector storing the derivative of the normalised magnetic field, second index refers to derivative coordinate.
 - mag_B::Array{Float64} - Magnitude of the magnetic field. Stored as an array so struct is immutable.
 - dmag_B::Array{Float64} - Derivative of the magnitude of B, index refers to derivative coordinate.
 """
-struct BFieldT
-    B :: vec3
-    b :: vec3
-    dB :: mat33
-    db :: mat33
-    mag_B :: vec1
-    dmag_B :: vec3
-    function BFieldT()
-        B = zeros(vec3)
-        b = zeros(vec3)
-        dB = zeros(mat33)
-        db = zeros(mat33)
-        mag_B = zeros(vec1)
-        dmag_B = zeros(vec3)
-        new(B, b, dB, db, mag_B, dmag_B)
-    end
-end
-=#
 struct BFieldT
     B :: Array{Float64, 1} 
     b :: Array{Float64, 1} 
@@ -67,13 +60,3 @@ struct BFieldT
     end
 end
 
-
-#this will have to be moved within fields.
-#for us to use defaults.
-#=
-function init_fields(; q::Function, dens::Function, isls::Array{<:IslandT})
-
-    #can't really remember how the fkn function wrapper shite works.
-    return FluxFieldsT(q, q, dens, dens, isls)
-end
-=#

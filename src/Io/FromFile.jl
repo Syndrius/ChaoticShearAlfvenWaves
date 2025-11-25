@@ -28,11 +28,11 @@ end
 
 
 """
-    efunc_from_file(; dir::String, ind, ft=true)
+    efunc_from_file(; dir::String, ind::Int64, ft::Bool=true, deriv::Bool=false)
 
 Reads a single eigenfunction from file using JLD2. Set ft=false to read the non-ft eigenfunction.
 """
-function efunc_from_file(; dir::String, ind, ft=true, deriv=false)
+function efunc_from_file(; dir::String, ind::Int64, ft::Bool=true, deriv::Bool=false)
 
     if ft
         if deriv

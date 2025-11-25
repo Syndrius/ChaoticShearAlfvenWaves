@@ -1,30 +1,12 @@
-
-#TODO change to flux!
-
-#template density profile
-function density_profile(x1::Float64)
-    return 1.0
-end
-
-function gae_isl_dens(x1::Float64)
-    κ = -1 #paper just says less than 0?
-    p = 1
-    fact = 5 #this is completly arbitrary, but just dicates the height of the peak.
-
-    return fact*((1-p*x1^2)^κ)
-end
-
-
 """
-    axel_dens(x1::Float64)xs
-
-Density function from Axel's paper, should be renamed.
+Profile allows a GAE to form when combined with gae_q.
+Taken from Van Rij et al. 1985.
 """
-function axel_dens(x1::Float64)
-    #Axel's density function
-    return 1/2 * (1 - tanh((x1-0.8)/0.1))
+function gae_dens(r::Float64)
 
+    return 1-r^2/(1+0.1)
 end
+
 
 """
     uniform_dens(x1::Float64)
@@ -35,21 +17,12 @@ function uniform_dens(x1::Float64)
     return 1.0
 end
 
-"""
-    bowden_singular_dens(x1::Float64)
 
-Density function from Bowden Singular paper, should be renamed.
 """
-function bowden_singular_dens(x1::Float64)
+Density profile for comparison for continuum damping, when paired with damping_q.
+Profile taken from Bowden and Hole 2015.
+"""
+function damping_dens(x1::Float64)
     return 1/2 * (1-tanh((x1-0.7)/0.05))
 end
 
-"""
-    comparison_bowden_dens(x1::Float64)
-
-Density function from Bowden comparison paper, should be renamed or removed as that paper seems dodge, only 800 points?.
-"""
-function comparison_bowden_dens(x1::Float64)
-
-    return (1-(x1^2)^(7.5))^7
-end

@@ -7,23 +7,19 @@ Module for the reading and writing files using JLD2. Includes
 """
 module Io
 
-#using MID.Structures
-#using MID.Geometry
-#using MID.Equilibrium
-#using MID.PostProcessing
 
 using JLD2
 using Printf
 using EllipsisNotation
 
-
+#good
 include("FromFile.jl")
 
 export inputs_from_file
 export evals_from_file
 export efunc_from_file
 
-
+#good
 include("ToFile.jl")
 
 export inputs_to_file

@@ -45,6 +45,7 @@ function ft_phi!(ϕ::Array{ComplexF64, 3}, ϕft::Array{ComplexF64, 3}, grids::FS
     nlist = mode_list(grids.x3)
 
     #here an 'inverse fourier transform' is applied, custom loop as only specific modes are used.
+    #note that this can be slow.
     ϕ .= 0
     for i in 1:grids.x1.N
         for j in 1:1:length(mlist)
@@ -160,7 +161,7 @@ end
 
 Computes the fourier and non-fourier representation of phi once it has been reconstructed.
 """
-function ft_phi!(ϕ::Array{ComplexF64}, ϕft::Array{ComplexF64}, grids::FFFGridsT, plan)
+function ft_phi!(ϕ::Array{ComplexF64}, ϕft::Array{ComplexF64}, grids::FFFGridsT, plan::FFTW.FFTWPlan)
     
     #FFF case is simply a direct ft of x2 and x3
     #note that this case is the same when the derivative is included

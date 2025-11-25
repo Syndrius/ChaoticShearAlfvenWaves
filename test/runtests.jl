@@ -19,21 +19,39 @@ module MIDTests
 using Test
 using MID
 
-display("Running Basic Tests")
-@time @testset "Basic" begin include("Basic/Basic.jl") end
+#think we should be cleverer about this.
+#damping covers non-idea fss and shift and ivert
+#in island covers ffs.
+#so we can just take an fff case?
+#don't think we need the like 10 different version of everthing tbh!
+
+display("Testing continuum calculation")
+@time @testset "Continuum" begin include("Continuum.jl") end
+
+#test fff
+#and spectrum slicing
+display("Testing basic finite elements")
+@time @testset "Basic" begin include("Basic.jl") end
+
+
+#tests island coordinates
+#and ffs
+display("Testing Island Coordinates")
+@time @testset "Island Coordinates" begin include("Island.jl") end
+
+#test fss
+#radial coordinate
+#shift and invert
+display("Testing Continuum Damping")
+@time @testset "Damping" begin include("Damping.jl") end
 
 #display("Running QFM Tests")
 #@time @testset "QFM" begin include("QFM/QFM.jl") end
 
-#TODO -> need to be able to find a basic case that works reliably for a test
-#display("Running Island Coordinate Tests")
-#@time @testset "Island Coordinates" begin include("Island/Island.jl") end
 
 #display("Running IO Tests")
 #@time @testset "IO" begin include("IO/IO.jl") end
 
-#TODO
-#Damping
 
 
 end

@@ -176,15 +176,3 @@ function index_to_grid(i::Int64, grids::FFFGridsT)
 end
 
 
-
-#this doesn't really work because evals are returned in order not based on the matrix structure
-#this only really works for evals
-function index_to_grid(i::Int64, grids::ContGridsT)
-
-    #guess!
-    x2 = mod(div(i-1, grids.x3.N), grids.x2.N) + 1
-    x3 = mod(i-1, grids.x3.N) + 1
-
-    return x2, x3
-
-end

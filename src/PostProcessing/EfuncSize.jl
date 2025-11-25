@@ -1,9 +1,9 @@
 """
-    allocate_phi_arrays(grids::FSSGridsT, nevals=0; deriv=false)
+    allocate_phi_arrays(grids::FSSGridsT, nevals::Int64=0; deriv::Bool=false)
 
 Allocates empty arrays used for computing phi and its fourier transformation. If nevals is non-zero creates the global phi structures that store all eigenvalues.
 """
-function allocate_phi_arrays(grids::FSSGridsT, nevals=0; deriv=false)
+function allocate_phi_arrays(grids::FSSGridsT, nevals::Int64=0; deriv::Bool=false)
 
     #extends the domain for ifft cases for smoother plotting.
     x2size = ifft_size(grids.x2)
@@ -20,7 +20,6 @@ function allocate_phi_arrays(grids::FSSGridsT, nevals=0; deriv=false)
             ϕ = Array{ComplexF64}(undef, nevals, grids.x1.N, x2size, x3size, 8)
             ϕft = Array{ComplexF64}(undef, nevals, grids.x1.N, grids.x2.N, grids.x3.N, 8)
         end
-        #placeholder memory for each eigenfunction.
         
     else
         if nevals == 0
@@ -40,11 +39,11 @@ end
 
 
 """
-    allocate_phi_arrays(grids::FFSGridsT, nevals=0; deriv=false)
+    allocate_phi_arrays(grids::FFSGridsT, nevals::Int64=0; deriv::Bool=false)
 
 Allocates empty arrays used for computing phi and its fourier transformation. If nevals is non-zero creates the global phi structures that store all eigenvalues.
 """
-function allocate_phi_arrays(grids::FFSGridsT, nevals=0; deriv=false)
+function allocate_phi_arrays(grids::FFSGridsT, nevals::Int64=0; deriv::Bool=false)
 
     x3size = ifft_size(grids.x3)
 
@@ -75,11 +74,11 @@ end
 
 
 """
-    allocate_phi_arrays(grids::FFFGridsT, nevals=0; deriv=false)
+    allocate_phi_arrays(grids::FFFGridsT, nevals::Int64=0; deriv::Bool=false)
 
 Allocates empty arrays used for computing phi and its fourier transformation. If nevals is non-zero creates the global phi structures that store all eigenvalues.
 """
-function allocate_phi_arrays(grids::FFFGridsT, nevals=0; deriv=false)
+function allocate_phi_arrays(grids::FFFGridsT, nevals::Int64=0; deriv::Bool=false)
 
     if deriv
 
@@ -103,7 +102,6 @@ function allocate_phi_arrays(grids::FFFGridsT, nevals=0; deriv=false)
     end
 
     return ϕ, ϕft
-
 
 end
 

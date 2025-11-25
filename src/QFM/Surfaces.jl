@@ -9,12 +9,12 @@ function itp_mat!(surf_itp::SurfaceITPT, sd::TempSurfT, s::Float64)
     dim1 = surf_itp.M + 1
     dim2 = 2*surf_itp.N + 1
 
-    for i in 1:dim1, j in 1:dim2
-        sd.rcos[i, j] = surf_itp.rcos_itp[i, j](s)
+    for j in 1:dim2, i in 1:dim1
+        sd.ψcos[i, j] = surf_itp.ψcos_itp[i, j](s)
         sd.θsin[i, j] = surf_itp.θsin_itp[i, j](s)
-        sd.drcosds[i, j] = surf_itp.drcos_itp[i, j](s)
+        sd.dψcosds[i, j] = surf_itp.dψcos_itp[i, j](s)
         sd.dθsinds[i, j] = surf_itp.dθsin_itp[i, j](s)
-        sd.d2rcosdsds[i, j] = surf_itp.d2rcos_itp[i, j](s)
+        sd.d2ψcosdsds[i, j] = surf_itp.d2ψcos_itp[i, j](s)
         sd.d2θsindsds[i, j] = surf_itp.d2θsin_itp[i, j](s)
     end
 
@@ -33,10 +33,10 @@ function create_surf_itp(surfs::Array{QFMSurfaceT})
     pqMpol = dim1 - 1
     pqNtor = (dim2 - 1) ÷ 2
 
-    rcosn = zeros((length(surfs), dim1, dim2))
+    ψcosn = zeros((length(surfs), dim1, dim2))
     θsinn = zeros((length(surfs), dim1, dim2))
 
-    #sorts the surfaces by the ρ value, so that interpolation can work properly.
+    #sorts the surfaces by the s value, so that interpolation can work properly.
     s_surfs_unsort = zeros(length(surfs))
 
     for (i, surf) in enumerate(surfs)
@@ -48,15 +48,15 @@ function create_surf_itp(surfs::Array{QFMSurfaceT})
     surfs = surfs[perm]
 
     for (i, surf) in enumerate(surfs)
-        rcosn[i, :, :] = surf.rcos
+        ψcosn[i, :, :] = surf.ψcos
         θsinn[i, :, :] = surf.θsin
     end
 
     #arrays storing the interpolations.
     #we need individual arrays for the derivatives to ensure extrapolation works as intended.
-    rcos_itp = Array{BSplineKit.SplineExtrapolations.SplineExtrapolation}(undef, dim1, dim2)
-    drcos_itp = Array{BSplineKit.SplineExtrapolations.SplineExtrapolation}(undef, dim1, dim2)
-    d2rcos_itp = Array{BSplineKit.SplineExtrapolations.SplineExtrapolation}(undef, dim1, dim2)
+    ψcos_itp = Array{BSplineKit.SplineExtrapolations.SplineExtrapolation}(undef, dim1, dim2)
+    dψcos_itp = Array{BSplineKit.SplineExtrapolations.SplineExtrapolation}(undef, dim1, dim2)
+    d2ψcos_itp = Array{BSplineKit.SplineExtrapolations.SplineExtrapolation}(undef, dim1, dim2)
     θsin_itp = Array{BSplineKit.SplineExtrapolations.SplineExtrapolation}(undef, dim1, dim2)
     dθsin_itp = Array{BSplineKit.SplineExtrapolations.SplineExtrapolation}(undef, dim1, dim2)
     d2θsin_itp = Array{BSplineKit.SplineExtrapolations.SplineExtrapolation}(undef, dim1, dim2)
@@ -64,15 +64,15 @@ function create_surf_itp(surfs::Array{QFMSurfaceT})
 
     for j in 1:dim2, i in 1:dim1
 
-        rcos = interpolate(s_surfs, rcosn[:, i, j], BSplineOrder(5))
+        ψcos = interpolate(s_surfs, ψcosn[:, i, j], BSplineOrder(5))
         θsin = interpolate(s_surfs, θsinn[:, i, j], BSplineOrder(5))
-        rcos_itp[i, j] = extrapolate(rcos, Smooth())
+        ψcos_itp[i, j] = extrapolate(ψcos, Smooth())
         θsin_itp[i, j] = extrapolate(θsin, Smooth())
         #unclear exactly how well these will actually work outside the domain.
         #but will atleast stop linear algebra errors.
-        drcos_itp[i, j] = extrapolate(Derivative(1)*rcos, Smooth())
+        dψcos_itp[i, j] = extrapolate(Derivative(1)*ψcos, Smooth())
         dθsin_itp[i, j] = extrapolate(Derivative(1)*θsin, Smooth())
-        d2rcos_itp[i, j] = extrapolate(Derivative(2)*rcos, Smooth())
+        d2ψcos_itp[i, j] = extrapolate(Derivative(2)*ψcos, Smooth())
         d2θsin_itp[i, j] = extrapolate(Derivative(2)*θsin, Smooth())
     end
 
@@ -83,37 +83,31 @@ end
 
 
 """
-Converts a surface into r, θ values.
+Converts a surface into ψ, θ values for plotting.
 """
 function convert_surf(surf::QFMSurfaceT)
-    #takes the weird output form into a plotable form.
-
 
     Nϑ = 100
     ϑgrid = LinRange(0, 2*π, Nϑ)
-    φ = 0.0
+    ζ = 0.0
 
-    #again, v stupid.
-    rcos = surf.rcos
-    rsin = surf.rsin
+    ψcos = surf.ψcos
+    ψsin = surf.ψsin
     θsin = surf.θsin
     θcos = surf.θcos
 
-    α = zeros((Nϑ, size(rcos)[1], size(rcos)[2]))
+    α = zeros((Nϑ, size(ψcos)[1], size(ψcos)[2]))
 
-    #this should be determinable from the array size.
-    #if only we understood these arrays.
-    #really good
-    pqMpol, pqNtor = size(rcos)
+    pqMpol, pqNtor = size(ψcos)
     mlist = collect(range(0, pqMpol))
 
     collect(-pqNtor:0)
     nlist = [collect(0:pqNtor);collect(-pqNtor:-1)] 
 
     for i in 1:Nϑ
-        for j in 1:size(rcos)[1]
-            for k in 1:size(rcos)[2]
-                α[i, j, k] = mlist[j] * ϑgrid[i] - nlist[k] * φ
+        for j in 1:size(ψcos)[1]
+            for k in 1:size(ψcos)[2]
+                α[i, j, k] = mlist[j] * ϑgrid[i] - nlist[k] * ζ
             end
         end
     end
@@ -121,22 +115,20 @@ function convert_surf(surf::QFMSurfaceT)
     cosα = cos.(α)
     sinα = sin.(α)
 
-    r = zeros(Nϑ)
-    θ = zeros(Nϑ)
+    ψ = zeros(Nϑ)
     θ = collect(LinRange(0, 2π, Nϑ))
 
     for i in 1:Nϑ
 
-        for j in 1:size(rcos)[1]
-            for k in 1:size(rcos)[2]
-                r[i] += rcos[j, k] * cosα[i, j, k]
-                #θ[i] += ϑgrid[i] + θsin[j, k] * sinα[i, j, k]
+        for j in 1:size(ψcos)[1]
+            for k in 1:size(ψcos)[2]
+                ψ[i] += ψcos[j, k] * cosα[i, j, k]
                 θ[i] += θsin[j, k] * sinα[i, j, k]
             end
         end
     end
 
-    return r, θ
+    return ψ, θ
 
 end
 
@@ -145,6 +137,7 @@ end
     compute_jac(prob::ProblemT, grids::FFFGridsT, surfs::Array{QFMSurfaceT})
 
 Computes the Jacobain and Magnetic field in qfm coordinates to test the new values.
+This is used for deciding on QFM surfaces.
 """
 function compute_jac(prob::ProblemT, grids::FFFGridsT, surfs::Array{QFMSurfaceT})
 
@@ -161,11 +154,6 @@ function compute_jac(prob::ProblemT, grids::FFFGridsT, surfs::Array{QFMSurfaceT}
 
     #creates the interpolations for the surfaces.
     surf_itp, sd = create_surf_itp(surfs)
-
-    #compute the gaussian qudrature points for finite elements.
-    #ξr, wgr = MID.Construct.FastGaussQuadrature.gausslegendre(grids.r.gp) #same as python!
-    #ξθ, wgθ = MID.Construct.FastGaussQuadrature.gausslegendre(grids.θ.gp)
-    #ξζ, wgζ = MID.Construct.FastGaussQuadrature.gausslegendre(grids.ζ.gp)
 
     #struct for storing the intermediate data for the coordinate transform
     CT = CoordTransformT()
