@@ -1,7 +1,7 @@
 """
     construct(prob::ProblemT, grids::FSSGridsT)
 
-Constructs the two matrices using the PeakForm of the SAP governing equation. Uses Finite elements with cubic Hermite polynomials in r, and the fourier spectral method in x2 and x3. Returns two sparse matrices.
+Constructs the two matrices using the WeakForm of the SAW governing equation. Uses Finite elements with cubic Hermite polynomials in x1, and the fourier spectral method in x2 and x3. Returns two sparse matrices.
 
 ### Args
 prob::ProblemT - Struct containing the functions and parameters that define the problem we are solving
@@ -24,7 +24,7 @@ function construct(prob::ProblemT, grids::FSSGridsT)
     met = MetT()
     B = BFieldT()
 
-    #compute the gaussian qudrature points for finite elements.
+    #compute the gaussian quadrature points for finite elements.
     ξ, wg = gauss_points(grids)
 
     #Gets the Hermite basis for the radial grid.
@@ -47,16 +47,13 @@ function construct(prob::ProblemT, grids::FSSGridsT)
     Qdata = Array{ComplexF64}(undef, 0)
     Pdata = Array{ComplexF64}(undef, 0)
 
-
-    #determines the indicies in the matrices corresponding to the dirichlet boundary conditions for r.
+    #determines the indicies in the matrices corresponding to the dirichlet boundary conditions for x1.
     boundary_inds = compute_boundary_inds(grids)
-    
 
     #generalised eval problem PΦ = ω^2 Q Φ
     #these matrices store the local contribution, i.e. at each grid point, for the global matrices Q and P.
     Q = init_local_matrix(grids)
     P = init_local_matrix(grids)
-
 
     #creates a fft plan for efficient fft used in spectral method.
     p = plan_fft!(P, [4, 5])
@@ -64,21 +61,18 @@ function construct(prob::ProblemT, grids::FSSGridsT)
     #initialises a struct storing temporary matrices used in the weak form.
     tm = TM()
 
-    x1 = zeros(length(ξ)) #ideally, this will be moved to a function
+    #arrays to store the global quadrature points
+    x1 = zeros(length(ξ)) 
     dx = zeros(1)
    
     #main loop
     for i in 1:grids.x1.N-1
 
-        #takes the local ξ array to a global r array around the grid point.
+        #takes the local ξ array to a global x1 array around the grid point.
         jac = local_to_global!(x1, dx, i, ξ, x1grid)
-
-        #jacobian of the local to global transformation.
-        #jac = dx1/2 
 
         #computes the contribution to the P and Q matrices.
         weak_form!(P, Q, B, met, prob, x1, x2grid, x3grid, tm)
-        
 
         #fft the two matrices.
         p * P
@@ -88,7 +82,6 @@ function construct(prob::ProblemT, grids::FSSGridsT)
         for (k1,m1) in enumerate(mlist), (l1, n1) in enumerate(nlist)
 
             #transforms the local basis function to the global.
-            #create_global_basis!(Φ, S, m1, n1, jac, ts)
             update_trial_function!(Φ, S, m1, n1, dx, ts)
 
             for (k2, m2) in enumerate(mlist), (l2, n2) in enumerate(nlist)
@@ -96,7 +89,7 @@ function construct(prob::ProblemT, grids::FSSGridsT)
                 #negatives for conjugate in the test function.
                 update_trial_function!(Ψ, S, -m2, -n2, dx, ts)
 
-                #extract the relevant indicies from the fft'ed matrices.
+                #extract the relevant indicies from the fft'd matrices.
                 mind = mod(k1-k2 + Nx2, Nx2) + 1
                 nind = mod(l1-l2 + Nx3, Nx3) + 1
 
@@ -173,22 +166,19 @@ function construct(prob::ProblemT, grids::FSSGridsT)
 end
 
 
-
-
 """
     construct(prob::ProblemT, grids::FSSGridsT, surfs::Array{QFMSurfaceT})
 
-Constructs the P and Q matrices with qfm surfaces using the spectral method in ϑ, φ.
+Constructs the P and Q matrices with qfm surfaces, using the spectral method in x2=ϑ, x3=ζ.
 """
 function construct(prob::ProblemT, grids::FSSGridsT, surfs::Array{QFMSurfaceT})
 
     #instantiate the grids into arrays.
-    #note that the inputs are the new coords.
-    sgrid, ϑgrid, φgrid = inst_grids(grids)
+    x1grid, x2grid, x3grid = inst_grids(grids)
 
     #for spectral method we need the length of the arrays
-    Nϑ = length(ϑgrid)
-    Nφ = length(φgrid)
+    Nx2 = length(x2grid)
+    Nx3 = length(x3grid)
 
     #and the list of modes to consider.
     mlist = mode_list(grids.x2)
@@ -201,11 +191,8 @@ function construct(prob::ProblemT, grids::FSSGridsT, surfs::Array{QFMSurfaceT})
     tor_B = BFieldT()
     qfm_B = BFieldT()
 
-    #creates the interpolations for the surfaces.
-    surf_itp, sd = create_surf_itp(surfs)
-
-    #compute the gaussian qudrature points for finite elements.
-    ξ, wg = gausslegendre(grids.x1.gp) 
+    #compute the gaussian quadrature points for finite elements.
+    ξ, wg = gauss_points(grids)
 
     #Gets the Hermite basis for the radial grid.
     S = hermite_basis(ξ)
@@ -214,11 +201,14 @@ function construct(prob::ProblemT, grids::FSSGridsT, surfs::Array{QFMSurfaceT})
     #from the local ξ∈[-1, 1] to global x∈[x_i, x_{i+1}] domain
     ts = ones(size(S.H))
     
+    #creates the interpolations for the surfaces.
+    surf_itp, sd = create_surf_itp(surfs)
+
     #creates the trial and test function arrays.
     #these store the basis functions for each derivative
     #and finite elements basis 
-    Φ = init_basis_function(grids)
-    Ψ = init_basis_function(grids)
+    Φ = init_trial_function(grids)
+    Ψ = init_trial_function(grids)
     
     #arrays to store the row, column and data of each matrix element
     #used for constructing sparse matrices.
@@ -227,38 +217,35 @@ function construct(prob::ProblemT, grids::FSSGridsT, surfs::Array{QFMSurfaceT})
     Qdata = Array{ComplexF64}(undef, 0)
     Pdata = Array{ComplexF64}(undef, 0)
 
-
-    #determines the indicies in the matrices corresponding to the dirichlet boundary conditions for r.
+    #determines the indicies in the matrices corresponding to the dirichlet boundary conditions for x1.
     boundary_inds = compute_boundary_inds(grids)
-    
 
     #generalised eval problem PΦ = ω^2 Q Φ
     #these matrices store the local contribution, i.e. at each grid point, for the global matrices Q and P.
-    Q = local_matrix_size(grids)
-    P = local_matrix_size(grids)
-
+    Q = init_local_matrix(grids)
+    P = init_local_matrix(grids)
 
     #creates a fft plan for efficient fft used in spectral method.
     p = plan_fft!(P, [4, 5])
-
 
     #initialises a struct storing temporary matrices used in the weak form.
     tm = TM()
 
     #struct for storing the intermediate data for the coordinate transform
     CT = CoordTransformT()
+
+    #arrays to store the global quadrature points
+    x1 = zeros(length(ξ)) 
+    dx = zeros(1)
    
     #main loop
     for i in 1:grids.x1.N-1
 
-        #takes the local ξ array to a global r array around the grid point.
-        s, ds = local_to_global(i, ξ, sgrid)
-
-        #jacobian of the local to global transformation.
-        jac = ds/2 
+        #takes the local ξ array to a global x1 array around the grid point.
+        jac = local_to_global!(x1, dx, i, ξ, x1grid)
 
         #computes the contribution to the P and Q matrices.
-        weak_form!(P, Q, tor_B, tor_met, qfm_B, qfm_met, prob, s, ϑgrid, φgrid, tm, surf_itp, CT, sd)
+        weak_form!(P, Q, tor_B, tor_met, qfm_B, qfm_met, prob, x1, x2grid, x3grid, tm, surf_itp, CT, sd)
 
         #fft the two matrices.
         p * P
@@ -268,16 +255,16 @@ function construct(prob::ProblemT, grids::FSSGridsT, surfs::Array{QFMSurfaceT})
         for (k1,m1) in enumerate(mlist), (l1, n1) in enumerate(nlist)
 
             #transforms the local basis function to the global.
-            create_global_basis!(Φ, S, m1, n1, jac, ts)
+            update_trial_function!(Φ, S, m1, n1, dx, ts)
 
             for (k2, m2) in enumerate(mlist), (l2, n2) in enumerate(nlist)
 
                 #negatives for conjugate in the test function.
-                create_global_basis!(Ψ, S, -m2, -n2, jac, ts)
+                update_trial_function!(Ψ, S, -m2, -n2, dx, ts)
 
-                #extract the relevant indicies from the fft'ed matrices.
-                mind = mod(k1-k2 + Nϑ, Nϑ) + 1
-                nind = mod(l1-l2 + Nφ, Nφ) + 1
+                #extract the relevant indicies from the fft'd matrices.
+                mind = mod(k1-k2 + Nx2, Nx2) + 1
+                nind = mod(l1-l2 + Nx3, Nx3) + 1
 
                 #loop over the Hermite elements for the trial function
                 for trialx1 in 1:4
@@ -350,3 +337,4 @@ function construct(prob::ProblemT, grids::FSSGridsT, surfs::Array{QFMSurfaceT})
 
     return Pmat, Qmat
 end
+

@@ -17,7 +17,6 @@ function construct(prob::ProblemT, grids::FFSGridsT)
     #and the mode list.
     nlist = mode_list(grids.x3)
 
-
     #initialise the two structs to store the metric and the magnetic field.
     met = MetT()
     B = BFieldT()
@@ -45,15 +44,13 @@ function construct(prob::ProblemT, grids::FFSGridsT)
     Qdata = Array{ComplexF64}(undef, 0)
     Pdata = Array{ComplexF64}(undef, 0)
 
-
-    #determines the indicies in the matrices corresponding to the dirichlet boundary conditions for r.
+    #determines the indicies in the matrices corresponding to the dirichlet boundary conditions for x1.
     boundary_inds = compute_boundary_inds(grids)
 
     #generalised eval problem PΦ = ω^2 Q Φ
     #these matrices store the local contribution, i.e. at each grid point, for the global matrices Q and P.
     Q = init_local_matrix(grids)
     P = init_local_matrix(grids)
-
 
     #creates a fft plan for efficient fft used in spectral method.
     p = plan_fft!(P, [5])
@@ -71,8 +68,6 @@ function construct(prob::ProblemT, grids::FFSGridsT)
         #takes the local ξ arrays to a global arrays around the grid point.
         jac = local_to_global!(x1, x2, dx, i, j, ξx1, ξx2, x1grid, x2grid)
 
-
-
         #computes the contribution to the P and Q matrices.
         weak_form!(P, Q, B, met, prob, x1, x2, x3grid, tm)
         
@@ -80,7 +75,6 @@ function construct(prob::ProblemT, grids::FFSGridsT)
         p * P
         p * Q
 
-        
         #loop over the fourier components of the trial function
         for (l1, n1) in enumerate(nlist)
 
@@ -110,7 +104,6 @@ function construct(prob::ProblemT, grids::FFSGridsT)
                         #only check for boundaries if this is true
                         #no other i's can possibly give boundaries
                         if i==1 || i==grids.x1.N-1
-
 
                             if left_ind == right_ind && left_ind in boundary_inds
 
@@ -188,6 +181,7 @@ function construct(prob::ProblemT, grids::FFSGridsT, surfs::Array{QFMSurfaceT})
     nlist = mode_list(grids.x3)
 
     #initialise the two structs to store the metric and the magnetic field.
+    #one for each cooridinate system.
     tor_met = MetT()
     qfm_met = MetT()
     tor_B = BFieldT()
@@ -197,8 +191,7 @@ function construct(prob::ProblemT, grids::FFSGridsT, surfs::Array{QFMSurfaceT})
     surf_itp, sd = create_surf_itp(surfs)
 
     #compute the gaussian qudrature points for finite elements.
-    ξx1, wgx1 = gausslegendre(grids.x1.gp) 
-    ξx2, wgx2 = gausslegendre(grids.x2.gp)
+    ξx1, ξx2, wgx1, wgx2 = gauss_points(grids)
 
     #Gets the Hermite basis for the radial grid and poloidal grid.
     S = hermite_basis(ξx1, ξx2)
@@ -210,8 +203,8 @@ function construct(prob::ProblemT, grids::FFSGridsT, surfs::Array{QFMSurfaceT})
     #creates the trial and test function arrays.
     #these store the basis functions for each derivative
     #and finite elements basis 
-    Φ = init_basis_function(grids)
-    Ψ = init_basis_function(grids)
+    Φ = init_trial_function(grids)
+    Ψ = init_trial_function(grids)
     
     #arrays to store the row, column and data of each matrix element
     #used for constructing sparse matrices.
@@ -220,15 +213,13 @@ function construct(prob::ProblemT, grids::FFSGridsT, surfs::Array{QFMSurfaceT})
     Qdata = Array{ComplexF64}(undef, 0)
     Pdata = Array{ComplexF64}(undef, 0)
 
-
-    #determines the indicies in the matrices corresponding to the dirichlet boundary conditions for r.
+    #determines the indicies in the matrices corresponding to the dirichlet boundary conditions for x1.
     boundary_inds = compute_boundary_inds(grids)
 
     #generalised eval problem PΦ = ω^2 Q Φ
     #these matrices store the local contribution, i.e. at each grid point, for the global matrices Q and P.
-    Q = local_matrix_size(grids)
-    P = local_matrix_size(grids)
-
+    Q = init_local_matrix(grids)
+    P = init_local_matrix(grids)
 
     #creates a fft plan for efficient fft used in spectral method.
     p = plan_fft!(P, [5])
@@ -236,39 +227,36 @@ function construct(prob::ProblemT, grids::FFSGridsT, surfs::Array{QFMSurfaceT})
     #initialises a struct storing temporary matrices used in the weak form.
     tm = TM()
 
+    x1 = zeros(length(ξx1))
+    x2 = zeros(length(ξx2))
+    dx = zeros(2)
+
     #struct for storing the intermediate data for the coordinate transform
     CT = CoordTransformT()
-
     
     #main loop, x2 goes to N for periodicity.
     for i in 1:grids.x1.N-1, j in 1:grids.x2.N 
 
         #takes the local ξ arrays to a global arrays around the grid point.
-        x1, x2, dx1, dx2 = local_to_global(i, j, ξx1, ξx2, x1grid, x2grid) 
-
-        #jacobian of the local to global transformation.
-        jac = dx1 * dx2 / 4
-
+        jac = local_to_global!(x1, x2, dx, i, j, ξx1, ξx2, x1grid, x2grid)
 
         #computes the contribution to the P and Q matrices.
-        #P_and_Q!(P, Q, B, met, prob, r, x2, x3grid, tm)
         weak_form!(P, Q, tor_B, tor_met, qfm_B, qfm_met, prob, x1, x2, x3grid, tm, surf_itp, CT, sd)
         
         #fft the two matrices.
         p * P
         p * Q
 
-        
         #loop over the fourier components of the trial function
         for (l1, n1) in enumerate(nlist)
 
             #transforms the local basis function to the global.
-            create_global_basis!(Φ, S, grids.x2.pf, n1, dx1, dx2, ts)
+            update_trial_function!(Φ, S, grids.x2.pf, n1, dx, ts)
 
             for (l2, n2) in enumerate(nlist)
 
                 #negatives for conjugate of test function
-                create_global_basis!(Ψ, S, -grids.x2.pf, -n2, dx1, dx2, ts)
+                update_trial_function!(Ψ, S, -grids.x2.pf, -n2, dx, ts)
 
                 #extract the relevant indicies from the ffted matrices.
                 nind = mod(l1-l2 + Nx3, Nx3) + 1
@@ -288,7 +276,6 @@ function construct(prob::ProblemT, grids::FFSGridsT, surfs::Array{QFMSurfaceT})
                         #only check for boundaries if this is true
                         #no other i's can possibly give boundaries
                         if i==1 || i==grids.x1.N-1
-
 
                             if left_ind == right_ind && left_ind in boundary_inds
 
@@ -346,4 +333,3 @@ function construct(prob::ProblemT, grids::FFSGridsT, surfs::Array{QFMSurfaceT})
 
     return Pmat, Qmat
 end
-

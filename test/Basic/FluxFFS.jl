@@ -1,10 +1,4 @@
 
-geo = init_geometry()
-fields = init_fields()
-
-
-prob = init_problem(fields=fields, geometry=geo)
-
 ψgrid = init_grid(:ψ, 20)
 θgrid = init_grid(:θ, 4, pf=1)
 ζgrid = init_grid(:sm, 1, start=-1)

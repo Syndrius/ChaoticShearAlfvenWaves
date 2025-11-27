@@ -5,12 +5,6 @@ rgrid = init_grid(:r, 30)
 
 grids = init_grids(rgrid, θgrid, ζgrid);
 
-geo = init_geometry()
-fields = init_fields(:r)
-
-prob = init_problem(fields=fields, geometry=geo)
-
-
 solver = init_solver(full_spectrum=true, prob=prob)
 
 evals, _, _ = compute_spectrum(prob, grids, solver);

@@ -1,4 +1,5 @@
 
+#test with island anonymous functions.
 geo = init_geometry(:κ, R0=1.0)
 
 isl = init_island(:κ, m0=1, n0=-1, w=0.1, ψ0=0.5, qp=1.0)
@@ -13,10 +14,24 @@ prob = init_problem(geometry=geo, fields=fields)
 
 grids = init_grids(κgrid, ᾱgrid, τgrid)
 solver = init_solver(prob=prob, full_spectrum=true)
-evals, _, _ = compute_spectrum(prob, grids, solver);
+
+dir = abspath(joinpath(pathof(MID), "../../test/data/"))
+
+inputs_to_file(dir=dir, grids=grids, prob=prob, solver=solver)
+
+compute_spectrum(dir);
+
+evals = evals_from_file(dir)
 
 ind = find_ind(evals, 0.015)
 
 @test ind == 77
 @test real(evals.ω[ind]) ≈ 0.01424 atol=0.001
+
+rm(joinpath(dir, "evals.jld2"))
+rm(joinpath(dir, "grids.jld2"))
+rm(joinpath(dir, "solver.jld2"))
+rm(joinpath(dir, "prob.jld2"))
+rm(joinpath(dir, "efuncs/"), recursive=true)
+rm(joinpath(dir, "efuncs_ft/"), recursive=true)
 

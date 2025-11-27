@@ -48,24 +48,19 @@ Current term is back on, it is working fine, may need higher res for best result
 module MID
 
 #submodules to fix
-#construct
 #mapping
 
 
 #things to actually do!
-#fix perN continuum
-#fix test cases, including helmholtz, island and damping etc -> helmholtz will be no more -> use generic FEM (change name to MID lol) for benchmarking in thesis.
 #delete all the extra random af files and stuff.
 #get the extra packages actually working
 #will be essential for the examples...
-#get qfm working again, will be fookin annoying. -> might be worth fully fixing up construct etc first, so functions looks the same. -> may even want to split the QFM up a bit.
-#islands, the structs and all related ufnctions, are still cooked af.
 #looks like we might need to fix slepcwrap after all lol -> cannot really get MIDParallel to compile anymore. old MPI version is conflicting with ordinary Diff eq.
 #alternatively, we can just create two different environments, one with parallel and one with ordinarydiffeq, until it is fixed. -> may be a more practical solution until thesis is done.
-#allow single island input in init_fields..
-#change W, I to P, Q to match paper and eventually thesis.
 #perhaps even change ζ to φ to match paper -> ideally we can determine what toroidal and cylindrical will actually be in general and make our code consistent with that!
 #gotta change the fkn spelling of separatrix....
+#the way of handling surfaces to/from file is really fkn bad but it is probably not worth fixing tbh
+#need to check if every function/method is actually working, ideally the test set covers most of it.
 
 ####################################
 
@@ -114,7 +109,7 @@ include("QFM/QFM.jl")
 #good
 include("Io/Io.jl")
 
-using ..Io; export inputs_to_file
+using ..Io; export inputs_to_file, surfaces_to_file, surfaces_from_file
 using ..Io; export inputs_from_file
 using ..Io; export evals_from_file
 using ..Io; export efunc_from_file
@@ -150,7 +145,7 @@ using ..Spectrum; export analytical_spectrum
 #maybe this can be simplified a bit from other things.
 include("Mapping/Mapping.jl") #hopefully not a mistake
 
+using ..Mapping; export qfm_spectrum_to_tor, isl_spectrum_to_tor
 
 
 end
-

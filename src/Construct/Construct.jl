@@ -1,6 +1,8 @@
 """
 
-Module for Constructing the two main matrices in the equation Wϕ = ω²Iϕ. Construction is split up based on which grids are used. Additionally, construction with qfm surfaces is slightly modified.
+Module for Constructing the two main matrices in the equation PΦ = ω²QΦ. 
+Construction is split up based on which grids are used. 
+Additionally, construction with qfm surfaces is slightly modified.
 """
 module Construct
 
@@ -10,7 +12,7 @@ using LinearAlgebra
 
 
 using ..Geometry
-using ..Basis #mayhap don't need this! but less sure
+using ..Basis 
 using ..Grids
 using ..Integration
 using ..Fields

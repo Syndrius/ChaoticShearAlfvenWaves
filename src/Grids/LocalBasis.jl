@@ -72,3 +72,48 @@ function local_to_global!(x1::Array{Float64}, x2::Array{Float64}, x3::Array{Floa
     return dx[1] * dx[2] * dx[3] / 8
 end
 
+
+"""
+    global_to_local(ind::Int64, grid::AbstractArray{Float64}, x::Float64)
+
+Maps the global grid into t alocal grid defined between -1 and 1.
+Used for Interpolation.
+"""
+function global_to_local(ind::Int64, grid::AbstractArray{Float64}, x::Float64)
+    #this is essentially an inverse of our local to global functions
+    #this takes the global segment, x∈[x_i, x_{i+1}] to local domain, ξ∈[-1, 1]
+    #guard in case point is exactly on grid
+    if grid[ind]==x
+        #extra edge cases only for derivatives.
+        ξ = -1.0
+        ind1 = ind
+        #assumes 2π periodicity
+        if ind1 == length(grid)
+            ind2 = 1
+            Δx = 2π + (grid[ind2] - grid[ind1])  #global difference
+        else
+            ind2 = ind+1 
+            Δx = grid[ind2] - grid[ind] 
+        end
+        inds = [ind1, ind2]
+    #periodic case
+    elseif x > grid[end]
+        inds = [length(grid), 1]
+        Δx = 2π + (grid[1] - grid[end])
+        ξ = (x - grid[end]) * 2 / Δx - 1
+    elseif grid[ind] < x
+        inds = [ind, ind+1]
+        Δx = grid[ind+1] - grid[ind]
+        ξ = (x - grid[ind]) * 2 / Δx - 1
+    else
+        #may need to add some other edge cases 
+        #in particular, the qfm grid not being maximal can cause problems
+        #typically this is easily fixed by making the mapped grid smaller.
+        inds = [ind-1, ind]
+        Δx = grid[ind] - grid[ind-1]
+        ξ = (x - grid[ind-1]) * 2 / Δx - 1
+    end
+    return ξ, inds, Δx
+end
+
+

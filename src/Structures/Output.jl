@@ -24,11 +24,3 @@ function find_ind(evals::EvalsT, val)
     return argmin(abs.(real.(evals.ω) .- val))
 end
 
-
-"""
-Generic version of above, should be somewhere else.
-"""
-function find_ind(grid::AbstractArray, val)
-
-    return argmin(abs.(grid .- val))
-end

@@ -16,6 +16,7 @@ using ..Grids
 using ..Structures
 using ..Solve
 using ..Construct
+using ..WeakForm
 using ..PostProcessing
 using ..Io
 
@@ -64,14 +65,18 @@ end
 
 
 """
+    compute_spectrum(dir::String; deriv=false)
+
 Computes the spectrum from inputs written to file.
 """
 function compute_spectrum(dir::String; deriv=false)
-    uninst_prob, grids, solver = inputs_from_file(dir=dir)
+    uninst_prob, grids, solver = inputs_from_file(dir)
 
-    prob = Structures.inst_problem(uninst_prob)
+    #this function is quite awkward because jld2 cannot write anonymous functions to file
+    #so they have to be recreated.
+    prob = WeakForm.inst_problem(uninst_prob.fields, uninst_prob.geo, uninst_prob.flr)
 
-    evals, ϕ, ϕft = compute_spectrum(prob=prob, grids=grids, solver=solver, deriv=deriv)
+    evals, ϕ, ϕft = compute_spectrum(prob, grids, solver, deriv=deriv)
 
     evals_to_file(evals, dir)
 

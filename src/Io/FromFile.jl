@@ -3,7 +3,7 @@
 
 Reads the prob and grids structs from file using JLD2.
 """
-function inputs_from_file(; dir::String)
+function inputs_from_file(dir::String)
 
     grids = load_object(dir*"grids.jld2")
     prob = load_object(dir*"prob.jld2")
@@ -19,7 +19,7 @@ end
 
 Reads the evals struct from file using JLD2.
 """
-function evals_from_file(; dir::String)
+function evals_from_file(dir::String)
 
     evals = load_object(dir*"evals.jld2")
 
@@ -32,7 +32,7 @@ end
 
 Reads a single eigenfunction from file using JLD2. Set ft=false to read the non-ft eigenfunction.
 """
-function efunc_from_file(; dir::String, ind::Int64, ft::Bool=true, deriv::Bool=false)
+function efunc_from_file(dir::String, ind::Int64; ft::Bool=true, deriv::Bool=false)
 
     if ft
         if deriv
@@ -49,4 +49,13 @@ function efunc_from_file(; dir::String, ind::Int64, ft::Bool=true, deriv::Bool=f
     ϕ = load_object(filename)
 
     return ϕ
+end
+
+"""
+    surfaces_from_file(dir::String)
+
+Loads surfaces from file.
+"""
+function surfaces_from_file(dir::String)
+    return load_object(dir)
 end

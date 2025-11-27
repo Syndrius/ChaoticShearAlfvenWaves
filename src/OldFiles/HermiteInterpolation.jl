@@ -14,11 +14,10 @@ function hermite_interpolation(x1::Float64, x2::Float64, x3::Float64, ϕ::Array{
     ξ2, inds2, dx2 = global_to_local(x2ind, x2grid, x2)
     ξ3, inds3, dx3 = global_to_local(x3ind, x3grid, x3)
 
-
     #so something is wrong here.
     ϕ_int = 0.0+0.0im
-    gid = Indexing.grid_id
-    bid = Indexing.basis_id
+    gid = Basis.grid_id
+    bid = Basis.basis_id
     for h3 in 1:4, h2 in 1:4, h1 in 1:4
         gi = (inds1[gid[h1]+1], inds2[gid[h2]+1], inds3[gid[h3]+1])
         bi = 1 + 4*bid[h1] + 2*bid[h2] + 1*bid[h3] #cannot be sure this is actually valid yet!
@@ -39,8 +38,8 @@ function hermite_interpolation(x1::Float64, ϕ::Array{ComplexF64, 2}, x1grid::Ar
 
     #so something is wrong here.
     ϕ_int = 0.0+0.0im
-    gid = Indexing.grid_id
-    bid = Indexing.basis_id
+    gid = Basis.grid_id
+    bid = Basis.basis_id
     for h1 in 1:4
         gi = inds1[gid[h1]+1]
         bi = 1 + bid[h1] 
@@ -89,6 +88,8 @@ function global_to_local(ind::Int64, grid::AbstractArray{Float64}, x::Float64)
         #may need to add some other edge cases 
         #in particular, the qfm grid not being maximal can cause problemos
         #typically this is easily fixed by making the mapped grid smaller.
+        #display(ind)
+        #display(grid)
         inds = [ind-1, ind]
         Δx = grid[ind] - grid[ind-1]
         ξ = (x - grid[ind-1]) * 2 / Δx - 1

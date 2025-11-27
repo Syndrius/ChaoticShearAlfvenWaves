@@ -6,11 +6,6 @@ rgrid = init_grid(:r, 15)
 
 grids = init_grids(rgrid, θgrid, ζgrid);
 
-geo = init_geometry()
-fields = init_fields(:r)
-
-prob = init_problem(fields=fields, geometry=geo)
-
 solver = init_solver(full_spectrum=true, prob=prob);
 
 #with @views. 22.907080 seconds (8.07 M allocations: 721.379 MiB, 1.36% gc time)

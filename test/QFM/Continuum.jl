@@ -1,15 +1,13 @@
 
-rgrid = init_grid(:cont, 20)
-θgrid = init_grid(:sm, 2, start=1)
+
+sgrid = init_grid(:cont, 20, start=0.15, stop=0.9)
+ϑgrid = init_grid(:sm, 2, start=1)
 ζgrid = init_grid(:sm, 1, start=-1)
 
+grids = init_grids(sgrid, ϑgrid, ζgrid)
 
-grids = init_grids(rgrid, θgrid, ζgrid)
 
-
- evals = compute_spectrum(prob, grids);
-
-#continuum_plot(ω, grids)
+evals = compute_spectrum(prob, grids, surfs);
 
 gap = 0.32
 
@@ -25,6 +23,3 @@ end
 
 #this tests asserst that there is a gap in the continuum in the correct spot.
 @test mindiff > 0.04
-
-
-

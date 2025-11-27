@@ -15,8 +15,10 @@ grids = init_grids(κgrid, ᾱgrid, τgrid)
 solver = init_solver(prob=prob, full_spectrum=true)
 evals, _, _ = compute_spectrum(prob, grids, solver);
 
-ind = find_ind(evals, 0.15)
+ind = find_ind(evals, 0.015)
 
 @test ind == 77
-@test real(evals.ω[ind]) ≈ 0.1424 atol=0.001
+@test real(evals.ω[ind]) ≈ 0.01424 atol=0.001
 
+#perhaps a mapping?
+#perhaps a normal case with a single island?

@@ -53,7 +53,7 @@ end
 
 Normalises the eigenvalues and determines the radial location for continuum case.
 """
-function post_process(evals::Array{Float64, 2}, grids::ContGridsT, geo::GeometryT)
+function post_process(evals::Array{ComplexF64, 2}, grids::ContGridsT, geo::GeometryT)
 
     ω = ComplexF64[]
     x1 = Float64[]

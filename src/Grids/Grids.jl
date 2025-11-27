@@ -47,5 +47,9 @@ include("LocalBasis.jl")
 
 export local_to_global!
 
+include("Interpolation.jl")
+
+export interpolation
+
 
 end

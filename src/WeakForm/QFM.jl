@@ -9,7 +9,7 @@ These are then transformed into the B and metric in (s, ϑ, ζ) coordinates so t
 function weak_form!(P::Array{ComplexF64, 5}, Q::Array{ComplexF64, 5}, tor_B::BFieldT, tor_met::MetT, qfm_B::BFieldT, qfm_met::MetT, prob::ProblemT, s::Array{Float64}, ϑ::AbstractArray, ζ::AbstractArray, tm::TM, surfs::SurfaceITPT, CT::CoordTransformT, sd::TempSurfT)
 
     #compute the density.
-    n = prob.dens.(s) :: Array{Float64}
+    n = prob.fields.dens.(s) :: Array{Float64}
 
     for k=1:1:length(ζ), j=1:1:length(ϑ), i=1:1:length(s)
 
@@ -18,7 +18,7 @@ function weak_form!(P::Array{ComplexF64, 5}, Q::Array{ComplexF64, 5}, tor_B::BFi
 
         #compute the original metric
         #using the computed values of (ψ, θ, φ)
-        prob.met(tor_met, CT.coords[1], CT.coords[2], CT.coords[3], prob.geo.R0)
+        prob.geo.met(tor_met, CT.coords[1], CT.coords[2], CT.coords[3], prob.geo.R0)
 
         #and original B field.
         compute_B!(tor_B, tor_met, prob.fields.q, prob.fields.isls, CT.coords[1], CT.coords[2], CT.coords[3]) 
@@ -35,10 +35,10 @@ function weak_form!(P::Array{ComplexF64, 5}, Q::Array{ComplexF64, 5}, tor_B::BFi
         compute_D!(qfm_B, qfm_met, tm.D)
 
         #compute the W matrix
-        @views compute_W!(W[:, :, i, j, k], qfm_B, qfm_met, n[i], tm)
+        @views compute_P!(P[:, :, i, j, k], qfm_B, qfm_met, n[i], tm)
 
         #compute the I matrix
-        @views compute_I!(I[:, :, i, j, k], qfm_B, qfm_met, n[i], prob.flr, tm.D, tm.F)
+        @views compute_Q!(Q[:, :, i, j, k], qfm_B, qfm_met, n[i], prob.flr, tm.D, tm.F)
 
 
     end

@@ -45,3 +45,14 @@ function efuncs_to_file(ϕ::Array{ComplexF64}, ϕft::Array{ComplexF64}, dir::Str
     end
     
 end
+
+"""
+    surfaces_to_file(surfs, dir::String)
+
+Saves the surfaces to file.
+"""
+function surfaces_to_file(surfs, dir::String)
+    #not really dir as we often want to name the surfaces.
+    save_object(dir, surfs)
+end
+

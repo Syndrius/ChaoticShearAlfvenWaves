@@ -29,7 +29,7 @@ Creates an a struct storing the interpolation function based on an array of qfm 
 """
 function create_surf_itp(surfs::Array{QFMSurfaceT})
 
-    dim1, dim2 = size(surfs[1].rcos)
+    dim1, dim2 = size(surfs[1].ψcos)
     pqMpol = dim1 - 1
     pqNtor = (dim2 - 1) ÷ 2
 
@@ -77,7 +77,7 @@ function create_surf_itp(surfs::Array{QFMSurfaceT})
     end
 
     #returns an empty struct of the correct size to store the intermediate interpolation data.
-    return SurfaceITPT(pqMpol, pqNtor, rcos_itp, θsin_itp, drcos_itp, dθsin_itp, d2rcos_itp, d2θsin_itp), TempSurfT(pqMpol, pqNtor)
+    return SurfaceITPT(pqMpol, pqNtor, ψcos_itp, θsin_itp, dψcos_itp, dθsin_itp, d2ψcos_itp, d2θsin_itp), TempSurfT(pqMpol, pqNtor)
 
 end
 
