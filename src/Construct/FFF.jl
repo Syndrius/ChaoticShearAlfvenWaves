@@ -54,22 +54,22 @@ function construct(prob::ProblemT, grids::FFFGridsT)
     x1 = zeros(length(ξx1))
     x2 = zeros(length(ξx2))
     x3 = zeros(length(ξx3))
-    dx = zeros(3)
+    Δx = zeros(3)
 
     #main loop, x2, x3 go to N for periodicity.
     for i in 1:grids.x1.N-1, j in 1:grids.x2.N, k in 1:grids.x3.N 
 
         #takes the local ξ arrays to a global arrays around the grid point.
         #number of args probably tells us that this could be improved
-        jac = local_to_global!(x1, x2, x3, dx, i, j, k, ξx1, ξx2, ξx3, x1grid, x2grid, x3grid)
+        jac = local_to_global!(x1, x2, x3, Δx, i, j, k, ξx1, ξx2, ξx3, x1grid, x2grid, x3grid)
 
         #computes the contribution to the P and Q matrices.
         weak_form!(P, Q, B, met, prob, x1, x2, x3, tm)
 
         #transforms the local basis function to the global.
-        update_trial_function!(Φ, S, grids.x2.pf, grids.x3.pf, dx, ts)
+        update_trial_function!(Φ, S, grids.x2.pf, grids.x3.pf, Δx, ts)
         #negatives for conjugate of test function
-        update_trial_function!(Ψ, S, -grids.x2.pf, -grids.x3.pf, dx, ts)
+        update_trial_function!(Ψ, S, -grids.x2.pf, -grids.x3.pf, Δx, ts)
 
         #loop over the Hermite elements for the trial function
         for trialx1 in 1:4, trialx2 in 1:4, trialx3 in 1:4
@@ -199,7 +199,7 @@ function construct(prob::ProblemT, grids::FFFGridsT, surfs::Array{QFMSurfaceT})
     x1 = zeros(length(ξx1))
     x2 = zeros(length(ξx2))
     x3 = zeros(length(ξx3))
-    dx = zeros(3)
+    Δx = zeros(3)
 
     #struct for storing the intermediate data for the coordinate transform
     CT = CoordTransformT()
@@ -209,15 +209,15 @@ function construct(prob::ProblemT, grids::FFFGridsT, surfs::Array{QFMSurfaceT})
 
         #takes the local ξ arrays to a global arrays around the grid point.
         #number of args probably tells us that this could be improved
-        jac = local_to_global!(x1, x2, x3, dx, i, j, k, ξx1, ξx2, ξx3, x1grid, x2grid, x3grid)
+        jac = local_to_global!(x1, x2, x3, Δx, i, j, k, ξx1, ξx2, ξx3, x1grid, x2grid, x3grid)
 
         #computes the contribution to the P and Q matrices.
         weak_form!(P, Q, tor_B, tor_met, qfm_B, qfm_met, prob, x1, x2, x3, tm, surf_itp, CT, sd)
 
         #transforms the local basis function to the global.
-        update_trial_function!(Φ, S, grids.x2.pf, grids.x3.pf, dx, ts)
+        update_trial_function!(Φ, S, grids.x2.pf, grids.x3.pf, Δx, ts)
         #negatives for conjugate of test function
-        update_trial_function!(Ψ, S, -grids.x2.pf, -grids.x3.pf, dx, ts)
+        update_trial_function!(Ψ, S, -grids.x2.pf, -grids.x3.pf, Δx, ts)
 
         #loop over the Hermite elements for the trial function
         for trialx1 in 1:4, trialx2 in 1:4, trialx3 in 1:4

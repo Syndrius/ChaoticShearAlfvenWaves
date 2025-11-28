@@ -63,13 +63,13 @@ function construct(prob::ProblemT, grids::FSSGridsT)
 
     #arrays to store the global quadrature points
     x1 = zeros(length(ξ)) 
-    dx = zeros(1)
+    Δx = zeros(1)
    
     #main loop
     for i in 1:grids.x1.N-1
 
         #takes the local ξ array to a global x1 array around the grid point.
-        jac = local_to_global!(x1, dx, i, ξ, x1grid)
+        jac = local_to_global!(x1, Δx, i, ξ, x1grid)
 
         #computes the contribution to the P and Q matrices.
         weak_form!(P, Q, B, met, prob, x1, x2grid, x3grid, tm)
@@ -82,12 +82,12 @@ function construct(prob::ProblemT, grids::FSSGridsT)
         for (k1,m1) in enumerate(mlist), (l1, n1) in enumerate(nlist)
 
             #transforms the local basis function to the global.
-            update_trial_function!(Φ, S, m1, n1, dx, ts)
+            update_trial_function!(Φ, S, m1, n1, Δx, ts)
 
             for (k2, m2) in enumerate(mlist), (l2, n2) in enumerate(nlist)
 
                 #negatives for conjugate in the test function.
-                update_trial_function!(Ψ, S, -m2, -n2, dx, ts)
+                update_trial_function!(Ψ, S, -m2, -n2, Δx, ts)
 
                 #extract the relevant indicies from the fft'd matrices.
                 mind = mod(k1-k2 + Nx2, Nx2) + 1
@@ -236,13 +236,13 @@ function construct(prob::ProblemT, grids::FSSGridsT, surfs::Array{QFMSurfaceT})
 
     #arrays to store the global quadrature points
     x1 = zeros(length(ξ)) 
-    dx = zeros(1)
+    Δx = zeros(1)
    
     #main loop
     for i in 1:grids.x1.N-1
 
         #takes the local ξ array to a global x1 array around the grid point.
-        jac = local_to_global!(x1, dx, i, ξ, x1grid)
+        jac = local_to_global!(x1, Δx, i, ξ, x1grid)
 
         #computes the contribution to the P and Q matrices.
         weak_form!(P, Q, tor_B, tor_met, qfm_B, qfm_met, prob, x1, x2grid, x3grid, tm, surf_itp, CT, sd)
@@ -255,12 +255,12 @@ function construct(prob::ProblemT, grids::FSSGridsT, surfs::Array{QFMSurfaceT})
         for (k1,m1) in enumerate(mlist), (l1, n1) in enumerate(nlist)
 
             #transforms the local basis function to the global.
-            update_trial_function!(Φ, S, m1, n1, dx, ts)
+            update_trial_function!(Φ, S, m1, n1, Δx, ts)
 
             for (k2, m2) in enumerate(mlist), (l2, n2) in enumerate(nlist)
 
                 #negatives for conjugate in the test function.
-                update_trial_function!(Ψ, S, -m2, -n2, dx, ts)
+                update_trial_function!(Ψ, S, -m2, -n2, Δx, ts)
 
                 #extract the relevant indicies from the fft'd matrices.
                 mind = mod(k1-k2 + Nx2, Nx2) + 1

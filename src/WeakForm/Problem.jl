@@ -40,9 +40,9 @@ function inst_problem(fields::RadialFieldsT, geo::GeometryT, flr::FLRT)
     end
 
     #this q-profile uses the island.
-    if fields.q == island_q
-        inst_q(r) = island_q(r, fields.isl[1])
-        inst_fields = FieldsT()
+    if fields.q_func == island_q
+        inst_q(r) = island_q(r, fields.isls[1])
+        inst_fields = RadialFieldsT(island_q, inst_q, fields.dens, fields.isls)
         #metric is fine.
         return ProblemT(inst_fields, inst_geo, prob.flr)
     end
@@ -69,10 +69,10 @@ function inst_problem(fields::FluxFieldsT, geo::GeometryT, flr::FLRT)
     end
     
     #this q-profile uses the island.
-    if fields.q == island_q
-        inst_q(ψ) = island_q(ψ, fields.isl[1])
-        inst_fields = FieldsT()
-        return ProblemT(inst_fields, inst_geo, prob.flr)
+    if fields.q_func == island_q
+        inst_q(ψ) = island_q(ψ, fields.isls[1])
+        inst_fields = FluxFieldsT(island_q, inst_q, fields.dens, fields.isls)
+        return ProblemT(inst_fields, inst_geo, flr)
     end
 
     return ProblemT(fields, inst_geo, flr)

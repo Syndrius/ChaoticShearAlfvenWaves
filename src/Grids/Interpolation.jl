@@ -11,9 +11,9 @@ function interpolation(x1::Float64, x2::Float64, x3::Float64, ϕ::Array{ComplexF
     x3ind = argmin(abs.(x3grid .- x3))
 
     #using this point, we find the two indices left and right of the point, the distance from the left point (ξ) and the disatnce between the two points.
-    ξ1, inds1, dx1 = global_to_local(x1ind, x1grid, x1)
-    ξ2, inds2, dx2 = global_to_local(x2ind, x2grid, x2)
-    ξ3, inds3, dx3 = global_to_local(x3ind, x3grid, x3)
+    ξ1, inds1, Δx1 = global_to_local(x1ind, x1grid, x1)
+    ξ2, inds2, Δx2 = global_to_local(x2ind, x2grid, x2)
+    ξ3, inds3, Δx3 = global_to_local(x3ind, x3grid, x3)
 
     ϕ_int = 0.0+0.0im
     gid = grid_id
@@ -21,7 +21,7 @@ function interpolation(x1::Float64, x2::Float64, x3::Float64, ϕ::Array{ComplexF
     for h3 in 1:4, h2 in 1:4, h1 in 1:4
         gi = (inds1[gid[h1]+1], inds2[gid[h2]+1], inds3[gid[h3]+1])
         bi = 1 + 4*bid[h1] + 2*bid[h2] + 1*bid[h3] #cannot be sure this is actually valid yet!
-        ϕ_int += ϕ[gi..., bi] * hb(ξ1, h1, dx1) * hb(ξ2, h2, dx2) * hb(ξ3, h3, dx3)
+        ϕ_int += ϕ[gi..., bi] * hb(ξ1, h1, Δx1) * hb(ξ2, h2, Δx2) * hb(ξ3, h3, Δx3)
     end
     return ϕ_int
 
@@ -39,9 +39,9 @@ function interpolation(x1::Float64, x2::Float64, x3::Float64, ϕ::Array{ComplexF
     x3ind = argmin(abs.(x3grid .- x3))
 
     #using this point, we find the two indices left and right of the point, the distance from the left point (ξ) and the disatnce between the two points.
-    ξ1, inds1, dx1 = global_to_local(x1ind, x1grid, x1)
-    ξ2, inds2, dx2 = global_to_local(x2ind, x2grid, x2)
-    ξ3, inds3, dx3 = global_to_local(x3ind, x3grid, x3)
+    ξ1, inds1, Δx1 = global_to_local(x1ind, x1grid, x1)
+    ξ2, inds2, Δx2 = global_to_local(x2ind, x2grid, x2)
+    ξ3, inds3, Δx3 = global_to_local(x3ind, x3grid, x3)
 
     ϕ_int = 0.0+0.0im
     gid = Indexing.grid_id
@@ -49,7 +49,7 @@ function interpolation(x1::Float64, x2::Float64, x3::Float64, ϕ::Array{ComplexF
     for h1 in 1:4, h2 in 1:4, h3 in 1:4
         gi = (inds1[gid[h1]+1], inds2[gid[h2]+1], inds3[gid[h3]+1])
         bi = 1 + 4*bid[h1] + 2*bid[h2] + 1*bid[h3] #cannot be sure this is actually valid yet!
-        ϕ_int += ϕ[gi..., bi] * hb(ξ1, h1, dx1, x1d) * hb(ξ2, h2, dx2, x2d) * hb(ξ3, h3, dx3, x3d)
+        ϕ_int += ϕ[gi..., bi] * hb(ξ1, h1, Δx1, x1d) * hb(ξ2, h2, Δx2, x2d) * hb(ξ3, h3, Δx3, x3d)
     end
     return ϕ_int
 

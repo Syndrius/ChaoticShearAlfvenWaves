@@ -1,4 +1,9 @@
+"""
+    qfm_spectrum_to_tor(dir_base::String, tor_grids::GridsT, surfs_dir::String)
 
+Converts the spectrum computed in QFM coordinates, (s, ϑ, ζ), into toroidal coordinates, (ψ, θ, φ).
+This version works with the output format of CSAWParallel.
+"""
 function qfm_spectrum_to_tor(dir_base::String, tor_grids::GridsT, surfs_dir::String)
 
     mkpath(dir_base*"/tor_map/efuncs")
@@ -19,10 +24,9 @@ function qfm_spectrum_to_tor(dir_base::String, tor_grids::GridsT, surfs_dir::Str
     #think this process is indep of flux vs rad, just depends how the surfaces where generated
     rgrid, θgrid, ζgrid = inst_grids(tor_grids)
 
-    rms = [] #note that we don't know the size of this yet
+    rms = [] 
     tor_ω = []
     mode_labs = Tuple{Int64, Int64}[]
-
 
     ϕ_qfm, ϕ_qfmft = PostProcessing.allocate_phi_arrays(qfm_grids, deriv=true)
 
@@ -40,19 +44,13 @@ function qfm_spectrum_to_tor(dir_base::String, tor_grids::GridsT, surfs_dir::Str
 
     mode_count = 1
 
+    #pre compute the coordinate map for efficient mapping
     coord_map = qfm_to_tor_coord_map(rgrid, θgrid, ζgrid, CT, surf_itp, sd)
 
     for i in 1:nevals
 
-        #Not impossible we would only want to map over the chaotic region or something!
-        #if evals.x1[i] < sep_min || evals.x1[i] > sep_max
-        #    continue
-        #end
-
-        #we could generalise this process by creating a get efunc function or something
-        #unsure how usefull that would ever be though!
+        #output of CSAW parallel is awkward to read in.
         efunc_read = @sprintf("efunc%05d.hdf5", un_inds[i])
-        #unfort doesn't handle complex numbers v well
         efunc_split = load_object(dir_base*"/efuncs_raw/"*efunc_read)
 
         #ideally this would be preallocated in some way
@@ -60,11 +58,7 @@ function qfm_spectrum_to_tor(dir_base::String, tor_grids::GridsT, surfs_dir::Str
 
         PostProcessing.reconstruct_phi!(efunc, qfm_grids, ϕ_qfm, ϕ_qfmft, plan_qfm)
 
-        #dont care about maximum in this case
-        #amax = argmax(abs.(real.(ϕ_qfm[:, :, 1, 1])))
-
-        
-        #bit stupid to pass in the array size here but whatever.
+        #maps the eigenfunction
         efunc_map!(ϕ_tor, tor_grids.x1.N, tor_grids.x2.N, tor_grids.x3.N, ϕ_qfm, sgrid, ϑgrid, φgrid, coord_map)
         
         PostProcessing.ft_phi!(ϕ_tor, ϕ_torft, tor_grids, plan_tor)
@@ -89,20 +83,13 @@ function qfm_spectrum_to_tor(dir_base::String, tor_grids::GridsT, surfs_dir::Str
 end
 
 
-#version without parallel (hopefully!)
-#working now!
+"""
+    qfm_spectrum_to_tor(evals::EvalsT, ϕ_qfm::Array{ComplexF64, 5}, ϕ_qfmft::Array{ComplexF64, 5}, qfm_grids::GridsT, tor_grids::GridsT, surfs::Array{QFMSurfaceT})
+
+Converts the spectrum computed in QFM coordinates, (s, ϑ, ζ), into toroidal coordinates, (ψ, θ, φ).
+This version works with the output in serial.
+"""
 function qfm_spectrum_to_tor(evals::EvalsT, ϕ_qfm::Array{ComplexF64, 5}, ϕ_qfmft::Array{ComplexF64, 5}, qfm_grids::GridsT, tor_grids::GridsT, surfs::Array{QFMSurfaceT})
-
-    #mkpath(dir_base*"/tor_map/efuncs")
-    #mkpath(dir_base*"/tor_map/efuncs_ft")
-
-    #prob, qfm_grids, _ = inputs_from_file(dir_base)
-
-    #surfs = load_object(surfs_dir)
-
-    #evals = evals_from_file(dir_base)
-
-    #un_inds = load_object(joinpath(dir_base, "unique_inds.jld2"))
 
     nevals = length(evals.ω)
 
@@ -127,12 +114,11 @@ function qfm_spectrum_to_tor(evals::EvalsT, ϕ_qfm::Array{ComplexF64, 5}, ϕ_qfm
     ψmarray = Array{Int64}(undef, tor_grids.x2.N, tor_grids.x3.N)
     ϕ_tormarray = Array{Float64}(undef, tor_grids.x2.N, tor_grids.x3.N)
 
+    #pre compute the coordinate map for efficient mapping
     coord_map = qfm_to_tor_coord_map(ψgrid, θgrid, φgrid, CT, surf_itp, sd)
 
     for i in 1:nevals
 
-        
-        #bit stupid to pass in the array size here but whatever.
         efunc_map!(ϕp, tor_grids.x1.N, tor_grids.x2.N, tor_grids.x3.N, ϕ_qfm[i, :, :, :, :], sgrid, ϑgrid, ζgrid, coord_map)
         
         PostProcessing.ft_phi!(ϕp, ϕp_ft, tor_grids, plan_tor)
@@ -145,19 +131,13 @@ function qfm_spectrum_to_tor(evals::EvalsT, ϕ_qfm::Array{ComplexF64, 5}, ϕ_qfm
         ϕ_tor[i, :, :, :] .= ϕp
         ϕ_torft[i, :, :, :] .= ϕp_ft
 
+        #probably not actually needed.
         ϕp .= 0.0
         ϕp_ft .= 0.0
 
-        #save_object(dir_base*"/tor_map/efuncs/"*efunc_write, ϕ_tor)
-        #save_object(dir_base*"/tor_map/efuncs_ft/"*efunc_write, ϕ_torft)
-        #mode_count += 1
     end
 
     tor_evals = EvalsT(tor_ω, ψms, mode_labs)
-    #save_object(dir_base*"/tor_map/evals.jld2", tor_evals)
-    #so we have a record of the grids used in the mapping
-    #save_object(dir_base*"/tor_map/grids.jld2", tor_grids)
-    return evals, ϕ_tor, ϕ_torft
+    return tor_evals, ϕ_tor, ϕ_torft
 end
-
 

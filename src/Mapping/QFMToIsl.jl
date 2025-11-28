@@ -1,14 +1,16 @@
+"""
+    qfm_spectrum_to_isl(dir_base::String, isl_grids::GridsT, surfs_dir::String)
 
+Maps the spectrum computed in QFM coordinates, (s, ϑ, ζ), to island coordinates, (κ, ᾱ, τ).
+"""
 function qfm_spectrum_to_isl(dir_base::String, isl_grids::GridsT, surfs_dir::String)
 
     mkpath(dir_base*"/isl_map/efuncs")
     mkpath(dir_base*"/isl_map/efuncs_ft")
 
-    prob, qfm_grids, _ = inputs_from_file(dir=dir_base)
+    prob, qfm_grids, _ = inputs_from_file(dir_base)
 
-    un_isl = prob.isls[1]
-
-    isl = inst_island(un_isl) 
+    isl = prob.fields.isls[1]
 
     un_inds = load_object(joinpath(dir_base, "unique_inds.jld2"))
 
@@ -16,7 +18,7 @@ function qfm_spectrum_to_isl(dir_base::String, isl_grids::GridsT, surfs_dir::Str
 
     surfs = load_object(surfs_dir)
 
-    evals = evals_from_file(dir=dir_base)
+    evals = evals_from_file(dir_base)
 
     sgrid, ϑgrid, φgrid = inst_grids(qfm_grids)
 
@@ -25,7 +27,6 @@ function qfm_spectrum_to_isl(dir_base::String, isl_grids::GridsT, surfs_dir::Str
     κms = [] #note that we don't know the size of this yet
     isl_ω = []
     mode_labs = Tuple{Int64, Int64}[]
-
 
     ϕ_qfm, ϕ_qfmft = PostProcessing.allocate_phi_arrays(qfm_grids, deriv=true)
 
@@ -47,13 +48,13 @@ function qfm_spectrum_to_isl(dir_base::String, isl_grids::GridsT, surfs_dir::Str
 
     for (i, θ) in enumerate(θgrid)
         #assumes ζ=0, probbaly ok
-        sep_min, sep_max = sepratrix(θ, isl)
+        sep_min, sep_max = separatrix(θ, isl)
         rmin[i] = sep_min
         rmax[i] = sep_max
     end
 
     CT = CoordTransformT()
-    smin, smax, ϑsep = map_sepratrix(rmin, rmax, θgrid, isl, CT, surf_itp, sd)
+    smin, smax, ϑsep = map_separatrix(rmin, rmax, θgrid, isl, CT, surf_itp, sd)
 
     sep_min = minimum(smin)
     sep_max = maximum(smax)
@@ -69,7 +70,7 @@ function qfm_spectrum_to_isl(dir_base::String, isl_grids::GridsT, surfs_dir::Str
         end
 
         efunc_read = @sprintf("efunc%05d.hdf5", un_inds[i])
-        #unfort doesn't handle complex numbers v well
+        #doesn't handle complex numbers well
         efunc_split = load_object(dir_base*"/efuncs_raw/"*efunc_read)
 
         #ideally this would be preallocated in some way
@@ -80,10 +81,7 @@ function qfm_spectrum_to_isl(dir_base::String, isl_grids::GridsT, surfs_dir::Str
         #for qfm we just take ζ=0.0 so sepratrix mapping is easier.
         amax = argmax(abs.(real.(ϕ_qfm[:, :, 1, 1])))
 
-        #we can probbaly change the other version to be a bit more like this
-        #unsure on this condition, but basically, the smin/smax are functions of ϑ, 
-        #so this checks if the s min/max at the peak is less/greater than the sepratrix.
-        #also ignores variance with ζ.
+        #this checks if the s min/max at the peak is less/greater than the sepratrix.
         if smin[amax[2]] >= sgrid[amax[1]] || sgrid[amax[1]] >= smax[amax[2]]
             continue
         end

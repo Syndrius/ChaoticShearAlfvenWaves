@@ -41,7 +41,8 @@ export gae_dens
 
 #good
 include("Island.jl")
-#probably need to export some stuff for mapping!
+
+export separatrix
 
 """
     init_fields(type=:ψ; q::Function=quadratic_q, dens::Function=uniform_dens, isls::Array{<:IslandT}=IslandT[])

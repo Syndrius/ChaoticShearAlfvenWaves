@@ -1,10 +1,10 @@
 
 """
-    sepratrix(α::Float64, isl::RadialIslandT)
+    separatrix(α::Float64, isl::RadialIslandT)
 
 Computes the two radial values of the sepratrix for an input α.
 """
-function sepratrix(α::Float64, isl::RadialIslandT)
+function separatrix(α::Float64, isl::RadialIslandT)
 
     r2diff = sqrt(isl.w^2*(1-sin(isl.m0*α/2)^2))
 
@@ -12,11 +12,11 @@ function sepratrix(α::Float64, isl::RadialIslandT)
 end
 
 """
-    sepratrix(α::Float64, isl::FluxIslandT)
+    separatrix(α::Float64, isl::FluxIslandT)
 
 Computes the two radial values of the sepratrix for an input α.
 """
-function sepratrix(α::Float64, isl::FluxIslandT)
+function separatrix(α::Float64, isl::FluxIslandT)
 
     Δψ = sqrt(isl.w^2/4*(1-sin(isl.m0*α/2)^2))
 

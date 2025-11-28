@@ -1,12 +1,17 @@
+"""
+    tor_spectrum_to_isl(dir_base::String, isl_grids::GridsT)
 
+Maps the spectrum computed in toroidal coordinates, (ψ, θ, φ), to island coordinates, (κ, ᾱ, τ).
+This expects the output from CSAWParallel.
+"""
 function tor_spectrum_to_isl(dir_base::String, isl_grids::GridsT)
 
     mkpath(dir_base*"/isl_map/efuncs")
     mkpath(dir_base*"/isl_map/efuncs_ft")
 
-    prob, tor_grids, _ = inputs_from_file(dir=dir_base)
+    prob, tor_grids, _ = inputs_from_file(dir_base)
 
-    evals = evals_from_file(dir=dir_base)
+    evals = evals_from_file(dir_base)
 
     un_inds = load_object(joinpath(dir_base, "unique_inds.jld2"))
 
@@ -15,9 +20,9 @@ function tor_spectrum_to_isl(dir_base::String, isl_grids::GridsT)
     rgrid, θgrid, ζgrid = inst_grids(tor_grids)
     κgrid, ᾱgrid, τgrid = inst_grids(isl_grids)
 
-    isl = prob.isls[1]
+    isl = prob.fields.isls[1]
 
-    κms = [] #note that we don't know the size of this yet
+    κms = [] 
     isl_ω = []
     mode_labs = Tuple{Int64, Int64}[]
 
@@ -34,8 +39,7 @@ function tor_spectrum_to_isl(dir_base::String, isl_grids::GridsT)
     ϕ_islmarray = Array{Float64}(undef, isl_grids.x2.N, isl_grids.x3.N)
 
     #0.0 is the widest part of the island.
-    #islands as an array is cooked af here.
-    sep_min, sep_max = sepratrix(0.0, isl)
+    sep_min, sep_max = separatrix(0.0, isl)
 
     mode_count = 1
 
@@ -51,31 +55,25 @@ function tor_spectrum_to_isl(dir_base::String, isl_grids::GridsT)
         end
 
         efunc_read = @sprintf("efunc%05d.hdf5", un_inds[i])
-        #unfort doesn't handle complex numbers v well
         efunc_split = load_object(dir_base*"/efuncs_raw/"*efunc_read)
 
         #ideally this would be preallocated in some way
         efunc = efunc_split[1, :] .+ efunc_split[2, :] * 1im
-
 
         #process the raw efunc to get the full solution for interpolation
         PostProcessing.reconstruct_phi!(efunc, tor_grids, ϕ_tor, ϕ_torft, plan_tor)
 
         amax = argmax(abs.(real.(ϕ_tor[:, :, :, 1])))
 
-        rmin, rmax = sepratrix(isl.m0*θgrid[amax[2]]+isl.n0*ζgrid[amax[3]], isl)
+        rmin, rmax = separatrix(isl.m0*θgrid[amax[2]]+isl.n0*ζgrid[amax[3]], isl)
 
         #now a stronger restriction can be placed
         if rmin >= rgrid[amax[1]] || rgrid[amax[1]] >= rmax
             continue
         end
-        
 
         efunc_map!(ϕ_isl, isl_grids.x1.N, isl_grids.x2.N, isl_grids.x3.N, ϕ_tor, rgrid, θgrid, ζgrid, coord_map)
 
-
-        #may need to check the plan is not in place or anything stupid.
-        #i.e. maybe we write ϕ_isl to file, then fft in place and do the other stuff
         PostProcessing.ft_phi!(ϕ_isl, ϕ_islft, isl_grids, plan_isl)
 
         κind, mode_lab = PostProcessing.label_mode(ϕ_islft, isl_grids, κmarray, ϕ_islmarray)

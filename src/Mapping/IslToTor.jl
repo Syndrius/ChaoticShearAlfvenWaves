@@ -1,11 +1,10 @@
 
-#TODO
-#this woould probably be the best example for showing how mapping actually works
-#taking the island gap mode to toroidal coords.
-#think we already have the coord transformation
-#dso maybe we should actually do this...
+"""
+    isl_spectrum_to_tor(evals::EvalsT, ϕ_isl::Array{ComplexF64, 5}, ϕ_islft::Array{ComplexF64, 5}, isl_grids::GridsT, tor_grids::GridsT, prob::ProblemT)
 
-#think this will only work converting to flux!
+Converts spectrum computed in island coordinates, (κ, ᾱ, τ), to toroidal coordinates, (ψ, θ, φ).
+Expects output from serial computation.
+"""
 function isl_spectrum_to_tor(evals::EvalsT, ϕ_isl::Array{ComplexF64, 5}, ϕ_islft::Array{ComplexF64, 5}, isl_grids::GridsT, tor_grids::GridsT, prob::ProblemT)
 
     nevals = length(evals.ω)
@@ -26,12 +25,11 @@ function isl_spectrum_to_tor(evals::EvalsT, ϕ_isl::Array{ComplexF64, 5}, ϕ_isl
     ψmarray = Array{Int64}(undef, tor_grids.x2.N, tor_grids.x3.N)
     ϕ_tormarray = Array{Float64}(undef, tor_grids.x2.N, tor_grids.x3.N)
 
+    #pre compute the coordinate map for efficient mapping
     coord_map = isl_to_tor_coord_map(ψgrid, θgrid, φgrid, prob.fields.isls[1])
 
     for i in 1:nevals
 
-        
-        #bit stupid to pass in the array size here but whatever.
         efunc_map!(ϕp, tor_grids.x1.N, tor_grids.x2.N, tor_grids.x3.N, ϕ_isl[i, :, :, :, :], κgrid, ᾱgrid, τgrid, coord_map)
         
         PostProcessing.ft_phi!(ϕp, ϕp_ft, tor_grids, plan_tor)
@@ -47,15 +45,9 @@ function isl_spectrum_to_tor(evals::EvalsT, ϕ_isl::Array{ComplexF64, 5}, ϕ_isl
         ϕp .= 0.0
         ϕp_ft .= 0.0
 
-        #save_object(dir_base*"/tor_map/efuncs/"*efunc_write, ϕ_tor)
-        #save_object(dir_base*"/tor_map/efuncs_ft/"*efunc_write, ϕ_torft)
-        #mode_count += 1
     end
 
     tor_evals = EvalsT(tor_ω, ψms, mode_labs)
-    #save_object(dir_base*"/tor_map/evals.jld2", tor_evals)
-    #so we have a record of the grids used in the mapping
-    #save_object(dir_base*"/tor_map/grids.jld2", tor_grids)
-    return evals, ϕ_tor, ϕ_torft
+    return tor_evals, ϕ_tor, ϕ_torft
 end
 

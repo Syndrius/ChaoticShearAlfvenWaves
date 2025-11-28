@@ -14,7 +14,7 @@ using ..Structures
 abstract type SolverT end
 
 
-export solve, SolverT, init_solver
+export solve, SolverT, init_solver, ShiftInvertSolverT, FullSpectrumSolverT, SliceSolverT
 
 #good
 include("Init.jl") 

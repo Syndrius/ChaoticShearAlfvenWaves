@@ -60,13 +60,13 @@ function construct(prob::ProblemT, grids::FFSGridsT)
 
     x1 = zeros(length(ξx1))
     x2 = zeros(length(ξx2))
-    dx = zeros(2)
+    Δx = zeros(2)
     
     #main loop, x2 goes to N for periodicity.
     for i in 1:grids.x1.N-1, j in 1:grids.x2.N 
 
         #takes the local ξ arrays to a global arrays around the grid point.
-        jac = local_to_global!(x1, x2, dx, i, j, ξx1, ξx2, x1grid, x2grid)
+        jac = local_to_global!(x1, x2, Δx, i, j, ξx1, ξx2, x1grid, x2grid)
 
         #computes the contribution to the P and Q matrices.
         weak_form!(P, Q, B, met, prob, x1, x2, x3grid, tm)
@@ -79,12 +79,12 @@ function construct(prob::ProblemT, grids::FFSGridsT)
         for (l1, n1) in enumerate(nlist)
 
             #transforms the local basis function to the global.
-            update_trial_function!(Φ, S, grids.x2.pf, n1, dx, ts)
+            update_trial_function!(Φ, S, grids.x2.pf, n1, Δx, ts)
 
             for (l2, n2) in enumerate(nlist)
 
                 #negatives for conjugate of test function
-                update_trial_function!(Ψ, S, -grids.x2.pf, -n2, dx, ts)
+                update_trial_function!(Ψ, S, -grids.x2.pf, -n2, Δx, ts)
 
                 #extract the relevant indicies from the ffted matrices.
                 nind = mod(l1-l2 + Nx3, Nx3) + 1
@@ -229,7 +229,7 @@ function construct(prob::ProblemT, grids::FFSGridsT, surfs::Array{QFMSurfaceT})
 
     x1 = zeros(length(ξx1))
     x2 = zeros(length(ξx2))
-    dx = zeros(2)
+    Δx = zeros(2)
 
     #struct for storing the intermediate data for the coordinate transform
     CT = CoordTransformT()
@@ -238,7 +238,7 @@ function construct(prob::ProblemT, grids::FFSGridsT, surfs::Array{QFMSurfaceT})
     for i in 1:grids.x1.N-1, j in 1:grids.x2.N 
 
         #takes the local ξ arrays to a global arrays around the grid point.
-        jac = local_to_global!(x1, x2, dx, i, j, ξx1, ξx2, x1grid, x2grid)
+        jac = local_to_global!(x1, x2, Δx, i, j, ξx1, ξx2, x1grid, x2grid)
 
         #computes the contribution to the P and Q matrices.
         weak_form!(P, Q, tor_B, tor_met, qfm_B, qfm_met, prob, x1, x2, x3grid, tm, surf_itp, CT, sd)
@@ -251,12 +251,12 @@ function construct(prob::ProblemT, grids::FFSGridsT, surfs::Array{QFMSurfaceT})
         for (l1, n1) in enumerate(nlist)
 
             #transforms the local basis function to the global.
-            update_trial_function!(Φ, S, grids.x2.pf, n1, dx, ts)
+            update_trial_function!(Φ, S, grids.x2.pf, n1, Δx, ts)
 
             for (l2, n2) in enumerate(nlist)
 
                 #negatives for conjugate of test function
-                update_trial_function!(Ψ, S, -grids.x2.pf, -n2, dx, ts)
+                update_trial_function!(Ψ, S, -grids.x2.pf, -n2, Δx, ts)
 
                 #extract the relevant indicies from the ffted matrices.
                 nind = mod(l1-l2 + Nx3, Nx3) + 1
