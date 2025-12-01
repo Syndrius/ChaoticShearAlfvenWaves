@@ -9,7 +9,6 @@ Base class that just imports everything. We will want a description of the packa
 - add title and descirpiotn to this file
 - Fix examples
 - Fix all the imports and exports
-- Delete all the extra garbage.
 - change ζ and φ to be consistent with thesis etc.
 - make sure all the random af functions we have still actually work.
 - stop the Chaotic etc .QFM.function, i.e. actually import the specific functions used? Perhaps this should be done in general?
