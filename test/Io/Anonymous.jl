@@ -15,7 +15,7 @@ prob = init_problem(geometry=geo, fields=fields)
 grids = init_grids(κgrid, ᾱgrid, τgrid)
 solver = init_solver(prob=prob, full_spectrum=true)
 
-dir = abspath(joinpath(pathof(MID), "../../test/data/"))
+dir = abspath(joinpath(pathof(ChaoticShearAlfvenWaves), "../../test/data/"))
 
 inputs_to_file(dir=dir, grids=grids, prob=prob, solver=solver)
 

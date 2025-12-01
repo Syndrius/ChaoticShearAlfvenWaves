@@ -5,3 +5,4 @@ data/*
 *.swp
 *.jld2
 old_data/*
+docs/*

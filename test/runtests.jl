@@ -3,7 +3,7 @@ module MIDTests
 #this is currently probably adequate tbh
 
 using Test
-using MID
+using ChaoticShearAlfvenWaves
 
 display("Running Basis Tests")
 @time @testset "Basic" begin include("Basic/Basic.jl") end

@@ -9,7 +9,7 @@ fields = init_fields(:ψ, q=cantori_q, isl=isl)
 
 prob = init_problem(geometry=geo, fields=fields)
 
-dir = abspath(joinpath(pathof(MID), "../../test/data/"))
+dir = abspath(joinpath(pathof(ChaoticShearAlfvenWaves), "../../test/data/"))
 surfs = surfaces_from_file(joinpath(dir, "benchmark_surfaces.jld2"))
 
 

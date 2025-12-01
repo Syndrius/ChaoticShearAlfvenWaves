@@ -1,4 +1,4 @@
-name = "MID"
+name = "ChaoticShearAlfvenWaves"
 uuid = "864cfd1d-2a39-4b19-8808-16c25e50ed02"
 version = "1.0.0-DEV"
 authors = ["Matthew Thomas <60493847+Syndrius@users.noreply.github.com> and contributors"]
@@ -29,3 +29,6 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
 test = ["Test"]
+
+[workspace]
+projects = ["docs"]

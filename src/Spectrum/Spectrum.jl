@@ -1,6 +1,6 @@
 """
 
-This modules solve the eigenvalues problem Wϕ - ω²Iϕ given the two matrices W and I. 
+This modules solve the eigenvalues problem PΦ = ω²QΦ given the two matrices W and I. 
 Solving can be done
  - directly via Julia's LinearAlgebra, which is slow and not practical for large grids.
  - using shift and invert to target a specific frequency, obtaining the nev::Int64 nearest eigenvalues.

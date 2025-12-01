@@ -3,8 +3,8 @@ Base class that just imports everything. We will want a description of the packa
 
 
 
-- change name to ChaoticShearAlfvenWaves
-- Add documentation (Documentor.jl")
+- Add documentation (Documentor.jl") -> has been initiated.
+- May need to change the documentation for multiple dispatch methods. -> eg, we may want a generic construct function placeholder, that gives the general description.
 - Create Readme
 - add title and descirpiotn to this file
 - Fix examples
@@ -12,14 +12,16 @@ Base class that just imports everything. We will want a description of the packa
 - Delete all the extra garbage.
 - change ζ and φ to be consistent with thesis etc.
 - make sure all the random af functions we have still actually work.
+- stop the Chaotic etc .QFM.function, i.e. actually import the specific functions used? Perhaps this should be done in general?
 - Final run through of each module -> make sure each has a proper description.
+- perhaps try and remove any more extra packages from CSAW
 
 
 
 """
 
 
-module MID
+module ChaoticShearAlfvenWaves
 
 
 include("Structures/Structures.jl")
