@@ -1,11 +1,15 @@
-# # Example of Basic usage.
+"""
+Example of Basic usage.
+"""
 
 using ChaoticShearAlfvenWaves
 
-# This main function, compute_spectrum, requires 3 inputs.
+"""
+This main function, compute_spectrum, requires 3 inputs.
 
-# The first defines the problem to be solved 
-# This requires information about the geometry and the fields.
+The first defines the problem to be solved 
+This requires information about the geometry and the fields.
+"""
 
 #by default, the geometry is initialised as toroidal with R0=4.0
 geo = init_geometry()
@@ -17,10 +21,12 @@ fields = init_fields()
 #we can then create the problem from these.
 prob = init_problem(geometry=geo, fields=fields)
 
-# We next define the grids used.
+"""
+We next define the grids used.
 
-# These are defined in each dimension separately, then combined into a 3d grid.
-# The type of grids constructed dictate the method of solution.
+These are defined in each dimension separately, then combined into a 3d grid.
+The type of grids constructed dictate the method of solution.
+"""
 
 #the radial grid, :ψ specifies the type, and 100 is the number of points.
 ψgrid = init_grid(:ψ, 100)
@@ -33,14 +39,18 @@ prob = init_problem(geometry=geo, fields=fields)
 #we then combine the grids
 grids = init_grids(ψgrid, θgrid, φgrid)
 
-# Finally, we specify the solver to use.
+"""
+Finally, we specify the solver to use.
+"""
 
 #the solver is set to compute the entire spectrum
 #which is only practical for small scale problems.
 #the prob input is needed here for normalisation.
 solver = init_solver(prob=prob, full_spectrum=true)
 
-# We now compute the spectrum.
+"""
+We now compute the spectrum.
+"""
 
 #this returns an object storing the eigenvalue information
 #the perturbation to the electric potential
@@ -48,7 +58,9 @@ solver = init_solver(prob=prob, full_spectrum=true)
 evals, ϕ, ϕft = compute_spectrum(prob, grids, solver);
 
 
-# We have created a companion package, CSAWViz, specifcally for viewing these outputs.
+""" 
+We have created a companion package, CSAWViz, specifcally for viewing these outputs.
+"""
 using CSAWViz
 
 #first the continuum
@@ -67,8 +79,10 @@ contour_plot(ϕ, grids, ind)
 #or a surface plot
 surface_plot(ϕ, grids, ind)
 
-#Now the TAE frequncy is known, we can change the solver to target this specific frequency.
-#This allows us to increase the resolution and solve much larger matrices.
+"""
+Now the TAE frequncy is known, we can change the solver to target this specific frequency.
+This allows us to increase the resolution and solve much larger matrices.
+"""
 
 #sets the solver to perform shift and inert, getting the 100 solutions closets to 0.3.
 solver = init_solver(prob=prob, target=0.3, nev=100)

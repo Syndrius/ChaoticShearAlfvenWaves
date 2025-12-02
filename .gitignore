@@ -6,3 +6,4 @@ data/*
 *.jld2
 old_data/*
 docs/*
+.DS_Store

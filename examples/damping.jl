@@ -1,7 +1,9 @@
-# # Continuum Damping
+"""
+Continuum Damping
 
-#in this example we compute the continuum damping of a TAE
-#this example follows the problem outlined in Bowden and Hole 2015.
+In this example we compute the continuum damping of a TAE.
+This example follows the problem outlined in Bowden and Hole 2015.
+"""
 
 using ChaoticShearAlfvenWaves
 using CSAWViz

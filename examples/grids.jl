@@ -1,5 +1,7 @@
-# # Example showing the different kind of Grids used.
-# The choice of grids dictates the method of solution.
+"""
+Example showing the different kind of Grids used.
+The choice of grids dictates the method of solution.
+"""
 
 using ChaoticShearAlfvenWaves
 using CSAWViz
@@ -43,7 +45,10 @@ ind = find_ind(evals, 0.3)
 #then look at the harmonics
 harmonic_plot(ϕft, grids, ind)
 
-# Alternatively, we can use finite elements in ψ and θ, with the spectral method in φ.
+"""
+Alternatively, we can use finite elements in ψ and θ, with the spectral method in φ.
+"""
+
 # Noting that the matrices are slower to construct with finite elements
 # So here we use a smaller grid
 ψgrid = init_grid(:ψ, 40)
@@ -64,10 +69,11 @@ ind = find_ind(evals, 0.3)
 #then look at the harmonics
 harmonic_plot(ϕft, grids, ind)
 
-
-# Finally, we can use finite elements in all dimensions.
-# This is a bit impractical in serial (see CSAWParallel)
-# But is most appropriate for cases with broken symmetry
+"""
+Finally, we can use finite elements in all dimensions.
+This is a bit impractical in serial (see CSAWParallel)
+But is most appropriate for cases with broken symmetry
+"""
 ψgrid = init_grid(:ψ, 30)
 θgrid = init_grid(:θ, 5, pf=1)
 φgrid = init_grid(:φ, 1, pf=-1)

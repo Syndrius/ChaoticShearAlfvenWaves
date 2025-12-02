@@ -1,4 +1,6 @@
-# Example showing cylindrical geometry.
+"""
+Example showing cylindrical geometry.
+"""
 
 using ChaoticShearAlfvenWaves
 using CSAWViz
@@ -26,8 +28,10 @@ evals_an = analytical_spectrum(prob, grids);
 #overlaying the analytical continuum we can see the agreement.
 continuum_plot!(evals_an, markersize=2.0)
 
-# We can also find a GAE in cylindrical geometry.
-# This follows the problem outined in Van Rij et al. 1985.
+"""
+We can also find a GAE in cylindrical geometry.
+This follows the problem outined in Van Rij et al. 1985.
+"""
 
 # Fields are set with the geometric radius as the radial coordinate
 # with specific density profile to create a minimum in the continuum.

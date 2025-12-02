@@ -1,5 +1,6 @@
-
-# # Example using Quadratic Flux Minimising (QFM) coordinates
+"""
+Example using Quadratic Flux Minimising (QFM) coordinates.
+"""
 
 using ChaoticShearAlfvenWaves
 using CSAWViz
@@ -45,7 +46,10 @@ cont_ind = find_ind(evals, 0.20)
 harmonic_plot(ϕft, grids, tae_ind)
 harmonic_plot(ϕft, grids, cont_ind)
 
-# To understand the QFM coordinates, we can map the solutions back to toroidal coordinates
+"""
+To understand the QFM coordinates, we can map the solutions back to toroidal coordinates.
+"""
+
 # Note that this mapping can be slow for large grids.
 # The radial grid is reduced again to prevent issues with interpolation at the edges.
 ψgrid = init_grid(:ψ, 80, start=0.25, stop=0.8)

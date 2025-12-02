@@ -1,4 +1,4 @@
-module MIDTests
+module ChaoticShearAlfvenWavesTests
 
 #this is currently probably adequate tbh
 

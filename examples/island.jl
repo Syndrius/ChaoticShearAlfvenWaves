@@ -1,5 +1,7 @@
-# Example using Straight field line island coordinates.
-# See Qu and Hole 2023, Konies et al 2024 and Thomas et al 2026.
+"""
+Example using Straight field line island coordinates.
+See Qu and Hole 2023, Konies et al 2024 and Thomas et al 2026.
+"""
 
 using ChaoticShearAlfvenWaves
 using CSAWViz
@@ -39,7 +41,9 @@ ind = find_ind(evals, 0.015)
 # We can see the global structure.
 harmonic_plot(ϕft, grids, ind)
 
-# We can also map the solutions from the island coordinates back to toroidal coordinates.
+"""
+We can also map the solutions from the island coordinates back to toroidal coordinates.
+"""
 
 # This requires that we create a new toroidal grid
 #we restrict it to only the island region.

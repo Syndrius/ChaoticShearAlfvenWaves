@@ -1,5 +1,7 @@
-# # Example with a chaotic magnetic field using QFM coordinates
-# See Thomas et al. 2026
+"""
+Example with a chaotic magnetic field using QFM coordinates
+See Thomas et al. 2026
+"""
 
 using ChaoticShearAlfvenWaves
 using CSAWViz
