@@ -25,11 +25,11 @@ end
 
 
 """
-    compute_sepratrix(θgrid::AbstractArray{Float64}, isl::IslandT, ζval::Float64=0.0)
+    compute_sepratrix(θgrid::AbstractArray{Float64}, isl::IslandT, φval::Float64=0.0)
 
 Computes the radial values for of the sepratrix for each point in the θgrid.
 """
-function compute_sepratrix(θgrid::AbstractArray{Float64}, isl::IslandT, ζval::Float64=0.0)
+function compute_sepratrix(θgrid::AbstractArray{Float64}, isl::IslandT, φval::Float64=0.0)
 
     sep1 = zeros(length(θgrid))
     sep2 = zeros(length(θgrid))
@@ -37,7 +37,7 @@ function compute_sepratrix(θgrid::AbstractArray{Float64}, isl::IslandT, ζval::
 
     for i in 1:length(θgrid)
 
-        α = θgrid[i] + isl.n0/isl.m0 * ζval
+        α = θgrid[i] + isl.n0/isl.m0 * φval
         sep_min, sep_max = sepratrix(α, isl)
 
         sep1[i] = sep_min

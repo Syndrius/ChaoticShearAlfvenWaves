@@ -1,11 +1,12 @@
 
 """
-    itp_mat!(surf_itp::SurfaceITPT, s::Float64)
+    itp_mat!(surf_itp::SurfaceITPT, sd::TempSurftT, s::Float64)
 
 Computes the matrix of interpolations.
 """
 function itp_mat!(surf_itp::SurfaceITPT, sd::TempSurfT, s::Float64)
 
+    #dimension is based on Fourier expansion, see CSAWCantori.
     dim1 = surf_itp.M + 1
     dim2 = 2*surf_itp.N + 1
 
@@ -83,6 +84,8 @@ end
 
 
 """
+    convert_surf(surf::QFMSurfaceT)
+
 Converts a surface into ψ, θ values for plotting.
 """
 function convert_surf(surf::QFMSurfaceT)
@@ -136,7 +139,7 @@ end
 """
     compute_jac(prob::ProblemT, grids::FFFGridsT, surfs::Array{QFMSurfaceT})
 
-Computes the Jacobain and Magnetic field in qfm coordinates to test the new values.
+Computes the Jacobian and Magnetic field in qfm coordinates to test the new values.
 This is used for deciding on QFM surfaces.
 """
 function compute_jac(prob::ProblemT, grids::FFFGridsT, surfs::Array{QFMSurfaceT})
@@ -169,8 +172,8 @@ function compute_jac(prob::ProblemT, grids::FFFGridsT, surfs::Array{QFMSurfaceT}
     #for (i, r) in enumerate(rvals), (j, x2) in enumerate(x2vals), (k, x3) in enumerate(x3vals)
     for (i, x1) in enumerate(x1grid), (j, x2) in enumerate(x2grid), (k, x3) in enumerate(x3grid)
         coord_transform!(x1, x2, x3, CT, surf_itp, sd)
-        prob.met(tor_met, CT.coords[1], CT.coords[2], CT.coords[3], prob.geo.R0)
-        compute_B!(tor_B, tor_met, prob.q, prob.isls, CT.coords[1], CT.coords[2], CT.coords[3])
+        prob.geo.met(tor_met, CT.coords[1], CT.coords[2], CT.coords[3], prob.geo.R0)
+        compute_B!(tor_B, tor_met, prob.fields.q, prob.fields.isls, CT.coords[1], CT.coords[2], CT.coords[3])
         met_transform!(tor_met, qfm_met, CT)
         B_transform!(tor_B, qfm_B, qfm_met, CT)
 

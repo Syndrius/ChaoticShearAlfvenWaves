@@ -51,7 +51,6 @@ function mode_list(gd::SMGridT)
 end
 
 
-
 """
     mode_label(i::Int64, grid::SMGridT)
 

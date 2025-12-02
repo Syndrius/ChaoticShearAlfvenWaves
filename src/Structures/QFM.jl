@@ -16,7 +16,7 @@ end
 
 
 """
-Struct for storing the temporary values defining each surface used in coord_transform!
+Struct for storing the temporary values defining each surface used in coord_transform!()
 """
 struct TempSurfT
     ψcos :: Array{Float64, 2} 
@@ -43,12 +43,12 @@ Derivatives are stored individually for extrapolation to work.
 struct SurfaceITPT
     M :: Int64
     N :: Int64
-    ψcos_itp :: Array{BSplineKit.SplineExtrapolations.SplineExtrapolation, 2}
-    θsin_itp :: Array{BSplineKit.SplineExtrapolations.SplineExtrapolation, 2}
-    dψcos_itp :: Array{BSplineKit.SplineExtrapolations.SplineExtrapolation, 2}
-    dθsin_itp :: Array{BSplineKit.SplineExtrapolations.SplineExtrapolation, 2}
-    d2ψcos_itp :: Array{BSplineKit.SplineExtrapolations.SplineExtrapolation, 2}
-    d2θsin_itp :: Array{BSplineKit.SplineExtrapolations.SplineExtrapolation, 2}
+    ψcos_itp :: Array{SplineExtrapolation, 2}
+    θsin_itp :: Array{SplineExtrapolation, 2}
+    dψcos_itp :: Array{SplineExtrapolation, 2}
+    dθsin_itp :: Array{SplineExtrapolation, 2}
+    d2ψcos_itp :: Array{SplineExtrapolation, 2}
+    d2θsin_itp :: Array{SplineExtrapolation, 2}
 end
 
 

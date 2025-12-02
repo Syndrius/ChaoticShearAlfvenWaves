@@ -1,6 +1,6 @@
 
 """
-    function Tl!(P::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, B::BFieldT, met::MetT, C::Array{Float64, 2}, D::Array{Float64, 2}, T::Array{Float64, 2})
+    function Tl!(P::SubArray{ComplexF64, 2, Array{ComplexF64, 5}}, B::BFieldT, met::MetT, C::Array{Float64, 2}, D::Array{Float64, 2})
 
 Computes the laplacian like term of P.
 T_l^{μν} = J C^μ_i D^i_j C_ν^j / B^2

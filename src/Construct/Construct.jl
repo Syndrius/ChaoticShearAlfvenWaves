@@ -2,9 +2,9 @@
 
 Module for Constructing the two main matrices in the equation PΦ = ω²QΦ. 
 Construction is split up based on which grids are used. 
-Additionally, construction with qfm surfaces is slightly modified.
 """
 module Construct
+
 
 using FFTW
 using SparseArrays
@@ -31,7 +31,6 @@ export construct
 include("Continuum.jl")
 
 export continuum
-
 
 
 end

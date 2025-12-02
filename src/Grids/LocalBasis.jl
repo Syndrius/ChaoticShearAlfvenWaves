@@ -25,6 +25,7 @@ function local_to_global!(x1::Array{Float64}, x2::Array{Float64}, Δx::Array{Flo
 
     Δx[1] = x1grid[x1ind+1] - x1grid[x1ind]
 
+    #handles periodicity.
     if x2ind == length(x2grid)
         Δx[2] = 2π + x2grid[1] - x2grid[end]
     else
@@ -50,12 +51,12 @@ function local_to_global!(x1::Array{Float64}, x2::Array{Float64}, x3::Array{Floa
 
     Δx[1] = x1grid[x1ind+1] - x1grid[x1ind]
 
+    #handles periodicity.
     if x2ind == length(x2grid)
         Δx[2] = 2π + x2grid[1] - x2grid[end]
     else
         Δx[2] = x2grid[x2ind+1] - x2grid[x2ind]
     end
-
     if x3ind == length(x3grid)
         Δx[3] = 2π + x3grid[1] - x3grid[end]
     else
@@ -76,7 +77,7 @@ end
 """
     global_to_local(ind::Int64, grid::AbstractArray{Float64}, x::Float64)
 
-Maps the global grid into t alocal grid defined between -1 and 1.
+Maps the global grid into a local grid defined between -1 and 1.
 Used for Interpolation.
 """
 function global_to_local(ind::Int64, grid::AbstractArray{Float64}, x::Float64)

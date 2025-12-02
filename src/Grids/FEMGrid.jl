@@ -62,7 +62,7 @@ function init_fem_grid(type::Symbol, N::Int64; start::Real=0.0, stop::Real=-1, b
     end
     if type in island_types
         if stop == -1
-            stop = 1.0
+            stop = 0.999 #prevents problems at the sepratrix
         end
         return RadialFEMGridT(N, float(start), float(stop), sep1, sep2, frac, gp, false)
     end

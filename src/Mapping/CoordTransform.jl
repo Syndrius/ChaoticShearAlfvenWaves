@@ -62,7 +62,7 @@ function isl_in_coords_to_tor(κ::Float64, ᾱ::Float64, τ::Float64, isl::Flux
 end
 
 """
-    tor_coords_to_qfm(ψ::Float64, θ::Float64, ζ::Float64, CT::CoordTransformT, surf_itp::SurfaceITPT, sd::TempSurfT) 
+    tor_coords_to_qfm(ψ::Float64, θ::Float64, φ::Float64, CT::CoordTransformT, surf_itp::SurfaceITPT, sd::TempSurfT) 
 
 Maps toroidal coordinates (ψ, θ, φ) to qfm coordinates (s, ϑ, ζ). Requires root finding so can be slow.
 """

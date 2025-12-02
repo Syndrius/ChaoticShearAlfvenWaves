@@ -1,6 +1,7 @@
 """
 
-Computes the weak form of our governing equation. This involves computing P and Q for a given grid point.
+Computes the weak form of our governing equation, given in terms of the two operators P̂ and Q̂.
+These operators are constructed as 9x9 matrices, which are contracted with the length 9 vector containing the derivatives of our trial and test functions, Φ and Ψ.
 """
 module WeakForm
 
@@ -32,42 +33,39 @@ end
 export weak_form!
 export TM
 
-#good
+
 include("Tl.jl") 
-#good
 include("Tj.jl") 
-#good
 include("P.jl")
-#good
 include("Q.jl")
-#good
 include("QFM.jl")
-#good
+
+
 include("Problem.jl")
 
 export init_problem, inst_problem
 
 
 """
-    weak_form!(P::Array{ComplexF64, 5}, Q::Array{ComplexF64, 5}, B::BFieldT, met::MetT, prob::ProblemT, r:: Array{Float64}, θ, ζ::AbstractRange)
+    weak_form!(P::Array{ComplexF64, 5}, Q::Array{ComplexF64, 5}, B::BFieldT, met::MetT, prob::ProblemT, x1:: Array{Float64}, x2::AbstractArray, x3::AbstractArray)
 
 Computes the two matrices P and Q based on the weak form of the SAW governing equation.
 Solving generalised eigenvalue problem PΦ = ω^2QΦ.
 """
-function weak_form!(P::Array{ComplexF64, 5}, Q::Array{ComplexF64, 5}, B::BFieldT, met::MetT, prob::ProblemT, r::Array{Float64}, θ::AbstractArray, ζ::AbstractArray, tm::TM)
+function weak_form!(P::Array{ComplexF64, 5}, Q::Array{ComplexF64, 5}, B::BFieldT, met::MetT, prob::ProblemT, x1::Array{Float64}, x2::AbstractArray, x3::AbstractArray, tm::TM)
 
     
     #compute the density.
-    n = prob.fields.dens.(r) :: Array{Float64}
+    n = prob.fields.dens.(x1) :: Array{Float64}
 
-    for k=1:1:length(ζ), j=1:1:length(θ), i=1:1:length(r)
+    for k=1:1:length(x3), j=1:1:length(x2), i=1:1:length(x1)
 
         #compute the metric
-        prob.geo.met(met, r[i], θ[j], ζ[k], prob.geo.R0)
+        prob.geo.met(met, x1[i], x2[j], x3[k], prob.geo.R0)
         #display("or here")
 
         #compute the magnetic field.
-        compute_B!(B, met, prob.fields.q, prob.fields.isls, r[i], θ[j], ζ[k])
+        compute_B!(B, met, prob.fields.q, prob.fields.isls, x1[i], x2[j], x3[k])
 
         #computes the matrix D.
         compute_D!(B, met, tm.D)

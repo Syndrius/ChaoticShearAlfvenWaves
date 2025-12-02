@@ -1,16 +1,13 @@
 """
 
-This modules solve the eigenvalues problem PΦ = ω²QΦ given the two matrices W and I. 
-Solving can be done
- - directly via Julia's LinearAlgebra, which is slow and not practical for large grids.
- - using shift and invert to target a specific frequency, obtaining the nev::Int64 nearest eigenvalues.
- - using a 'slicing' method where the shift invert method is used multiple times to build up a larger portion of the spectrum.
-
-Also contains the compute_spectrum function, which is essentially the main() of this package. This function constructs the matrices, solves the eigenvalue problem then processes the output.
+This module acts like the Main.
+Contains the function compute_spectrum() which constructs the matrices, solves the eigenvalue problem then processes the output.
 """
 module Spectrum
 
+
 using Printf
+
 
 using ..Grids
 using ..Structures
@@ -20,12 +17,12 @@ using ..WeakForm
 using ..PostProcessing
 using ..Io
 
+
 export compute_spectrum
 export analytical_spectrum
 
 
 include("Continuum.jl")
-
 include("QFM.jl")
 
 

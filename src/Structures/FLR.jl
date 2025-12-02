@@ -12,7 +12,7 @@ struct FLRT
     δ_e :: Float64
 end
 
-#flr for ideal MHD.
+#flr for ideal case.
 const ideal_flr = FLRT(0.0, 0.0, 0.0)
 
 """

@@ -3,7 +3,7 @@ abstract type IslandT end
 
 """
 Struct storing the island parameters. Only m0, n0 and one of A or w are required.
-Island takes form A*sin(m0*θ + n0*ζ) so m0 and n0 should have different sign.
+Island takes form A*sin(m0*θ + n0*φ) so m0 and n0 should have different sign.
 Different types are used for multiple dispatch based on radial coordinate.
 
 ### Fields

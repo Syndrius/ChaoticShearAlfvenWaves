@@ -1,28 +1,30 @@
 """
 
-Module for the geometry and computing the metric tensor.
-
+Module for the computing the metric tensor in different coordinate systems.
 """
 module Geometry
 
+
 using ..Structures
 
+
 using Elliptic
-using LinearAlgebra
+import LinearAlgebra: inv
+
 
 export init_geometry
 
-#good
+
 include("Toroidal.jl")
 
 export radial_toroidal_metric!, flux_toroidal_metric!
 
-#good
+
 include("Cylindrical.jl")
 
 export radial_cylindrical_metric!, flux_cylindrical_metric!
 
-#good
+
 include("Island.jl")
 
 export island_metric!

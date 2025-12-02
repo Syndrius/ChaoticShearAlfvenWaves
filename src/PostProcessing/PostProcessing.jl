@@ -18,16 +18,12 @@ using ..Grids
 export post_process
 
 
-#good
 include("EfuncSize.jl")
 
-#good
 include("Reconstruction.jl")
 
-#good
 include("FT.jl")
 
-#good
 include("Continuum.jl")
 
 

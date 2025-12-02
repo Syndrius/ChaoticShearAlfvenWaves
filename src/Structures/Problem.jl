@@ -1,6 +1,7 @@
 """
 
 Main struct used for computing the weak form.
+This struct is initialised in WeakForm.
 
 ### Fields
 - fields::FieldsT - Stores the fields used.

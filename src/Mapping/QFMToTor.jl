@@ -19,10 +19,10 @@ function qfm_spectrum_to_tor(dir_base::String, tor_grids::GridsT, surfs_dir::Str
 
     nevals = length(un_inds)
 
-    sgrid, ϑgrid, φgrid = inst_grids(qfm_grids)
+    sgrid, ϑgrid, ζgrid = inst_grids(qfm_grids)
 
     #think this process is indep of flux vs rad, just depends how the surfaces where generated
-    rgrid, θgrid, ζgrid = inst_grids(tor_grids)
+    rgrid, θgrid, φgrid = inst_grids(tor_grids)
 
     rms = [] 
     tor_ω = []
@@ -45,7 +45,7 @@ function qfm_spectrum_to_tor(dir_base::String, tor_grids::GridsT, surfs_dir::Str
     mode_count = 1
 
     #pre compute the coordinate map for efficient mapping
-    coord_map = qfm_to_tor_coord_map(rgrid, θgrid, ζgrid, CT, surf_itp, sd)
+    coord_map = qfm_to_tor_coord_map(rgrid, θgrid, φgrid, CT, surf_itp, sd)
 
     for i in 1:nevals
 
@@ -59,7 +59,7 @@ function qfm_spectrum_to_tor(dir_base::String, tor_grids::GridsT, surfs_dir::Str
         PostProcessing.reconstruct_phi!(efunc, qfm_grids, ϕ_qfm, ϕ_qfmft, plan_qfm)
 
         #maps the eigenfunction
-        efunc_map!(ϕ_tor, tor_grids.x1.N, tor_grids.x2.N, tor_grids.x3.N, ϕ_qfm, sgrid, ϑgrid, φgrid, coord_map)
+        efunc_map!(ϕ_tor, tor_grids.x1.N, tor_grids.x2.N, tor_grids.x3.N, ϕ_qfm, sgrid, ϑgrid, ζgrid, coord_map)
         
         PostProcessing.ft_phi!(ϕ_tor, ϕ_torft, tor_grids, plan_tor)
 

@@ -44,8 +44,8 @@ function interpolation(x1::Float64, x2::Float64, x3::Float64, ϕ::Array{ComplexF
     ξ3, inds3, Δx3 = global_to_local(x3ind, x3grid, x3)
 
     ϕ_int = 0.0+0.0im
-    gid = Indexing.grid_id
-    bid = Indexing.basis_id
+    gid = grid_id
+    bid = basis_id
     for h1 in 1:4, h2 in 1:4, h3 in 1:4
         gi = (inds1[gid[h1]+1], inds2[gid[h2]+1], inds3[gid[h3]+1])
         bi = 1 + 4*bid[h1] + 2*bid[h2] + 1*bid[h3] #cannot be sure this is actually valid yet!
@@ -64,7 +64,7 @@ Function that returns the appropriate hermite basis function based on h.
 function hb(ξ::Float64, h::Int64, Δx::Float64, order::Int64=0)
     #Δx is due to arbitrary interval, see wikipedia page.
     #change from ξ∈[-1, 1] to x∈[x_i, x_{i+1}]
-    jac = Δx / 2 #may need to be upside down!
+    jac = Δx / 2 
     if order == 0
         if h==1
             return Basis.h00(ξ)

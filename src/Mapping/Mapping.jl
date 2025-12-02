@@ -20,28 +20,28 @@ using Printf
 using NLsolve 
 
 
-#good enough
+
 include("CoordTransform.jl")
 
-#good enough.
+
 include("Eigenfunctions.jl")
 
-#good, and has been tested.
+
 include("QFMToTor.jl")
 
 export qfm_spectrum_to_tor
+
 
 include("QFMToIsl.jl")
 
 export qfm_spectrum_to_isl
 
-#good and tested.
+
 include("TorToIsl.jl")
 
-#good and tested.
 export tor_spectrum_to_isl
 
-#good, and tested.
+
 include("IslToTor.jl")
 
 export isl_spectrum_to_tor

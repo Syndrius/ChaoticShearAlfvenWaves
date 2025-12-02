@@ -1,25 +1,10 @@
 """
-Base class that just imports everything. We will want a description of the package here and the author etc
+Package for computing the spectrum of Shear Alfven Waves in fusion plasmas with chaotic magentic fields.
+This packages solved the generalised eigenvalue problem of the reduced ideal MHD equations for shear Alfven waves.
 
-
-
-- Add documentation (Documentor.jl") -> has been initiated.
-- May need to change the documentation for multiple dispatch methods. -> eg, we may want a generic construct function placeholder, that gives the general description.
-- Create Readme
-- add title and descirpiotn to this file
-- Fix examples
-- Fix all the imports and exports
-- change ζ and φ to be consistent with thesis etc.
-- make sure all the random af functions we have still actually work.
-- stop the Chaotic etc .QFM.function, i.e. actually import the specific functions used? Perhaps this should be done in general?
-- Final run through of each module -> make sure each has a proper description.
-- perhaps try and remove any more extra packages from CSAW
-
-
-
+Written by Matthew Thomas.
+See Thomas et al. 2026 for a decription.
 """
-
-
 module ChaoticShearAlfvenWaves
 
 
@@ -56,17 +41,16 @@ include("QFM/QFM.jl")
 
 include("Io/Io.jl")
 
-using ..Io; export inputs_to_file, surfaces_to_file, surfaces_from_file
-using ..Io; export inputs_from_file
-using ..Io; export evals_from_file
-using ..Io; export efunc_from_file
+using ..Io; export inputs_to_file, surfaces_to_file, surfaces_from_file, inputs_from_file, evals_from_file, efunc_from_file
 
 
 include("PostProcessing/PostProcessing.jl")
 
+
 include("WeakForm/WeakForm.jl")
 
-using ..WeakForm; export init_problem, inst_problem
+using ..WeakForm; export init_problem
+
 
 include("Construct/Construct.jl")
 
@@ -78,8 +62,8 @@ using ..Solve; export init_solver
 
 include("Spectrum/Spectrum.jl")
 
-using ..Spectrum; export compute_spectrum
-using ..Spectrum; export analytical_spectrum
+using ..Spectrum; export compute_spectrum, analytical_spectrum
+
 
 include("Mapping/Mapping.jl") 
 

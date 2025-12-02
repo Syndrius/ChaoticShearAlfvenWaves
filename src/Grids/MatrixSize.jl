@@ -85,15 +85,16 @@ function init_local_matrix(grids::FFFGridsT)
 end
 
 
+"""
+    init_bases_function(grids::FSSGridsT)
 
-#in theory, this needs to know the size of the basis
-#and the size of the weakform.
+Initialises the empty structure that contains the trial and test functions.
+4's are for number of Hermite elements when using FEM, 9 is for total first and second derivatives.
+"""
 function init_trial_function(grids::FSSGridsT)
-    #assumong proper spectral basis
-    #return zeros(ComplexF64, 4, 1, 1, 9, grids.x1.gp, grids.x2.N, grids.x3.N)
+
     return zeros(ComplexF64, 4, 9, grids.x1.gp)   
 end
-
 
 
 """
@@ -119,6 +120,4 @@ function init_trial_function(grids::FFSGridsT)
 
     #order here is chosen so integration is done on contigeous block
     return zeros(ComplexF64, 4, 4, 9, grids.x1.gp, grids.x2.gp) 
-
-
 end

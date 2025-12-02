@@ -33,6 +33,8 @@ function flux_toroidal_metric!(met::MetT, ψ::Float64, θ::Float64, φ::Float64,
     met.dJ[2] = -R0 * 2*ϵ*sin(θ)
 
 
+    #first two indicies give metric element, while third is derivative,
+    #eg [1, 2, 3] is ∂g_{12}/∂x3
     met.dgu[1, 1, 1] = (2*r * (1+2*Δp * cos(θ)) + r^2*(2*Δpp*cos(θ))) / dψdr
     met.dgu[1, 1, 2] = r^2 * (-2*Δp * sin(θ)) 
 

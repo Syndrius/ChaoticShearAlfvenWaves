@@ -5,12 +5,12 @@ Module for numerical integration using Gaussian quadrature.
 module Integration
 
 
-using FastGaussQuadrature
+import FastGaussQuadrature: gausslegendre
+
 
 using ..Grids
 
 
-#good
 include("GaussQuadrature.jl")
 
 export gauss_integrate, gauss_points

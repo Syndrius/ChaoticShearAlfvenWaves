@@ -17,7 +17,7 @@ function tor_spectrum_to_isl(dir_base::String, isl_grids::GridsT)
 
     nevals = length(un_inds)
 
-    rgrid, θgrid, ζgrid = inst_grids(tor_grids)
+    rgrid, θgrid, φgrid = inst_grids(tor_grids)
     κgrid, ᾱgrid, τgrid = inst_grids(isl_grids)
 
     isl = prob.fields.isls[1]
@@ -65,14 +65,14 @@ function tor_spectrum_to_isl(dir_base::String, isl_grids::GridsT)
 
         amax = argmax(abs.(real.(ϕ_tor[:, :, :, 1])))
 
-        rmin, rmax = separatrix(isl.m0*θgrid[amax[2]]+isl.n0*ζgrid[amax[3]], isl)
+        rmin, rmax = separatrix(isl.m0*θgrid[amax[2]]+isl.n0*φgrid[amax[3]], isl)
 
         #now a stronger restriction can be placed
         if rmin >= rgrid[amax[1]] || rgrid[amax[1]] >= rmax
             continue
         end
 
-        efunc_map!(ϕ_isl, isl_grids.x1.N, isl_grids.x2.N, isl_grids.x3.N, ϕ_tor, rgrid, θgrid, ζgrid, coord_map)
+        efunc_map!(ϕ_isl, isl_grids.x1.N, isl_grids.x2.N, isl_grids.x3.N, ϕ_tor, rgrid, θgrid, φgrid, coord_map)
 
         PostProcessing.ft_phi!(ϕ_isl, ϕ_islft, isl_grids, plan_isl)
 

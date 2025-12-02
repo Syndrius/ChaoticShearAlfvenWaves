@@ -22,7 +22,7 @@ end
 Profile to make analytical coordinates for inside an magnetic island.
 """
 function island_q(κ::Float64, isl::CoordIslandT)
-    K, E = Elliptic.ellipke(κ)
+    K, E = ellipke(κ)
 
     q = isl.w / (isl.m0*π) * K
 

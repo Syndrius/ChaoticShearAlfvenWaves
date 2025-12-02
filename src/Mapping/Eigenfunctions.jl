@@ -15,7 +15,7 @@ end
 
 
 """
-    qfm_to_tor_coord_map(rgrid::AbstractArray{Float64}, θgrid::AbstractArray{Float64}, ζgrid::AbstractArray{Float64}, CT::CoordTransformT, surf_itp::SurfaceITPT, sd::TempSurfT)
+    qfm_to_tor_coord_map(rgrid::AbstractArray{Float64}, θgrid::AbstractArray{Float64}, φgrid::AbstractArray{Float64}, CT::CoordTransformT, surf_itp::SurfaceITPT, sd::TempSurfT)
 
 Creates a Array that maps qfm coordinates to toroidal coordinates. Allows for efficient interpolation.
 """
@@ -69,7 +69,7 @@ end
 
 
 """
-    isl_to_tor_coord_map(rgrid::AbstractArray{Float64}, θgrid::AbstractArray{Float64}, ζgrid::AbstractArray{Float64}, isl::IslandT)
+    isl_to_tor_coord_map(rgrid::AbstractArray{Float64}, θgrid::AbstractArray{Float64}, φgrid::AbstractArray{Float64}, isl::IslandT)
 
 Creates an array that maps island coordinates to toroidal coordinates. Allows for efficient interpolation.
 """

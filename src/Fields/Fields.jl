@@ -1,7 +1,8 @@
 """
 
-Module for the fields used. 
-This includes the density and the magnetic field, computed from an input q-profile and input magnetic islands.
+Module for the Magnetic and density fields used. 
+The magnetic field functions fills out the BFieldT struct based on a q-profile and radial perturbations in the form
+    Asin(m0 * θ + n0 * φ).
 """
 module Fields
 
@@ -9,40 +10,32 @@ module Fields
 using ..Structures
 
 
-using Elliptic
-using FunctionWrappers
+import Elliptic: ellipke
 import FunctionWrappers: FunctionWrapper
 
 
 export init_fields
 
 
-#good
 include("MagneticField.jl")
 
 export compute_B!
 
-#good
+
 include("qProfiles.jl") 
 
-export quadratic_q
-export cantori_q
-export island_q
-export gae_q
-export damping_q
+export quadratic_q, cantori_q, island_q, gae_q, damping_q
 
-#good
+
 include("DensityProfiles.jl")
 
-export uniform_dens
-export damping_dens
-export gae_dens
+export uniform_dens, damping_dens, gae_dens
 
 
-#good
 include("Island.jl")
 
 export separatrix
+
 
 """
     init_fields(type=:ψ; q::Function=quadratic_q, dens::Function=uniform_dens, isls::Array{<:IslandT}=IslandT[])
@@ -117,5 +110,6 @@ function init_fields(type=:ψ; q::Function=quadratic_q, dens::Function=uniform_d
     end
 
 end
+
 
 end

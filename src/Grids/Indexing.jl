@@ -15,7 +15,6 @@ function grid_to_index(x1ind::Int64, x2ind::Int64, x3ind::Int64, hx1::Int64, gri
     #tells us which of the basis vectors is being considered here
     #0 reps the first which has restrictions on the value at the boundaries
     #1 reps the second which has restrictions on the derivative at the boundaries
-    
 
     #matrix will be structured so [r1x21x31, r1x21x32, ...r1x21x3nn, r1x22x31, ..., r1x2nmx3nn, r2x21x31, .., rnr, x2nm, x3nn]
 
@@ -50,8 +49,6 @@ function grid_to_index(x1ind::Int64, x2ind::Int64, x3ind::Int64, hx1::Int64, hx2
 
     #(subtract 1 due to julia indexing starting from 1)
     # mod is for periodicity, so that if x2ind==Nx2, it is mapped to x2ind = 1.
-
-    #TODO describe this
 
     #first we find the appropriate segment for our indicies.
     # - Each increment of x3ind moves us one segment.

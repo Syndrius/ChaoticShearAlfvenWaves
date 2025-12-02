@@ -1,5 +1,5 @@
 """
-Struct storing the data required for computing the continuum. Simplified RFEMGridT, used for multiple dispatch.
+Struct storing the data required for computing the continuum. Simplified RadialFEMGridT, used for multiple dispatch.
 
 ### Fields
 - N::Int64 - Number of grid points.

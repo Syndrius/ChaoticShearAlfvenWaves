@@ -8,28 +8,28 @@ This assumed the original geometry was cylindrical.
 """
 function island_metric!(met::MetT, κ::Float64, ᾱ::Float64, τ::Float64, R0::Float64, isl::CoordIslandT)
 
-    #first we compute our intermediate metric (κ, β, ζ)
+    #first we compute our intermediate metric (κ, β, τ)
     #where √κsin(β) = sin(m0 α/2)
 
     #we have, for the first transformation
-    #κ = 4/w^2 * (ψ-ψ0)^2 + sin^2(m0*α/2) -> κ(ψ, θ, ζ)
-    #β = arctan(w/2 * sin(m0*α/2)/(ψ-ψ0)) -> β(ψ, θ, ζ)
-    #τ = ζ -> τ(ψ, θ, ζ)
+    #κ = 4/w^2 * (ψ-ψ0)^2 + sin^2(m0*α/2) -> κ(ψ, θ, φ)
+    #β = arctan(w/2 * sin(m0*α/2)/(ψ-ψ0)) -> β(ψ, θ, φ)
+    #τ = φ -> τ(ψ, θ, φ)
 
     #We then straighten these coordinates via
-    #ᾱ = π/(2*K(κ)) * F(β, κ) -> ᾱ(κ, θ, ζ)
+    #ᾱ = π/(2*K(κ)) * F(β, κ) -> ᾱ(κ, β, τ)
 
     #other relations
     #ψ-ψ0 = w*sqrt(κ)/2 * cos(β)
     #but we will use β as an intermediate for derivatives to reduce complexity.
 
-    K, E = Elliptic.ellipke(κ)
+    K, E = ellipke(κ)
 
     #shorhand for the argument in the coordinate transformation
     arg = 2*K / π * ᾱ
 
-    sn, cn, dn = Elliptic.ellipj(arg, κ)
-    β = Elliptic.Jacobi.am(arg, κ)
+    sn, cn, dn = ellipj(arg, κ)
+    β = Jacobi.am(arg, κ)
 
     Eβ = Elliptic.E(β, κ) #equiv to JacobiEpsilon
     Fβ = Elliptic.F(β, κ)

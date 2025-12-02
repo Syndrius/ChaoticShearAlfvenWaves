@@ -42,14 +42,12 @@ Computes the numerical integration required for finite elements via ∫f(x)dx �
 """
 function gauss_integrate(Ψ::SubArray{ComplexF64, 2, Array{ComplexF64, 3}}, Φ::SubArray{ComplexF64, 2, Array{ComplexF64, 3}}, mat::SubArray{ComplexF64, 3, Array{ComplexF64, 5}}, wg::Array{Float64}, jac::Float64, ngp::Int64)
 
-    #this function is taking up a lot of time when nm, nn get large, but I think that is more to do with the size of the loops that call this function tbh.
-
     res = 0.0 + 0.0im
     for k in 1:ngp
     
         scale = wg[k] * jac
         for j in 1:9, i in 1:9
-            #significantly faster to have * jac here 
+            
             res += @inbounds Ψ[i, k] * Φ[j, k] * mat[i, j, k] * scale
 
         end
