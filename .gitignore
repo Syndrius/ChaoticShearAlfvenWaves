@@ -7,3 +7,4 @@ data/*
 old_data/*
 docs/*
 .DS_Store
+!test/data/*.jld2
