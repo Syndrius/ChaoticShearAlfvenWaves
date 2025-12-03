@@ -5,9 +5,9 @@ Reads the prob and grids structs from file using JLD2.
 """
 function inputs_from_file(dir::String)
 
-    grids = load_object(dir*"grids.jld2")
-    prob = load_object(dir*"prob.jld2")
-    solver = load_object(dir*"solver.jld2")
+    grids = load_object(joinpath(dir,"grids.jld2"))
+    prob = load_object(joinpath(dir,"prob.jld2"))
+    solver = load_object(joinpath(dir,"solver.jld2"))
     
     return prob, grids, solver
 
@@ -21,7 +21,7 @@ Reads the evals struct from file using JLD2.
 """
 function evals_from_file(dir::String)
 
-    evals = load_object(dir*"evals.jld2")
+    evals = load_object(joinpath(dir,"evals.jld2"))
 
     return evals
 end
@@ -36,14 +36,14 @@ function efunc_from_file(dir::String, ind::Int64; ft::Bool=true, deriv::Bool=fal
 
     if ft
         if deriv
-            filename = dir * @sprintf("efuncs_ft_deriv/efunc%05d.jld2", ind)
+            filename = joinpath(dir, @sprintf("efuncs_ft_deriv/efunc%05d.jld2", ind))
         else
-            filename = dir * @sprintf("efuncs_ft/efunc%05d.jld2", ind)
+            filename = joinpath(dir, @sprintf("efuncs_ft/efunc%05d.jld2", ind))
         end
     elseif deriv
-        filename = dir * @sprintf("efuncs_deriv/efunc%05d.jld2", ind)
+        filename = joinpath(dir, @sprintf("efuncs_deriv/efunc%05d.jld2", ind))
     else
-        filename = dir * @sprintf("efuncs/efunc%05d.jld2", ind)
+        filename = joinpath(dir, @sprintf("efuncs/efunc%05d.jld2", ind))
     end
 
     ϕ = load_object(filename)

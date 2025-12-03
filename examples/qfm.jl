@@ -35,7 +35,7 @@ solver = init_solver(prob=prob, full_spectrum=true)
 #we now also need to pass the QFM surfaces in.
 evals, ϕ, ϕft = compute_spectrum(prob, grids, solver, surfs, deriv=true);
 
-#despite the perturbation the continuum appears nowrmal
+#despite the perturbation the continuum appears normal
 #as we have 'straightened' the flux surfaces.
 continuum_plot(evals)
 
