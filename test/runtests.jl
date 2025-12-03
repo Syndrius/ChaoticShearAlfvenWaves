@@ -15,7 +15,7 @@ display("Running Island Tests")
 @time @testset "Island" begin include("Island/Island.jl") end
 
 display("Running IO Tests")
-@time @testset "IO" begin include("IO/IO.jl") end
+@time @testset "IO" begin include("Io/Io.jl") end
 
 display("Running FLR Tests")
 @time @testset "FLR" begin include("FLR/FLR.jl") end
